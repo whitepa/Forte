@@ -21,7 +21,7 @@ CEventQueue::CEventQueue(int maxdepth) :
     mNotify = NULL;
 }
 
-CEventQueue::CEventQueue(int maxdepth, CCondition *notifier) :
+CEventQueue::CEventQueue(int maxdepth, CThreadCondition *notifier) :
     mBlockingMode(true),
     mShutdown(false),
     mMaxDepth((maxdepth <= EVQ_MAX_DEPTH) ? maxdepth : EVQ_MAX_DEPTH),

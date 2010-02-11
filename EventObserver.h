@@ -52,7 +52,7 @@ protected:
     static RWLock sLock;
     static CEventQueue sQueue;
     static CMutex sNotifyLock;
-    static CCondition sNotify;
+    static CThreadCondition sNotify;
     static CThread *sObserverThread;
 
     unsigned int mSubsysID; // unsigned int identifying the desired subsystem

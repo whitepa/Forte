@@ -5,7 +5,7 @@
 #include "EventQueue.h"
 #include "RequestHandler.h"
 #include "AutoMutex.h"
-#include "Condition.h"
+#include "ThreadCondition.h"
 #include "Semaphore.h"
 #include "Thread.h"
 #include <vector>
@@ -98,7 +98,7 @@ public:
     CSemaphore mThreadSem;
     CSemaphore mSpareThreadSem;
     CMutex mNotifyLock;
-    CCondition mNotify;
+    CThreadCondition mNotify;
     CEventQueue mEventQueue;
     CThreadPoolDispatcherManager mManagerThread;
 };
@@ -146,7 +146,7 @@ class COnDemandDispatcher : public CDispatcher
     unsigned int mMaxThreads;
     CSemaphore mThreadSem;
     CMutex mNotifyLock;
-    CCondition mNotify;
+    CThreadCondition mNotify;
     CEventQueue mEventQueue;
     COnDemandDispatcherManager mManagerThread;
 };

@@ -56,13 +56,13 @@ protected:
     static void *startThread(void *obj);
     pthread_t mThread;
     CMutex mInitializedLock;
-    CCondition mInitializedNotify;
+    CThreadCondition mInitializedNotify;
     bool mInitialized;
     bool mThreadShutdown;
     bool mSelfDelete;
     bool mShutdownComplete;
     CMutex mShutdownNotifyLock;
-    CCondition mShutdownNotify;
+    CThreadCondition mShutdownNotify;
     static pthread_key_t sThreadKey;
     static pthread_once_t sThreadKeyOnce;
 };

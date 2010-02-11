@@ -5,7 +5,7 @@
 #include <sys/time.h>
 
 class CMutex {
-    friend class CCondition;
+    friend class CThreadCondition;
 public:
     inline CMutex(const pthread_mutexattr_t *attr = NULL)
     {

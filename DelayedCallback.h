@@ -23,7 +23,7 @@ protected:
     static CMutex sLock;
     static CMutex sThreadLock;
     static CMutex sNotifyLock;
-    static CCondition sNotify;
+    static CThreadCondition sNotify;
     static CThread *sCallbackThread;
 
     static std::set<unsigned int> sTimes;

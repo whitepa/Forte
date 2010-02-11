@@ -7,7 +7,7 @@
 CMutex CDelayedCallback::sLock;
 CMutex CDelayedCallback::sThreadLock;
 CMutex CDelayedCallback::sNotifyLock;
-CCondition CDelayedCallback::sNotify(CDelayedCallback::sNotifyLock);
+CThreadCondition CDelayedCallback::sNotify(CDelayedCallback::sNotifyLock);
 CThread * CDelayedCallback::sCallbackThread;
 
 std::set<unsigned int> CDelayedCallback::sTimes;

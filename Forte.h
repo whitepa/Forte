@@ -23,7 +23,7 @@ using namespace __gnu_cxx;
 #include "Base64.h"
 #include "Callback.h"
 #include "ClusterLock.h"
-#include "Condition.h"
+#include "ThreadCondition.h"
 
 #ifndef FORTE_NO_CURL
 #include "Curl.h"

@@ -3,7 +3,7 @@
 
 #include <errno.h>
 #include "AutoMutex.h"
-#include "Condition.h"
+#include "ThreadCondition.h"
 
 class CSemaphore
 {
@@ -36,7 +36,7 @@ class CSemaphore
  protected:
     int mValue;
     CMutex mLock;
-    CCondition mNotify;
+    CThreadCondition mNotify;
 };
 
 

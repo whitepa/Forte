@@ -4,7 +4,7 @@ std::map<unsigned int, CEventObserver> CEventObserver::sEventObservers;
 RWLock CEventObserver::sLock;
 unsigned int CEventObserver::sNextID = 0;
 CMutex CEventObserver::sNotifyLock;
-CCondition CEventObserver::sNotify(CEventObserver::sNotifyLock);
+CThreadCondition CEventObserver::sNotify(CEventObserver::sNotifyLock);
 CEventQueue CEventObserver::sQueue(100000, &sNotify); // XXX need unreliable queue which does not block on add()
 CThread * CEventObserver::sObserverThread = NULL;
 

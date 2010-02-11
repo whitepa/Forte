@@ -13,7 +13,7 @@ class CEventQueue
  public:
     CEventQueue();
     CEventQueue(int maxdepth);
-    CEventQueue(int maxdepth, CCondition *notifier);
+    CEventQueue(int maxdepth, CThreadCondition *notifier);
     virtual ~CEventQueue();
 
     void add(CEvent *e);
@@ -52,8 +52,8 @@ class CEventQueue
     std::list<CEvent*> mQueue;
     CSemaphore mMaxDepth;
     CMutex mMutex;
-    CCondition mEmptyCondition;
-    CCondition *mNotify;
+    CThreadCondition mEmptyCondition;
+    CThreadCondition *mNotify;
 };
 
 #endif
