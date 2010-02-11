@@ -1,9 +1,6 @@
 // FileSystem.cpp
 
-#include "FileSystem.h"
-#include "ProcRunner.h"
-#include "ServerMain.h"
-#include "AutoFD.h"
+#include "Forte.h"
 #include <fstream>
 #include <vector>
 #include <cstring>

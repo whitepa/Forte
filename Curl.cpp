@@ -1,7 +1,6 @@
 // Curl.cpp
 #ifndef FORTE_NO_CURL
-#include "Curl.h"
-#include "LogManager.h"
+#include "Forte.h"
 
 // macros
 #define SET_CURL_OPT(OPTION, VALUE)                                     \

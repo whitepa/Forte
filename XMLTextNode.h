@@ -4,13 +4,14 @@
 #ifndef FORTE_NO_XML
 
 #include "XMLNode.h"
-
-class CXMLTextNode : public CXMLNode
+namespace Forte
 {
-public:
-    CXMLTextNode(const FString& name, const FString& text, xmlNodePtr parent = NULL);
-    virtual ~CXMLTextNode() { }
+    class CXMLTextNode : public CXMLNode
+    {
+    public:
+        CXMLTextNode(const FString& name, const FString& text, xmlNodePtr parent = NULL);
+        virtual ~CXMLTextNode() { }
+    };
 };
-
 #endif
 #endif

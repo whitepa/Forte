@@ -5,6 +5,8 @@
 #include "Exception.h"
 #include <wctype.h>
 
+using namespace Forte;
+
 CXMLBlob::CXMLBlob(const char *rootName
     ) :
     readOnly(false)

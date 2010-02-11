@@ -8,41 +8,43 @@
 #include "FString.h"
 #include "DbConnection.h"
 
-class CDbLiteConnection : public CDbConnection
+namespace Forte
 {
-public:
-    CDbLiteConnection();
-    virtual ~CDbLiteConnection();
+    class CDbLiteConnection : public CDbConnection
+    {
+    public:
+        CDbLiteConnection();
+        virtual ~CDbLiteConnection();
 
-    // initialization
-    virtual bool Init(struct sqlite3 *db);
+        // initialization
+        virtual bool Init(struct sqlite3 *db);
 
-    // connection management
-    virtual bool Connect();
-    virtual bool Close();
+        // connection management
+        virtual bool Connect();
+        virtual bool Close();
 
-    // queries
-    virtual bool execute(const FString& sql);
-    virtual CDbResult store(const FString& sql);
-    virtual CDbResult use(const FString& sql);
+        // queries
+        virtual bool execute(const FString& sql);
+        virtual CDbResult store(const FString& sql);
+        virtual CDbResult use(const FString& sql);
 
-    // error info
-    virtual bool isTemporaryError() const;
+        // error info
+        virtual bool isTemporaryError() const;
     
-    // misc.
-    virtual uint64_t InsertID() { return sqlite3_last_insert_rowid(m_db); }
-    virtual uint64_t AffectedRows() { return sqlite3_changes(m_db); }
-    virtual FString escape(const char *str);
+        // misc.
+        virtual uint64_t InsertID() { return sqlite3_last_insert_rowid(m_db); }
+        virtual uint64_t AffectedRows() { return sqlite3_changes(m_db); }
+        virtual FString escape(const char *str);
 
-private:
-    void set_error();
-    CDbResult query(const FString& sql);
-    struct sqlite3 *m_db;
+    private:
+        void set_error();
+        CDbResult query(const FString& sql);
+        struct sqlite3 *m_db;
 
-public:
-    int m_flags;
+    public:
+        int m_flags;
+    };
 };
-
 #endif
 #endif
 #endif

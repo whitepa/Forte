@@ -4,6 +4,8 @@
 #include "XMLNode.h"
 #include <wctype.h>
 
+using namespace Forte;
+
 CXMLNode::CXMLNode(const FString& name, xmlNodePtr parent)
 {
     FString stripped;

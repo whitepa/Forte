@@ -1,6 +1,6 @@
 #ifndef FORTE_NO_DB
 
-#include "DbException.h"
+#include "Forte.h"
 
 CDbException::CDbException(const char* description, unsigned int dbErrno, const char *sql) :
     CException((description != NULL) ? description : "Database Exception"),

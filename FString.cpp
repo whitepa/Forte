@@ -1,6 +1,4 @@
-#include "FString.h"
-#include "Exception.h"
-#include "LogManager.h"
+#include "Forte.h"
 #include <cstdio>
 #include <cstdarg>
 

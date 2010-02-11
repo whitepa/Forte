@@ -2,7 +2,7 @@
 #include "Murmur.h"
 #include "LogManager.h"
 #include "Types.h"
-
+using namespace Forte;
 // #define DEBUG_MURMUR
 
 // modified Murmur64 hash

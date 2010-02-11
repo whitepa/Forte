@@ -4,6 +4,8 @@
 #include "XMLDoc.h"
 #include "LogManager.h"
 
+using namespace Forte;
+
 CMutex CXMLDoc::s_mutex;
 
 CXMLDoc::CXMLDoc()

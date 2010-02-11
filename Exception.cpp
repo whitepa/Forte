@@ -1,9 +1,5 @@
 // Exception.cpp
-#include "Types.h"
-#include "Exception.h"
-#include "FTrace.h"
-#include "LogManager.h"
-#include "ProcRunner.h"
+#include "Forte.h"
 #include <sys/types.h>
 #include <unistd.h>
 

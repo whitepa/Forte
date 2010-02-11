@@ -3,11 +3,12 @@
 #define __forte_guid_h__
 
 #include "FString.h"
-
-class GUID
+namespace Forte
 {
-public:
-    static FString GenerateGUID(bool pathSafe = false);
+    class GUID
+    {
+    public:
+        static FString GenerateGUID(bool pathSafe = false);
+    };
 };
-
 #endif

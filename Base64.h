@@ -4,13 +4,15 @@
 #include "FString.h"
 #include "Exception.h"
 
-EXCEPTION_SUBCLASS(CForteException, CForteBase64Exception);
+namespace Forte
+{
+    EXCEPTION_SUBCLASS(CForteException, CForteBase64Exception);
 
-class CBase64 {
-public:
-    static int Encode(const char *data, int size, FString &out);
-    static int Decode(const char *in, FString &out);
+    class CBase64 {
+    public:
+        static int Encode(const char *data, int size, FString &out);
+        static int Decode(const char *in, FString &out);
+    };
 };
-
 
 #endif

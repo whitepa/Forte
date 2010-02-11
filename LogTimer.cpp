@@ -1,5 +1,5 @@
 // LogTimer.cpp
-#include "LogTimer.h"
+#include "Forte.h"
 
 
 CLogTimer::CLogTimer(int level, const FString& log_str) :

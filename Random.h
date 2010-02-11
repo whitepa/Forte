@@ -4,14 +4,16 @@
 
 #include "FString.h"
 
-EXCEPTION_SUBCLASS(CForteException, CForteRandomException);
-
-class Random
+namespace Forte
 {
-public:
-    static FString GetSecureRandomData(unsigned int length);
-    static FString GetRandomData(unsigned int length);
-    static unsigned int GetRandomUInt(void);
-};
+    EXCEPTION_SUBCLASS(CForteException, CForteRandomException);
 
+    class Random
+    {
+    public:
+        static FString GetSecureRandomData(unsigned int length);
+        static FString GetRandomData(unsigned int length);
+        static unsigned int GetRandomUInt(void);
+    };
+};
 #endif

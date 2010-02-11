@@ -17,13 +17,14 @@
 
 using namespace std;
 using namespace __gnu_cxx;
+namespace Forte {};
+using namespace Forte;
 
 #include "AutoFD.h"
 #include "AutoMutex.h"
 #include "Base64.h"
 #include "Callback.h"
 #include "ClusterLock.h"
-#include "ThreadCondition.h"
 
 #ifndef FORTE_NO_CURL
 #include "Curl.h"
@@ -81,6 +82,7 @@ using namespace __gnu_cxx;
 #include "ServiceConfig.h"
 #include "ServerMain.h"
 #include "Thread.h"
+#include "ThreadCondition.h"
 #include "ThreadKey.h"
 #include "Types.h"
 #include "Util.h"

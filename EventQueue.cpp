@@ -1,6 +1,4 @@
-#include "EventQueue.h"
-#include "AutoMutex.h"
-#include "Exception.h"
+#include "Forte.h"
 #define EVQ_MAX_DEPTH 65536
 
 CEventQueue::CEventQueue() :

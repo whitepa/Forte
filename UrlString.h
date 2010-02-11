@@ -2,18 +2,19 @@
 #define __url_string_h__
 
 #include "FString.h"
+namespace Forte
+{
+    class CUrlString {
+    public:
+        static FString & encode(FString &encoded, const FString &decoded);
+        static FString & decode(FString &decoded, const FString &encoded);
 
-class CUrlString {
-public:
-    static FString & encode(FString &encoded, const FString &decoded);
-    static FString & decode(FString &decoded, const FString &encoded);
+        // utilities:
+        static char charFromHexPair(char hi, char lo);
 
-    // utilities:
-    static char charFromHexPair(char hi, char lo);
-
-protected:
-    static FString sUnsafe;
+    protected:
+        static FString sUnsafe;
+    };
 };
-
 
 #endif

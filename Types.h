@@ -3,13 +3,13 @@
 
 // macros
 /*
-#ifndef test_virt
-#  ifdef QA
-#    define test_virt virtual
-#  else
-#    define test_virt
-#  endif
-#endif
+  #ifndef test_virt
+  #  ifdef QA
+  #    define test_virt virtual
+  #  else
+  #    define test_virt
+  #  endif
+  #endif
 */
 
 //TODO: determine if we can define something virtual for unit testing only
@@ -43,14 +43,16 @@ struct eqstr
 };
 
 // types
-typedef vector<unsigned> UIntVector;
-typedef set<unsigned> UIntSet;
-typedef hash_map<FString, FString, hash<const char *>, eqstr> StringHashMap;
-typedef vector<FString> StrList;
-typedef map<FString, FString> StrStrMap;
-typedef map<FString, int> StrIntMap;
-typedef set<FString> FStringSet;
-typedef vector<FString> FStringVector;
-
+namespace Forte
+{
+    typedef vector<unsigned> UIntVector;
+    typedef set<unsigned> UIntSet;
+    typedef hash_map<FString, FString, hash<const char *>, eqstr> StringHashMap;
+    typedef vector<FString> StrList;
+    typedef map<FString, FString> StrStrMap;
+    typedef map<FString, int> StrIntMap;
+    typedef set<FString> FStringSet;
+    typedef vector<FString> FStringVector;
+};
 
 #endif

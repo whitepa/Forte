@@ -5,27 +5,28 @@
 
 #include "Exception.h"
 #include "FString.h"
-
-class CDbException : public CException
+namespace Forte
 {
-public:
-    CDbException(const char* description=NULL, unsigned int dbErrno = 0,
-                 const char *sql=NULL);
-    CDbException(const CDbException& other);
-    virtual ~CDbException() throw();
+    class CDbException : public CException
+    {
+    public:
+        CDbException(const char* description=NULL, unsigned int dbErrno = 0,
+                     const char *sql=NULL);
+        CDbException(const CDbException& other);
+        virtual ~CDbException() throw();
 
-    unsigned int mDbErrno;
-    FString mSQL;
+        unsigned int mDbErrno;
+        FString mSQL;
+    };
+
+    class CDbTempErrorException : public CDbException
+    {
+    public:
+        CDbTempErrorException(const char* description=NULL, unsigned int dbErrno = 0,
+                              const char *sql=NULL);
+        CDbTempErrorException(const CDbException& other);
+        virtual ~CDbTempErrorException() throw();
+    };
 };
-
-class CDbTempErrorException : public CDbException
-{
-public:
-    CDbTempErrorException(const char* description=NULL, unsigned int dbErrno = 0,
-                          const char *sql=NULL);
-    CDbTempErrorException(const CDbException& other);
-    virtual ~CDbTempErrorException() throw();
-};
-
 #endif
 #endif

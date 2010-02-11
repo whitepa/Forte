@@ -19,6 +19,8 @@
 #include <dirent.h>
 #include <fcntl.h>
 
+using namespace Forte;
+
 // class data
 ProcRunner* ProcRunner::s_singleton = NULL;
 CMutex ProcRunner::s_mutex;

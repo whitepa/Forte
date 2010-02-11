@@ -3,17 +3,18 @@
 
 #include "LogManager.h"
 #include <sys/time.h>
-
-class CLogTimer
+namespace Forte
 {
-public:
-    CLogTimer(int level, const FString& log_str);
-    ~CLogTimer();
+    class CLogTimer
+    {
+    public:
+        CLogTimer(int level, const FString& log_str);
+        ~CLogTimer();
 
-protected:
-    int m_level;
-    FString m_log_str;
-    struct timeval m_start, m_end;
+    protected:
+        int m_level;
+        FString m_log_str;
+        struct timeval m_start, m_end;
+    };
 };
-
 #endif

@@ -32,7 +32,7 @@
 
 #include <cstdlib>
 #include "FString.h"
-
+using namespace Forte;
 /* POINTER defines a generic pointer type */
 typedef unsigned char *POINTER;
 
@@ -62,38 +62,40 @@ void MD5Init PROTO_LIST ((MD5_CTX *));
 void MD5Update PROTO_LIST ((MD5_CTX *, unsigned char *, unsigned int));
 void MD5Final PROTO_LIST ((unsigned char [16], MD5_CTX *));
 
-class MD5
+namespace Forte
 {
+    class MD5
+    {
 // data members
-public:
-    unsigned char md5[16];
+    public:
+        unsigned char md5[16];
 
-protected:
-    MD5_CTX m_ctx;
+    protected:
+        MD5_CTX m_ctx;
 
 // ctor/dtor
-public:
-    MD5() { Init(); memset(md5, 0, 16); }
-    MD5(unsigned char m[16]) { Init(); memcpy(md5, m, 16); }
-    MD5(const MD5& other) { Init(); *this = other; }
-    MD5(const FString& str) { Init(); *this = str; }
+    public:
+        MD5() { Init(); memset(md5, 0, 16); }
+        MD5(unsigned char m[16]) { Init(); memcpy(md5, m, 16); }
+        MD5(const MD5& other) { Init(); *this = other; }
+        MD5(const FString& str) { Init(); *this = str; }
 
 // operations
-public:
-    inline void Init() { MD5Init(&m_ctx); }
-    inline void Update(const void *data, unsigned size) { MD5Update(&m_ctx, (unsigned char*)data, size); }
-    inline void Final() { MD5Final(md5, &m_ctx); }
-    MD5& operator=(const MD5& other)
-    {
-        memcpy(md5, other.md5, 16);
-        memcpy(&m_ctx, &other.m_ctx, sizeof(m_ctx));
-        return *this;
-    }
-    MD5& operator=(const FString& str) { return *this = AtoMD5(str); }
-    operator FString() const { return MD5toA(*this); }
-    static MD5 AtoMD5(const FString& str);
-    static FString MD5toA(const MD5& md5);
-    bool operator==(const MD5& other) const { return memcmp(md5, other.md5, 16) == 0; }
+    public:
+        inline void Init() { MD5Init(&m_ctx); }
+        inline void Update(const void *data, unsigned size) { MD5Update(&m_ctx, (unsigned char*)data, size); }
+        inline void Final() { MD5Final(md5, &m_ctx); }
+        MD5& operator=(const MD5& other)
+            {
+                memcpy(md5, other.md5, 16);
+                memcpy(&m_ctx, &other.m_ctx, sizeof(m_ctx));
+                return *this;
+            }
+        MD5& operator=(const FString& str) { return *this = AtoMD5(str); }
+        operator FString() const { return MD5toA(*this); }
+        static MD5 AtoMD5(const FString& str);
+        static FString MD5toA(const MD5& md5);
+        bool operator==(const MD5& other) const { return memcmp(md5, other.md5, 16) == 0; }
+    };
 };
-
 #endif

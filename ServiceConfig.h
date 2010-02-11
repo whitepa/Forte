@@ -3,24 +3,25 @@
 
 #include "Types.h"
 #include "AutoMutex.h"
+namespace Forte
+{
+    class CServiceConfig {
+    public:
+        CServiceConfig();
+        CServiceConfig(const char *configFile);
 
-class CServiceConfig {
-public:
-    CServiceConfig();
-    CServiceConfig(const char *configFile);
+        void ReadConfigFile(const char *configFile);
 
-    void ReadConfigFile(const char *configFile);
+        void Set(const char *key, const char *value);
+        FString Get(const char *key);
+        int GetInteger(const char *key);
+        void Display(void);
+        void Clear();
 
-    void Set(const char *key, const char *value);
-    FString Get(const char *key);
-    int GetInteger(const char *key);
-    void Display(void);
-    void Clear();
+    protected:
 
-protected:
-
-    CMutex mMutex;
-    StringHashMap mConfig;
+        CMutex mMutex;
+        StringHashMap mConfig;
+    };
 };
-
 #endif

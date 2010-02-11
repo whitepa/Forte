@@ -18,54 +18,55 @@
 
 // Subsystems 0 - 255 are reserved by forte library
 #define EO_SUBSYS_SERVER        0
+namespace Forte
+{
+    EXCEPTION_SUBCLASS(CForteException, CForteEventObserverException);
+    EXCEPTION_SUBCLASS(CForteEventObserverException, CBadObserverException);
 
-EXCEPTION_SUBCLASS(CForteException, CForteEventObserverException);
-EXCEPTION_SUBCLASS(CForteEventObserverException, CBadObserverException);
+    class CEventObserver {
+        friend class CObserverThread;
+    public:
+        CEventObserver() {};
+        CEventObserver(unsigned int subsysID,
+                       unsigned int typeMask, CCallback *callback) :
+            mSubsysID(subsysID), mTypeMask(typeMask), mCallback(callback) {};
+        virtual ~CEventObserver() {};
+        static void broadcastEvent(CObservableEvent *event);
+        static void broadcastEvent(unsigned int subsysID, 
+                                   unsigned int eventType, 
+                                   const char *eventData);
 
-class CEventObserver {
-    friend class CObserverThread;
-public:
-    CEventObserver() {};
-    CEventObserver(unsigned int subsysID,
-                   unsigned int typeMask, CCallback *callback) :
-        mSubsysID(subsysID), mTypeMask(typeMask), mCallback(callback) {};
-    virtual ~CEventObserver() {};
-    static void broadcastEvent(CObservableEvent *event);
-    static void broadcastEvent(unsigned int subsysID, 
-                               unsigned int eventType, 
-                               const char *eventData);
+        static void runEventCallbacks(CObservableEvent *event);
 
-    static void runEventCallbacks(CObservableEvent *event);
-
-    static unsigned int registerObserver(unsigned int subsysID,
-                                         unsigned int typeMask, 
-                                         CCallback *callback);
-    static void unregisterObserver(unsigned int observerID);
+        static unsigned int registerObserver(unsigned int subsysID,
+                                             unsigned int typeMask, 
+                                             CCallback *callback);
+        static void unregisterObserver(unsigned int observerID);
 
 
-protected:
-    static void startObserverThread(void);
-    static void stopObserverThread(void);
+    protected:
+        static void startObserverThread(void);
+        static void stopObserverThread(void);
 
-    static std::map<unsigned int, CEventObserver> sEventObservers;
-    static unsigned int sNextID;
-    static RWLock sLock;
-    static CEventQueue sQueue;
-    static CMutex sNotifyLock;
-    static CThreadCondition sNotify;
-    static CThread *sObserverThread;
+        static std::map<unsigned int, CEventObserver> sEventObservers;
+        static unsigned int sNextID;
+        static RWLock sLock;
+        static CEventQueue sQueue;
+        static CMutex sNotifyLock;
+        static CThreadCondition sNotify;
+        static CThread *sObserverThread;
 
-    unsigned int mSubsysID; // unsigned int identifying the desired subsystem
-    unsigned int mTypeMask; // bitmask flagging desired events
-    CCallback *mCallback; // method to call with event ptr
+        unsigned int mSubsysID; // unsigned int identifying the desired subsystem
+        unsigned int mTypeMask; // bitmask flagging desired events
+        CCallback *mCallback; // method to call with event ptr
+    };
+
+    class CObserverThread : public CThread {
+    public:
+        CObserverThread() { initialized(); }
+        virtual ~CObserverThread() {};
+    protected:
+        void *run(void);
+    };
 };
-
-class CObserverThread : public CThread {
-public:
-    CObserverThread() { initialized(); }
-    virtual ~CObserverThread() {};
-protected:
-    void *run(void);
-};
-
 #endif

@@ -8,39 +8,42 @@
 #include "Exception.h"
 #include <set>
 
+// TODO: remove this:
 volatile extern bool g_shutdown;
 
-EXCEPTION_SUBCLASS(CForteException, CForteServerMainException);
-
-class CServerMain
+namespace Forte
 {
-public:
-    CServerMain(int argc, char * const argv[], const char *getoptstr, const char *defaultConfig, bool daemonize = true);
-    virtual ~CServerMain();
+    EXCEPTION_SUBCLASS(CForteException, CForteServerMainException);
 
-    virtual void MainLoop();
-    virtual void Usage();
-    void WritePidFile();
-    void PrepareSigmask();
+    class CServerMain
+    {
+    public:
+        CServerMain(int argc, char * const argv[], const char *getoptstr, const char *defaultConfig, bool daemonize = true);
+        virtual ~CServerMain();
+
+        virtual void MainLoop();
+        virtual void Usage();
+        void WritePidFile();
+        void PrepareSigmask();
     
-    void RegisterShutdownCallback(CCallback *callback);
+        void RegisterShutdownCallback(CCallback *callback);
 
-    static CServerMain &GetServer();
-    static CServerMain *GetServerPtr();
+        static CServerMain &GetServer();
+        static CServerMain *GetServerPtr();
 
-    FString mHostname;
-    FString mConfigFile;
-    FString mLogFile;
-    FString mPidFile;
-    bool mDaemon;
-    CLogManager mLogManager;
-    CServiceConfig mServiceConfig;
-    CMutex mCallbackMutex;
-    std::set<CCallback*> mShutdownCallbacks;
-    sigset_t mSigmask;
-protected:
-    static CMutex sSingletonMutex;
-    static CServerMain* sSingletonPtr;
+        FString mHostname;
+        FString mConfigFile;
+        FString mLogFile;
+        FString mPidFile;
+        bool mDaemon;
+        CLogManager mLogManager;
+        CServiceConfig mServiceConfig;
+        CMutex mCallbackMutex;
+        std::set<CCallback*> mShutdownCallbacks;
+        sigset_t mSigmask;
+    protected:
+        static CMutex sSingletonMutex;
+        static CServerMain* sSingletonPtr;
+    };
 };
-
 #endif

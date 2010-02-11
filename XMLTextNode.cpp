@@ -3,6 +3,8 @@
 
 #include "XMLTextNode.h"
 
+using namespace Forte;
+
 CXMLTextNode::CXMLTextNode(const FString& name, const FString& text, xmlNodePtr parent) :
     CXMLNode()
 {

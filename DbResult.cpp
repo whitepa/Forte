@@ -1,8 +1,7 @@
 #ifndef FORTE_NO_DB
 
 // DbResult.cpp
-#include "DbResult.h"
-#include "DbException.h"
+#include "Forte.h"
 
 CDbResult::CDbResult()
 {
