@@ -1,0 +1,56 @@
+#ifndef __Types_h
+#define __Types_h
+
+// macros
+/*
+#ifndef test_virt
+#  ifdef QA
+#    define test_virt virtual
+#  else
+#    define test_virt
+#  endif
+#endif
+*/
+
+//TODO: determine if we can define something virtual for unit testing only
+#define test_virt virtual
+
+// for casting things in printf-like functions
+#define u64 unsigned long long int
+
+// includes
+#include <cstdlib>
+#include <cassert>
+#include <cmath>
+#include <vector>
+#include <list>
+#include <map>
+#include <set>
+#include <ext/hash_map>
+#include "FString.h"
+#include "Exception.h"
+
+// namespace
+using namespace std;
+using namespace __gnu_cxx;
+
+struct eqstr
+{
+    bool operator()(const char* s1, const char* s2) const
+        {
+            return strcmp(s1, s2) == 0;
+        }
+};
+
+// types
+typedef vector<unsigned> UIntVector;
+typedef set<unsigned> UIntSet;
+typedef hash_map<FString, FString, hash<const char *>, eqstr> StringHashMap;
+typedef vector<FString> StrList;
+typedef map<FString, FString> StrStrMap;
+typedef map<FString, int> StrIntMap;
+typedef set<FString> FStringSet;
+typedef vector<FString> FStringVector;
+
+
+#endif

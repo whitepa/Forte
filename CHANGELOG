@@ -1,0 +1,31 @@
+FORTE CHANGELOG
+
+1.0.1
+  Added 'install' target to Makefile.
+
+1.0.2
+  Fixed installation to include DbUtil.h
+
+1.0.3
+  Added mysql_num_rows() support as getNumRows
+  Added DbResult::seek()
+  Added foreach macro
+  Added a daemonize option to CServerMain
+  Log Manager now adds function name, file name, and line number to logs
+  Added ThreadKey class
+  Fixed a deadlock bug in the Log Manager
+  Improved time conversion error logging
+  Added FTrace class, allowing run-time stack traces
+  Added an extendedDescription() call to CException class, which prints a stack trace of where the exception was generated.
+  Added capability for runtime control of database query logging (per connection)
+  Fixed multiple segfault bugs in the MySQL code
+  Vastly improved automatic database reconnection code for MySQL
+  Added profiling capabilities which can be activated at runtime
+  Added strip chars option to explode()
+  Added UIntSet and UIntVector constructors for FString
+  Added Raw APIs to XMLBlob (which do not strip control characters)
+
+1.0.4
+  Retry NULL MySQL results up to 3 times
+  Added CFunctorCallback
+  Disallow copy construction of CDbAutoConnection (prevents nasty bugs) 

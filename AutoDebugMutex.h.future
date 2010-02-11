@@ -1,0 +1,102 @@
+/////////////////////////TODO:///////////////////////////////
+// enable to achieve code compatability between DEBUG and RELEASE versions
+// of the codebase, we want to move away from these sorts of #ifdef
+// usages. we need to eventually make an AutoDebugMutex that logs, etc, 
+// doesn't slow down performance on CMutex and has the above mentioned
+// code compatability. no time to do it now though, but we are going
+// to go ahead and make the CMutex compatible
+
+
+#ifndef _AutoMutex_h
+#define _AutoMutex_h
+#include <pthread.h>
+#include <ctime>
+#include <sys/time.h>
+
+#if defined(XDEBUG) && !defined(XNDEBUG)
+#define HAVE_DEBUG_MUTEX
+#endif
+
+class CMutex {
+    friend class CCondition;
+public:
+    inline CMutex(const pthread_mutexattr_t *attr = NULL)
+    {
+        pthread_mutex_init(&m_pthread_mutex, attr);
+    }
+#ifndef HAVE_DEBUG_MUTEX
+    inline ~CMutex() {pthread_mutex_destroy(&m_pthread_mutex);}
+    inline int lock() {return pthread_mutex_lock(&m_pthread_mutex);}
+    inline int unlock() {return pthread_mutex_unlock(&m_pthread_mutex);}
+    inline int trylock() {return pthread_mutex_trylock(&m_pthread_mutex);}
+    inline int timedlock(const struct timespec& timeout)
+    {
+        struct timespec abs_time;
+        if (clock_gettime(CLOCK_REALTIME, &abs_time) != 0)
+        {
+            struct timeval now;
+            gettimeofday(&now, NULL);
+            abs_time.tv_sec = now.tv_sec;
+            abs_time.tv_nsec = now.tv_usec * 1000;
+        }
+        abs_time.tv_sec += timeout.tv_sec;
+        abs_time.tv_nsec += timeout.tv_nsec;
+        if (abs_time.tv_nsec > 1000000000)
+        {
+            abs_time.tv_sec++;
+            abs_time.tv_nsec -= 1000000000;
+        }
+        return pthread_mutex_timedlock(&m_pthread_mutex, &abs_time);
+    }
+#else
+    virtual ~CMutex();
+    virtual int lock();
+    virtual int unlock();
+    virtual int trylock();
+    virtual int timedlock(const struct timespec& timeout);
+#endif
+protected:
+    pthread_mutex_t m_pthread_mutex;
+};
+
+#ifdef HAVE_DEBUG_MUTEX
+class CDebugMutex : public CMutex
+{
+public:
+    CDebugMutex(const pthread_mutexattr_t *attr = NULL);
+    virtual ~CDebugMutex() { }
+    virtual int lock();
+    virtual int unlock();
+    virtual int trylock();
+    virtual int timedlock(const struct timespec& timeout);
+private:
+    CMutex m_attr_mutex;
+    pthread_t m_owner;
+};
+#endif
+
+class CAutoLockMutex {
+public:
+    inline CAutoLockMutex(CMutex &mutex):m_mutex(mutex) {m_mutex.unlock();}
+    inline ~CAutoLockMutex() {m_mutex.lock();}
+private:
+    CMutex &m_mutex;
+};
+
+class CAutoUnlockMutex {
+public:
+    inline CAutoUnlockMutex(CMutex &mutex):m_mutex(mutex) {m_mutex.lock();}
+    inline ~CAutoUnlockMutex() {m_mutex.unlock();}
+private:
+    CMutex &m_mutex;
+};
+
+class CAutoUnlockOnlyMutex {
+public:
+    inline CAutoUnlockOnlyMutex(CMutex &mutex):m_mutex(mutex) { }
+    inline ~CAutoUnlockOnlyMutex() { m_mutex.unlock(); }
+private:
+    CMutex &m_mutex;
+};
+
+#endif

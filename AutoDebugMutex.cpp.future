@@ -1,0 +1,197 @@
+#include "AutoMutex.h"
+#ifdef HAVE_DEBUG_MUTEX
+#include "Forte.h"
+
+// normal mutex
+CMutex::~CMutex()
+{
+    pthread_mutex_destroy(&m_pthread_mutex);
+}
+
+int CMutex::lock()
+{
+    return pthread_mutex_lock(&m_pthread_mutex);
+}
+
+int CMutex::unlock()
+{
+    return pthread_mutex_unlock(&m_pthread_mutex);
+}
+
+int CMutex::trylock()
+{
+    return pthread_mutex_trylock(&m_pthread_mutex);
+}
+
+int CMutex::timedlock(const struct timespec& timeout)
+{
+    struct timespec abs_time;
+
+    if (clock_gettime(CLOCK_REALTIME, &abs_time) != 0)
+    {
+        struct timeval now;
+        gettimeofday(&now, NULL);
+        abs_time.tv_sec = now.tv_sec;
+        abs_time.tv_nsec = now.tv_usec * 1000;
+    }
+
+    abs_time.tv_sec += timeout.tv_sec;
+    abs_time.tv_nsec += timeout.tv_nsec;
+
+    if (abs_time.tv_nsec > 1000000000)
+    {
+        abs_time.tv_sec++;
+        abs_time.tv_nsec -= 1000000000;
+    }
+
+    return pthread_mutex_timedlock(&m_pthread_mutex, &abs_time);
+}
+
+
+// DEBUG mutex
+CDebugMutex::CDebugMutex(const pthread_mutexattr_t *attr)
+:
+    CMutex(attr)
+{
+    pthread_mutexattr_t dbg_attr;
+    int type = PTHREAD_MUTEX_ERRORCHECK;
+
+    pthread_mutexattr_init(&dbg_attr);
+
+    if (attr != NULL)
+    {
+        pthread_mutexattr_gettype(attr, &type);
+        if (type != PTHREAD_MUTEX_RECURSIVE) type = PTHREAD_MUTEX_ERRORCHECK;
+    }
+
+    pthread_mutexattr_settype(&dbg_attr, type);
+    pthread_mutex_destroy(&m_pthread_mutex);
+    pthread_mutex_init(&m_pthread_mutex, attr);
+    pthread_mutexattr_destroy(&dbg_attr);
+}
+
+
+int CDebugMutex::lock()
+{
+    // attempt to acquire lock
+    int ret = pthread_mutex_trylock(&m_pthread_mutex);
+
+    // log info
+    m_attr_mutex.lock();
+    switch (ret)
+    {
+    case 0:
+        m_owner = pthread_self();
+        hlog(HLOG_DEBUG4, "lock(): mutex %p locked", &m_pthread_mutex);
+        break;
+    case EBUSY:
+        // sometimes 0 if the lock owner hasn't had a chance to update m_owner
+        hlog(HLOG_DEBUG4, "lock(): mutex %p is already locked by thread %u",
+             &m_pthread_mutex, (unsigned)m_owner);
+        break;
+    case EDEADLK:
+        hlog(HLOG_CRIT, "lock(): re-locking mutex %p would result in deadlock!", &m_pthread_mutex);
+        break;
+    default:
+        hlog(HLOG_CRIT, "lock(): locking mutex %p produced error %d!", &m_pthread_mutex, ret);
+        break;
+    }
+    m_attr_mutex.unlock();
+
+    // no lock?
+    if (ret == EBUSY)
+    {
+        ret = pthread_mutex_lock(&m_pthread_mutex);
+        m_attr_mutex.lock();
+        m_owner = pthread_self();
+        m_attr_mutex.unlock();
+    }
+
+    // done
+    return ret;
+}
+
+int CDebugMutex::unlock()
+{
+    m_attr_mutex.lock();
+    m_owner = 0;
+    m_attr_mutex.unlock();
+    hlog(HLOG_DEBUG4, "mutex %p unlocked", &m_pthread_mutex);
+    return pthread_mutex_unlock(&m_pthread_mutex);
+}
+
+int CDebugMutex::trylock()
+{
+    int ret = pthread_mutex_trylock(&m_pthread_mutex);
+
+    // log info
+    m_attr_mutex.lock();
+    switch (ret)
+    {
+    case 0:
+        m_owner = pthread_self();
+        hlog(HLOG_DEBUG4, "trylock(): mutex %p locked", &m_pthread_mutex);
+        break;
+    case EBUSY:
+        hlog(HLOG_DEBUG4, "trylock(): mutex %p is already locked by thread %u",
+             &m_pthread_mutex, (unsigned)m_owner);
+        break;
+    case EDEADLK:
+        hlog(HLOG_DEBUG4, "trylock(): re-locking mutex %p would result in deadlock",
+             &m_pthread_mutex);
+        break;
+    default:
+        hlog(HLOG_CRIT, "trylock() on mutex %p produced error %d!", &m_pthread_mutex, ret);
+        break;
+    }
+    m_attr_mutex.unlock();
+
+    return ret;
+}
+
+int CDebugMutex::timedlock(const struct timespec& timeout)
+{
+    struct timespec abs_time;
+    int ret;
+
+    if (clock_gettime(CLOCK_REALTIME, &abs_time) != 0)
+    {
+        struct timeval now;
+        gettimeofday(&now, NULL);
+        abs_time.tv_sec = now.tv_sec;
+        abs_time.tv_nsec = now.tv_usec * 1000;
+    }
+
+    abs_time.tv_sec += timeout.tv_sec;
+    abs_time.tv_nsec += timeout.tv_nsec;
+
+    if (abs_time.tv_nsec > 1000000000)
+    {
+        abs_time.tv_sec++;
+        abs_time.tv_nsec -= 1000000000;
+    }
+
+    ret = pthread_mutex_timedlock(&m_pthread_mutex, &abs_time);
+
+    // log info
+    m_attr_mutex.lock();
+    switch (ret)
+    {
+    case 0:
+        m_owner = pthread_self();
+        hlog(HLOG_DEBUG4, "timedlock(): mutex %p locked", &m_pthread_mutex);
+        break;
+    case ETIMEDOUT:
+        hlog(HLOG_DEBUG4, "timedlock(): mutex %p timed out waiting for thread %u",
+             &m_pthread_mutex, (unsigned)m_owner);
+        break;
+    default:
+        hlog(HLOG_CRIT, "timedlock() on mutex %p produced error %d!", &m_pthread_mutex, ret);
+        break;
+    };
+    m_attr_mutex.unlock();
+
+    return ret;
+}
+
+#endif // HAVE_DEBUG_MUTEX
