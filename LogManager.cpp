@@ -37,6 +37,9 @@ FString CLogfile::getLevelStr(int level)
 
     switch (level & HLOG_ALL)
     {
+    case HLOG_TRACE:
+        levelstr = "TRCE";
+        break;
     case HLOG_DEBUG4:
     case HLOG_DEBUG3:
     case HLOG_DEBUG2:
@@ -546,7 +549,7 @@ static const char *levelstr[] =
     "8",
     "9",
     "10",
-    "11",
+    "TRACE",
     "DEBUG4",
     "DEBUG3",
     "DEBUG2",

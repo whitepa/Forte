@@ -24,7 +24,10 @@ using namespace Forte;
 #include "AutoMutex.h"
 #include "Base64.h"
 #include "Callback.h"
+#include "CheckedInt32.h"
+#include "CheckedStringEnum.h"
 #include "ClusterLock.h"
+#include "Config.h"
 
 #ifndef FORTE_NO_CURL
 #include "Curl.h"

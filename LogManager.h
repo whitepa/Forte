@@ -15,6 +15,7 @@
 #include <syslog.h>
 #include <stdarg.h>
 
+#define HLOG_TRACE       0x00000800
 #define HLOG_DEBUG4      0x00001000
 #define HLOG_DEBUG3      0x00002000
 #define HLOG_DEBUG2      0x00004000
@@ -27,10 +28,10 @@
 #define HLOG_CRIT        0x00200000
 #define HLOG_ALERT       0x00400000
 #define HLOG_EMERG       0x00800000
-#define HLOG_ALL         0x00FFF000
+#define HLOG_ALL         0x00FFFFFF
 #define HLOG_NODEBUG     0x00FE0000
 
-#define HLOG_MIN         HLOG_DEBUG4
+#define HLOG_MIN         HLOG_TRACE
 #define HLOG_MAX         HLOG_EMERG
 #define HLOG_WARNING     HLOG_WARN
 #define HLOG_ERROR       HLOG_ERR

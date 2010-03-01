@@ -2,6 +2,7 @@
 #define __forte_Trace_h__
 
 #include "ThreadKey.h"
+#include "LogManager.h"
 #include <list>
 #include <map>
 
@@ -63,5 +64,25 @@ namespace Forte
         static CThreadKey sTraceKey;
         static FTrace *sInstance;
     };
+
+    class FunctionEntry
+    {
+    public:
+        FunctionEntry(const char *functionName) : mFN(functionName) {
+            hlog(HLOG_DEBUG, "ENTER %s", mFN.c_str());
+        }
+        virtual ~FunctionEntry() {
+            hlog(HLOG_DEBUG, "EXIT %s", mFN.c_str());
+        }
+    protected:
+        FString mFN;
+    };
 };
+
+//#ifdef FORTE_FUNCTION_TRACING
+#define FTRACE Forte::FunctionEntry _forte_trace_object(__FUNCTION__)
+//#else
+//#define FTRACE
+//#endif
+    
 #endif

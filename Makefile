@@ -14,10 +14,11 @@ HEADER_INSTALL_PATH = $(PREFIX)/include
 LIB_INSTALL_PATH = $(PREFIX)/lib
 
 INCLUDE = $(DB_INCLUDE) $(XML_INCLUDE) $(BOOST_INCLUDE) -I.
-CCARGS += -Wall
+CCARGS += -Wall -DFORTE_FUNCTION_TRACING
 SRCS =	\
 	AutoMutex.cpp \
 	Base64.cpp \
+	CheckedValue.cpp \
 	ClusterLock.cpp \
 	Curl.cpp \
 	DaemonUtil.cpp \
