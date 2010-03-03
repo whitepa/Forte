@@ -27,7 +27,8 @@ using namespace Forte;
 #include "CheckedInt32.h"
 #include "CheckedStringEnum.h"
 #include "ClusterLock.h"
-#include "Config.h"
+//#include "Config.h"
+#include "Context.h"
 
 #ifndef FORTE_NO_CURL
 #include "Curl.h"

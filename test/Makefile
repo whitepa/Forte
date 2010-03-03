@@ -10,9 +10,6 @@ BUILDROOT:=$(shell echo 'while [ ! -d re ]; do cd ..; done; pwd' | sh)
 include $(BUILDROOT)/re/make/head.mk
 $(make-targetdir)
 
-ifdef DEBUG
-CCARGS += -DDEBUG_LOG_ON
-endif
 CCARGS += -Wall -ggdb
 
 INCLUDE = \
