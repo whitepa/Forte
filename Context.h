@@ -69,7 +69,6 @@ namespace Forte
          * from the Context.  If the object does not exists, one can
          * be automatically created using an appropriate factory.
          **/
-        template <typename ValueType>
         ObjectPtr Get(const char *key) const {
             ObjectMap::const_iterator i;
             if ((i = mObjectMap.find(key)) == mObjectMap.end())

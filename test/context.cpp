@@ -49,10 +49,10 @@ BOOST_AUTO_TEST_CASE ( context_test1 )
     c.Set("testobject", new TestClass());
     BOOST_CHECK(TestClass::mCount == 1);
     {
-        Forte::Context::ObjectPtr o(c.Get<TestClass>("testobject"));
+        Forte::Context::ObjectPtr oPtr(c.Get("testobject"));
+        TestClass &tc(CAST(TestClass, oPtr));
         c.Remove("testobject");
-        BOOST_CHECK( CAST(TestClass, o).getCount() == 1 );
-        BOOST_CHECK( TestClass::mCount == 1 );
+        BOOST_CHECK( tc.getCount() == 1 );
     }
     BOOST_CHECK(TestClass::mCount == 0);
 }
