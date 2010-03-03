@@ -5,7 +5,7 @@
 #include "AutoMutex.h"
 namespace Forte
 {
-    class CServiceConfig {
+    class CServiceConfig : public Object {
     public:
         CServiceConfig();
         CServiceConfig(const char *configFile);

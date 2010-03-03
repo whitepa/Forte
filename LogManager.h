@@ -10,6 +10,7 @@
 #include <arpa/inet.h>
 #include "AutoMutex.h"
 #include "Exception.h"
+#include "Object.h"
 #include "Thread.h"
 #include "ThreadKey.h"
 #include <syslog.h>
@@ -41,7 +42,7 @@ namespace Forte
 {
     EXCEPTION_SUBCLASS(CForteException, CForteLogException);
 
-    class CLogMsg {
+    class CLogMsg : public Object {
     public:
         CLogMsg();
         struct timeval mTime;
@@ -56,7 +57,7 @@ namespace Forte
         FString mMsg;
     };
 
-    class CLogFilter {
+    class CLogFilter : public Object {
     public:
         CLogFilter(const FString sourceFile, int mask) :
             mSourceFile(sourceFile), mMask(mask), mMode(0) {};
@@ -65,7 +66,7 @@ namespace Forte
         int mMode; ///< FUTURE USE:  include (only) / exclude
     };
 
-    class CLogfile {
+    class CLogfile : public Object {
     public:
         CLogfile(const FString &path, std::ostream *stream,
                  unsigned logMask = HLOG_ALL, bool delStream = false);
@@ -102,7 +103,7 @@ namespace Forte
     };
 
     class CLogManager;
-    class CLogContext {
+    class CLogContext : public Object {
     public:
         CLogContext(); // push onto the stack
         virtual ~CLogContext();        // pop from the stack
@@ -116,7 +117,7 @@ namespace Forte
         CLogManager *mLogMgrPtr;
     };
 
-    class CLogContextStack {
+    class CLogContextStack : public Object {
     public:
         CLogContextStack() {};
         ~CLogContextStack() {};
@@ -124,7 +125,7 @@ namespace Forte
         std::vector<CLogContext*> mStack;
     };
 
-    class CLogThreadInfo {
+    class CLogThreadInfo : public Object {
         friend class CLogManager;
     public:
         CLogThreadInfo(CLogManager &mgr, CThread &thr);
@@ -135,7 +136,7 @@ namespace Forte
         CThread &mThread;
     };
 
-    class CLogManager {
+    class CLogManager : public Object {
         friend class CLogContext;
         friend class CLogThreadInfo;
     public:

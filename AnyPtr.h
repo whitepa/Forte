@@ -66,6 +66,17 @@ namespace Forte
             return *static_cast<ValueType*>(m_a);
         }
 
+        template<typename ValueType>
+        ValueType& RefCast2() {
+            if (!m_a)
+                throw EInvalidReference();
+            ValueType *vtPtr = dynamic_cast<ValueType*>(m_a);
+            if (vtPtr == NULL)
+                throw ETypeMismatch();
+            else
+                return *vtPtr;
+        }
+
         // Function table type
         // order is important, must match all other lists of functions
         struct table {

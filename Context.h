@@ -1,24 +1,14 @@
 #ifndef __Forte__Context_h__
 #define __Forte__Context_h__
 
-#include "AnyPtr.h"
+#include "Object.h"
 #include <boost/shared_ptr.hpp>
-
-/**
- * TODO: This CAST() macro is currently needed to convert the
- * ObjectPtr type (a shared_ptr<AnyPtr>) into whatever type is
- * actually needed.  If there is a way to return a shared_ptr to the
- * specific type while updating the correct reference count (currently
- * in the shared_ptr<AnyPtr> stored within this Context) then that
- * method should be used.  This will probably require a shared_any_ptr
- * type.
- **/
-#define CAST(type, arg) ((*arg).RefCast<type>())
 
 namespace Forte
 {
     EXCEPTION_CLASS(EContext);
     EXCEPTION_SUBCLASS(EContext, EInvalidKey);
+    EXCEPTION_SUBCLASS(EContext, EContextTypeMismatch);
 
     /**
      * This class implements a 'context' which may be passed into
@@ -40,8 +30,6 @@ namespace Forte
         Context(const Context &other) { throw EUnimplemented(); }
         virtual ~Context() {};
 
-        typedef boost::shared_ptr<AnyPtr> ObjectPtr;
-
         /**
          * Copy() makes a copy of the requested object, to which any
          * future Get() calls to this context will reference.  
@@ -61,7 +49,10 @@ namespace Forte
             if ((i = mObjectMap.find(key)) == mObjectMap.end())
                 // TODO: use a factory to create one?
                 throw EInvalidKey();
-            return (*((*i).second)).RefCast<ValueType>();
+            shared_ptr<ValueType> ptr(dynamic_pointer_cast<ValueType>((*i).second));
+            if (!ptr)
+                throw EContextTypeMismatch(); // TODO: include types in error message
+            return *ptr;
         }
 
         /**
@@ -82,7 +73,7 @@ namespace Forte
          **/
         template<typename ValueType>
         void Set(const char *key, ValueType *ref) {
-            mObjectMap[key] = shared_ptr<AnyPtr>(new AnyPtr(ref));
+            mObjectMap[key] = ObjectPtr(ref);
         }
 
         /**
@@ -108,7 +99,6 @@ namespace Forte
          * no such thing exists (yet), so we use shared_ptr<AnyPtr>.
          **/
     protected:
-        typedef std::map<FString, ObjectPtr> ObjectMap;
         ObjectMap mObjectMap;
     };
 };

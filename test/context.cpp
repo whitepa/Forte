@@ -7,12 +7,20 @@ struct ContextFixture {
     Forte::Context c;
 };
 
-class TestClass {
+class TestClass : public Forte::Object {
 public:
     TestClass() { ++mCount; }
     virtual ~TestClass() { --mCount; }
     int getCount(void) { return mCount; }
+    virtual bool isDerived(void) { return false; }
     static int mCount;
+};
+
+class TestClassDerived : public TestClass {
+public:
+    TestClassDerived() {};
+    virtual ~TestClassDerived() {};
+    virtual bool isDerived(void) { return true; }
 };
 int TestClass::mCount = 0;
 
@@ -31,7 +39,7 @@ BOOST_AUTO_TEST_CASE ( context_test1 )
     BOOST_CHECK_THROW(c.GetRef<CServiceConfig>("forte.config.fail"), EInvalidKey);
 
     // verify type mismatch throws
-    BOOST_CHECK_THROW(c.GetRef<CLogManager>("forte.config"), ETypeMismatch);
+    BOOST_CHECK_THROW(c.GetRef<CLogManager>("forte.config"), EContextTypeMismatch);
 
     {
         CServiceConfig &cfg(c.GetRef<CServiceConfig>("forte.config"));
@@ -49,10 +57,27 @@ BOOST_AUTO_TEST_CASE ( context_test1 )
     c.Set("testobject", new TestClass());
     BOOST_CHECK(TestClass::mCount == 1);
     {
-        Forte::Context::ObjectPtr oPtr(c.Get("testobject"));
-        TestClass &tc(CAST(TestClass, oPtr));
+        Forte::ObjectPtr oPtr(c.Get("testobject"));
+        shared_ptr<TestClass> tcPtr(dynamic_pointer_cast<TestClass>(oPtr));
+        BOOST_CHECK( tcPtr->getCount() == 1 );
+        BOOST_CHECK( tcPtr->isDerived() == false );
         c.Remove("testobject");
-        BOOST_CHECK( tc.getCount() == 1 );
+        BOOST_CHECK( TestClass::mCount == 1 );
+    }
+    BOOST_CHECK(TestClass::mCount == 0);
+
+    // test object replacement and up-casting:
+    c.Set("testobject", new TestClass());
+    BOOST_CHECK( TestClass::mCount == 1 );
+    c.Set("testobject", new TestClassDerived());
+    BOOST_CHECK( TestClass::mCount == 1 );
+    {
+        Forte::ObjectPtr oPtr(c.Get("testobject"));
+        shared_ptr<TestClass> tcPtr(dynamic_pointer_cast<TestClass>(oPtr));
+        BOOST_CHECK( tcPtr->getCount() == 1 );
+        BOOST_CHECK( tcPtr->isDerived() == true );
+        c.Remove("testobject");
+        BOOST_CHECK( TestClass::mCount == 1 );
     }
     BOOST_CHECK(TestClass::mCount == 0);
 }

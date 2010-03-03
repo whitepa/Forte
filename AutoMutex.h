@@ -3,10 +3,11 @@
 #include <pthread.h>
 #include <ctime>
 #include <sys/time.h>
+#include "Object.h"
 
 namespace Forte
 {
-    class CMutex {
+    class CMutex : public Object {
         friend class CThreadCondition;
     public:
         inline CMutex(const pthread_mutexattr_t *attr = NULL)
@@ -40,7 +41,7 @@ namespace Forte
         pthread_mutex_t m_pthread_mutex;
     };
 
-    class CAutoLockMutex {
+    class CAutoLockMutex : public Object {
     public:
         inline CAutoLockMutex(CMutex &mutex):m_mutex(mutex) {m_mutex.unlock();}
         inline ~CAutoLockMutex() {m_mutex.lock();}
@@ -48,7 +49,7 @@ namespace Forte
         CMutex &m_mutex;
     };
 
-    class CAutoUnlockMutex {
+    class CAutoUnlockMutex : public Object {
     public:
         inline CAutoUnlockMutex(CMutex &mutex):m_mutex(mutex) {m_mutex.lock();}
         inline ~CAutoUnlockMutex() {m_mutex.unlock();}
@@ -56,7 +57,7 @@ namespace Forte
         CMutex &m_mutex;
     };
 
-    class CAutoUnlockOnlyMutex {
+    class CAutoUnlockOnlyMutex : public Object {
     public:
         inline CAutoUnlockOnlyMutex(CMutex &mutex):m_mutex(mutex) { }
         inline ~CAutoUnlockOnlyMutex() { m_mutex.unlock(); }

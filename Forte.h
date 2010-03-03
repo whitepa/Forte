@@ -20,6 +20,8 @@ using namespace __gnu_cxx;
 namespace Forte {};
 using namespace Forte;
 
+#include "Object.h"
+
 #include "AutoFD.h"
 #include "AutoMutex.h"
 #include "Base64.h"
