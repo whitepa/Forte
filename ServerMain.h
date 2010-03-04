@@ -15,7 +15,7 @@ namespace Forte
 {
     EXCEPTION_SUBCLASS(CForteException, CForteServerMainException);
 
-    class CServerMain
+    class CServerMain : public Object
     {
     public:
         CServerMain(int argc, char * const argv[], const char *getoptstr, const char *defaultConfig, bool daemonize = true);

@@ -8,7 +8,7 @@
 
 namespace Forte
 {
-    class CDbResult
+    class CDbResult : public Object
     {
     protected:
         // types

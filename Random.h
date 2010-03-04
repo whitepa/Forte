@@ -8,7 +8,7 @@ namespace Forte
 {
     EXCEPTION_SUBCLASS(CForteException, CForteRandomException);
 
-    class Random
+    class Random : public Object
     {
     public:
         static FString GetSecureRandomData(unsigned int length);

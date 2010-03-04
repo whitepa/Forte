@@ -9,7 +9,7 @@
 #include "FString.h"
 namespace Forte
 {
-    class CEvent {
+    class CEvent : public Object {
     public:
         CEvent() {};
         CEvent(unsigned int userTypeInfo) : mUserTypeInfo(userTypeInfo) {};

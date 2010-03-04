@@ -6,11 +6,12 @@
 #include "DbConnection.h"
 #include "DbConnectionPool.h"
 #include "LogManager.h"
+#include "Object.h"
 
 namespace Forte
 {
 // Auto helper to get and release a database connection.
-    class CDbAutoConnection {
+    class CDbAutoConnection : public Object {
     public:
         CDbAutoConnection(bool autocommit = true)
             : mPool(CDbConnectionPool::GetInstance()), mDbConnection(mPool.GetDbConnection())

@@ -16,7 +16,7 @@ namespace Forte
     EXCEPTION_SUBCLASS(CForteException, CForteThreadPoolDispatcherException);
 
     class CDispatcherThread;
-    class CDispatcher
+    class CDispatcher : public Object
     {
     public:
         CDispatcher();

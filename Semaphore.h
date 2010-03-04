@@ -2,14 +2,17 @@
 #define __Semaphore_h
 
 #include <errno.h>
+#include "Object.h"
 #include "AutoMutex.h"
 #include "ThreadCondition.h"
 namespace Forte
 {
-    class CSemaphore
+    class CSemaphore : public Object
     {
     public:
         inline CSemaphore(int value) : mValue(value), mNotify(mLock) {};
+        virtual ~CSemaphore() {};
+
         inline int post(void) {
             CAutoUnlockMutex lock(mLock);
             if (++mValue > 0)

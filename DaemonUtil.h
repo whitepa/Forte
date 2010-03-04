@@ -1,11 +1,13 @@
 #ifndef __forte_daemon_util_h_
 #define __forte_daemon_util_h_
 
+#include "Object.h"
+
 namespace Forte
 {
     EXCEPTION_SUBCLASS2(CForteException, CForkFailedException, "fork() failed");
 
-    class CDaemonUtil
+    class CDaemonUtil : public Object
     {
     public:
         /// Daemonize will correctly place your process in the background,

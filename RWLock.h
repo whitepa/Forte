@@ -4,16 +4,17 @@
 
 #include <pthread.h>
 #include "FString.h"
+#include "Object.h"
 #include "./Semaphore.h"
 #include "./Exception.h"
 
 namespace Forte
 {
-    class RWLock
+    class RWLock : public Object
     {
     public:
         RWLock();
-        ~RWLock() { }
+        virtual ~RWLock() { }
 
     public:
         void _write_lock(const char *file, unsigned line);

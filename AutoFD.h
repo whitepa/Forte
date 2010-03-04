@@ -8,7 +8,7 @@
 
 namespace Forte
 {
-    class AutoFD
+    class AutoFD : public Object
     {
     public:
         static const int NONE = -1;

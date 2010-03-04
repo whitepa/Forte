@@ -8,7 +8,7 @@
 #include "DbException.h"
 namespace Forte
 {
-    class CDbConnection
+    class CDbConnection : public Object
     {
     public:
         CDbConnection();

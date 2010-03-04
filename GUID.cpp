@@ -1,7 +1,7 @@
 #include "Forte.h"
 #include "GUID.h"
 
-FString GUID::GenerateGUID(bool pathSafe)
+FString Forte::GUID::GenerateGUID(bool pathSafe)
 {
     // generate a GUID
     // start with timestamp in microseconds

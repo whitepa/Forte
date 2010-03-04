@@ -2,6 +2,7 @@
 #define __Delayed_callback_h__
 
 #include "Thread.h"
+#include "Object.h"
 
 namespace Forte
 {
@@ -10,7 +11,7 @@ namespace Forte
 
     EXCEPTION_SUBCLASS(CForteException, CForteDelayedCallbackException);
 
-    class CDelayedCallback
+    class CDelayedCallback : public Object
     {
         friend class CDelayedCallbackThread;
     public:

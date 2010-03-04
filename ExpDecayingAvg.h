@@ -13,7 +13,7 @@ namespace Forte
 {
     class CExpDecayingAvgThread;
 
-    class CExpDecayingAvg {
+    class CExpDecayingAvg : public Object {
         friend class CExpDecayingAvgThread;
     public:
         // damping time in ms

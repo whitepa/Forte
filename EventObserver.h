@@ -23,7 +23,7 @@ namespace Forte
     EXCEPTION_SUBCLASS(CForteException, CForteEventObserverException);
     EXCEPTION_SUBCLASS(CForteEventObserverException, CBadObserverException);
 
-    class CEventObserver {
+    class CEventObserver : public Object {
         friend class CObserverThread;
     public:
         CEventObserver() {};

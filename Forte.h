@@ -49,7 +49,7 @@ using namespace Forte;
 #include "DbMyConnection.h"
 #include "DbMyResult.h"
 #endif
-#ifndef FORTE_NO_POSTGRESQL
+#ifdef FORTE_WITH_POSTGRESQL
 #include "DbPgConnection.h"
 #include "DbPgResult.h"
 #endif
@@ -102,11 +102,9 @@ using namespace Forte;
 #include "XMLTextNode.h"
 #endif
 
-#ifndef FORTE_NO_BOOST
 #include <boost/foreach.hpp>
 #ifndef foreach
 #define foreach BOOST_FOREACH
-#endif
 #endif
 
 #endif

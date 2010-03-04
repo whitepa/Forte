@@ -7,7 +7,7 @@ namespace Forte
     EXCEPTION_SUBCLASS2(CException, EAlreadyRunning, "Process is already running");
     EXCEPTION_SUBCLASS2(CException, EPidfileOpenFailed, "Failed to create pidfile");
 
-    class CPidFile
+    class CPidFile : public Object
     {
     public:
         /// Create a PID file in the filesystem at the given path.

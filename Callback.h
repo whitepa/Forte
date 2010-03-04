@@ -10,7 +10,7 @@
 namespace Forte
 {
     EXCEPTION_SUBCLASS(CForteException, CForteCallbackException);
-    class CCallback
+    class CCallback : public Object
     {
     public:
         CCallback() {};

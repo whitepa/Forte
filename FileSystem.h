@@ -30,7 +30,7 @@ namespace Forte
     EXCEPTION_SUBCLASS(CForteFileSystemException, CForteFileSystemUnlinkException);
 
 
-    class FileSystem
+    class FileSystem : public Object
     {
     public:
         // helper classes

@@ -5,7 +5,7 @@
 #include <sys/time.h>
 namespace Forte
 {
-    class CLogTimer
+    class CLogTimer : public Object
     {
     public:
         CLogTimer(int level, const FString& log_str);

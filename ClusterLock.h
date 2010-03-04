@@ -21,7 +21,7 @@ namespace Forte
     EXCEPTION_SUBCLASS(EClusterLock,
                        EClusterLockFile);
 
-    class CClusterLock
+    class CClusterLock : public Object
     {
     public:
         CClusterLock();

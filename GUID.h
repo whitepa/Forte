@@ -5,10 +5,9 @@
 #include "FString.h"
 namespace Forte
 {
-    class GUID
+    namespace GUID
     {
-    public:
-        static FString GenerateGUID(bool pathSafe = false);
+        FString GenerateGUID(bool pathSafe = false);
     };
 };
 #endif

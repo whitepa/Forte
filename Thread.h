@@ -3,6 +3,7 @@
 
 #include <pthread.h>
 #include "FString.h"
+#include "Object.h"
 #include "Semaphore.h"
 
 // A generic thread class.  The user should derive from this class and define
@@ -19,7 +20,7 @@ namespace Forte
 {
     EXCEPTION_SUBCLASS(CForteException, CForteThreadException);
 
-    class CThread
+    class CThread : public Object
     {
     public:
         // Setting selfDelete to true will create a 'detached' thread which will

@@ -3,9 +3,11 @@
 
 #include "Types.h"
 #include "AutoMutex.h"
+#include "Object.h"
+
 namespace Forte
 {
-    class ProcRunner
+    class ProcRunner : public Object
     {
     public:
         // ctor/dtor

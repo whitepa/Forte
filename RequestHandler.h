@@ -4,7 +4,7 @@
 namespace Forte
 {
 // base class for a user-defined request handler
-    class CRequestHandler {
+    class CRequestHandler : public Object {
     public:
         inline CRequestHandler(unsigned int timeout = 0) : mTimeout(timeout) {};
         inline virtual ~CRequestHandler() {};

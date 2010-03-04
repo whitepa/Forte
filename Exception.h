@@ -1,6 +1,7 @@
 #ifndef _Exception_h
 #define _Exception_h
 
+#include "Object.h"
 #include "FString.h"
 #include <cstdarg>
 #include <list>
@@ -9,7 +10,7 @@
 
 namespace Forte
 {
-    class CException
+    class CException : public Object
     {
     public:
         CException();

@@ -3,11 +3,12 @@
 #ifndef FORTE_NO_CURL
 
 #include "Types.h"
+#include "Object.h"
 #include <curl/curl.h>
 
 namespace Forte
 {
-    class Curl
+    class Curl : public Object
     {
     public:
         // types
@@ -66,7 +67,7 @@ namespace Forte
 
 
 // global initialization helper class
-    class CurlInitializer
+    class CurlInitializer : public Object
     {
     public:
         CurlInitializer(long flags = CURL_GLOBAL_ALL) { Curl::Init(flags); }

@@ -10,7 +10,7 @@ namespace Forte
 {
     EXCEPTION_SUBCLASS(CForteException, CForteEventQueueException);
 
-    class CEventQueue
+    class CEventQueue : public Object
     {
     public:
         CEventQueue();
