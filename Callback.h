@@ -7,6 +7,10 @@
 #include <boost/function.hpp>
 #endif
 
+/**
+ * The Callback classes are DEPRECATED.  boost::bind is superior.
+ */
+
 namespace Forte
 {
     EXCEPTION_SUBCLASS(CForteException, CForteCallbackException);

@@ -4,6 +4,9 @@
 #include "Object.h"
 #include <boost/shared_ptr.hpp>
 
+// TODO: thread safety!
+// TODO: How to set certain keys as read-only?
+
 namespace Forte
 {
     EXCEPTION_CLASS(EContext);
@@ -31,12 +34,13 @@ namespace Forte
         virtual ~Context() {};
 
         /**
-         * Copy() makes a copy of the requested object, to which any
-         * future Get() calls to this context will reference.  
-         * TODO:
-         *   not entirely sure if this is needed yet.
+         * Detach() will make a copy of an object within this Context
+         * instance, such that if this Context object had been copied
+         * from another Context object, the object referenced by the
+         * given key will no longer reference the orginal object, but
+         * instead a separate local instance.
          **/
-//        void Copy(const char *key);
+        void Detach(const char *key) { throw EUnimplemented(); }
 
         /**
          * GetRef() retrieves a reference to an object from the
@@ -48,7 +52,7 @@ namespace Forte
             ObjectMap::const_iterator i;
             if ((i = mObjectMap.find(key)) == mObjectMap.end())
                 // TODO: use a factory to create one?
-                throw EInvalidKey();
+                throw EInvalidKey(key);
             shared_ptr<ValueType> ptr(dynamic_pointer_cast<ValueType>((*i).second));
             if (!ptr)
                 throw EContextTypeMismatch(); // TODO: include types in error message
@@ -93,11 +97,6 @@ namespace Forte
         void Clear(void) {
             mObjectMap.clear();
         }
-
-        /**
-         * Ideally, we would use some kind of shared_any_ptr type, but
-         * no such thing exists (yet), so we use shared_ptr<AnyPtr>.
-         **/
     protected:
         ObjectMap mObjectMap;
     };
