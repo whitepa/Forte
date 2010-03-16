@@ -2,6 +2,17 @@
 #define BOOST_TEST_MODULE "Context Unit Tests"
 #include <boost/test/unit_test.hpp>
 
+#include <boost/bind.hpp>
+#include <boost/tuple/tuple.hpp>
+#include <boost/type_traits.hpp>
+#include <boost/ref.hpp>
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/bind.hpp>
+#include <boost/lambda/if.hpp>
+#include <boost/lambda/loops.hpp>
+#include <boost/lambda/switch.hpp>
+
+namespace bll = boost::lambda;
 
 struct ContextFixture {
     Forte::Context c;
@@ -80,6 +91,32 @@ BOOST_AUTO_TEST_CASE ( context_test1 )
         BOOST_CHECK( TestClass::mCount == 1 );
     }
     BOOST_CHECK(TestClass::mCount == 0);
+
+//    boost::bind( boost::mem_fn(&Forte::Context::GetRef<TestClass>), _1, "testobject");
+    c.Set("testobject", new TestClassDerived());
+    BOOST_CHECK( TestClass::mCount == 1 );
+    bll::bind( &Context::GetRef<TestClass>, bll::_1, "testobject");  // functor to retrieve object from context
+
+//  This works:
+//    boost::function<TestClass(Context&)> b = 
+//        bll::bind(&Context::GetRef<TestClass>, bll::_1, "testobject");
+    std::set<FString> validStrs;
+    validStrs.insert("validStr");
+    c.Set("checkedvalue", new CheckedStringEnum(validStrs));
+    c.GetRef<CheckedStringEnum>("checkedvalue").Set("validStr");
+    
+//        bll::bind(bll::bind(&Context::GetRef<TestClass>, bll::_1, "testobject"),bll::_1);
+//    b(c);
+        
+//    boost::function<bool(Context&)> b = 
+    bll::bind(
+        &Context::GetRef<CheckedStringEnum>, bll::_1, "checkedvalue");
+// == "validStr");
+    
+    
+//    int x = 
+//        bll::bind<Forte::Context>(bll::bind( &Context::GetRef<TestClass>, bll::_1 )("testobject").getCount())(c);
+
 }
 BOOST_AUTO_TEST_SUITE_END();
 

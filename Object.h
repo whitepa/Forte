@@ -10,7 +10,7 @@ namespace Forte
     class Object
     {
     public:
-        virtual ~Object() = 0;
+        virtual ~Object() {};
     };
     typedef boost::shared_ptr<Object> ObjectPtr;
     typedef std::map<FString, ObjectPtr> ObjectMap;
