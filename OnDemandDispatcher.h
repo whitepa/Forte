@@ -11,19 +11,18 @@ namespace Forte
     class OnDemandDispatcherManager : public DispatcherThread
     {
     public:
-        inline OnDemandDispatcherManager(OnDemandDispatcher *disp)
-            {mDispatcher = (Dispatcher*)disp; initialized();};
+        OnDemandDispatcherManager(OnDemandDispatcher &disp);
+        virtual ~OnDemandDispatcherManager() {};
     protected:
         virtual void *run(void);
     };
     class OnDemandDispatcherWorker : public DispatcherThread
     {
     public:
-        OnDemandDispatcherWorker(OnDemandDispatcher *disp, Event *event);
+        OnDemandDispatcherWorker(OnDemandDispatcher &disp, shared_ptr<Event> event);
         ~OnDemandDispatcherWorker();
     protected:
         virtual void *run(void);
-        scoped_ptr<Event> mEvent;
     };
 
 
@@ -38,20 +37,18 @@ namespace Forte
         virtual ~OnDemandDispatcher();
         virtual void pause(void);
         virtual void resume(void);
-        virtual void enqueue(Event *e);
+        virtual void enqueue(shared_ptr<Event> e);
         virtual bool accepting(void);
 
-        inline int getQueuedEvents(int maxEvents, std::list<Event*> &queuedEvents)
-            { return mEventQueue.getEventCopies(maxEvents, queuedEvents); }
-        int getRunningEvents(int maxEvents, std::list<Event*> &runningEvents);
+        inline int getQueuedEvents(int maxEvents, 
+                                   std::list<shared_ptr<Event> > &queuedEvents)
+            { return mEventQueue.getEvents(maxEvents, queuedEvents); }
+        int getRunningEvents(int maxEvents, 
+                             std::list<shared_ptr<Event> > &runningEvents);
 
     protected:
-        RequestHandler &mRequestHandler;
         unsigned int mMaxThreads;
         Semaphore mThreadSem;
-        Mutex mNotifyLock;
-        ThreadCondition mNotify;
-        EventQueue mEventQueue;
         OnDemandDispatcherManager mManagerThread;
     };
 };

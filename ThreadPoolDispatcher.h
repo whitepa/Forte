@@ -11,15 +11,15 @@ namespace Forte
     class ThreadPoolDispatcherManager : public DispatcherThread
     {
     public:
-        inline ThreadPoolDispatcherManager(ThreadPoolDispatcher *disp)
-            {mDispatcher = (Dispatcher*)disp; initialized();};
+        ThreadPoolDispatcherManager(ThreadPoolDispatcher &disp);
+        virtual ~ThreadPoolDispatcherManager() {};
     protected:
         virtual void *run(void);
     };
     class ThreadPoolDispatcherWorker : public DispatcherThread
     {
     public:
-        ThreadPoolDispatcherWorker(ThreadPoolDispatcher *disp);
+        ThreadPoolDispatcherWorker(ThreadPoolDispatcher &disp);
         virtual ~ThreadPoolDispatcherWorker();
     protected:
         virtual void *run(void);
@@ -37,24 +37,20 @@ namespace Forte
         virtual ~ThreadPoolDispatcher();
         virtual void pause(void);
         virtual void resume(void);
-        virtual void enqueue(Event *e);
+        virtual void enqueue(shared_ptr<Event> e);
         virtual bool accepting(void);
 
-        inline int getQueuedEvents(int maxEvents, std::list<Event*> &queuedEvents)
-            { return mEventQueue.getEventCopies(maxEvents, queuedEvents); }
-        int getRunningEvents(int maxEvents, std::list<Event*> &runningEvents);
+        inline int getQueuedEvents(int maxEvents, std::list<shared_ptr<Event> > &queuedEvents)
+            { return mEventQueue.getEvents(maxEvents, queuedEvents); }
+        int getRunningEvents(int maxEvents, std::list<shared_ptr<Event> > &runningEvents);
 
     protected:
-        RequestHandler &mRequestHandler;
         unsigned int mMinThreads;
         unsigned int mMaxThreads;
         unsigned int mMinSpareThreads;
         unsigned int mMaxSpareThreads;
         Semaphore mThreadSem;
         Semaphore mSpareThreadSem;
-        Mutex mNotifyLock;
-        ThreadCondition mNotify;
-        EventQueue mEventQueue;
         ThreadPoolDispatcherManager mManagerThread;
     };
 };

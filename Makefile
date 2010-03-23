@@ -33,9 +33,7 @@ SRCS =	\
 	DbMyResult.cpp \
 	DbPgResult.cpp \
 	DbLiteResult.cpp \
-	DelayedCallback.cpp \
 	Dispatcher.cpp \
-	EventObserver.cpp \
 	EventQueue.cpp \
 	Exception.cpp \
 	ExpDecayingAvg.cpp \

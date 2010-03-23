@@ -5,6 +5,9 @@
 #include "Event.h"
 #include "Exception.h"
 #include <list>
+#include <boost/shared_ptr.hpp>
+
+using namespace boost;
 
 namespace Forte
 {
@@ -18,8 +21,8 @@ namespace Forte
         EventQueue(int maxdepth, ThreadCondition *notifier);
         virtual ~EventQueue();
 
-        void add(Event *e);
-        Event * get(void);
+        void add(shared_ptr<Event> e);
+        shared_ptr<Event> get(void);
         inline bool accepting(void) { return (!mShutdown && ((mMaxDepth.getvalue() > 0) ? true : false));}
         inline int depth(void) {AutoUnlockMutex lock(mMutex); return mQueue.size();};
 
@@ -42,16 +45,16 @@ namespace Forte
                 mEmptyCondition.wait();
         };
 
-        /// getEventCopies retreives copies of the next maxEvents in the queue
+        /// getEventCopies retreives references of the next maxEvents in the queue
         ///
-        int getEventCopies(int maxEvents, std::list<Event*> &result);
+        int getEvents(int maxEvents, std::list<shared_ptr<Event> > &result);
 
         int mDeepThresh;
         int mLastDepth;
     protected:
         bool mBlockingMode;
         bool mShutdown;
-        std::list<Event*> mQueue;
+        std::list<shared_ptr<Event> > mQueue;
         Semaphore mMaxDepth;
         Mutex mMutex;
         ThreadCondition mEmptyCondition;

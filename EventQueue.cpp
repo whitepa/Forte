@@ -31,22 +31,16 @@ EventQueue::EventQueue(int maxdepth, ThreadCondition *notifier) :
 EventQueue::~EventQueue()
 {
     AutoUnlockMutex lock(mMutex);
-    // delete all events in queue
-    std::list<Event*>::iterator i;
-    for (i = mQueue.begin(); i != mQueue.end(); ++i)
-    {
-        Event *e = *i;
-        if (e != NULL)
-            delete e;
-    }
+    // cleanup the queue
+    mQueue.clear();
     // kick out anyone waiting for the empty condition
     mEmptyCondition.broadcast();
 }
 
-void EventQueue::add(Event *e)
+void EventQueue::add(shared_ptr<Event> e)
 {
     // check for NULL event
-    if (e == NULL)
+    if (!e)
         throw ForteEventQueueException("attempt to add NULL event to queue");
     if (mShutdown)
         throw ForteEventQueueException("unable to add event: queue is shutting down");
@@ -57,50 +51,49 @@ void EventQueue::add(Event *e)
     if (!mBlockingMode && mMaxDepth.trywait() == -1 && errno == EAGAIN)
     {
         // non blocking mode and max depth, delete the oldest entry
-        std::list<Event*>::iterator i;
+        std::list<shared_ptr<Event> >::iterator i;
         i = mQueue.begin();
         if (i != mQueue.end())
         {
-            if (*i != NULL) delete *i;
             mQueue.pop_front();
             mMaxDepth.post();
         }
     }
-
     mQueue.push_back(e);
     // XXX check for a deep queue
     // signal appropriate threads
     if (mNotify) mNotify->signal();
 }
 
-Event * EventQueue::get(void)
+shared_ptr<Event> EventQueue::get(void)
 {
     AutoUnlockMutex lock(mMutex);
-    std::list<Event*>::iterator i;
+    shared_ptr<Event> e;
+    std::list<shared_ptr<Event> >::iterator i;
     i = mQueue.begin();
     if (i == mQueue.end())
-        return NULL;
-    Event *ret = *i;
+        return e;
+    e = *i;
     mQueue.pop_front();
     mMaxDepth.post();
     if (mQueue.empty())
         mEmptyCondition.broadcast();
-    return ret;
+    return e;
 }
 
-int EventQueue::getEventCopies(int maxEvents, std::list<Event*> &result)
+int EventQueue::getEvents(int maxEvents, std::list<shared_ptr<Event> > &result)
 {
     result.clear();
     AutoUnlockMutex lock(mMutex);
-    std::list<Event*>::iterator i;
+    std::list<shared_ptr<Event> >::iterator i;
     int count = 0;
     for (i = mQueue.begin(); i != mQueue.end() && maxEvents-- > 0;
          ++i)
     {
-        Event *e = *i;
-        if (e != NULL)
+        shared_ptr<Event> e = *i;
+        if (e)
         {
-            result.push_back(e->copy());
+            result.push_back(e);
             ++count;
         }
     }

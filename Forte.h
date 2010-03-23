@@ -25,7 +25,6 @@ using namespace Forte;
 #include "AutoFD.h"
 #include "AutoMutex.h"
 #include "Base64.h"
-#include "Callback.h"
 #include "CheckedInt32.h"
 #include "CheckedStringEnum.h"
 #include "ClusterLock.h"
@@ -60,7 +59,6 @@ using namespace Forte;
 #endif // FORTE_NO_DB
 
 #include "DaemonUtil.h"
-#include "DelayedCallback.h"
 #include "Dispatcher.h"
 #include "Event.h"
 #include "EventObserver.h"
@@ -68,6 +66,7 @@ using namespace Forte;
 #include "Exception.h"
 #include "ExpDecayingAvg.h"
 #include "FileSystem.h"
+#include "Foreach.h"
 #include "FString.h"
 #include "FTrace.h"
 #include "GUID.h"
@@ -100,11 +99,6 @@ using namespace Forte;
 #include "XMLDoc.h"
 #include "XMLNode.h"
 #include "XMLTextNode.h"
-#endif
-
-#include <boost/foreach.hpp>
-#ifndef foreach
-#define foreach BOOST_FOREACH
 #endif
 
 #endif
