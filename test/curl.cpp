@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     FileSystem& fs(FileSystem::getRef());
     CurlInitializer ci;
 
-    CLogManager logManager;
+    LogManager logManager;
     logManager.BeginLogging();
     logManager.SetGlobalLogMask(HLOG_ALL);
 
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
         c.setURL("notthere");
         c.perform();
         hlog(HLOG_ERR, "no error on notthere");
-        throw CException("no error on notthere");
+        throw Exception("no error on notthere");
     }
     catch (Curl::CurlException& e)
     {
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
         c.setURL("http://localhost/notthere");
         c.perform();
         hlog(HLOG_ERR, "no error on http://localhost/notthere");
-        throw CException("no error on http://localhost/notthere");
+        throw Exception("no error on http://localhost/notthere");
     }
     catch (Curl::CurlException& e)
     {
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
         if (outputFilePointer == NULL)
         {
             hlog(HLOG_ERR, "could not create outputFile");
-            throw CException("");
+            throw Exception("");
         }
 
         Curl c;
@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
         if (!fs.file_exists("./dlfile"))
         {
             hlog(HLOG_ERR, "there is no dlfile");
-            throw CException("");
+            throw Exception("");
         }
 
         FString dlFile;
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
             hlog(HLOG_INFO, "dlFile: %s\n dlInternalBuf: %s\n", 
                  dlFile.c_str(), 
                  dlInternalBuf.c_str());
-            throw CException("");
+            throw Exception("");
         }
         //pr.run("/bin/rm ./dlfile");
         hlog(HLOG_INFO, "done with dl to file");
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
     {
         testScaleReplDL();
         hlog(HLOG_ERR, "did not timeout in testScaleReplDl");
-        throw CException("did not timeout in testScaleReplDl");
+        throw Exception("did not timeout in testScaleReplDl");
     }
     catch (Curl::CurlException& e)
     {

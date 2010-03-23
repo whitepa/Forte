@@ -17,7 +17,7 @@ void* test(void* p)
         {
             try
             {
-                CClusterLock lock(FString(i), 5, err);
+                ClusterLock lock(FString(i), 5, err);
             }
             catch (EClusterLockUnvailable &e)
             {
@@ -33,7 +33,7 @@ void* test(void* p)
             {
                 printf("lock error: %s\n", e.what().c_str());
             }
-            catch (CException &e)
+            catch (Exception &e)
             {
                 printf("%s\n", e.what().c_str());
             }
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 {
     bool all_pass;
 
-    CClusterLock::LOCK_PATH = "/fsscale0/lock/";
+    ClusterLock::LOCK_PATH = "/fsscale0/lock/";
 
     pthread_t threads[CLUSTER_LOCK_TEST_NUM_LOCKS];
 

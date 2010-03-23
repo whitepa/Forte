@@ -13,11 +13,11 @@ void* test(void* p)
 int main(int argc, char *argv[])
 {
     bool all_pass = true;
-    CLogManager logManager;
+    LogManager logManager;
     logManager.BeginLogging();
     logManager.SetGlobalLogMask(HLOG_ALL);
 
-    CServiceConfig config;
+    ServiceConfig config;
     FString file = "./sampleserviceconfig";
     printf("Loading config, should see a warning\n");
     config.ReadConfigFile(file);

@@ -20,13 +20,13 @@ int main(int argc, char * const argv[])
         return 0;
 #endif
     }
-    catch (CException &e)
+    catch (Exception &e)
     {
-        cout << "Caught CException: " << e.what() << endl;
+        cout << "Caught Exception: " << e.what() << endl;
     }
     catch (std::exception &e)
     {
-        cout << "Caught CException: " << e.what() << endl;
+        cout << "Caught Exception: " << e.what() << endl;
     }
     catch (...)
     {
@@ -37,17 +37,17 @@ int main(int argc, char * const argv[])
 #if !defined(FORTE_NO_BOOST)
 int main2(int argc, char * const argv[])
 {
-//    CTime::init("/usr/local/lib/date_time_zonespec.csv");
-    COpenSSLInitializer sslInit;
+//    FTime::init("/usr/local/lib/date_time_zonespec.csv");
+    OpenSSLInitializer sslInit;
     unsigned int numFailed = 0, numPassed = 0;
     
     TEST("base64 class");
     FAILSTOP();
     FString data = "This is some data which we will be encoding in base64.";
     FString data64, decoded;
-    CBase64::Encode(data, data.size(), data64);
+    Base64::Encode(data, data.size(), data64);
     cout << "Base64 encoded data is: " << data64 << endl;
-    CBase64::Decode(data64, decoded);
+    Base64::Decode(data64, decoded);
     cout << "Decoded : " << decoded << "(length=" << decoded.length() << ")" << endl;
     cout << "Original: " << data << "(length=" << data.length() << ")" << endl;
     if (data.compare(decoded)) FAIL("decoded data does not match original");
@@ -60,7 +60,7 @@ int main2(int argc, char * const argv[])
     FString encoded;
     FString::LoadFile("random1", 0x100000, randomData);
     FString::LoadFile("random1encoded", 0x100000, randomDataEncoded);
-    CBase64::Encode(randomData, randomData.length(), encoded);
+    Base64::Encode(randomData, randomData.length(), encoded);
     if (randomDataEncoded.compare(encoded))
     {
         cout << "  Encoded: " << encoded << endl;
@@ -87,27 +87,27 @@ int main2(int argc, char * const argv[])
 
     TEST("base64 binary data");
     FAILSTOP();
-    CKeyBuffer publicKeyBuffer(pubkey);
-    CPublicKey publicKey(publicKeyBuffer, NULL);
-    CRSAString rsaStr("This is the plaintext.", publicKey);
+    KeyBuffer publicKeyBuffer(pubkey);
+    PublicKey publicKey(publicKeyBuffer, NULL);
+    RSAString rsaStr("This is the plaintext.", publicKey);
     FString decoded, decoded2, tmp;
     cout << "   encoded: " << rsaStr << endl;
-    CBase64::Decode(rsaStr, decoded);
-    CBase64::Encode(decoded, decoded.length(), tmp);
+    Base64::Decode(rsaStr, decoded);
+    Base64::Encode(decoded, decoded.length(), tmp);
     cout << "re-encoded: " << tmp << endl;
-    CBase64::Decode(tmp, decoded2);
+    Base64::Decode(tmp, decoded2);
     if (decoded.compare(decoded2)) FAIL("binary strings do not match");
     ENDTEST();
 
     TEST("encrypt string");
     FAILSTOP();
-    CKeyBuffer publicKeyBuffer(pubkey);
-    CPublicKey publicKey(publicKeyBuffer, NULL);
+    KeyBuffer publicKeyBuffer(pubkey);
+    PublicKey publicKey(publicKeyBuffer, NULL);
 
-    CKeyBuffer privateKeyBuffer(privkey);
-    CPrivateKey privateKey(privateKeyBuffer, "forte");
+    KeyBuffer privateKeyBuffer(privkey);
+    PrivateKey privateKey(privateKeyBuffer, "forte");
     FString plain("This is the plaintext.");
-    CRSAString rsaStr(plain, publicKey);
+    RSAString rsaStr(plain, publicKey);
     cout << "Ciphertext: " << rsaStr << endl;
     rsaStr.getPlaintext(plaintext, privateKey);
     cout << "Plaintext: " << plaintext << endl;
@@ -122,11 +122,11 @@ int main2(int argc, char * const argv[])
 
     TEST("account data envelope");
     FAILSTOP();
-    CKeyBuffer publicKeyBuffer(pubkey);
-    CKeyBuffer privateKeyBuffer(privkey);
+    KeyBuffer publicKeyBuffer(pubkey);
+    KeyBuffer privateKeyBuffer(privkey);
 
-    CSecureEnvelopeEncoder encoder(publicKeyBuffer);
-    CSecureEnvelopeDecoder decoder(privateKeyBuffer, "forte");
+    SecureEnvelopeEncoder encoder(publicKeyBuffer);
+    SecureEnvelopeDecoder decoder(privateKeyBuffer, "forte");
 
     FString accountNum = "4111222233334444";
     FString obscuredNum = "XXXXXXXXXXXX4444";
@@ -154,7 +154,7 @@ int main2(int argc, char * const argv[])
             }
             cout << "secondary failures: " << secondfailures << endl;
         }
-        CSecureEnvelopeDecoder::obscured(out, obscured);
+        SecureEnvelopeDecoder::obscured(out, obscured);
 //        cout << "obscured as: " << obscured << endl;
         if (obscured.compare(obscuredNum))
         {

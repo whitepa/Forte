@@ -24,7 +24,7 @@ struct StringEnumFixture {
 BOOST_FIXTURE_TEST_SUITE( checked_values, Int32Fixture );
 BOOST_AUTO_TEST_CASE ( int_test )
 {
-    CLogManager logMgr;
+    LogManager logMgr;
     logMgr.BeginLogging();
     logMgr.SetGlobalLogMask(HLOG_ALL);
 
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_SUITE_END();
 BOOST_FIXTURE_TEST_SUITE( checked_strings, StringEnumFixture );
 BOOST_AUTO_TEST_CASE ( int_test )
 {
-    CLogManager logMgr;
+    LogManager logMgr;
     logMgr.BeginLogging();
     logMgr.SetGlobalLogMask(HLOG_ALL);
     

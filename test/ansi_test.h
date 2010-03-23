@@ -22,11 +22,11 @@ using namespace std;
         }                                                       \
         else cout << ANSI_PASS << endl;                         \
     }                                                           \
-    catch (CException& e)                                       \
+    catch (Exception& e)                                       \
     {                                                           \
         all_pass = false;                                       \
         cout << ANSI_FAIL << endl;                              \
-        cout << "\tCException: " << e.getDescription() << endl; \
+        cout << "\tException: " << e.getDescription() << endl; \
         e.pretty_trace_log(HLOG_ERR);                           \
     }                                                           \
     catch (std::exception e)                                    \
@@ -49,11 +49,11 @@ using namespace std;
         X;                                                      \
         cout << ANSI_PASS << endl;                              \
     }                                                           \
-    catch (CException& e)                                       \
+    catch (Exception& e)                                       \
     {                                                           \
         all_pass = false;                                       \
         cout << ANSI_FAIL << endl;                              \
-        cout << "\tCException: " << e.getDescription() << endl; \
+        cout << "\tException: " << e.getDescription() << endl; \
         e.pretty_trace_log(HLOG_ERR);                           \
     }                                                           \
     catch (std::exception e)                                    \
@@ -78,7 +78,7 @@ using namespace std;
         cout << ANSI_FAIL << endl;                                  \
         cout << "\tNo exception thrown" << endl;                    \
     }                                                               \
-    catch (CException& e)                                           \
+    catch (Exception& e)                                           \
     {                                                               \
         if (e.getDescription() == (Y))                              \
         {                                                           \
@@ -88,7 +88,7 @@ using namespace std;
         {                                                           \
             all_pass = false;                                       \
             cout << ANSI_FAIL << endl;                              \
-            cout << "\tCException: " << e.getDescription() << endl; \
+            cout << "\tException: " << e.getDescription() << endl; \
             e.pretty_trace_log(HLOG_ERR);                           \
         }                                                           \
     }                                                               \

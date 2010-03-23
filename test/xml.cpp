@@ -9,13 +9,13 @@ int main(int argc, char *argv[])
     regularString = "regularString";
 
 
-    CXMLDoc doc;
-    CXMLNode root = doc.createDocument("root");
+    XMLDoc doc;
+    XMLNode root = doc.createDocument("root");
 
 
     /********************basic test*********************/
     printf("regularString: %s\n", regularString.c_str());
-    CXMLNode nodeRegular(regularString, root);
+    XMLNode nodeRegular(regularString, root);
 
     printf("xmlNode: %s\n", doc.toString().c_str());
 
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 
     printf("controlCharString: %s\n", controlCharString.c_str());
 
-    CXMLNode node(controlCharString, root);
+    XMLNode node(controlCharString, root);
 
     node.setProp(regularString, controlCharString);
 

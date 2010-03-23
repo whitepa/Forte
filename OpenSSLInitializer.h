@@ -6,10 +6,10 @@
 /// Declare one of these in main() if you are using OpenSSL in a multithreaded program.
 namespace Forte
 {
-    class COpenSSLInitializer {
+    class OpenSSLInitializer {
     public:
-        COpenSSLInitializer();
-        virtual ~COpenSSLInitializer();
+        OpenSSLInitializer();
+        virtual ~OpenSSLInitializer();
     };
 };
 #endif

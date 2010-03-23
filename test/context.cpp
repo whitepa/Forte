@@ -38,22 +38,22 @@ int TestClass::mCount = 0;
 BOOST_FIXTURE_TEST_SUITE( context, ContextFixture );
 BOOST_AUTO_TEST_CASE ( context_test1 )
 {
-    CLogManager logMgr;
+    LogManager logMgr;
     logMgr.BeginLogging();
     logMgr.SetGlobalLogMask(HLOG_ALL);
 
     // verify invalid keys throws
-    BOOST_CHECK_THROW(c.Get<CLogManager>("forte.logManager"), EInvalidKey);
+    BOOST_CHECK_THROW(c.Get<LogManager>("forte.logManager"), EInvalidKey);
     
-    c.Set("forte.config", new CServiceConfig());
+    c.Set("forte.config", new ServiceConfig());
 
-    BOOST_CHECK_THROW(c.Get<CServiceConfig>("forte.config.fail"), EInvalidKey);
+    BOOST_CHECK_THROW(c.Get<ServiceConfig>("forte.config.fail"), EInvalidKey);
 
     // verify type mismatch throws
-    BOOST_CHECK_THROW(c.Get<CLogManager>("forte.config"), EContextTypeMismatch);
+    BOOST_CHECK_THROW(c.Get<LogManager>("forte.config"), EContextTypeMismatch);
 
     {
-        shared_ptr<CServiceConfig> cfg = (c.Get<CServiceConfig>("forte.config"));
+        shared_ptr<ServiceConfig> cfg = (c.Get<ServiceConfig>("forte.config"));
         cfg->Set("key", "value");
     }
 

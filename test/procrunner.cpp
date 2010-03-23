@@ -13,7 +13,7 @@ void* testTimeout(void* p)
 int main(int argc, char *argv[])
 {
     bool all_pass = true;
-    CLogManager logManager;
+    LogManager logManager;
     logManager.BeginLogging();
     logManager.SetGlobalLogMask(HLOG_ALL);
 

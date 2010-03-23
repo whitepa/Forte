@@ -12,7 +12,7 @@
         cout << "TEST \"" << name << "\"..." << endl;   \
         struct timeval teststart;                            \
         gettimeofday(&teststart, NULL);                      \
-        printf("timestamp=%s.%06u\n", CTime::to_str(teststart.tv_sec, "US/Pacific").c_str(), (unsigned int)teststart.tv_usec);
+        printf("timestamp=%s.%06u\n", FTime::to_str(teststart.tv_sec, "US/Pacific").c_str(), (unsigned int)teststart.tv_usec);
         bool testfail = false, failstop = false;
 #endif
 

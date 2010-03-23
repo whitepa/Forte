@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
     int err = 0;
 
     // logging
-    CLogManager log_mgr;
+    LogManager log_mgr;
     log_mgr.BeginLogging("filesystem.log");
     log_mgr.SetGlobalLogMask(HLOG_NODEBUG & ~(HLOG_INFO));
 
