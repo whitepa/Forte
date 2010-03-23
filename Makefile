@@ -48,6 +48,7 @@ SRCS =	\
 	LogTimer.cpp \
 	MD5.cpp \
 	Murmur.cpp \
+	OnDemandDispatcher.cpp \
 	OpenSSLInitializer.cpp \
 	PidFile.cpp \
 	ProcRunner.cpp \
@@ -60,6 +61,7 @@ SRCS =	\
 	ServiceConfig.cpp \
 	Thread.cpp \
 	ThreadKey.cpp \
+	ThreadPoolDispatcher.cpp \
 	UrlString.cpp \
 	Util.cpp \
 	VersionManager.cpp \

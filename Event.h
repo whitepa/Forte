@@ -7,6 +7,8 @@
 #include <arpa/inet.h>
 #include <sys/time.h>
 #include "FString.h"
+#include "Object.h"
+
 namespace Forte
 {
     class Event : public Object {

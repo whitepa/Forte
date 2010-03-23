@@ -55,6 +55,7 @@ namespace Forte
         virtual void *run(void) = 0;
         static void *startThread(void *obj);
         pthread_t mThread;
+
         Mutex mInitializedLock;
         ThreadCondition mInitializedNotify;
         bool mInitialized;
