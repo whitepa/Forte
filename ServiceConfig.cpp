@@ -1,14 +1,14 @@
 #include "Forte.h"
 
-CServiceConfig::CServiceConfig() {
+ServiceConfig::ServiceConfig() {
     mConfig.clear();
 }
-CServiceConfig::CServiceConfig(const char *configFile) {
+ServiceConfig::ServiceConfig(const char *configFile) {
     mConfig.clear();
     ReadConfigFile(configFile);
 }
 
-void CServiceConfig::ReadConfigFile(const char *configFile) {
+void ServiceConfig::ReadConfigFile(const char *configFile) {
     // load the file
     bool loggedWarning = false;
     FString conf;
@@ -81,7 +81,7 @@ void CServiceConfig::ReadConfigFile(const char *configFile) {
 //    Display();
 }
 
-void CServiceConfig::Display(void)
+void ServiceConfig::Display(void)
 {
     StringHashMap::iterator i;
     cout << "Hash contents:" << endl;
@@ -90,25 +90,25 @@ void CServiceConfig::Display(void)
         cout << (*i).first << "=" << (*i).second << endl;
     }
 }
-void CServiceConfig::Clear()
+void ServiceConfig::Clear()
 {
-    CAutoUnlockMutex lock(mMutex);
+    AutoUnlockMutex lock(mMutex);
     mConfig.clear();
 }
 
-void CServiceConfig::Set(const char *key, const char *value)
+void ServiceConfig::Set(const char *key, const char *value)
 {
-    CAutoUnlockMutex lock(mMutex);
+    AutoUnlockMutex lock(mMutex);
     mConfig[key] = value;
 }
 
-FString CServiceConfig::Get(const char *key)
+FString ServiceConfig::Get(const char *key)
 {
-    CAutoUnlockMutex lock(mMutex);
+    AutoUnlockMutex lock(mMutex);
     return mConfig[key];
 }
 
-int CServiceConfig::GetInteger(const char *key)
+int ServiceConfig::GetInteger(const char *key)
 {
     return strtol(Get(key),NULL,10);
 }

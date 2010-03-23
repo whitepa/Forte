@@ -4,10 +4,10 @@
 
 // XXX auto_ptr was deleting itself too early, segfault on shutdown
 
-CLogManager *CLogManager::sLogManager = NULL;
+LogManager *LogManager::sLogManager = NULL;
 
-// CLogfile
-CLogfile::CLogfile(const FString& path, ostream *str, unsigned logMask, bool delStream) :
+// Logfile
+Logfile::Logfile(const FString& path, ostream *str, unsigned logMask, bool delStream) :
     mPath(path),
     mOut(str),
     mDelStream(delStream),
@@ -16,13 +16,13 @@ CLogfile::CLogfile(const FString& path, ostream *str, unsigned logMask, bool del
 //    mOut.tie(&str);
 }
 
-CLogfile::~CLogfile()
+Logfile::~Logfile()
 {
     if (mDelStream)
         delete mOut;
 }
 
-void CLogfile::Write(const CLogMsg& msg)
+void Logfile::Write(const LogMsg& msg)
 {
     if (mOut)
     {
@@ -31,7 +31,7 @@ void CLogfile::Write(const CLogMsg& msg)
     }
 }
 
-FString CLogfile::getLevelStr(int level)
+FString Logfile::getLevelStr(int level)
 {
     FString levelstr;
 
@@ -76,27 +76,27 @@ FString CLogfile::getLevelStr(int level)
     return levelstr;
 }
 
-void CLogfile::FilterSet(const CLogFilter &filter)
+void Logfile::FilterSet(const LogFilter &filter)
 {
     mFileMasks[filter.mSourceFile] = filter.mMask;
 }
-void CLogfile::FilterDelete(const char *filename)
+void Logfile::FilterDelete(const char *filename)
 {
     mFileMasks.erase(filename);
 }
-void CLogfile::FilterDeleteAll(void)
+void Logfile::FilterDeleteAll(void)
 {
     mFileMasks.clear();
 }
-void CLogfile::FilterList(std::vector<CLogFilter> &filters)
+void Logfile::FilterList(std::vector<LogFilter> &filters)
 {
     filters.clear();
     typedef std::pair<FString, unsigned int> FileMaskPair;
     foreach(const FileMaskPair &fp, mFileMasks)
-        filters.push_back(CLogFilter(fp.first, fp.second));
+        filters.push_back(LogFilter(fp.first, fp.second));
 }
 
-FString CLogfile::FormatMsg(const CLogMsg &msg)
+FString Logfile::FormatMsg(const LogMsg &msg)
 {
     FString levelstr, formattedMsg;
     struct tm lt;
@@ -129,10 +129,10 @@ FString CLogfile::FormatMsg(const CLogMsg &msg)
 }
 
 
-// CSysLogfile
-CSysLogfile::CSysLogfile(const FString& ident, unsigned logMask, int option)
+// SysLogfile
+SysLogfile::SysLogfile(const FString& ident, unsigned logMask, int option)
 :
-    CLogfile("//syslog/" + ident, NULL, logMask, false),
+    Logfile("//syslog/" + ident, NULL, logMask, false),
     mIdent(ident)
 {
     // use mIdent.c_str() so that the memory associated with ident stays valid
@@ -140,12 +140,12 @@ CSysLogfile::CSysLogfile(const FString& ident, unsigned logMask, int option)
     openlog(mIdent.c_str(), option, LOG_DAEMON);
 }
 
-CSysLogfile::~CSysLogfile()
+SysLogfile::~SysLogfile()
 {
     closelog();
 }
 
-void CSysLogfile::Write(const CLogMsg& msg)
+void SysLogfile::Write(const LogMsg& msg)
 {
     int level = LOG_DEBUG;
 
@@ -162,7 +162,7 @@ void CSysLogfile::Write(const CLogMsg& msg)
     syslog(LOG_DAEMON | level, "%s", FormatMsg(msg).c_str());
 }
 
-FString CSysLogfile::FormatMsg(const CLogMsg &msg)
+FString SysLogfile::FormatMsg(const LogMsg &msg)
 {
     FString levelstr, formattedMsg;
     levelstr = getLevelStr(msg.mLevel);
@@ -174,131 +174,131 @@ FString CSysLogfile::FormatMsg(const CLogMsg &msg)
 }
 
 
-// CLogMsg
-CLogMsg::CLogMsg() :
+// LogMsg
+LogMsg::LogMsg() :
     mThread(NULL)
 {}
 
 
-// CLogContext
-CLogContext::CLogContext()
+// LogContext
+LogContext::LogContext()
 {
-    CLogManager &mgr(CLogManager::getInstance());
+    LogManager &mgr(LogManager::getInstance());
     if (mgr.mLogContextStackKey.get() == NULL)
-        mgr.mLogContextStackKey.set(new CLogContextStack());
+        mgr.mLogContextStackKey.set(new LogContextStack());
     mLogMgrPtr = &mgr;
-    CLogContextStack *stack = (CLogContextStack *)(mgr.mLogContextStackKey.get());
+    LogContextStack *stack = (LogContextStack *)(mgr.mLogContextStackKey.get());
     if (!(stack->mStack.empty()))
     {
-        CLogContext *previousContext(stack->mStack.back());
+        LogContext *previousContext(stack->mStack.back());
         mClient = previousContext->mClient;
         mPrefix = previousContext->mPrefix;
     }
     stack->mStack.push_back(this);
 }
 
-CLogContext::~CLogContext()
+LogContext::~LogContext()
 {
     // remove pointer to this log context from the manager
-    CAutoUnlockMutex lock(mLogMgrPtr->mLogMutex);
-    CLogContextStack *stack = (CLogContextStack *)(mLogMgrPtr->mLogContextStackKey.get());
+    AutoUnlockMutex lock(mLogMgrPtr->mLogMutex);
+    LogContextStack *stack = (LogContextStack *)(mLogMgrPtr->mLogContextStackKey.get());
     if (stack) stack->mStack.pop_back();
 }
 
 
-// CLogThreadInfo
-CLogThreadInfo::CLogThreadInfo(CLogManager &mgr, CThread &thr) :
+// LogThreadInfo
+LogThreadInfo::LogThreadInfo(LogManager &mgr, Thread &thr) :
     mLogMgr(mgr),
     mThread(thr)
 {
     mLogMgr.mThreadInfoKey.set(this);
 }
 
-CLogThreadInfo::~CLogThreadInfo()
+LogThreadInfo::~LogThreadInfo()
 {
     // remove pointer to this log context from the manager
-    CAutoUnlockMutex lock(mLogMgr.mLogMutex);
+    AutoUnlockMutex lock(mLogMgr.mLogMutex);
     mLogMgr.mThreadInfoKey.set(NULL);
 }
 
 
-// CLogManager
-CLogManager::CLogManager() {
+// LogManager
+LogManager::LogManager() {
     mLogMaskTemplate = HLOG_ALL;
 }
 
-CLogManager::~CLogManager() {
-    LogMsg(HLOG_INFO, "logging halted");
+LogManager::~LogManager() {
+    Log(HLOG_INFO, "logging halted");
     EndLogging();
 }
 
-void CLogManager::BeginLogging()
+void LogManager::BeginLogging()
 {
     sLogManager = this;
     BeginLogging("//stderr");
 }
 
-void CLogManager::BeginLogging(const char *path)
+void LogManager::BeginLogging(const char *path)
 {
     sLogManager = this;
-    CAutoUnlockMutex lock(mLogMutex);
+    AutoUnlockMutex lock(mLogMutex);
     beginLogging(path, mLogMaskTemplate);
 }
 
-void CLogManager::BeginLogging(const char *path, int mask)
+void LogManager::BeginLogging(const char *path, int mask)
 {
     sLogManager = this;
-    CAutoUnlockMutex lock(mLogMutex);
+    AutoUnlockMutex lock(mLogMutex);
     beginLogging(path, mask);
 }
 
-void CLogManager::beginLogging(const char *path, int mask)  // helper - no locking
+void LogManager::beginLogging(const char *path, int mask)  // helper - no locking
 {
-    CLogfile *logfile;
+    Logfile *logfile;
     if (!strcmp(path, "//stderr"))
-        logfile = new CLogfile(path, &cerr, mask);
+        logfile = new Logfile(path, &cerr, mask);
     else if (!strcmp(path, "//stdout"))
-        logfile = new CLogfile(path, &cout, mask);
+        logfile = new Logfile(path, &cout, mask);
     else if (!strncmp(path, "//syslog/", 9))
     {        
-        logfile = new CSysLogfile(path + 9, mask);
+        logfile = new SysLogfile(path + 9, mask);
     }
     else
     {
         ofstream *out = new ofstream(path, ios::app | ios::out);
-        logfile = new CLogfile(path, out, mask, true);
+        logfile = new Logfile(path, out, mask, true);
     }
     logfile->mPath = path;
     mLogfiles.push_back(logfile);
 }
 
-void CLogManager::BeginLogging(CLogfile *logfile)
+void LogManager::BeginLogging(Logfile *logfile)
 {
     sLogManager = this;
-    CAutoUnlockMutex lock(mLogMutex);
+    AutoUnlockMutex lock(mLogMutex);
     mLogfiles.push_back(logfile);
 }
 
-void CLogManager::EndLogging()
+void LogManager::EndLogging()
 {
     sLogManager = NULL;
-    CAutoUnlockMutex lock(mLogMutex);
-    std::vector<CLogfile*>::iterator i;
+    AutoUnlockMutex lock(mLogMutex);
+    std::vector<Logfile*>::iterator i;
     for (i = mLogfiles.begin(); i != mLogfiles.end(); i++)
         delete *i;
     mLogfiles.clear();
 }
 
-void CLogManager::EndLogging(const char *path)
+void LogManager::EndLogging(const char *path)
 {
-    CAutoUnlockMutex lock(mLogMutex);
+    AutoUnlockMutex lock(mLogMutex);
     endLogging(path);
 }
 
-void CLogManager::endLogging(const char *path)  // helper - no locking
+void LogManager::endLogging(const char *path)  // helper - no locking
 {
     // find the logfile with this path
-    std::vector<CLogfile*>::iterator i;
+    std::vector<Logfile*>::iterator i;
     for (i = mLogfiles.begin(); i != mLogfiles.end(); i++)
     {
         if (!(*i)->mPath.Compare(path))
@@ -311,10 +311,10 @@ void CLogManager::endLogging(const char *path)  // helper - no locking
     if (mLogfiles.empty()) sLogManager = NULL;
 }
 
-void CLogManager::Reopen()  // re-open all log files
+void LogManager::Reopen()  // re-open all log files
 {
-    CAutoUnlockMutex lock(mLogMutex);
-    std::vector<CLogfile*>::iterator i;
+    AutoUnlockMutex lock(mLogMutex);
+    std::vector<Logfile*>::iterator i;
     typedef std::pair<FString,int> PathMaskPair;
     std::list<PathMaskPair> recreate;
 
@@ -332,10 +332,10 @@ void CLogManager::Reopen()  // re-open all log files
     }
 }
 
-void CLogManager::SetGlobalLogMask(unsigned int mask)
+void LogManager::SetGlobalLogMask(unsigned int mask)
 {
-    CAutoUnlockMutex lock(mLogMutex);
-    std::vector<CLogfile*>::iterator i;
+    AutoUnlockMutex lock(mLogMutex);
+    std::vector<Logfile*>::iterator i;
     for (i = mLogfiles.begin(); i != mLogfiles.end(); i++)
     {
         (*i)->mLogMask = mask;
@@ -343,12 +343,12 @@ void CLogManager::SetGlobalLogMask(unsigned int mask)
     mLogMaskTemplate = mask;  // template is for newly created log files
 }
 
-void CLogManager::SetLogMask(const char *path, unsigned int mask)
+void LogManager::SetLogMask(const char *path, unsigned int mask)
 {
-    CAutoUnlockMutex lock(mLogMutex);
+    AutoUnlockMutex lock(mLogMutex);
 
     // find the logfile with this path
-    std::vector<CLogfile*>::iterator i;
+    std::vector<Logfile*>::iterator i;
     for (i = mLogfiles.begin(); i != mLogfiles.end(); i++)
     {
         if (!(*i)->mPath.Compare(path))
@@ -357,73 +357,73 @@ void CLogManager::SetLogMask(const char *path, unsigned int mask)
         }
     }
 }
-unsigned int CLogManager::GetLogMask(const char *path)
+unsigned int LogManager::GetLogMask(const char *path)
 {
-    CAutoUnlockMutex lock(mLogMutex);
+    AutoUnlockMutex lock(mLogMutex);
 
     // find the logfile with this path
-    std::vector<CLogfile*>::iterator i;
+    std::vector<Logfile*>::iterator i;
     for (i = mLogfiles.begin(); i != mLogfiles.end(); i++)
         if (!(*i)->mPath.Compare(path))
             return (*i)->mLogMask;
     return 0;
 }
-void CLogManager::SetSourceFileLogMask(const char *filename, unsigned int mask)
+void LogManager::SetSourceFileLogMask(const char *filename, unsigned int mask)
 {
-    CAutoUnlockMutex lock(mLogMutex);
+    AutoUnlockMutex lock(mLogMutex);
     mFileMasks[filename] = mask;
 }
-void CLogManager::ClearSourceFileLogMask(const char *filename)
+void LogManager::ClearSourceFileLogMask(const char *filename)
 {
-    CAutoUnlockMutex lock(mLogMutex);
+    AutoUnlockMutex lock(mLogMutex);
     mFileMasks.erase(filename);
 }
 
 
-void CLogManager::PathSetSourceFileLogMask(const char *path, const char *filename, 
+void LogManager::PathSetSourceFileLogMask(const char *path, const char *filename, 
                                            unsigned int mask)
 {
-    CAutoUnlockMutex lock(mLogMutex);
-    CLogfile &logfile(getLogfile(path));
-    logfile.FilterSet(CLogFilter(filename, mask));
+    AutoUnlockMutex lock(mLogMutex);
+    Logfile &logfile(getLogfile(path));
+    logfile.FilterSet(LogFilter(filename, mask));
 }
-void CLogManager::PathClearSourceFileLogMask(const char *path, const char *filename)
+void LogManager::PathClearSourceFileLogMask(const char *path, const char *filename)
 {
-    CAutoUnlockMutex lock(mLogMutex);
-    CLogfile &logfile(getLogfile(path));
+    AutoUnlockMutex lock(mLogMutex);
+    Logfile &logfile(getLogfile(path));
     logfile.FilterDelete(filename);
 }
-void CLogManager::PathClearAllSourceFiles(const char *path)
+void LogManager::PathClearAllSourceFiles(const char *path)
 {
-    CAutoUnlockMutex lock(mLogMutex);
-    CLogfile &logfile(getLogfile(path));
+    AutoUnlockMutex lock(mLogMutex);
+    Logfile &logfile(getLogfile(path));
     logfile.FilterDeleteAll();
 }
 
-void CLogManager::PathFilterList(const char *path, std::vector<CLogFilter> &filters)
+void LogManager::PathFilterList(const char *path, std::vector<LogFilter> &filters)
 {
-    CAutoUnlockMutex lock(mLogMutex);
-    CLogfile &logfile(getLogfile(path));
+    AutoUnlockMutex lock(mLogMutex);
+    Logfile &logfile(getLogfile(path));
     logfile.FilterList(filters);    
 }
 
-void CLogManager::PathList(std::vector<FString> &paths)
+void LogManager::PathList(std::vector<FString> &paths)
 {
-    CAutoUnlockMutex lock(mLogMutex);
-    foreach (const CLogfile *logfile, mLogfiles)
+    AutoUnlockMutex lock(mLogMutex);
+    foreach (const Logfile *logfile, mLogfiles)
         paths.push_back(logfile->mPath);
 }
 
-CLogfile & CLogManager::getLogfile(const char *path)
+Logfile & LogManager::getLogfile(const char *path)
 {
     // internal helper to get a logfile object (caller should already be locked)
-    foreach (CLogfile *logfile, mLogfiles)
+    foreach (Logfile *logfile, mLogfiles)
         if (!(logfile->mPath.Compare(path)))
             return *logfile;
-    throw CForteLogException(FStringFC(), "not currently logging to '%s'", path);
+    throw ForteLogException(FStringFC(), "not currently logging to '%s'", path);
 }
 
-void CLogManager::LogMsg(int level, const char *fmt, ...)
+void LogManager::Log(int level, const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -431,16 +431,16 @@ void CLogManager::LogMsg(int level, const char *fmt, ...)
     va_end(ap);
 }
 
-void CLogManager::LogMsgVa(int level, const char *fmt, va_list ap)
+void LogManager::LogMsgVa(int level, const char *fmt, va_list ap)
 {
     LogMsgVa(NULL, NULL, 0, level, fmt, ap);
 }
 
-void CLogManager::LogMsgVa(const char * func, const char * file, int line, int level, const char *fmt, va_list ap)
+void LogManager::LogMsgVa(const char * func, const char * file, int line, int level, const char *fmt, va_list ap)
 {
     char tmp[128];
     tmp[0] = 0;
-    CLogMsg msg;
+    LogMsg msg;
     if (level < HLOG_MIN)
     {
         // convert syslog level to HLOG level
@@ -462,8 +462,8 @@ void CLogManager::LogMsgVa(const char * func, const char * file, int line, int l
         msg.mHost.assign(tmp);
     else
         msg.mHost = "(hostname too long)";
-    CAutoUnlockMutex lock(mLogMutex);
-    CLogThreadInfo *ti = (CLogThreadInfo *)mThreadInfoKey.get();
+    AutoUnlockMutex lock(mLogMutex);
+    LogThreadInfo *ti = (LogThreadInfo *)mThreadInfoKey.get();
     if (ti != NULL)
         msg.mThread = &(ti->mThread);
     msg.mLevel = level;
@@ -473,10 +473,10 @@ void CLogManager::LogMsgVa(const char * func, const char * file, int line, int l
     msg.mFunction = func;
     msg.mFile = file;
     msg.mLine = line;
-    CLogContextStack *stack = (CLogContextStack*)mLogContextStackKey.get();
+    LogContextStack *stack = (LogContextStack*)mLogContextStackKey.get();
     if (stack && !(stack->mStack.empty()))
     {
-        CLogContext *c(stack->mStack.back());
+        LogContext *c(stack->mStack.back());
         msg.mClient = c->mClient;
         msg.mPrefix = c->mPrefix;
     }
@@ -499,11 +499,11 @@ void CLogManager::LogMsgVa(const char * func, const char * file, int line, int l
     }        
 
     // send the message to all the logfiles
-    foreach (CLogfile *i, mLogfiles)
+    foreach (Logfile *i, mLogfiles)
     {
         // first check this logfile's source file filters
         bool pathFileSpecific = false;
-        CLogfile &lf(*i);
+        Logfile &lf(*i);
         if (lf.mFileMasks.find(file) != lf.mFileMasks.end())
         {
             if ((level & lf.mFileMasks[file]) != 0)
@@ -527,7 +527,7 @@ void _hlog(const char *func, const char * file, int line, int level, const char 
     va_start(ap, fmt);
     try
     {
-        CLogManager *log_mgr = CLogManager::GetInstancePtr();
+        LogManager *log_mgr = LogManager::GetInstancePtr();
         if (log_mgr != NULL) log_mgr->LogMsgVa(func, file, line, level, fmt, ap);
     }
     catch (...)
@@ -576,7 +576,7 @@ static const char *levelstr[] =
     
 
 // helper to generate a string describing a log mask
-FString CLogManager::LogMaskStr(int mask)
+FString LogManager::LogMaskStr(int mask)
 {
     std::vector<FString> levels;
     for (int i = 0; i < 32; ++i)

@@ -6,9 +6,9 @@
 #include "DbLiteResult.h"
 #include "DbException.h"
 
-CDbLiteConnection::CDbLiteConnection()
+DbLiteConnection::DbLiteConnection()
 :
-    CDbConnection()
+    DbConnection()
 {
     m_db_type = "sqlite";
     m_db = NULL;
@@ -16,13 +16,13 @@ CDbLiteConnection::CDbLiteConnection()
 }
 
 
-CDbLiteConnection::~CDbLiteConnection()
+DbLiteConnection::~DbLiteConnection()
 {
     Close();
 }
 
 
-void CDbLiteConnection::set_error()
+void DbLiteConnection::set_error()
 {
     if (m_db != NULL)
     {
@@ -37,7 +37,7 @@ void CDbLiteConnection::set_error()
 }
 
 
-bool CDbLiteConnection::Init(struct sqlite3 *db)
+bool DbLiteConnection::Init(struct sqlite3 *db)
 {
     m_db = db;
     m_did_init = true;
@@ -46,7 +46,7 @@ bool CDbLiteConnection::Init(struct sqlite3 *db)
 }
 
 
-bool CDbLiteConnection::Connect()
+bool DbLiteConnection::Connect()
 {
     int err;
 
@@ -74,7 +74,7 @@ bool CDbLiteConnection::Connect()
 }
 
 
-bool CDbLiteConnection::Close()
+bool DbLiteConnection::Close()
 {
     if (sqlite3_close(m_db) == SQLITE_OK)
     {
@@ -87,11 +87,11 @@ bool CDbLiteConnection::Close()
 }
 
 
-CDbResult CDbLiteConnection::query(const FString& sql)
+DbResult DbLiteConnection::query(const FString& sql)
 {
     unsigned int tries_remaining = m_retries + 1;
     struct timeval tv_start, tv_end;
-    CDbLiteResult res;
+    DbLiteResult res;
     sqlite3_stmt *stmt = NULL;
     FString remain = sql;
     const char *tail = NULL;
@@ -162,32 +162,32 @@ CDbResult CDbLiteConnection::query(const FString& sql)
 }
 
 
-bool CDbLiteConnection::execute(const FString& sql)
+bool DbLiteConnection::execute(const FString& sql)
 {
     return query(sql);
 }
 
 
-CDbResult CDbLiteConnection::store(const FString& sql)
+DbResult DbLiteConnection::store(const FString& sql)
 {
     return query(sql);
 }
 
 
-CDbResult CDbLiteConnection::use(const FString& sql)
+DbResult DbLiteConnection::use(const FString& sql)
 {
     return query(sql);
 }
 
 
-bool CDbLiteConnection::isTemporaryError() const
+bool DbLiteConnection::isTemporaryError() const
 {
     return (m_errno == SQLITE_BUSY ||
             m_errno == SQLITE_LOCKED);
 }
 
 
-FString CDbLiteConnection::escape(const char *str)
+FString DbLiteConnection::escape(const char *str)
 {
     FString ret;
     char *tmp;

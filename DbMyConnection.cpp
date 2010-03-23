@@ -6,9 +6,9 @@
 #include "DbMyResult.h"
 #include "DbException.h"
 
-CDbMyConnection::CDbMyConnection()
+DbMyConnection::DbMyConnection()
 :
-    CDbConnection()
+    DbConnection()
 {
     mysql_init(&m_mysql);
     m_db_type = "mysql";
@@ -16,9 +16,9 @@ CDbMyConnection::CDbMyConnection()
 }
 
 
-CDbMyConnection::CDbMyConnection(const MySQLOptionArray& options)
+DbMyConnection::DbMyConnection(const MySQLOptionArray& options)
 :
-    CDbConnection()
+    DbConnection()
 {
     unsigned i, n = options.size();
 
@@ -35,13 +35,13 @@ CDbMyConnection::CDbMyConnection(const MySQLOptionArray& options)
 }
 
 
-CDbMyConnection::~CDbMyConnection()
+DbMyConnection::~DbMyConnection()
 {
     Close();
 }
 
 
-bool CDbMyConnection::Init(MYSQL *mysql)
+bool DbMyConnection::Init(MYSQL *mysql)
 {
     m_db = mysql;
     m_did_init = true;
@@ -50,7 +50,7 @@ bool CDbMyConnection::Init(MYSQL *mysql)
 }
 
 
-bool CDbMyConnection::Connect(void)
+bool DbMyConnection::Connect(void)
 {
     bool ret;
     unsigned int tries = m_retries + 1;
@@ -93,7 +93,7 @@ bool CDbMyConnection::Connect(void)
 }
 
 
-bool CDbMyConnection::Close(void)
+bool DbMyConnection::Close(void)
 {
     if (m_db != NULL) mysql_close(m_db);
     m_db = NULL;
@@ -101,7 +101,7 @@ bool CDbMyConnection::Close(void)
 }
 
 
-bool CDbMyConnection::execute(const FString& sql)
+bool DbMyConnection::execute(const FString& sql)
 {
     bool ret;
     unsigned int tries_remaining = m_retries + 1;
@@ -114,7 +114,7 @@ bool CDbMyConnection::execute(const FString& sql)
 
     if (m_db == NULL && !Connect()) // try to repair the connection
     {
-        m_error.assign("NULL database handle in CDbMyConnection::execute()");
+        m_error.assign("NULL database handle in DbMyConnection::execute()");
         return false;
     }
 
@@ -145,7 +145,7 @@ bool CDbMyConnection::execute(const FString& sql)
             case CR_SERVER_GONE_ERROR:
             case CR_SERVER_LOST:
                 if (m_queries_pending)
-                    throw CDbException("connection lost during transaction", m_errno, sql);
+                    throw DbException("connection lost during transaction", m_errno, sql);
                 // try reconnecting
                 hlog(HLOG_WARN, "MySQL connection lost, reconnecting...");
                 Connect();
@@ -163,7 +163,7 @@ bool CDbMyConnection::execute(const FString& sql)
 
     if (m_db == NULL)
     {
-        m_error.assign("NULL database handle after query in CDbMyConnection:execute()");
+        m_error.assign("NULL database handle after query in DbMyConnection:execute()");
         return false;
     }
 
@@ -172,9 +172,9 @@ bool CDbMyConnection::execute(const FString& sql)
 }
 
 
-CDbResult CDbMyConnection::store(const FString& sql)
+DbResult DbMyConnection::store(const FString& sql)
 {
-    CDbMyResult result;
+    DbMyResult result;
     MYSQL_RES *result_ptr = NULL;
     int tries = 3;
     while (result_ptr == NULL && tries--)
@@ -186,7 +186,7 @@ CDbResult CDbMyConnection::store(const FString& sql)
         }
         else
         {
-            hlog(HLOG_ERR, "CDbMyConnection::store(): NULL result after successful query; errno=%u error=%s",
+            hlog(HLOG_ERR, "DbMyConnection::store(): NULL result after successful query; errno=%u error=%s",
                  mysql_errno(m_db), mysql_error(m_db));
             // throttle back a bit
             usleep(100000); // sleep 0.1 second
@@ -196,16 +196,16 @@ CDbResult CDbMyConnection::store(const FString& sql)
 }
 
 
-CDbResult CDbMyConnection::use(const FString& sql)
+DbResult DbMyConnection::use(const FString& sql)
 {
-    CDbMyResult result;
+    DbMyResult result;
     if (!execute(sql)) return result;
     result = mysql_use_result(m_db);
     return result;
 }
 
 
-bool CDbMyConnection::isTemporaryError() const
+bool DbMyConnection::isTemporaryError() const
 {
     return (m_errno == ER_GET_TEMPORARY_ERRMSG ||
             m_errno == ER_TRANS_CACHE_FULL ||
@@ -215,7 +215,7 @@ bool CDbMyConnection::isTemporaryError() const
 }
 
 
-FString CDbMyConnection::escape(const char *str)
+FString DbMyConnection::escape(const char *str)
 {
     FString ret, sql(str);
     char *foo = new char[2 + 2 * sql.length()];

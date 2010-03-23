@@ -6,25 +6,25 @@
 #endif
 
 #include "Forte.h"
-// CControlFile is a template class which allows creation and
+// ControlFile is a template class which allows creation and
 // management of a generic 'control file' for parallelizing a large
 // operation into much smaller work units.
 
 // This template supports a single user-defined header type, as well
 // as a user-defined record type.
 
-// POSIX advisory locking is used for concurrency.  A CControlFile
+// POSIX advisory locking is used for concurrency.  A ControlFile
 // object should only be used from a single thread.  Multiple
-// CControlFile objects may be used on the same file to allow
+// ControlFile objects may be used on the same file to allow
 // multithreading.
 
 // Work units are added to the control file with the enqueue() method.
 // A thread may claim a work unit with the claim() method.
 
-EXCEPTION_SUBCLASS(CForteException, CForteControlFileException);
+EXCEPTION_SUBCLASS(ForteException, ForteControlFileException);
 
 template < typename Header, typename Record >
-class CControlFile
+class ControlFile
 {
 public:
     // constants
@@ -49,8 +49,8 @@ public:
 
 public:
     // ctor/dtor
-    CControlFile(const FString& filename) : m_filename(filename) { }
-    virtual ~CControlFile() { }
+    ControlFile(const FString& filename) : m_filename(filename) { }
+    virtual ~ControlFile() { }
 
     // interface
     bool exists() const;                        // checks for file existence

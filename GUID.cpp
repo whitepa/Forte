@@ -15,7 +15,7 @@ FString Forte::GUID::GenerateGUID(bool pathSafe)
     rawGUID.append(Random::GetRandomData(16));
     // base64 encode
     FString GUID;
-    CBase64::Encode(rawGUID, rawGUID.size(), GUID);
+    Base64::Encode(rawGUID, rawGUID.size(), GUID);
     if (pathSafe)
         GUID.Replace("/","_");
     return GUID; 

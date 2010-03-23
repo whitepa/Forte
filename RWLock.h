@@ -25,10 +25,10 @@ namespace Forte
         void _read_unlock(const char *file, unsigned line);
 
     private:
-        CSemaphore m_main_lock;
-        CSemaphore m_read_lock_mutex;
-        CSemaphore m_read_lock_atomic;
-        CSemaphore m_read_lock_count;
+        Semaphore m_main_lock;
+        Semaphore m_read_lock_mutex;
+        Semaphore m_read_lock_atomic;
+        Semaphore m_read_lock_count;
         FString m_file;
         unsigned m_line;
     };
@@ -39,10 +39,10 @@ namespace Forte
 #define read_lock() _read_lock(__FILE__, __LINE__)
 #define read_trylock() _read_trylock(__FILE__, __LINE__)
 #define read_unlock() _read_unlock(__FILE__, __LINE__)
-    class CAutoReadUnlock {
+    class AutoReadUnlock {
     public:
-        CAutoReadUnlock(RWLock &lock) : mUnlockOnDestruct(true), mLock(lock) { mLock.read_lock(); }
-        virtual ~CAutoReadUnlock() { if(mUnlockOnDestruct) unlock(); }
+        AutoReadUnlock(RWLock &lock) : mUnlockOnDestruct(true), mLock(lock) { mLock.read_lock(); }
+        virtual ~AutoReadUnlock() { if(mUnlockOnDestruct) unlock(); }
         inline void unlock() { mLock.read_unlock(); release(); }
         inline void release() { mUnlockOnDestruct = false; }
     protected:
@@ -60,10 +60,10 @@ namespace Forte
         bool mUnlockOnDestruct;
         RWLock &mLock;
     };
-    class CAutoWriteUnlock {
+    class AutoWriteUnlock {
     public:
-        CAutoWriteUnlock(RWLock &lock) : mUnlockOnDestruct(true), mLock(lock) { mLock.write_lock(); }
-        virtual ~CAutoWriteUnlock() { if(mUnlockOnDestruct) unlock(); }
+        AutoWriteUnlock(RWLock &lock) : mUnlockOnDestruct(true), mLock(lock) { mLock.write_lock(); }
+        virtual ~AutoWriteUnlock() { if(mUnlockOnDestruct) unlock(); }
         inline void unlock() { mLock.write_unlock(); mUnlockOnDestruct = false; }
         inline void release() { mUnlockOnDestruct = false; }
     protected:

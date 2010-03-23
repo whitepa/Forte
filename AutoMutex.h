@@ -7,14 +7,14 @@
 
 namespace Forte
 {
-    class CMutex : public Object {
-        friend class CThreadCondition;
+    class Mutex : public Object {
+        friend class ThreadCondition;
     public:
-        inline CMutex(const pthread_mutexattr_t *attr = NULL)
+        inline Mutex(const pthread_mutexattr_t *attr = NULL)
             {
                 pthread_mutex_init(&m_pthread_mutex, attr);
             }
-        inline ~CMutex() {pthread_mutex_destroy(&m_pthread_mutex);}
+        inline ~Mutex() {pthread_mutex_destroy(&m_pthread_mutex);}
         inline int lock() {return pthread_mutex_lock(&m_pthread_mutex);}
         inline int unlock() {return pthread_mutex_unlock(&m_pthread_mutex);}
         inline int trylock() {return pthread_mutex_trylock(&m_pthread_mutex);}
@@ -41,28 +41,28 @@ namespace Forte
         pthread_mutex_t m_pthread_mutex;
     };
 
-    class CAutoLockMutex : public Object {
+    class AutoLockMutex : public Object {
     public:
-        inline CAutoLockMutex(CMutex &mutex):m_mutex(mutex) {m_mutex.unlock();}
-        inline ~CAutoLockMutex() {m_mutex.lock();}
+        inline AutoLockMutex(Mutex &mutex):m_mutex(mutex) {m_mutex.unlock();}
+        inline ~AutoLockMutex() {m_mutex.lock();}
     private:
-        CMutex &m_mutex;
+        Mutex &m_mutex;
     };
 
-    class CAutoUnlockMutex : public Object {
+    class AutoUnlockMutex : public Object {
     public:
-        inline CAutoUnlockMutex(CMutex &mutex):m_mutex(mutex) {m_mutex.lock();}
-        inline ~CAutoUnlockMutex() {m_mutex.unlock();}
+        inline AutoUnlockMutex(Mutex &mutex):m_mutex(mutex) {m_mutex.lock();}
+        inline ~AutoUnlockMutex() {m_mutex.unlock();}
     private:
-        CMutex &m_mutex;
+        Mutex &m_mutex;
     };
 
-    class CAutoUnlockOnlyMutex : public Object {
+    class AutoUnlockOnlyMutex : public Object {
     public:
-        inline CAutoUnlockOnlyMutex(CMutex &mutex):m_mutex(mutex) { }
-        inline ~CAutoUnlockOnlyMutex() { m_mutex.unlock(); }
+        inline AutoUnlockOnlyMutex(Mutex &mutex):m_mutex(mutex) { }
+        inline ~AutoUnlockOnlyMutex() { m_mutex.unlock(); }
     private:
-        CMutex &m_mutex;
+        Mutex &m_mutex;
     };
 };
 #endif

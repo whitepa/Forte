@@ -11,9 +11,9 @@
 
 namespace Forte
 {
-    class CDbLiteConnection;
+    class DbLiteConnection;
 
-    class CDbLiteResult : public CDbResult
+    class DbLiteResult : public DbResult
     {
     protected:
         class LiteData : public Data
@@ -28,7 +28,7 @@ namespace Forte
 
             // abstract interface
             virtual bool isOkay() const;
-            virtual bool fetchRow(CDbResultRow& row /*OUT*/);
+            virtual bool fetchRow(DbResultRow& row /*OUT*/);
             virtual size_t getNumColumns();
             virtual FString getColumnName(size_t i);
             virtual size_t getFieldLength(size_t i);
@@ -36,7 +36,7 @@ namespace Forte
             virtual bool seek(size_t offset);
 
         protected:
-            friend class CDbLiteResult;
+            friend class DbLiteResult;
             typedef std::pair<FString, bool> Val;
             typedef std::vector<Val> Row;
             typedef std::list<Row> RowList;
@@ -48,10 +48,10 @@ namespace Forte
         };
 
     public:
-        CDbLiteResult() : CDbResult() { }
-        CDbLiteResult(const CDbResult& other) : CDbResult(other) { }
-        CDbLiteResult(Data *data) : CDbResult(data) { }
-        virtual ~CDbLiteResult() { }
+        DbLiteResult() : DbResult() { }
+        DbLiteResult(const DbResult& other) : DbResult(other) { }
+        DbLiteResult(Data *data) : DbResult(data) { }
+        virtual ~DbLiteResult() { }
         int Load(sqlite3_stmt *stmt);
     };
 };

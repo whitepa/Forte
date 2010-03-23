@@ -3,6 +3,8 @@
 #include "Forte.h"
 #include "UtilTest.h"
 
+using namespace Forte;
+
 int main2(int argc, char *argv[]);
 int main(int argc, char *argv[])
 {
@@ -24,7 +26,7 @@ int main(int argc, char *argv[])
     {
         cerr << "ABORT: " << err.what() << endl;
     }
-    catch (CException &e)
+    catch (Exception &e)
     {
         cerr << "ABORT: " << e.getDescription() << endl;
     }
@@ -35,8 +37,8 @@ int main2(int argc, char *argv[])
 {
     // start logging to stderr
     char *fake_argv[] = { "utiltest", "-d", "-v" };
-    CServerMain main(sizeof(fake_argv)/sizeof(char*), fake_argv, "c:dv", "");
-    CLogManager& lm = main.mLogManager;
+    ServerMain main(sizeof(fake_argv)/sizeof(char*), fake_argv, "c:dv", "");
+    LogManager& lm = main.mLogManager;
     lm.BeginLogging();
     lm.BeginLogging("//syslog/utiltest");
 
@@ -59,8 +61,8 @@ int main2(int argc, char *argv[])
 
     /*
     // create a thread pool dispatcher
-    CTestRequestHandler rh;
-    CThreadPoolDispatcher disp(rh,  // request handler
+    TestRequestHandler rh;
+    ThreadPoolDispatcher disp(rh,  // request handler
                                5,   // min threads
                                20,  // max threads
                                5,   // min spare threads
@@ -73,7 +75,7 @@ int main2(int argc, char *argv[])
     // throw some events at it
     for (int i = 0; i < 1; i++)
     {
-        CTestEvent *e = new CTestEvent();
+        TestEvent *e = new TestEvent();
         e->mStr.Format("event #%d", i);
         disp.enqueue(e);
     }
@@ -83,38 +85,38 @@ int main2(int argc, char *argv[])
     return 0;
 }
 
-CTestEvent::CTestEvent()
+TestEvent::TestEvent()
 {
     hlog(HLOG_INFO, "event ctor");
 }
-CTestEvent::~CTestEvent()
+TestEvent::~TestEvent()
 {
     hlog(HLOG_INFO, "event dtor");
 }
-void CTestRequestHandler::handler(CEvent *e)
+void TestRequestHandler::handler(Event *e)
 {
-    CTestEvent *te = dynamic_cast<CTestEvent*>(e);
+    TestEvent *te = dynamic_cast<TestEvent*>(e);
     if (te == NULL)
     {
         FString err;
         err.Format("dynamic cast failed in handler()");
-        throw CForteUnilTestException(err);
+        throw ForteUtilTestException(err);
     }
     hlog(HLOG_INFO, "running handler(); str is %s", te->mStr.c_str());
     sleep(1);
 }
 
-void CTestRequestHandler::busy()
+void TestRequestHandler::busy()
 {}
-void CTestRequestHandler::periodic()
+void TestRequestHandler::periodic()
 {
     hlog(HLOG_INFO, "running periodic()");
 }
-void CTestRequestHandler::init()
+void TestRequestHandler::init()
 {
     hlog(HLOG_INFO, "running init()");
 }
-void CTestRequestHandler::cleanup()
+void TestRequestHandler::cleanup()
 {
     hlog(HLOG_INFO, "running cleanup()");
 }

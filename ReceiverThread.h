@@ -6,24 +6,24 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(CForteException, CForteReceiverThreadException);
+    EXCEPTION_SUBCLASS(ForteException, ForteReceiverThreadException);
 
-    class CReceiverThread : public CThread
+    class ReceiverThread : public Thread
     {
     public:
-        inline CReceiverThread(CDispatcher &disp, const char *name, const char *bindIP = "") :
+        inline ReceiverThread(Dispatcher &disp, const char *name, const char *bindIP = "") :
             mDisp(disp), mName(name), mBindIP(bindIP)
             {
-                if (mName.empty()) throw CException("receiver must be given a valid name");
+                if (mName.empty()) throw Exception("receiver must be given a valid name");
                 // TODO: validate IP address
                 initialized();
             }
-//    virtual ~CReceiverThread();
+//    virtual ~ReceiverThread();
 
     protected:
         virtual void * run();
     
-        CDispatcher &mDisp;
+        Dispatcher &mDisp;
         FString mName;
         FString mBindIP;
     };

@@ -8,27 +8,27 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(CForteException, CForteDbRowException);
+    EXCEPTION_SUBCLASS(ForteException, ForteDbRowException);
 
-    typedef std::vector<const char*> CDbResultRow;
+    typedef std::vector<const char*> DbResultRow;
 
 // base class for a row
-    class CDbRow {
+    class DbRow {
     public:
-        CDbRow() { }
-        virtual ~CDbRow() { }
-        virtual void Set(const CDbResultRow& row) = 0;
+        DbRow() { }
+        virtual ~DbRow() { }
+        virtual void Set(const DbResultRow& row) = 0;
 
     protected:
-        static void CheckRange(const CDbResultRow& row, int index);
-        static bool IsNull(const CDbResultRow& row, int index);
-        static int GetInt(const CDbResultRow& row, int index);
-        static unsigned int GetUInt(const CDbResultRow& row, int index);
-        static unsigned long long GetULLInt(const CDbResultRow& row, int index);
-        static bool GetBool(const CDbResultRow& row, int index);
-        static FString GetString(const CDbResultRow& row, int index);
-        static float GetFloat(const CDbResultRow& row, int index);
-        static double GetDouble(const CDbResultRow& row, int index);
+        static void CheckRange(const DbResultRow& row, int index);
+        static bool IsNull(const DbResultRow& row, int index);
+        static int GetInt(const DbResultRow& row, int index);
+        static unsigned int GetUInt(const DbResultRow& row, int index);
+        static unsigned long long GetULLInt(const DbResultRow& row, int index);
+        static bool GetBool(const DbResultRow& row, int index);
+        static FString GetString(const DbResultRow& row, int index);
+        static float GetFloat(const DbResultRow& row, int index);
+        static double GetDouble(const DbResultRow& row, int index);
     };
 };
 #endif

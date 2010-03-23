@@ -5,11 +5,11 @@
 #include <sys/time.h>
 namespace Forte
 {
-    class CLogTimer : public Object
+    class LogTimer : public Object
     {
     public:
-        CLogTimer(int level, const FString& log_str);
-        ~CLogTimer();
+        LogTimer(int level, const FString& log_str);
+        ~LogTimer();
 
     protected:
         int m_level;

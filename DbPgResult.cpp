@@ -4,17 +4,17 @@
 // DbPgResult.cpp
 #include "DbPgResult.h"
 
-// CDbPgResult class
-CDbPgResult::CDbPgResult(PGresult *result)
+// DbPgResult class
+DbPgResult::DbPgResult(PGresult *result)
 :
-    CDbResult()
+    DbResult()
 {
     PgData *data = new PgData(result);
     *this = data;
 }
 
 
-CDbPgResult::operator PGresult*()
+DbPgResult::operator PGresult*()
 {
     PgData *data = dynamic_cast<PgData*>(m_data);
     if (data == NULL) return NULL;
@@ -22,7 +22,7 @@ CDbPgResult::operator PGresult*()
 }
 
 
-uint64_t CDbPgResult::InsertID()
+uint64_t DbPgResult::InsertID()
 {
     PgData *data = dynamic_cast<PgData*>(m_data);
     if (data == NULL) return 0;
@@ -30,8 +30,8 @@ uint64_t CDbPgResult::InsertID()
 }
 
 
-// CDbPgResult::PgData class
-CDbPgResult::PgData::PgData(PGresult *res)
+// DbPgResult::PgData class
+DbPgResult::PgData::PgData(PGresult *res)
 :
     Data()
 {
@@ -42,13 +42,13 @@ CDbPgResult::PgData::PgData(PGresult *res)
 }
 
 
-CDbPgResult::PgData::~PgData()
+DbPgResult::PgData::~PgData()
 {
     if (m_result != NULL) PQclear(m_result);
 }
 
 
-bool CDbPgResult::PgData::isOkay() const
+bool DbPgResult::PgData::isOkay() const
 {
     bool ret = false;
 
@@ -73,7 +73,7 @@ bool CDbPgResult::PgData::isOkay() const
 }
 
 
-bool CDbPgResult::PgData::fetchRow(CDbResultRow& row /*OUT*/)
+bool DbPgResult::PgData::fetchRow(DbResultRow& row /*OUT*/)
 {
     size_t i;
     char *val;
@@ -94,25 +94,25 @@ bool CDbPgResult::PgData::fetchRow(CDbResultRow& row /*OUT*/)
 }
 
 
-size_t CDbPgResult::PgData::getNumColumns()
+size_t DbPgResult::PgData::getNumColumns()
 {
     return m_num_cols;
 }
 
 
-FString CDbPgResult::PgData::getColumnName(size_t i)
+FString DbPgResult::PgData::getColumnName(size_t i)
 {
     return PQfname(m_result, (int)i);
 }
 
 
-size_t CDbPgResult::PgData::getFieldLength(size_t i)
+size_t DbPgResult::PgData::getFieldLength(size_t i)
 {
     return (size_t)PQgetlength(m_result, m_current_row, i);
 }
 
 
-uint64_t CDbPgResult::PgData::InsertID()
+uint64_t DbPgResult::PgData::InsertID()
 {
     if (m_num_rows != 1 || m_num_cols != 1) return 0;
     char *val = PQgetvalue(m_result, 0, 0);

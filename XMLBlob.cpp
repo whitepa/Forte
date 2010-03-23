@@ -7,7 +7,7 @@
 
 using namespace Forte;
 
-CXMLBlob::CXMLBlob(const char *rootName
+XMLBlob::XMLBlob(const char *rootName
     ) :
     readOnly(false)
 {
@@ -21,37 +21,37 @@ CXMLBlob::CXMLBlob(const char *rootName
     lastData=NULL;
 }
 
-CXMLBlob::~CXMLBlob()
+XMLBlob::~XMLBlob()
 {
     xmlFreeDoc(doc);
 }
 
-CXMLBlob::CXMLBlob(const FString &in) :
+XMLBlob::XMLBlob(const FString &in) :
     readOnly(true)
 {
     // parse the incoming XML string
-    throw CForteUnimplementedException("XML parsing not implemented");
+    throw ForteUnimplementedException("XML parsing not implemented");
 }
 
-void CXMLBlob::beginChild(const char *name)
+void XMLBlob::beginChild(const char *name)
 {
     current = xmlNewChild(current, NULL, BAD_CAST name, NULL);
 }
 
-void CXMLBlob::endChild(void)
+void XMLBlob::endChild(void)
 {
     if (current != NULL)
         current = current->parent;
 }
 
-void CXMLBlob::addAttribute(const char *name, const char *value)
+void XMLBlob::addAttribute(const char *name, const char *value)
 {
     FString stripped;
     stripControls(stripped, value);
     xmlNewProp(current, BAD_CAST name, BAD_CAST stripped.c_str());
 }
 
-void CXMLBlob::addDataAttribute(const char *name, const char *value)
+void XMLBlob::addDataAttribute(const char *name, const char *value)
 {
     if (lastData)
     {
@@ -61,30 +61,30 @@ void CXMLBlob::addDataAttribute(const char *name, const char *value)
     }
 }
 
-void CXMLBlob::addData(const char *name, const char *value)
+void XMLBlob::addData(const char *name, const char *value)
 {
     FString stripped;
     addDataToNode(current, name, value);
 }
-void CXMLBlob::addDataRaw(const char *name, const char *value)
+void XMLBlob::addDataRaw(const char *name, const char *value)
 {
     FString stripped;
     addDataToNodeRaw(current, name, value);
 }
 
-void CXMLBlob::addDataToNode(xmlNodePtr node, const char *name, const char *value)
+void XMLBlob::addDataToNode(xmlNodePtr node, const char *name, const char *value)
 {
     FString stripped;
     stripControls(stripped, value);
     lastData = xmlNewTextChild(current, NULL, BAD_CAST name, BAD_CAST stripped.c_str());
 }
-void CXMLBlob::addDataToNodeRaw(xmlNodePtr node, const char *name, const char *value)
+void XMLBlob::addDataToNodeRaw(xmlNodePtr node, const char *name, const char *value)
 {
     FString stripped;
     lastData = xmlNewTextChild(current, NULL, BAD_CAST name, BAD_CAST value);
 }
 
-void CXMLBlob::toString(FString &out,
+void XMLBlob::toString(FString &out,
                         bool pretty
     )
 {
@@ -95,7 +95,7 @@ void CXMLBlob::toString(FString &out,
     xmlFree(buf);
 }
 
-void CXMLBlob::stripControls(FString &dest,  
+void XMLBlob::stripControls(FString &dest,  
                              const char *src 
     )
 {

@@ -11,16 +11,16 @@
 namespace Forte
 {
 // Auto helper to get and release a database connection.
-    class CDbAutoConnection : public Object {
+    class DbAutoConnection : public Object {
     public:
-        CDbAutoConnection(bool autocommit = true)
-            : mPool(CDbConnectionPool::GetInstance()), mDbConnection(mPool.GetDbConnection())
+        DbAutoConnection(bool autocommit = true)
+            : mPool(DbConnectionPool::GetInstance()), mDbConnection(mPool.GetDbConnection())
             {
                 // set autocommit appropriately
                 autoCommit(autocommit);
             };
 
-        CDbAutoConnection(CDbConnectionPool& pool, bool autocommit = true)
+        DbAutoConnection(DbConnectionPool& pool, bool autocommit = true)
             : mPool(pool), mDbConnection(pool.GetDbConnection())
             {
                 // set autocommit appropriately
@@ -32,14 +32,14 @@ namespace Forte
         // destructor would release the DB connection from a copy before
         // the original may be finished.  Plus, this would potentially
         // allow sharing of a db connection.
-        CDbAutoConnection(const CDbAutoConnection &other) : 
+        DbAutoConnection(const DbAutoConnection &other) : 
             mPool(other.mPool), mDbConnection(other.mDbConnection) { 
             // should never execute
-            throw CException();
+            throw Exception();
         };
 
     public:
-        virtual ~CDbAutoConnection() {
+        virtual ~DbAutoConnection() {
             // turn off temporary logging
             logQueries(false);
             try {
@@ -70,26 +70,26 @@ namespace Forte
         }
     
         // Cast operator
-        inline operator CDbConnection* () const {
+        inline operator DbConnection* () const {
             return &mDbConnection;
         };
-        inline operator CDbConnection& () const {
+        inline operator DbConnection& () const {
             return mDbConnection;
         };
     
         // Dereference operator
-        inline CDbConnection& operator*() const {
+        inline DbConnection& operator*() const {
             return mDbConnection;
         };
 
         // Dereference operator
-        inline CDbConnection* operator->() const {
+        inline DbConnection* operator->() const {
             return &mDbConnection;
         };
     
     private:
-        CDbConnectionPool& mPool;
-        CDbConnection & mDbConnection;
+        DbConnectionPool& mPool;
+        DbConnection & mDbConnection;
     };
 };
 #endif

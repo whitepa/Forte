@@ -4,17 +4,17 @@
 // DbMyResult.cpp
 #include "DbMyResult.h"
 
-// CDbMyResult class
-CDbMyResult::CDbMyResult(MYSQL_RES *result)
+// DbMyResult class
+DbMyResult::DbMyResult(MYSQL_RES *result)
 :
-    CDbResult()
+    DbResult()
 {
     MyData *data = new MyData(result);
     *this = data;
 }
 
 
-CDbMyResult::operator MYSQL_RES*()
+DbMyResult::operator MYSQL_RES*()
 {
     MyData *data = dynamic_cast<MyData*>(m_data);
     if (data == NULL) return NULL;
@@ -22,8 +22,8 @@ CDbMyResult::operator MYSQL_RES*()
 }
 
 
-// CDbMyResult::MyData class
-CDbMyResult::MyData::MyData(MYSQL_RES *res)
+// DbMyResult::MyData class
+DbMyResult::MyData::MyData(MYSQL_RES *res)
 :
     Data(),
     m_result(NULL),
@@ -39,19 +39,19 @@ CDbMyResult::MyData::MyData(MYSQL_RES *res)
 }
 
 
-CDbMyResult::MyData::~MyData()
+DbMyResult::MyData::~MyData()
 {
     if (m_result != NULL) mysql_free_result(m_result);
 }
 
 
-bool CDbMyResult::MyData::isOkay() const
+bool DbMyResult::MyData::isOkay() const
 {
     return (m_result != NULL);
 }
 
 
-bool CDbMyResult::MyData::fetchRow(CDbResultRow& row /*OUT*/)
+bool DbMyResult::MyData::fetchRow(DbResultRow& row /*OUT*/)
 {
     bool ret;
     size_t i;
@@ -74,13 +74,13 @@ bool CDbMyResult::MyData::fetchRow(CDbResultRow& row /*OUT*/)
 }
 
 
-size_t CDbMyResult::MyData::getNumColumns()
+size_t DbMyResult::MyData::getNumColumns()
 {
     return m_num_cols;
 }
 
 
-FString CDbMyResult::MyData::getColumnName(size_t i)
+FString DbMyResult::MyData::getColumnName(size_t i)
 {
     if (m_result == NULL) return "";
     MYSQL_FIELD *fields = mysql_fetch_fields(m_result);
@@ -89,7 +89,7 @@ FString CDbMyResult::MyData::getColumnName(size_t i)
 }
 
 
-size_t CDbMyResult::MyData::getFieldLength(size_t i)
+size_t DbMyResult::MyData::getFieldLength(size_t i)
 {
     if (m_result == NULL) return 0;
     unsigned long *lengths = mysql_fetch_lengths(m_result);
@@ -97,13 +97,13 @@ size_t CDbMyResult::MyData::getFieldLength(size_t i)
     return (size_t)lengths[i];
 }
 
-size_t CDbMyResult::MyData::getNumRows()
+size_t DbMyResult::MyData::getNumRows()
 {
     if (m_result == NULL) return 0;
     return mysql_num_rows(m_result);
 }
 
-bool CDbMyResult::MyData::seek(size_t offset)
+bool DbMyResult::MyData::seek(size_t offset)
 {
     if (m_result == NULL) return false;
     mysql_data_seek(m_result, offset);

@@ -18,22 +18,19 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(CForteException, CForteThreadException);
+    EXCEPTION_SUBCLASS(ForteException, ForteThreadException);
 
-    class CThread : public Object
+    class Thread : public Object
     {
     public:
-        // Setting selfDelete to true will create a 'detached' thread which will
-        // clean itself up on its own.
-        inline CThread(bool selfDelete = false) : 
+        inline Thread(void) : 
             mInitializedNotify(mInitializedLock), 
             mInitialized(false),
             mThreadShutdown(false), 
-            mSelfDelete(selfDelete),
             mShutdownComplete(false),
             mShutdownNotify(mShutdownNotifyLock)
-            { pthread_create(&mThread, NULL, CThread::startThread, this); };
-        virtual ~CThread();
+            { pthread_create(&mThread, NULL, Thread::startThread, this); };
+        virtual ~Thread();
 
         // Tell a thread to shut itself down.
         inline void shutdown(void) { mThreadShutdown = true; };
@@ -49,7 +46,7 @@ namespace Forte
         static void makeKey(void);
     public:
         // get pointer to your thread object
-        static CThread * myThread(void);
+        static Thread * myThread(void);
 
         unsigned int mPid;
         FString mThreadName;
@@ -58,14 +55,13 @@ namespace Forte
         virtual void *run(void) = 0;
         static void *startThread(void *obj);
         pthread_t mThread;
-        CMutex mInitializedLock;
-        CThreadCondition mInitializedNotify;
+        Mutex mInitializedLock;
+        ThreadCondition mInitializedNotify;
         bool mInitialized;
         bool mThreadShutdown;
-        bool mSelfDelete;
         bool mShutdownComplete;
-        CMutex mShutdownNotifyLock;
-        CThreadCondition mShutdownNotify;
+        Mutex mShutdownNotifyLock;
+        ThreadCondition mShutdownNotify;
         static pthread_key_t sThreadKey;
         static pthread_once_t sThreadKeyOnce;
     };

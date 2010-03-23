@@ -12,11 +12,11 @@ namespace Forte
     {
     public:
         // types
-        class CurlException : public CException
+        class CurlException : public Exception
         {
         public:
             CurlException(int errorCode, const FString &str) :
-                CException(str),
+                Exception(str),
                 mErrorCode(errorCode) {};
             int mErrorCode;
         };

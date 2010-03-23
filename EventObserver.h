@@ -1,7 +1,7 @@
 #ifndef __EventObserver_h
 #define __EventObserver_h
 
-// CEventObserver manages event observers
+// EventObserver manages event observers
 // A single thread is created when observers exist
 // All other threads may call broadcastEvent() at any time, passing it
 // an event for any interested observers.  Incoming events are placed into
@@ -20,27 +20,27 @@
 #define EO_SUBSYS_SERVER        0
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(CForteException, CForteEventObserverException);
-    EXCEPTION_SUBCLASS(CForteEventObserverException, CBadObserverException);
+    EXCEPTION_SUBCLASS(ForteException, ForteEventObserverException);
+    EXCEPTION_SUBCLASS(ForteEventObserverException, CBadObserverException);
 
-    class CEventObserver : public Object {
-        friend class CObserverThread;
+    class EventObserver : public Object {
+        friend class ObserverThread;
     public:
-        CEventObserver() {};
-        CEventObserver(unsigned int subsysID,
-                       unsigned int typeMask, CCallback *callback) :
+        EventObserver() {};
+        EventObserver(unsigned int subsysID,
+                       unsigned int typeMask, Callback *callback) :
             mSubsysID(subsysID), mTypeMask(typeMask), mCallback(callback) {};
-        virtual ~CEventObserver() {};
-        static void broadcastEvent(CObservableEvent *event);
+        virtual ~EventObserver() {};
+        static void broadcastEvent(ObservableEvent *event);
         static void broadcastEvent(unsigned int subsysID, 
                                    unsigned int eventType, 
                                    const char *eventData);
 
-        static void runEventCallbacks(CObservableEvent *event);
+        static void runEventCallbacks(ObservableEvent *event);
 
         static unsigned int registerObserver(unsigned int subsysID,
                                              unsigned int typeMask, 
-                                             CCallback *callback);
+                                             Callback *callback);
         static void unregisterObserver(unsigned int observerID);
 
 
@@ -48,23 +48,23 @@ namespace Forte
         static void startObserverThread(void);
         static void stopObserverThread(void);
 
-        static std::map<unsigned int, CEventObserver> sEventObservers;
+        static std::map<unsigned int, EventObserver> sEventObservers;
         static unsigned int sNextID;
         static RWLock sLock;
-        static CEventQueue sQueue;
-        static CMutex sNotifyLock;
-        static CThreadCondition sNotify;
-        static CThread *sObserverThread;
+        static EventQueue sQueue;
+        static Mutex sNotifyLock;
+        static ThreadCondition sNotify;
+        static Thread *sObserverThread;
 
         unsigned int mSubsysID; // unsigned int identifying the desired subsystem
         unsigned int mTypeMask; // bitmask flagging desired events
-        CCallback *mCallback; // method to call with event ptr
+        Callback *mCallback; // method to call with event ptr
     };
 
-    class CObserverThread : public CThread {
+    class ObserverThread : public Thread {
     public:
-        CObserverThread() { initialized(); }
-        virtual ~CObserverThread() {};
+        ObserverThread() { initialized(); }
+        virtual ~ObserverThread() {};
     protected:
         void *run(void);
     };

@@ -10,27 +10,27 @@
 #error libxml not configured with tree and output support
 #endif
 
-/// CXMLBlob is a fairly simple, free-form, non-validating, XML writing class.  The XML document
+/// XMLBlob is a fairly simple, free-form, non-validating, XML writing class.  The XML document
 /// must be constructed from beginning to end.
 ///
 namespace Forte
 {
-    class CXMLBlob
+    class XMLBlob
     {
     public:
         /// Construct a new XML document with the specified root node name.
         ///
-        CXMLBlob(const char *rootName ///< The name of the document's root element.
+        XMLBlob(const char *rootName ///< The name of the document's root element.
             );
 
         /// Future plans include parsing of XML documents, which this constructor would be used for.
         /// Currently, this constructor will throw an exception, as it is not yet implemented.
         ///
-        CXMLBlob(const FString &in);
+        XMLBlob(const FString &in);
 
-        /// The CXMLBlob destructor frees all internally allocated memory.
+        /// The XMLBlob destructor frees all internally allocated memory.
         ///
-        virtual ~CXMLBlob();
+        virtual ~XMLBlob();
     
         /// Create a child element of the previously added node.  This effectively 'pushes' an element 
         /// on to a stack, such that all data nodes and child nodes added after this call will end up

@@ -10,7 +10,7 @@
 
 namespace Forte
 {
-    class CDbPgResult : public CDbResult
+    class DbPgResult : public DbResult
     {
     protected:
         class PgData : public Data
@@ -22,21 +22,21 @@ namespace Forte
 
             // abstract interface
             virtual bool isOkay() const;
-            virtual bool fetchRow(CDbResultRow& row /*OUT*/);
+            virtual bool fetchRow(DbResultRow& row /*OUT*/);
             virtual size_t getNumColumns();
             virtual FString getColumnName(size_t i);
             virtual size_t getFieldLength(size_t i);
             virtual size_t getNumRows() { 
-                throw CException("DbPgResult::getNumRows not implemented");
+                throw Exception("DbPgResult::getNumRows not implemented");
             }
             virtual bool seek(size_t offset) {
-                throw CException("DbPgResult::seek not implemented");
+                throw Exception("DbPgResult::seek not implemented");
             }
             // additions for PostgreSQL only
             virtual uint64_t InsertID();
 
         protected:
-            friend class CDbPgResult;
+            friend class DbPgResult;
             PGresult *m_result;
             size_t m_num_rows;
             size_t m_num_cols;
@@ -44,11 +44,11 @@ namespace Forte
         };
 
     public:
-        CDbPgResult() : CDbResult() { }
-        CDbPgResult(const CDbResult& other) : CDbResult(other) { }
-        CDbPgResult(Data *data) : CDbResult(data) { }
-        CDbPgResult(PGresult *result);
-        virtual ~CDbPgResult() { }
+        DbPgResult() : DbResult() { }
+        DbPgResult(const DbResult& other) : DbResult(other) { }
+        DbPgResult(Data *data) : DbResult(data) { }
+        DbPgResult(PGresult *result);
+        virtual ~DbPgResult() { }
         virtual uint64_t InsertID();
 
     public:

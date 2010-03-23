@@ -17,24 +17,24 @@
 
 // statics
 template < typename Header, typename Record >
-const unsigned CControlFile<Header, Record>::s_lock_timeout = 60;
+const unsigned ControlFile<Header, Record>::s_lock_timeout = 60;
 
 // CReplicationControlFile definition
 template < typename Header, typename Record >
-bool CControlFile<Header, Record>::exists() const
+bool ControlFile<Header, Record>::exists() const
 {
     struct stat st;
     bool ret = (FileSystem::get()->stat(m_filename, &st) == 0);
-    hlog(HLOG_DEBUG2, "CControlFile::%s() = %s", __FUNCTION__,
+    hlog(HLOG_DEBUG2, "ControlFile::%s() = %s", __FUNCTION__,
          (ret ? "true" : "false"));
     return ret;
 }
 
 
 template < typename Header, typename Record >
-void CControlFile<Header, Record>::createEmpty()
+void ControlFile<Header, Record>::createEmpty()
 {
-    hlog(HLOG_DEBUG2, "CControlFile::%s()", __FUNCTION__);
+    hlog(HLOG_DEBUG2, "ControlFile::%s()", __FUNCTION__);
     header_t header;
     FString stmp;
     AutoFD fd;
@@ -44,7 +44,7 @@ void CControlFile<Header, Record>::createEmpty()
 
     // open control file for read-write
     if ((m_fd = ::open(m_filename, O_RDWR|O_CREAT, 0600)) == -1)
-        throw CForteControlFileException(FStringFC(), "Failed to create control file '%s': %s",
+        throw ForteControlFileException(FStringFC(), "Failed to create control file '%s': %s",
                                          m_filename.c_str(), FileSystem::get()->strerror(errno).c_str());
 
     // write header
@@ -60,20 +60,20 @@ void CControlFile<Header, Record>::createEmpty()
     header.last_progress_time = time(NULL);
 
     if (write(m_fd, &header, sizeof(header)) != sizeof(header))
-        throw CForteControlFileException(FStringFC(), "Failed to write control file header to '%s': %s",
+        throw ForteControlFileException(FStringFC(), "Failed to write control file header to '%s': %s",
                                          m_filename.c_str(), FileSystem::get()->strerror(errno).c_str());
     fsync(m_fd);
 }
 
 template < typename Header, typename Record >
-void CControlFile<Header, Record>::unlink()
+void ControlFile<Header, Record>::unlink()
 {
-    hlog(HLOG_DEBUG2, "CControlFile::%s()", __FUNCTION__);
+    hlog(HLOG_DEBUG2, "ControlFile::%s()", __FUNCTION__);
     FileSystem::get()->unlink(m_filename);
 }
 
 template < typename Header, typename Record >
-void CControlFile<Header, Record>::setHeader(const Header &userHeader)
+void ControlFile<Header, Record>::setHeader(const Header &userHeader)
 {
     checkOpen();
     // update the user header
@@ -81,28 +81,28 @@ void CControlFile<Header, Record>::setHeader(const Header &userHeader)
         FileSystem::AdvisoryAutoUnlock lock(m_fd, sizeof(header_t), sizeof(Header), true);
         lseek64(m_fd, sizeof(header_t), SEEK_SET); // seek past our header
         if (write(m_fd, &userHeader, sizeof(Header)) != sizeof(Header))
-            throw CForteControlFileException(FStringFC(), "failed to write user header (%lu bytes) to control file '%s'",
+            throw ForteControlFileException(FStringFC(), "failed to write user header (%lu bytes) to control file '%s'",
                                              sizeof(Header), m_filename.c_str());
         fdatasync(m_fd);
     }
 }
 template < typename Header, typename Record >
-void CControlFile<Header, Record>::getHeader(Header &userHeader)
+void ControlFile<Header, Record>::getHeader(Header &userHeader)
 {
     checkOpen();
     {
         FileSystem::AdvisoryAutoUnlock lock(m_fd, sizeof(header_t), sizeof(Header), false);
         lseek64(m_fd, sizeof(header_t), SEEK_SET); // seek past our header
         if (::read(m_fd, &userHeader, sizeof(Header)) != sizeof(Header))
-            throw CForteControlFileException(FStringFC(), "failed to read user header (%lu bytes) to control file '%s'",
+            throw ForteControlFileException(FStringFC(), "failed to read user header (%lu bytes) to control file '%s'",
                                              sizeof(Header), m_filename.c_str());
     }    
 }
 
 template < typename Header, typename Record >
-uint64_t CControlFile<Header, Record>::enqueue(const Record &r)
+uint64_t ControlFile<Header, Record>::enqueue(const Record &r)
 {
-    hlog(HLOG_DEBUG2, "CControlFile::%s([record])", __FUNCTION__);
+    hlog(HLOG_DEBUG2, "ControlFile::%s([record])", __FUNCTION__);
     off64_t orig_eof = 0;
 
     checkOpen();
@@ -132,7 +132,7 @@ uint64_t CControlFile<Header, Record>::enqueue(const Record &r)
         if (write(m_fd, &record, sizeof(record_t)) != sizeof(record_t))
         {
             ftruncate(m_fd, orig_eof); // undo everything
-            throw CForteControlFileException(FStringFC(), "failed to write record to control file '%s'",
+            throw ForteControlFileException(FStringFC(), "failed to write record to control file '%s'",
                                              m_filename.c_str());
         }
         writeHeader(header);
@@ -143,14 +143,14 @@ uint64_t CControlFile<Header, Record>::enqueue(const Record &r)
 }
 
 template < typename Header, typename Record >
-void CControlFile<Header, Record>::checkOpen(void)
+void ControlFile<Header, Record>::checkOpen(void)
 {
     if (m_fd != AutoFD::NONE)
         // already open
         return;
 
     if ((m_fd = ::open(m_filename, O_RDWR|O_NONBLOCK, 0600)) == -1)
-        throw CForteControlFileException(FStringFC(), "failed to open control file '%s': %s",
+        throw ForteControlFileException(FStringFC(), "failed to open control file '%s': %s",
                                          m_filename.c_str(), FileSystem::get()->strerror(errno).c_str());
 
     // read header
@@ -158,7 +158,7 @@ void CControlFile<Header, Record>::checkOpen(void)
     header_t header;
     size_t bytesRead;
     if ((bytesRead = ::read(m_fd, &header, sizeof(header))) != sizeof(header))
-        throw CForteControlFileException(FStringFC(), "Failed to read control file header to '%s': %s, "
+        throw ForteControlFileException(FStringFC(), "Failed to read control file header to '%s': %s, "
                                          "expected %llu bytes, got %llu",
                                          m_filename.c_str(), 
                                          FileSystem::get()->strerror(errno).c_str(),
@@ -169,14 +169,14 @@ void CControlFile<Header, Record>::checkOpen(void)
     if (header.header_size != sizeof(header_t) || 
         header.user_header_size != sizeof(Header) ||
         header.record_size != sizeof(Record))
-        throw CForteControlFileException(FStringFC(), "Invalid control file '%s'", m_filename.c_str());        
+        throw ForteControlFileException(FStringFC(), "Invalid control file '%s'", m_filename.c_str());        
 }
 
 
 template < typename Header, typename Record >
-bool CControlFile<Header, Record>::claim(off64_t &offset/*OUT*/, Record &record/*OUT*/)
+bool ControlFile<Header, Record>::claim(off64_t &offset/*OUT*/, Record &record/*OUT*/)
 {
-    hlog(HLOG_DEBUG3, "CControlFile::%s()", __FUNCTION__);
+    hlog(HLOG_DEBUG3, "ControlFile::%s()", __FUNCTION__);
 
     //struct in_addr addr;
 //     off64_t offset;
@@ -198,12 +198,12 @@ bool CControlFile<Header, Record>::claim(off64_t &offset/*OUT*/, Record &record/
 
         record_t wrapper;
         if (::read(m_fd, &wrapper, sizeof(wrapper)) != sizeof(wrapper))
-            throw CForteControlFileException(FStringFC(), "failed to read next available record in control file '%s': %s",
+            throw ForteControlFileException(FStringFC(), "failed to read next available record in control file '%s': %s",
                                              m_filename.c_str(), FileSystem::get()->strerror(errno).c_str());
 
         // verify status
         if (wrapper.status != CF_STATUS_QUEUED)
-            throw CForteControlFileException(FStringFC(), "control file '%s' in invalid state. "
+            throw ForteControlFileException(FStringFC(), "control file '%s' in invalid state. "
                                              "expected CF_STATUS_QUEUED but got %u",
                                              m_filename.c_str(), wrapper.status);
 
@@ -219,7 +219,7 @@ bool CControlFile<Header, Record>::claim(off64_t &offset/*OUT*/, Record &record/
 
         if (write(m_fd, &wrapper, sizeof(wrapper)) != sizeof(wrapper))
         {
-            throw CForteControlFileException(FStringFC(), "failed to re-write record in control file '%s': %s",
+            throw ForteControlFileException(FStringFC(), "failed to re-write record in control file '%s': %s",
                                              m_filename.c_str(), FileSystem::get()->strerror(errno).c_str());
         }
 
@@ -244,7 +244,7 @@ bool CControlFile<Header, Record>::claim(off64_t &offset/*OUT*/, Record &record/
             }
             if (bytesRead == 0)
             {
-                throw CForteControlFileException("should have found a next record");                
+                throw ForteControlFileException("should have found a next record");                
             }
         }
 
@@ -257,9 +257,9 @@ bool CControlFile<Header, Record>::claim(off64_t &offset/*OUT*/, Record &record/
 }
 
 template < typename Header, typename Record >
-void CControlFile<Header, Record>::unclaim(off64_t offset)
+void ControlFile<Header, Record>::unclaim(off64_t offset)
 {
-    hlog(HLOG_DEBUG3, "CControlFile::%s(%llu)", __FUNCTION__, offset);
+    hlog(HLOG_DEBUG3, "ControlFile::%s(%llu)", __FUNCTION__, offset);
 
     struct in_addr addr;
 //     off64_t offset;
@@ -275,13 +275,13 @@ void CControlFile<Header, Record>::unclaim(off64_t offset)
         lseek(m_fd, offset, SEEK_SET);
         record_t wrapper;
         if (::read(m_fd, &wrapper, sizeof(wrapper)) != sizeof(wrapper))
-            throw CForteControlFileException(FStringFC(), "failed to read next available record in control file '%s': %s",
+            throw ForteControlFileException(FStringFC(), "failed to read next available record in control file '%s': %s",
                                              m_filename.c_str(), FileSystem::get()->strerror(errno).c_str());
 
         // verify status
         // make sure we have it claimed
         if (wrapper.status != 1) //TODO: change status to verify ip
-            throw CForteControlFileException(FStringFC(), "control file record '%s' is not claimed",
+            throw ForteControlFileException(FStringFC(), "control file record '%s' is not claimed",
                                              m_filename.c_str());
 
 //    inet_aton(NetUtil::get()->getMyPrivateIP(), &addr); TODO
@@ -291,7 +291,7 @@ void CControlFile<Header, Record>::unclaim(off64_t offset)
         wrapper.status = CF_STATUS_QUEUED;
         if (write(m_fd, &wrapper, sizeof(wrapper)) != sizeof(wrapper))
         {
-            throw CForteControlFileException("failed to re-write record in control file '%s': %s",
+            throw ForteControlFileException("failed to re-write record in control file '%s': %s",
                                              m_filename.c_str(), FileSystem::get()->strerror(errno).c_str());
         }
 
@@ -311,9 +311,9 @@ void CControlFile<Header, Record>::unclaim(off64_t offset)
 }
 
 template < typename Header, typename Record >
-void CControlFile<Header, Record>::complete(off64_t offset, const Record &r)
+void ControlFile<Header, Record>::complete(off64_t offset, const Record &r)
 {
-    hlog(HLOG_DEBUG3, "CControlFile::%s(%llu)", __FUNCTION__, offset);
+    hlog(HLOG_DEBUG3, "ControlFile::%s(%llu)", __FUNCTION__, offset);
 
     //struct in_addr addr;
 //     off64_t offset;
@@ -329,14 +329,14 @@ void CControlFile<Header, Record>::complete(off64_t offset, const Record &r)
         lseek(m_fd, offset, SEEK_SET);
         record_t wrapper;
         if (::read(m_fd, &wrapper, sizeof(wrapper)) != sizeof(wrapper))
-            throw CForteControlFileException(FStringFC(), "failed to read next available record in control file '%s': %s",
+            throw ForteControlFileException(FStringFC(), "failed to read next available record in control file '%s': %s",
                                              m_filename.c_str(), FileSystem::get()->strerror(errno).c_str());
 
         // verify status
         // make sure we have it claimed
         //if (wrapper.status != addr.s_addr) //TODO: update status to ip
         if (wrapper.status != 1)
-            throw CForteControlFileException(FStringFC(), 
+            throw ForteControlFileException(FStringFC(), 
                                              "control file record at offset %llu returned"
                                              " status %u instead of claimed",
                                              (unsigned long long) offset, wrapper.status);
@@ -351,7 +351,7 @@ void CControlFile<Header, Record>::complete(off64_t offset, const Record &r)
         wrapper.status = CF_STATUS_DONE;
         if (write(m_fd, &wrapper, sizeof(wrapper)) != sizeof(wrapper))
         {
-            throw CForteControlFileException(FStringFC(), "failed to re-write record in control file '%s': %s",
+            throw ForteControlFileException(FStringFC(), "failed to re-write record in control file '%s': %s",
                                              m_filename.c_str(), FileSystem::get()->strerror(errno).c_str());
         }
 
@@ -364,11 +364,11 @@ void CControlFile<Header, Record>::complete(off64_t offset, const Record &r)
     // done
 }
 template < typename Header, typename Record >
-void CControlFile<Header, Record>::read(uint64_t recnum, 
+void ControlFile<Header, Record>::read(uint64_t recnum, 
                                         Record &r /*OUT*/, 
                                         unsigned int &status /*OUT*/)
 {
-    hlog(HLOG_DEBUG3, "CControlFile::%s()", __FUNCTION__);
+    hlog(HLOG_DEBUG3, "ControlFile::%s()", __FUNCTION__);
 
     checkOpen();
     {
@@ -378,7 +378,7 @@ void CControlFile<Header, Record>::read(uint64_t recnum,
 
         // verify recnum is feasible
         if (recnum >= header.n_total)
-            throw CForteControlFileException(FStringFC(), "recnum %llu is out of range (max is %llu)",
+            throw ForteControlFileException(FStringFC(), "recnum %llu is out of range (max is %llu)",
                                              (unsigned long long) recnum, 
                                              (unsigned long long) header.n_total - 1);
 
@@ -387,7 +387,7 @@ void CControlFile<Header, Record>::read(uint64_t recnum,
         lseek(m_fd, offset, SEEK_SET);
         record_t wrapper;
         if (::read(m_fd, &wrapper, sizeof(wrapper)) != sizeof(wrapper))
-            throw CForteControlFileException(FStringFC(), 
+            throw ForteControlFileException(FStringFC(), 
                                              "failed to read record number %llu in control file '%s': %s",
                                              (unsigned long long) recnum, 
                                              m_filename.c_str(), 
@@ -402,7 +402,7 @@ void CControlFile<Header, Record>::read(uint64_t recnum,
 }
 
 template < typename Header, typename Record >
-void CControlFile<Header, Record>::getProgress(uint64_t& complete /*OUT*/,
+void ControlFile<Header, Record>::getProgress(uint64_t& complete /*OUT*/,
                                                uint64_t& total    /*OUT*/,
                                                uint64_t& claimed  /*OUT*/,
                                                time_t& last_progress_time /*OUT*/,
@@ -427,22 +427,22 @@ void CControlFile<Header, Record>::getProgress(uint64_t& complete /*OUT*/,
 }
 
 template < typename Header, typename Record >
-void CControlFile<Header, Record>::readHeader(header_t &header)
+void ControlFile<Header, Record>::readHeader(header_t &header)
 {
     // locking must be performed by the caller
     lseek64(m_fd, 0, SEEK_SET);
     if (::read(m_fd, &header, sizeof(header_t)) != sizeof(header_t))
-        throw CForteControlFileException(FStringFC(), "failed to read header (%lu bytes) from control file '%s'",
+        throw ForteControlFileException(FStringFC(), "failed to read header (%lu bytes) from control file '%s'",
                                          sizeof(header_t), m_filename.c_str());
 }
 
 template < typename Header, typename Record >
-void CControlFile<Header, Record>::writeHeader(const header_t &header)
+void ControlFile<Header, Record>::writeHeader(const header_t &header)
 {
     // locking must be performed by the caller
     lseek64(m_fd, 0, SEEK_SET); // seek to 0, rewrite header
     if (write(m_fd, &header, sizeof(header_t)) != sizeof(header_t))
-        throw CForteControlFileException(FStringFC(), "failed to write header (%lu bytes) to control file '%s'",
+        throw ForteControlFileException(FStringFC(), "failed to write header (%lu bytes) to control file '%s'",
                                          sizeof(header_t), m_filename.c_str());
     fdatasync(m_fd);
 }

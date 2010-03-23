@@ -5,30 +5,30 @@
 #include <openssl/pem.h>
 #include <openssl/err.h>
 
-CKeyBuffer::CKeyBuffer()
+KeyBuffer::KeyBuffer()
 {
     if ((mBuf = BIO_new(BIO_s_mem()))==NULL)
-        throw CForteSecureStringException("CKeyBuffer(): failed to allocate buffer");
+        throw ForteSecureStringException("KeyBuffer(): failed to allocate buffer");
 }
 
-CKeyBuffer::CKeyBuffer(const FString &in)
+KeyBuffer::KeyBuffer(const FString &in)
 {
     if ((mBuf = BIO_new(BIO_s_mem()))==NULL)
-        throw CForteSecureStringException("CKeyBuffer(): failed to allocate buffer");
+        throw ForteSecureStringException("KeyBuffer(): failed to allocate buffer");
 //    BIO_write(mBuf,(void *)in.c_str(), in.length());
     BIO_puts(mBuf, in.c_str());
 //    if ((mBuf = BIO_new_mem_buf(const_cast<void *>((const void *)in.c_str()), in.length()))==NULL)
-//        throw CForteSecureStringException("CKeyBuffer(): failed to allocate buffer");
+//        throw ForteSecureStringException("KeyBuffer(): failed to allocate buffer");
 }
 
-CKeyBuffer::~CKeyBuffer()
+KeyBuffer::~KeyBuffer()
 {
     BIO_free(mBuf);
 }
 
 //////////////////
 
-CPublicKey::CPublicKey(const CKeyBuffer &keybuf, const char *passphrase)
+PublicKey::PublicKey(const KeyBuffer &keybuf, const char *passphrase)
 {
 //    char *ptr = NULL;
 //    BIO_get_mem_data(keybuf.mBuf, &ptr);
@@ -41,22 +41,22 @@ CPublicKey::CPublicKey(const CKeyBuffer &keybuf, const char *passphrase)
     {
         ERR_load_crypto_strings();
 //        ERR_print_errors_fp(stderr);
-        throw CForteSecureStringException(FStringFC(),
+        throw ForteSecureStringException(FStringFC(),
                          "failed to load public key: %s",
                          ERR_error_string(ERR_get_error(), NULL));
     }
 }
 
-CPublicKey::~CPublicKey()
+PublicKey::~PublicKey()
 {
 
 }
 
-CPrivateKey::CPrivateKey(const CKeyBuffer &keybuf, const char *passphrase)
+PrivateKey::PrivateKey(const KeyBuffer &keybuf, const char *passphrase)
 {
 //    char *ptr = NULL;
 //    BIO_get_mem_data(keybuf.mBuf, &ptr);
-//    cout << "CPrivateKey about to use BIO buffer: " << ptr << endl;
+//    cout << "PrivateKey about to use BIO buffer: " << ptr << endl;
 //    BIO_reset(keybuf.mBuf);
     if ((mKey = PEM_read_bio_RSAPrivateKey(keybuf.mBuf, NULL, NULL,
                                            const_cast<void *>((const void*)passphrase)))==NULL)
@@ -65,25 +65,25 @@ CPrivateKey::CPrivateKey(const CKeyBuffer &keybuf, const char *passphrase)
     {
         ERR_load_crypto_strings();
 //        ERR_print_errors_fp(stderr);
-        throw CForteSecureStringException(FStringFC(),
+        throw ForteSecureStringException(FStringFC(),
                          "failed to load private key: %s",
                          ERR_error_string(ERR_get_error(), NULL));
     }
 }
 
-CPrivateKey::~CPrivateKey()
+PrivateKey::~PrivateKey()
 {
 
 }
 
 /////////////////////
 
-CRSAString::CRSAString(const FString &plaintext, CPublicKey &key)
+RSAString::RSAString(const FString &plaintext, PublicKey &key)
 {
     size_t size = RSA_size(key.mKey);
     // length must be less than RSA_size() - 11 (per RSA_public_encrypt(3))
     if (plaintext.length() + 1 > size - 11)
-        throw CForteSecureStringException(FStringFC(), "plaintext is too long for key; max is %u bytes",
+        throw ForteSecureStringException(FStringFC(), "plaintext is too long for key; max is %u bytes",
                          (unsigned)(size - 11));
     unsigned char *ciphertext = new unsigned char[size];
     memset(ciphertext, 0, size);
@@ -92,26 +92,26 @@ CRSAString::CRSAString(const FString &plaintext, CPublicKey &key)
     {
         delete [] ciphertext;
         ERR_load_crypto_strings();
-        throw CForteSecureStringException(FStringFC(), "CRSAString: Encryption failed: %s", 
+        throw ForteSecureStringException(FStringFC(), "RSAString: Encryption failed: %s", 
                          ERR_error_string(ERR_get_error(), NULL));
     }
     // convert to text
-    CBase64::Encode((char *)ciphertext, size, mCiphertext);
+    Base64::Encode((char *)ciphertext, size, mCiphertext);
     memset(ciphertext, 0, size);
     delete [] ciphertext;
 }
-CRSAString::~CRSAString()
+RSAString::~RSAString()
 {
     
 }
-void CRSAString::getPlaintext(FString &plaintext/*OUT*/, CPrivateKey &key)
+void RSAString::getPlaintext(FString &plaintext/*OUT*/, PrivateKey &key)
 {
     size_t size = RSA_size(key.mKey);
     unsigned char *plain = new unsigned char[size];
 //    cerr << "RSA size is " << size << endl;
     // convert to binary
     FString binCiphertext;
-    CBase64::Decode(mCiphertext, binCiphertext);
+    Base64::Decode(mCiphertext, binCiphertext);
 //    cerr << "binCiphertext size is " << binCiphertext.length() << endl;
     int plainsize = 0;
     if ((plainsize = RSA_private_decrypt(binCiphertext.length(), (const unsigned char *)binCiphertext.data(), 
@@ -120,13 +120,13 @@ void CRSAString::getPlaintext(FString &plaintext/*OUT*/, CPrivateKey &key)
         delete [] plain;
         ERR_load_crypto_strings();
         ERR_print_errors_fp(stderr);
-        throw CForteSecureStringException(FStringFC(), "CRSAString: Decryption failed: %s",
+        throw ForteSecureStringException(FStringFC(), "RSAString: Decryption failed: %s",
                          ERR_error_string(ERR_get_error(), NULL));
     }
     else if (plainsize > (int)size)
     {
         delete [] plain;
-        throw CForteSecureStringException("plainsize > RSA_size()");
+        throw ForteSecureStringException("plainsize > RSA_size()");
     }
     // don't count the last char if it's null when assigning to the FString
     if (plainsize > 0 && plain[plainsize - 1] == 0)

@@ -6,11 +6,11 @@
 #include "XMLNode.h"
 namespace Forte
 {
-    class CXMLTextNode : public CXMLNode
+    class XMLTextNode : public XMLNode
     {
     public:
-        CXMLTextNode(const FString& name, const FString& text, xmlNodePtr parent = NULL);
-        virtual ~CXMLTextNode() { }
+        XMLTextNode(const FString& name, const FString& text, xmlNodePtr parent = NULL);
+        virtual ~XMLTextNode() { }
     };
 };
 #endif

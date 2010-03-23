@@ -1,40 +1,40 @@
 #include "Forte.h"
 
-std::map<unsigned int, CEventObserver> CEventObserver::sEventObservers;
-RWLock CEventObserver::sLock;
-unsigned int CEventObserver::sNextID = 0;
-CMutex CEventObserver::sNotifyLock;
-CThreadCondition CEventObserver::sNotify(CEventObserver::sNotifyLock);
-CEventQueue CEventObserver::sQueue(100000, &sNotify); // XXX need unreliable queue which does not block on add()
-CThread * CEventObserver::sObserverThread = NULL;
+std::map<unsigned int, EventObserver> EventObserver::sEventObservers;
+RWLock EventObserver::sLock;
+unsigned int EventObserver::sNextID = 0;
+Mutex EventObserver::sNotifyLock;
+ThreadCondition EventObserver::sNotify(EventObserver::sNotifyLock);
+EventQueue EventObserver::sQueue(100000, &sNotify); // XXX need unreliable queue which does not block on add()
+Thread * EventObserver::sObserverThread = NULL;
 
-void CEventObserver::broadcastEvent(unsigned int subsysID,
+void EventObserver::broadcastEvent(unsigned int subsysID,
                                     unsigned int eventType,
                                     const char *eventData)
 {
-    CObservableEvent *e = new CObservableEvent(subsysID, eventType, eventData);
+    ObservableEvent *e = new ObservableEvent(subsysID, eventType, eventData);
     broadcastEvent(e);
 }
-void CEventObserver::broadcastEvent(CObservableEvent *event)
+void EventObserver::broadcastEvent(ObservableEvent *event)
 {
-    CAutoReadUnlock lock(sLock);
+    AutoReadUnlock lock(sLock);
     if (!sEventObservers.empty())
         // enqueue the event
         sQueue.add(event);
     else
         delete event;
 }
-void CEventObserver::runEventCallbacks(CObservableEvent *event)
+void EventObserver::runEventCallbacks(ObservableEvent *event)
 {
     if (event == NULL) return;
     std::vector<unsigned int> badObservers; // keep a list of bad observers to remove
     {
-        CAutoReadUnlock lock(sLock);
-        std::map<unsigned int, CEventObserver>::iterator i;
+        AutoReadUnlock lock(sLock);
+        std::map<unsigned int, EventObserver>::iterator i;
         for (i = sEventObservers.begin(); i != sEventObservers.end(); ++i)
         {
             // call each observer's callback with the event address
-            CEventObserver o((*i).second);
+            EventObserver o((*i).second);
             hlog(HLOG_DEBUG, "runEventCallbacks(): event subsysID %d type 0x%x", event->mSubsysID, event->mEventType);
             hlog(HLOG_DEBUG, "runEventCallbacks(): checking observer with subsysID %d and mask 0x%x", o.mSubsysID, o.mTypeMask);
             if (o.mSubsysID == event->mSubsysID && 
@@ -51,7 +51,7 @@ void CEventObserver::runEventCallbacks(CObservableEvent *event)
                     // this observer needs to be removed
                     badObservers.push_back((*i).first);
                 }
-                catch (CException &e)
+                catch (Exception &e)
                 {
                     hlog(HLOG_ERR, "exception in event observer callback: %s",
                          e.what().c_str());
@@ -71,60 +71,60 @@ void CEventObserver::runEventCallbacks(CObservableEvent *event)
     }
 }
 
-void CEventObserver::startObserverThread(void)
+void EventObserver::startObserverThread(void)
 {
     if (sObserverThread != NULL)
-        throw CForteEventObserverException("startObserverThread(): sObserverThread not NULL");
-    sObserverThread = new CObserverThread();
+        throw ForteEventObserverException("startObserverThread(): sObserverThread not NULL");
+    sObserverThread = new ObserverThread();
 }
-void CEventObserver::stopObserverThread(void)
+void EventObserver::stopObserverThread(void)
 {
     if (sObserverThread == NULL)
-        throw CForteEventObserverException("stopObserverThread(): sObserverThread is NULL");
+        throw ForteEventObserverException("stopObserverThread(): sObserverThread is NULL");
     delete sObserverThread;
     sObserverThread = NULL;
 }
-unsigned int CEventObserver::registerObserver(unsigned int subsysID,
+unsigned int EventObserver::registerObserver(unsigned int subsysID,
                                               unsigned int typeMask,
-                                              CCallback *callback)
+                                              Callback *callback)
 {
-    CAutoWriteUnlock lock(sLock);
-    sEventObservers[sNextID] = CEventObserver(subsysID, typeMask, callback);
+    AutoWriteUnlock lock(sLock);
+    sEventObservers[sNextID] = EventObserver(subsysID, typeMask, callback);
     if (!sEventObservers.empty() && sObserverThread == NULL)
         startObserverThread();
     return sNextID++;
 }
 
-void CEventObserver::unregisterObserver(unsigned int observerID)
+void EventObserver::unregisterObserver(unsigned int observerID)
 {
-    CAutoWriteUnlock lock(sLock);
+    AutoWriteUnlock lock(sLock);
     if (sEventObservers.find(observerID) == sEventObservers.end())
     {
         FString err;
         err.Format("unregisterObserver(): observerID %d does not exist",
                    observerID);
-        throw CForteEventObserverException(err);
+        throw ForteEventObserverException(err);
     }
     if (sEventObservers[observerID].mCallback !=NULL)
         delete sEventObservers[observerID].mCallback;
     sEventObservers.erase(observerID);
 }
 
-void *CObserverThread::run(void)
+void *ObserverThread::run(void)
 {
-    CAutoUnlockMutex lock(CEventObserver::sNotifyLock);
+    AutoUnlockMutex lock(EventObserver::sNotifyLock);
     while(!mThreadShutdown)
     {
-        CEvent *event;
-        while ((event = CEventObserver::sQueue.get()))
+        Event *event;
+        while ((event = EventObserver::sQueue.get()))
         {
             hlog(HLOG_DEBUG, "observer thread got event");
-            CAutoLockMutex unlock(CEventObserver::sNotifyLock);
-            CObservableEvent *oe = dynamic_cast<CObservableEvent*>(event);
+            AutoLockMutex unlock(EventObserver::sNotifyLock);
+            ObservableEvent *oe = dynamic_cast<ObservableEvent*>(event);
             if (oe == NULL)
-                hlog(HLOG_ERR, "dynamic cast to CObservableEvent failed");
+                hlog(HLOG_ERR, "dynamic cast to ObservableEvent failed");
             else
-                CEventObserver::runEventCallbacks(oe);
+                EventObserver::runEventCallbacks(oe);
             // now we are done with the event
             delete event;
         }
@@ -133,7 +133,7 @@ void *CObserverThread::run(void)
         gettimeofday(&now, 0);
         timeout.tv_sec = now.tv_sec + 1; // wake up every second
         timeout.tv_nsec = now.tv_usec * 1000;
-        CEventObserver::sNotify.timedwait(timeout);
+        EventObserver::sNotify.timedwait(timeout);
     }
     return NULL;
 }

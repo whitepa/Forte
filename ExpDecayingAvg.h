@@ -11,14 +11,14 @@
 
 namespace Forte
 {
-    class CExpDecayingAvgThread;
+    class ExpDecayingAvgThread;
 
-    class CExpDecayingAvg : public Object {
-        friend class CExpDecayingAvgThread;
+    class ExpDecayingAvg : public Object {
+        friend class ExpDecayingAvgThread;
     public:
         // damping time in ms
-        CExpDecayingAvg(int dampingTime = 10000); // default 10 second damping
-        virtual ~CExpDecayingAvg();
+        ExpDecayingAvg(int dampingTime = 10000); // default 10 second damping
+        virtual ~ExpDecayingAvg();
     
         // shutdown the update thread
         static void shutdown(void);
@@ -37,21 +37,21 @@ namespace Forte
         // update the average using the current input value
         void update(void);
 
-        static CMutex sThrMutex;
-        static CExpDecayingAvgThread *sThread;
-        static std::set<CExpDecayingAvg*> sObjs;
+        static Mutex sThrMutex;
+        static ExpDecayingAvgThread *sThread;
+        static std::set<ExpDecayingAvg*> sObjs;
     
         int mDampingTime;
         struct timeval mLastUpdate;
         float mLastAvg;
         float mInput;
         bool mResetInputUponUpdate;
-        CMutex mLock;
+        Mutex mLock;
     };
 
-    class CExpDecayingAvgThread : public CThread {
+    class ExpDecayingAvgThread : public Thread {
     public:
-        inline CExpDecayingAvgThread() { initialized(); }
+        inline ExpDecayingAvgThread() { initialized(); }
     protected:
         virtual void * run(void);
     };

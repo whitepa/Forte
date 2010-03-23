@@ -8,11 +8,11 @@
 #include "DbException.h"
 namespace Forte
 {
-    class CDbConnection : public Object
+    class DbConnection : public Object
     {
     public:
-        CDbConnection();
-        virtual ~CDbConnection();
+        DbConnection();
+        virtual ~DbConnection();
 
         // initialization
         virtual bool Init(const FString& db, const FString& user, const FString& pass,
@@ -25,12 +25,12 @@ namespace Forte
 
         // queries
         virtual bool execute(const FString& sql) = 0;
-        virtual CDbResult store(const FString& sql) = 0;
-        virtual CDbResult use(const FString& sql) = 0;
+        virtual DbResult store(const FString& sql) = 0;
+        virtual DbResult use(const FString& sql) = 0;
 
         virtual bool execute2(const FString& sql);
-        virtual CDbResult store2(const FString& sql);
-        virtual CDbResult use2(const FString& sql);
+        virtual DbResult store2(const FString& sql);
+        virtual DbResult use2(const FString& sql);
 
         // transactions
         virtual void autoCommit(bool enabled);
@@ -79,7 +79,7 @@ namespace Forte
         bool m_autocommit;
 
         static ofstream sDebugOutputFile;
-        static CMutex sDebugOutputMutex;
+        static Mutex sDebugOutputMutex;
         static bool sDebugSql;
     };
 };

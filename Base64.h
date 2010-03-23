@@ -6,9 +6,9 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(CForteException, CForteBase64Exception);
+    EXCEPTION_SUBCLASS(ForteException, ForteBase64Exception);
 
-    class CBase64 : public Object {
+    class Base64 : public Object {
     public:
         static int Encode(const char *data, int size, FString &out);
         static int Decode(const char *in, FString &out);

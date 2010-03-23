@@ -15,19 +15,19 @@
 namespace Forte
 {
 // typed exceptions
-    EXCEPTION_SUBCLASS(CForteException, CForteFileSystemException);
-    EXCEPTION_SUBCLASS(CForteFileSystemException, CForteFileSystemCopyException);
-    EXCEPTION_SUBCLASS(CForteFileSystemException, CForteFileSystemLinkException);
-    EXCEPTION_SUBCLASS(CForteFileSystemException, CForteFileSystemMkdirException);
-    EXCEPTION_SUBCLASS(CForteFileSystemException, CForteFileSystemReadlinkException);
-    EXCEPTION_SUBCLASS(CForteFileSystemException, CForteFileSystemRenameException);
-    EXCEPTION_SUBCLASS(CForteFileSystemException, CForteFileSystemResolveSymlinkException);
+    EXCEPTION_SUBCLASS(ForteException, ForteFileSystemException);
+    EXCEPTION_SUBCLASS(ForteFileSystemException, ForteFileSystemCopyException);
+    EXCEPTION_SUBCLASS(ForteFileSystemException, ForteFileSystemLinkException);
+    EXCEPTION_SUBCLASS(ForteFileSystemException, ForteFileSystemMkdirException);
+    EXCEPTION_SUBCLASS(ForteFileSystemException, ForteFileSystemReadlinkException);
+    EXCEPTION_SUBCLASS(ForteFileSystemException, ForteFileSystemRenameException);
+    EXCEPTION_SUBCLASS(ForteFileSystemException, ForteFileSystemResolveSymlinkException);
 //not used yet, might be desirable
-//EXCEPTION_SUBCLASS(CForteFileSystemResolveSymlinkException, CForteFileSystemResolveSymlinkBroken);
-//EXCEPTION_SUBCLASS(CForteFileSystemResolveSymlinkException, CForteFileSystemResolveSymlinkLoop);
-    EXCEPTION_SUBCLASS(CForteFileSystemException, CForteFileSystemSymLinkException);
-    EXCEPTION_SUBCLASS(CForteFileSystemException, CForteFileSystemTouchException);
-    EXCEPTION_SUBCLASS(CForteFileSystemException, CForteFileSystemUnlinkException);
+//EXCEPTION_SUBCLASS(ForteFileSystemResolveSymlinkException, ForteFileSystemResolveSymlinkBroken);
+//EXCEPTION_SUBCLASS(ForteFileSystemResolveSymlinkException, ForteFileSystemResolveSymlinkLoop);
+    EXCEPTION_SUBCLASS(ForteFileSystemException, ForteFileSystemSymLinkException);
+    EXCEPTION_SUBCLASS(ForteFileSystemException, ForteFileSystemTouchException);
+    EXCEPTION_SUBCLASS(ForteFileSystemException, ForteFileSystemUnlinkException);
 
 
     class FileSystem : public Object
@@ -147,7 +147,7 @@ namespace Forte
         FileSystem();
         virtual ~FileSystem();
         static FileSystem *s_singleton;
-        static CMutex s_mutex;
+        static Mutex s_mutex;
     };
 
 // inline funcs for legacy code support

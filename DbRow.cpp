@@ -5,61 +5,61 @@
 #include "Forte.h"
 #include "DbRow.h"
 
-void CDbRow::CheckRange(const CDbResultRow& row, int index)
+void DbRow::CheckRange(const DbResultRow& row, int index)
 {
     if (index < 0 || index >= (int)row.size())
-        throw CForteDbRowException(FStringFC(), "Software Error: index %d out of range", index);
+        throw ForteDbRowException(FStringFC(), "Software Error: index %d out of range", index);
 }
 
-bool CDbRow::IsNull(const CDbResultRow& row, int index)
+bool DbRow::IsNull(const DbResultRow& row, int index)
 {
     CheckRange(row, index);
     return (row[index] == NULL);
 }
 
-int CDbRow::GetInt(const CDbResultRow& row, int index)
+int DbRow::GetInt(const DbResultRow& row, int index)
 {
     CheckRange(row, index);
     if (row[index] == NULL) return 0;
     return strtol(row[index], NULL, 10);
 }
 
-unsigned int CDbRow::GetUInt(const CDbResultRow& row, int index)
+unsigned int DbRow::GetUInt(const DbResultRow& row, int index)
 {
     CheckRange(row, index);
     if (row[index] == NULL) return 0;
     return strtoul(row[index], NULL, 10);
 }
 
-unsigned long long CDbRow::GetULLInt(const CDbResultRow& row, int index)
+unsigned long long DbRow::GetULLInt(const DbResultRow& row, int index)
 {
     CheckRange(row, index);
     if (row[index] == NULL) return 0;
     return strtoull(row[index], NULL, 10);
 }
 
-bool CDbRow::GetBool(const CDbResultRow& row, int index)
+bool DbRow::GetBool(const DbResultRow& row, int index)
 {
     CheckRange(row, index);
     if (row[index] == NULL) return false;
     return atoi(row[index]);
 }
 
-FString CDbRow::GetString(const CDbResultRow& row, int index)
+FString DbRow::GetString(const DbResultRow& row, int index)
 {
     CheckRange(row, index);
     if (row[index] == NULL) return "";
     return row[index];
 }
 
-float CDbRow::GetFloat(const CDbResultRow& row, int index)
+float DbRow::GetFloat(const DbResultRow& row, int index)
 {
     CheckRange(row, index);
     if (row[index] == NULL) return 0.f;
     return strtof(row[index], NULL);
 }
 
-double CDbRow::GetDouble(const CDbResultRow& row, int index)
+double DbRow::GetDouble(const DbResultRow& row, int index)
 {
     CheckRange(row, index);
     if (row[index] == NULL) return 0.;

@@ -7,18 +7,18 @@
 
 // this thread just loops and accepts connections
 
-void * CReceiverThread::run(void)
+void * ReceiverThread::run(void)
 {
     // init thread name
     mThreadName.Format("%s-recv-%u", mName.c_str(), (unsigned)mThread);
 
     // load config
     int port, backlog;
-    port = CServerMain::GetServer().mServiceConfig.GetInteger(mName + "_port");
-    backlog = CServerMain::GetServer().mServiceConfig.GetInteger(mName + "_backlog");
+    port = ServerMain::GetServer().mServiceConfig.GetInteger(mName + "_port");
+    backlog = ServerMain::GetServer().mServiceConfig.GetInteger(mName + "_backlog");
 
     if (port == 0)
-        throw CForteReceiverThreadException(FStringFC(),
+        throw ForteReceiverThreadException(FStringFC(),
                          "Unable to start receiver thread: no such key '%s_port' in config",
                          mName.c_str());
     if (backlog <= 0)
@@ -30,7 +30,7 @@ void * CReceiverThread::run(void)
     // create socket
     AutoFD m;
     if ((m = socket(PF_INET, SOCK_STREAM, 0)) < 0)
-        throw CForteReceiverThreadException(FStringFC(), "Failed to create socket: %s", strerror(errno));
+        throw ForteReceiverThreadException(FStringFC(), "Failed to create socket: %s", strerror(errno));
     
     // set SO_REUSEADDR
     int one = 1;
@@ -45,13 +45,13 @@ void * CReceiverThread::run(void)
     bind_addr.sin_family = AF_INET;
     bind_addr.sin_port = htons(port);
     if (!inet_aton(mBindIP, &(bind_addr.sin_addr)))
-        throw CForteReceiverThreadException(FStringFC(), "invalid bind IP: %s", mBindIP.c_str());
+        throw ForteReceiverThreadException(FStringFC(), "invalid bind IP: %s", mBindIP.c_str());
 
     if (bind(m, (struct sockaddr *)&bind_addr, sizeof(struct sockaddr_in))==-1)
-        throw CForteReceiverThreadException(FStringFC(), "failed to bind: %s", strerror(errno));
+        throw ForteReceiverThreadException(FStringFC(), "failed to bind: %s", strerror(errno));
 
     if (listen(m, backlog)==-1)
-        throw CForteReceiverThreadException(FStringFC(), "failed to listen: %s", strerror(errno));
+        throw ForteReceiverThreadException(FStringFC(), "failed to listen: %s", strerror(errno));
 
     // set socket to close-on-exec, which prevents a bug wherein a
     // child process that restarts this server will still have this
@@ -84,7 +84,7 @@ void * CReceiverThread::run(void)
         }
 
         // TODO: shared_ptr
-        CRequestEvent *e = new CRequestEvent();
+        RequestEvent *e = new RequestEvent();
         e->mFd = s;
         // mark the time of accept
         gettimeofday(&(e->mTime), NULL);

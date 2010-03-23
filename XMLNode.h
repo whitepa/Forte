@@ -8,18 +8,18 @@
 #include <libxml/tree.h>
 namespace Forte
 {
-    class CXMLNode;
+    class XMLNode;
 
-    class CXMLNode
+    class XMLNode
     {
     public:
-        CXMLNode() : m_node(NULL) { }
-        CXMLNode(xmlNodePtr node) : m_node(node) { *this = node; }
-        CXMLNode(const FString& name, xmlNodePtr parent = NULL);
-        CXMLNode(const CXMLNode& other) : m_node(other.m_node) { *this = other; }
-        CXMLNode& operator =(const CXMLNode& other) { m_node = other.m_node; return *this; }
-        CXMLNode& operator =(const xmlNodePtr node) { m_node = node; return *this; }
-        virtual ~CXMLNode();
+        XMLNode() : m_node(NULL) { }
+        XMLNode(xmlNodePtr node) : m_node(node) { *this = node; }
+        XMLNode(const FString& name, xmlNodePtr parent = NULL);
+        XMLNode(const XMLNode& other) : m_node(other.m_node) { *this = other; }
+        XMLNode& operator =(const XMLNode& other) { m_node = other.m_node; return *this; }
+        XMLNode& operator =(const xmlNodePtr node) { m_node = node; return *this; }
+        virtual ~XMLNode();
 
     public:
         FString getProp(const char *name) const;
@@ -36,7 +36,7 @@ namespace Forte
         inline operator const xmlNodePtr() const { return m_node; }
 
     protected:
-        friend class CXMLDoc;
+        friend class XMLDoc;
 
         ///
         /// Strip all control characters from a string, even if the src is a MBS (UTF-8 string)

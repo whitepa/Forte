@@ -9,25 +9,25 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(CForteException, CForteDbConnectionPoolException);
+    EXCEPTION_SUBCLASS(ForteException, ForteDbConnectionPoolException);
 
 // A pool of database connections.
-    class CDbConnectionPool {
+    class DbConnectionPool {
 
     public:
-        static CDbConnectionPool& GetInstance();
-        static CDbConnectionPool& GetInstance(CServiceConfig &configObj);
+        static DbConnectionPool& GetInstance();
+        static DbConnectionPool& GetInstance(ServiceConfig &configObj);
 
-        CDbConnectionPool();
-        CDbConnectionPool(CServiceConfig &configObj);
-        virtual ~CDbConnectionPool();
+        DbConnectionPool();
+        DbConnectionPool(ServiceConfig &configObj);
+        virtual ~DbConnectionPool();
 
-        CDbConnection& GetDbConnection();
-        void ReleaseDbConnection(CDbConnection& connection);
+        DbConnection& GetDbConnection();
+        void ReleaseDbConnection(DbConnection& connection);
 
     private:
-        static auto_ptr<CDbConnectionPool> spInstance;
-        static CMutex sSingletonMutex;
+        static auto_ptr<DbConnectionPool> spInstance;
+        static Mutex sSingletonMutex;
 
         FString mDbType;
         FString mDbName;
@@ -37,9 +37,9 @@ namespace Forte
         FString mDbSock;
 
         unsigned int mPoolSize;
-        CMutex mPoolMutex;
-        list<CDbConnection*> mFreeConnections;
-        set<CDbConnection*> mUsedConnections;
+        Mutex mPoolMutex;
+        list<DbConnection*> mFreeConnections;
+        set<DbConnection*> mUsedConnections;
     };
 };
 #endif

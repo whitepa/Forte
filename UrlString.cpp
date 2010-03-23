@@ -2,9 +2,9 @@
 #include "Forte.h"
 
 
-FString CUrlString::sUnsafe = "%=\"<>\\^[]`+$,@:;/!#?&'";
+FString UrlString::sUnsafe = "%=\"<>\\^[]`+$,@:;/!#?&'";
 
-FString & CUrlString::encode(FString &encoded, const FString &decoded)
+FString & UrlString::encode(FString &encoded, const FString &decoded)
 {
     int len = decoded.length();
     encoded.reserve(len * 2); // should be plenty for most cases
@@ -25,7 +25,7 @@ FString & CUrlString::encode(FString &encoded, const FString &decoded)
 
 // following adapted from:
 // http://www.bjnet.edu.cn/tech/book/seucgi/ch22.htm
-FString & CUrlString::decode(FString &decoded, const FString &encoded)
+FString & UrlString::decode(FString &decoded, const FString &encoded)
 {
     decoded.reserve(encoded.size());
     // loop through looking for escapes
@@ -51,7 +51,7 @@ FString & CUrlString::decode(FString &decoded, const FString &encoded)
 }
 
 // a subroutine that unescapes escaped characters:
-char CUrlString::charFromHexPair(char hi, char lo)
+char UrlString::charFromHexPair(char hi, char lo)
 {
     // high nibble
     if ('0' <= hi && hi <= '9') {

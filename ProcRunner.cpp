@@ -23,7 +23,7 @@ using namespace Forte;
 
 // class data
 ProcRunner* ProcRunner::s_singleton = NULL;
-CMutex ProcRunner::s_mutex;
+Mutex ProcRunner::s_mutex;
 
 
 // class methods
@@ -32,7 +32,7 @@ ProcRunner* ProcRunner::get()
     // double-checked locking pattern
     if (s_singleton == NULL)
     {
-        CAutoUnlockMutex lock(s_mutex);
+        AutoUnlockMutex lock(s_mutex);
 
         if (s_singleton == NULL)
         {
@@ -49,7 +49,7 @@ ProcRunner& ProcRunner::getRef()
 
     if (s_singleton == NULL)
     {
-        throw CForteEmptyReferenceException("ProcRunner pointer is invalid");
+        throw ForteEmptyReferenceException("ProcRunner pointer is invalid");
     }
 
     return *s_singleton;
@@ -65,7 +65,7 @@ int ProcRunner::run(const FString& command,
 {
     if (cwd.empty()) hlog(HLOG_DEBUG3, "run(%s)", command.c_str());
     else hlog(HLOG_DEBUG3, "run(%s) [in %s]", command.c_str(), cwd.c_str());
-    CLogTimer timer(HLOG_DEBUG3, "Child ran for @TIME@");
+    LogTimer timer(HLOG_DEBUG3, "Child ran for @TIME@");
     vector<FString>::const_iterator vi;
     FString stmp, filename, path = "/bin/bash";
     int ret = -1, fd_out = 1;
@@ -76,12 +76,12 @@ int ProcRunner::run(const FString& command,
     // get default settings
     try
     {
-        CServerMain& main = CServerMain::GetServer();
+        ServerMain& main = ServerMain::GetServer();
         log_child = (main.mServiceConfig.GetInteger("log_child") != 0);
         stmp = main.mServiceConfig.Get("child_timeout");
         if (timeout == -1) timeout = (stmp.empty() ? 120 : stmp.asUnsignedInteger());
     }
-    catch (CException &e)
+    catch (Exception &e)
     {
         // there won't always be a ServerMain defined
         if (timeout == -1) timeout = 120;

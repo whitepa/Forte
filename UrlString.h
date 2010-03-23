@@ -4,7 +4,7 @@
 #include "FString.h"
 namespace Forte
 {
-    class CUrlString {
+    class UrlString {
     public:
         static FString & encode(FString &encoded, const FString &decoded);
         static FString & decode(FString &decoded, const FString &encoded);

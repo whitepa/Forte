@@ -43,18 +43,18 @@ BOOST_AUTO_TEST_CASE ( context_test1 )
     logMgr.SetGlobalLogMask(HLOG_ALL);
 
     // verify invalid keys throws
-    BOOST_CHECK_THROW(c.GetRef<CLogManager>("forte.logManager"), EInvalidKey);
+    BOOST_CHECK_THROW(c.Get<CLogManager>("forte.logManager"), EInvalidKey);
     
     c.Set("forte.config", new CServiceConfig());
 
-    BOOST_CHECK_THROW(c.GetRef<CServiceConfig>("forte.config.fail"), EInvalidKey);
+    BOOST_CHECK_THROW(c.Get<CServiceConfig>("forte.config.fail"), EInvalidKey);
 
     // verify type mismatch throws
-    BOOST_CHECK_THROW(c.GetRef<CLogManager>("forte.config"), EContextTypeMismatch);
+    BOOST_CHECK_THROW(c.Get<CLogManager>("forte.config"), EContextTypeMismatch);
 
     {
-        CServiceConfig &cfg(c.GetRef<CServiceConfig>("forte.config"));
-        cfg.Set("key", "value");
+        shared_ptr<CServiceConfig> cfg = (c.Get<CServiceConfig>("forte.config"));
+        cfg->Set("key", "value");
     }
 
     // verify objects are destroyed and reference counts work correctly
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE ( context_test1 )
     BOOST_CHECK(TestClass::mCount == 1);
     c.Remove("testobject");
     BOOST_CHECK(TestClass::mCount == 0);
-    BOOST_CHECK_THROW(c.GetRef<TestClass>("testobject"), EInvalidKey);
+    BOOST_CHECK_THROW(c.Get<TestClass>("testobject"), EInvalidKey);
 
     c.Set("testobject", new TestClass());
     BOOST_CHECK(TestClass::mCount == 1);
@@ -95,22 +95,37 @@ BOOST_AUTO_TEST_CASE ( context_test1 )
 //    boost::bind( boost::mem_fn(&Forte::Context::GetRef<TestClass>), _1, "testobject");
     c.Set("testobject", new TestClassDerived());
     BOOST_CHECK( TestClass::mCount == 1 );
-    bll::bind( &Context::GetRef<TestClass>, bll::_1, "testobject");  // functor to retrieve object from context
+    bll::bind( &Context::Get<TestClass>, bll::_1, "testobject");  // functor to retrieve object from context
 
 //  This works:
-//    boost::function<TestClass(Context&)> b = 
-//        bll::bind(&Context::GetRef<TestClass>, bll::_1, "testobject");
+    boost::function<shared_ptr<TestClass>(const Context&)> f = 
+        bll::bind(&Context::Get<TestClass>, bll::_1, "testobject");
+    f(c);
+    boost::function<int(TestClass&)> g = 
+        bll::bind(&TestClass::getCount, bll::_1);
+
+    // Not sure how to bind this such that 'c' is the parameter:
+    g(*(f(c)));
+    
+//    boost::function<bool(Context&)> h =
+//    bll::bind(f, bll::_1);
+//    (bll::unlambda(g)(*(bll::unlambda(f)(bll::_1))) == 1);
+//    boost::bind(bll::unlambda(g),
+
+
+//    h(c);
+
     std::set<FString> validStrs;
     validStrs.insert("validStr");
     c.Set("checkedvalue", new CheckedStringEnum(validStrs));
-    c.GetRef<CheckedStringEnum>("checkedvalue").Set("validStr");
+    c.Get<CheckedStringEnum>("checkedvalue")->Set("validStr");
     
 //        bll::bind(bll::bind(&Context::GetRef<TestClass>, bll::_1, "testobject"),bll::_1);
 //    b(c);
         
 //    boost::function<bool(Context&)> b = 
     bll::bind(
-        &Context::GetRef<CheckedStringEnum>, bll::_1, "checkedvalue");
+        &Context::Get<CheckedStringEnum>, bll::_1, "checkedvalue");
 // == "validStr");
     
     

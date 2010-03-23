@@ -5,9 +5,9 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS2(CForteException, CForkFailedException, "fork() failed");
+    EXCEPTION_SUBCLASS2(ForteException, ForkFailedException, "fork() failed");
 
-    class CDaemonUtil : public Object
+    class DaemonUtil : public Object
     {
     public:
         /// Daemonize will correctly place your process in the background,

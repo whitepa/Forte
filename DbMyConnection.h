@@ -11,14 +11,14 @@
 #include "DbConnection.h"
 namespace Forte
 {
-    class CDbMyConnection : public CDbConnection
+    class DbMyConnection : public DbConnection
     {
     public:
         typedef vector< pair<enum mysql_option, const char*> > MySQLOptionArray;
 
-        CDbMyConnection();
-        CDbMyConnection(const MySQLOptionArray& options);
-        virtual ~CDbMyConnection();
+        DbMyConnection();
+        DbMyConnection(const MySQLOptionArray& options);
+        virtual ~DbMyConnection();
 
         // initialization
         virtual bool Init(MYSQL *mysql);
@@ -29,8 +29,8 @@ namespace Forte
 
         // queries
         virtual bool execute(const FString& sql);
-        virtual CDbResult store(const FString& sql);
-        virtual CDbResult use(const FString& sql);
+        virtual DbResult store(const FString& sql);
+        virtual DbResult use(const FString& sql);
 
         // error info
         virtual bool isTemporaryError() const;

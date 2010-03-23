@@ -11,11 +11,11 @@ using namespace boost::gregorian;
 using namespace boost::local_time;
 using namespace boost::posix_time;
 
-#define TO_TIME_T(s, tz) CTime::f_to_time_t(__FILE__, __LINE__, # s, s, tz)
+#define TO_TIME_T(s, tz) FTime::f_to_time_t(__FILE__, __LINE__, # s, s, tz)
 
-EXCEPTION_SUBCLASS(CForteException, CForteFTimeException);
+EXCEPTION_SUBCLASS(ForteException, ForteFTimeException);
 
-class CTime {
+class FTime {
 public:
     static void init(const char *timezoneDatafile);
 
@@ -40,7 +40,7 @@ public:
     static time_t day(const ptime pt, const char *tz);
 
 protected:
-    static CMutex sLock;
+    static Mutex sLock;
     static tz_database sTimezoneDb;
     static bool sInitialized;
 };

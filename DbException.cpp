@@ -2,37 +2,37 @@
 
 #include "Forte.h"
 
-CDbException::CDbException(const char* description, unsigned int dbErrno, const char *sql) :
-    CException((description != NULL) ? description : "Database Exception"),
+DbException::DbException(const char* description, unsigned int dbErrno, const char *sql) :
+    Exception((description != NULL) ? description : "Database Exception"),
     mDbErrno(dbErrno),
     mSQL((sql != NULL) ? sql : "")
 {
 }
 
-CDbException::CDbException(const CDbException& other) :
-    CException(other)
+DbException::DbException(const DbException& other) :
+    Exception(other)
 {
     mDbErrno = other.mDbErrno;
     mSQL = other.mSQL;
 }
 
-CDbException::~CDbException() throw()
+DbException::~DbException() throw()
 {
 }
 
 
-CDbTempErrorException::CDbTempErrorException(const char* description, unsigned int dbErrno,
+DbTempErrorException::DbTempErrorException(const char* description, unsigned int dbErrno,
                                              const char *sql) :
-    CDbException((description!=NULL)?description:"Temporary Database Exception", dbErrno, sql)
+    DbException((description!=NULL)?description:"Temporary Database Exception", dbErrno, sql)
 {
 }
 
-// CDbTempErrorException::CDbTempErrorException(const CDbTempErrorException& other) :
-//   CDbException(other)
+// DbTempErrorException::DbTempErrorException(const DbTempErrorException& other) :
+//   DbException(other)
 // {
 // }
 
-CDbTempErrorException::~CDbTempErrorException() throw()
+DbTempErrorException::~DbTempErrorException() throw()
 {
 }
 

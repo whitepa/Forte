@@ -8,7 +8,7 @@
 
 #include <dlfcn.h>
 
-CThreadKey FTrace::sTraceKey(FTrace::cleanup);
+ThreadKey FTrace::sTraceKey(FTrace::cleanup);
 unsigned int FTrace::sInitialized = 0;
 
 ////////////////////////////////////////////////////////////

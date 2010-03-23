@@ -43,23 +43,6 @@ namespace Forte
         void Detach(const char *key) { throw EUnimplemented(); }
 
         /**
-         * GetRef() retrieves a reference to an object from the
-         * Context.  If the object does not exists, one can be
-         * automatically created using an appropriate factory.
-         **/
-        template <typename ValueType>
-        ValueType& GetRef(const char *key) const {
-            ObjectMap::const_iterator i;
-            if ((i = mObjectMap.find(key)) == mObjectMap.end())
-                // TODO: use a factory to create one?
-                throw EInvalidKey(key);
-            shared_ptr<ValueType> ptr(dynamic_pointer_cast<ValueType>((*i).second));
-            if (!ptr)
-                throw EContextTypeMismatch(); // TODO: include types in error message
-            return *ptr;
-        }
-
-        /**
          * Get() retrieves a reference counted pointer to an object
          * from the Context.  If the object does not exists, one can
          * be automatically created using an appropriate factory.
@@ -70,6 +53,23 @@ namespace Forte
                 // TODO: use a factory to create one?
                 throw EInvalidKey();
             return (*i).second;
+        }
+
+        /**
+         * Get() retrieves a reference counted pointer to a typed object
+         * from the Context.  If the object does not exists, one can
+         * be automatically created using an appropriate factory.
+         **/
+        template <typename ValueType>
+        shared_ptr<ValueType> Get(const char *key) const {
+            ObjectMap::const_iterator i;
+            if ((i = mObjectMap.find(key)) == mObjectMap.end())
+                // TODO: use a factory to create one?
+                throw EInvalidKey(key);
+            shared_ptr<ValueType> ptr(dynamic_pointer_cast<ValueType>((*i).second));
+            if (!ptr)
+                throw EContextTypeMismatch(); // TODO: include types in error message
+            return ptr;            
         }
         
         /**

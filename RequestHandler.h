@@ -4,11 +4,11 @@
 namespace Forte
 {
 // base class for a user-defined request handler
-    class CRequestHandler : public Object {
+    class RequestHandler : public Object {
     public:
-        inline CRequestHandler(unsigned int timeout = 0) : mTimeout(timeout) {};
-        inline virtual ~CRequestHandler() {};
-        virtual void handler(CEvent *e) = 0;
+        inline RequestHandler(unsigned int timeout = 0) : mTimeout(timeout) {};
+        inline virtual ~RequestHandler() {};
+        virtual void handler(Event *e) = 0;
         virtual void busy(void) = 0;
         virtual void periodic(void) = 0;
         virtual void init(void) = 0;

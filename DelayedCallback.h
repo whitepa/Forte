@@ -6,39 +6,39 @@
 
 namespace Forte
 {
-    typedef std::multimap<unsigned int, CCallback *> CallbackMap;
+    typedef std::multimap<unsigned int, Callback *> CallbackMap;
     typedef std::pair<CallbackMap::iterator,CallbackMap::iterator> CallbackRange;
 
-    EXCEPTION_SUBCLASS(CForteException, CForteDelayedCallbackException);
+    EXCEPTION_SUBCLASS(ForteException, ForteDelayedCallbackException);
 
-    class CDelayedCallback : public Object
+    class DelayedCallback : public Object
     {
-        friend class CDelayedCallbackThread;
+        friend class DelayedCallbackThread;
     public:
 
-        static void registerCallback(CCallback *callback, unsigned int delay);
-        static void unregisterCallback(CCallback *callback);
+        static void registerCallback(Callback *callback, unsigned int delay);
+        static void unregisterCallback(Callback *callback);
 
     protected:
         static void startCallbackThread(void);
         static void stopCallbackThread(void);
 
-        static CMutex sLock;
-        static CMutex sThreadLock;
-        static CMutex sNotifyLock;
-        static CThreadCondition sNotify;
-        static CThread *sCallbackThread;
+        static Mutex sLock;
+        static Mutex sThreadLock;
+        static Mutex sNotifyLock;
+        static ThreadCondition sNotify;
+        static Thread *sCallbackThread;
 
         static std::set<unsigned int> sTimes;
         static CallbackMap sCallbacks;
-        static std::map<CCallback *, unsigned int> sLookup;
+        static std::map<Callback *, unsigned int> sLookup;
 
     };
 
-    class CDelayedCallbackThread : public CThread {
+    class DelayedCallbackThread : public Thread {
     public:
-        CDelayedCallbackThread() {initialized();}
-        virtual ~CDelayedCallbackThread() {};
+        DelayedCallbackThread() {initialized();}
+        virtual ~DelayedCallbackThread() {};
     protected:
         void * run(void);
     };

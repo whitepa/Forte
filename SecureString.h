@@ -5,48 +5,48 @@
 #include <openssl/bio.h>
 #include <openssl/rsa.h>
 
-EXCEPTION_SUBCLASS(CForteException, CForteSecureStringException);
+EXCEPTION_SUBCLASS(ForteException, ForteSecureStringException);
 
-class CPublicKey;
-class CPrivateKey;
-class CRSAString;
+class PublicKey;
+class PrivateKey;
+class RSAString;
 
-class CKeyBuffer {
-    friend class CPublicKey;
-    friend class CPrivateKey;
+class KeyBuffer {
+    friend class PublicKey;
+    friend class PrivateKey;
 public:
-    CKeyBuffer();
-    CKeyBuffer(const FString &in);
-    virtual ~CKeyBuffer();
+    KeyBuffer();
+    KeyBuffer(const FString &in);
+    virtual ~KeyBuffer();
 protected:
     BIO *mBuf;
 };
 
-class CPublicKey {
-    friend class CRSAString;
+class PublicKey {
+    friend class RSAString;
 public:
-    CPublicKey(const CKeyBuffer &keybuf, const char *passphrase);
-    virtual ~CPublicKey();
+    PublicKey(const KeyBuffer &keybuf, const char *passphrase);
+    virtual ~PublicKey();
 protected:
     RSA *mKey;
 };
 
-class CPrivateKey {
-    friend class CRSAString;
+class PrivateKey {
+    friend class RSAString;
 public:
-    CPrivateKey(const CKeyBuffer &keybuf, const char *passphrase);
-    virtual ~CPrivateKey();
+    PrivateKey(const KeyBuffer &keybuf, const char *passphrase);
+    virtual ~PrivateKey();
 protected:
     RSA *mKey;
 };
 
-class CRSAString {
+class RSAString {
 public:
-    CRSAString(const FString &plaintext, CPublicKey &key);
-    CRSAString(const FString &ciphertext) : mCiphertext(ciphertext) {};
-    virtual ~CRSAString();
+    RSAString(const FString &plaintext, PublicKey &key);
+    RSAString(const FString &ciphertext) : mCiphertext(ciphertext) {};
+    virtual ~RSAString();
 
-    void getPlaintext(FString &plaintext/*OUT*/, CPrivateKey &key);
+    void getPlaintext(FString &plaintext/*OUT*/, PrivateKey &key);
 
 //    inline operator const FString &() const { return mCiphertext; }
     inline operator const char *() const { return mCiphertext.c_str(); }

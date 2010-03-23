@@ -11,7 +11,7 @@
 
 namespace Forte
 {
-    class CDbMyResult : public CDbResult
+    class DbMyResult : public DbResult
     {
     protected:
         class MyData : public Data
@@ -23,7 +23,7 @@ namespace Forte
 
             // abstract interface
             virtual bool isOkay() const;
-            virtual bool fetchRow(CDbResultRow& row /*OUT*/);
+            virtual bool fetchRow(DbResultRow& row /*OUT*/);
             virtual size_t getNumColumns();
             virtual FString getColumnName(size_t i);
             virtual size_t getFieldLength(size_t i);
@@ -31,18 +31,18 @@ namespace Forte
             virtual bool seek(size_t offset);
 
         protected:
-            friend class CDbMyResult;
+            friend class DbMyResult;
             MYSQL_RES *m_result;
             MYSQL_ROW m_row;
             size_t m_num_cols;
         };
 
     public:
-        CDbMyResult() : CDbResult() { }
-        CDbMyResult(const CDbResult& other) : CDbResult(other) { }
-        CDbMyResult(Data *data) : CDbResult(data) { }
-        CDbMyResult(MYSQL_RES *result);
-        virtual ~CDbMyResult() { }
+        DbMyResult() : DbResult() { }
+        DbMyResult(const DbResult& other) : DbResult(other) { }
+        DbMyResult(Data *data) : DbResult(data) { }
+        DbMyResult(MYSQL_RES *result);
+        virtual ~DbMyResult() { }
 
     public:
         operator MYSQL_RES*();

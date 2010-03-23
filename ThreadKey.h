@@ -3,11 +3,11 @@
 
 namespace Forte
 {
-    class CThreadKey {
+    class ThreadKey {
     public:
-        inline CThreadKey(void (*destructor)(void *) = NULL)
+        inline ThreadKey(void (*destructor)(void *) = NULL)
             { pthread_key_create(&mKey, destructor); }
-        inline ~CThreadKey()
+        inline ~ThreadKey()
             { pthread_key_delete(mKey); }
 
         void *get(void)  __attribute__ ((no_instrument_function));

@@ -11,28 +11,28 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(CForteException, CForteXMLDocException);
+    EXCEPTION_SUBCLASS(ForteException, ForteXMLDocException);
 
-    class CXMLDoc
+    class XMLDoc
     {
     public:
-        CXMLDoc();
-        CXMLDoc(xmlDocPtr doc) : m_doc(doc) { }
-        CXMLDoc(const FString& xml);
-        virtual ~CXMLDoc();
+        XMLDoc();
+        XMLDoc(xmlDocPtr doc) : m_doc(doc) { }
+        XMLDoc(const FString& xml);
+        virtual ~XMLDoc();
 
     public:
-        inline CXMLNode getRootNode() const { return CXMLNode(m_doc->children); }
-        CXMLNode createDocument(const FString& root_name);
+        inline XMLNode getRootNode() const { return XMLNode(m_doc->children); }
+        XMLNode createDocument(const FString& root_name);
         FString toString() const;
 
-        inline operator CXMLNode() const { return getRootNode(); }
+        inline operator XMLNode() const { return getRootNode(); }
         inline operator FString() const { return toString(); }
         inline operator xmlDocPtr() { return m_doc; }
         inline operator const xmlDocPtr() const { return m_doc; }
 
     protected:
-        static CMutex s_mutex;  // lock for all libxml2 access
+        static Mutex s_mutex;  // lock for all libxml2 access
         xmlDocPtr m_doc;
     };
 };

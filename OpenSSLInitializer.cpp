@@ -4,8 +4,8 @@
 #include "openssl/crypto.h"
 #include "openssl/evp.h"
 
-static CMutex * sOpenSSLMutexArray;
-struct CRYPTO_dynlock_value { CMutex mutex; };
+static Mutex * sOpenSSLMutexArray;
+struct CRYPTO_dynlock_value { Mutex mutex; };
 
 
 void COpenSSLInitializer_lockingCallback(int mode, int n, const char *file, int line) {
@@ -45,7 +45,7 @@ void COpenSSLInitializer_dynlockDestroyCallback(struct CRYPTO_dynlock_value *l,
 /// Declare one of these in main() if you are using OpenSSL in a multithreaded program.
 COpenSSLInitializer::COpenSSLInitializer() {
 
-   sOpenSSLMutexArray = new CMutex[CRYPTO_num_locks()];
+   sOpenSSLMutexArray = new Mutex[CRYPTO_num_locks()];
    CRYPTO_set_id_callback(COpenSSLInitializer_threadIdCallback);
    CRYPTO_set_locking_callback(COpenSSLInitializer_lockingCallback);
    CRYPTO_set_dynlock_create_callback(

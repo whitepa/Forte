@@ -13,34 +13,34 @@
 
 namespace Forte
 {
-    class CDbAutoTrans {
+    class DbAutoTrans {
     public:
-        CDbAutoTrans(CDbConnection &db_in) :
+        DbAutoTrans(DbConnection &db_in) :
             db(db_in)
             {
                 if (db.hasPendingQueries())
                 {
-                    hlog(HLOG_ERR, "CDbAutoTrans(): new transaction created while queries pending");
+                    hlog(HLOG_ERR, "DbAutoTrans(): new transaction created while queries pending");
                     db.commit();
                 }
                 db.autoCommit(false);
             };
-        virtual ~CDbAutoTrans() {
+        virtual ~DbAutoTrans() {
             try {
                 if (db.hasPendingQueries())
                 {
-                    hlog(HLOG_DEBUG, "~CDbAutoTrans(): Rolling back transaction started at %s:%u",
+                    hlog(HLOG_DEBUG, "~DbAutoTrans(): Rolling back transaction started at %s:%u",
                          file, line);
                     db.rollback();
                 }
             } catch (...) {
-                hlog(HLOG_ERR, "CDbAutoTrans(): exception during rollback");
+                hlog(HLOG_ERR, "DbAutoTrans(): exception during rollback");
             }
             db.autoCommit(true);
         }
         
     protected:
-        CDbConnection &db;
+        DbConnection &db;
 
     public:
         const char *file;
@@ -53,7 +53,7 @@ namespace Forte
     bool _dbTransCompleted = false;             \
     do                                          \
     {                                           \
-        CDbAutoTrans _dbAutoTrans(db);          \
+        DbAutoTrans _dbAutoTrans(db);          \
         _dbAutoTrans.file = __FILE__;           \
         _dbAutoTrans.line = __LINE__;           \
         try                                     \
@@ -62,7 +62,7 @@ namespace Forte
 #define DbEndTrans()                                    \
     _dbTransCompleted = true;                           \
     }                                                   \
-        catch (CDbTempErrorException &e)                \
+        catch (DbTempErrorException &e)                \
         {                                               \
             if (_dbTransTries == 0)                     \
                 throw e;                                \

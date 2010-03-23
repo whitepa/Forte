@@ -8,7 +8,7 @@
 
 namespace Forte
 {
-    class CDbResult : public Object
+    class DbResult : public Object
     {
     protected:
         // types
@@ -21,7 +21,7 @@ namespace Forte
 
             // abstract interface
             virtual bool isOkay() const = 0;
-            virtual bool fetchRow(CDbResultRow& row /*OUT*/) = 0;
+            virtual bool fetchRow(DbResultRow& row /*OUT*/) = 0;
             virtual size_t getNumColumns() = 0;
             virtual FString getColumnName(size_t i) = 0;
             virtual size_t getFieldLength(size_t i) = 0;
@@ -29,7 +29,7 @@ namespace Forte
             virtual bool seek(size_t offset) = 0;
 
             // extra convenience method
-            virtual bool fetchRow(CDbRow& row /*OUT*/);
+            virtual bool fetchRow(DbRow& row /*OUT*/);
 
             // memory management (use within a single thread only)
             void AddRef() { m_count++; };
@@ -40,14 +40,14 @@ namespace Forte
 
     public:
         // ctor/dtor
-        CDbResult();
-        CDbResult(const CDbResult& other) { m_data = NULL; *this = other; }
-        CDbResult(Data *data) { m_data = NULL; *this = data; }
-        virtual ~CDbResult() { Clear(); }
+        DbResult();
+        DbResult(const DbResult& other) { m_data = NULL; *this = other; }
+        DbResult(Data *data) { m_data = NULL; *this = data; }
+        virtual ~DbResult() { Clear(); }
 
         // copy operators
-        CDbResult& operator =(const CDbResult& other);
-        CDbResult& operator =(Data *data);
+        DbResult& operator =(const DbResult& other);
+        DbResult& operator =(Data *data);
 
         // helpers
         void Clear();
@@ -56,8 +56,8 @@ namespace Forte
         inline operator bool() const  { return (m_data != NULL) && m_data->isOkay(); }
         inline bool operator !() const { return (m_data == NULL) || !m_data->isOkay(); }
         inline bool isOkay() { return (m_data != NULL) && m_data->isOkay(); }
-        inline bool fetchRow(CDbResultRow& row) { return (m_data != NULL) && m_data->fetchRow(row); }
-        inline bool fetchRow(CDbRow& row) { return (m_data != NULL) && m_data->fetchRow(row); }
+        inline bool fetchRow(DbResultRow& row) { return (m_data != NULL) && m_data->fetchRow(row); }
+        inline bool fetchRow(DbRow& row) { return (m_data != NULL) && m_data->fetchRow(row); }
         inline size_t getNumColumns() { return (m_data ? m_data->getNumColumns() : 0); }
         inline FString getColumnName(size_t i) { return (m_data ? m_data->getNumColumns() : 0); }
         inline size_t getFieldLength(size_t i) { return (m_data ? m_data->getFieldLength(i) : 0); }

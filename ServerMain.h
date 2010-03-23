@@ -13,37 +13,37 @@ volatile extern bool g_shutdown;
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(CForteException, CForteServerMainException);
+    EXCEPTION_SUBCLASS(ForteException, ForteServerMainException);
 
-    class CServerMain : public Object
+    class ServerMain : public Object
     {
     public:
-        CServerMain(int argc, char * const argv[], const char *getoptstr, const char *defaultConfig, bool daemonize = true);
-        virtual ~CServerMain();
+        ServerMain(int argc, char * const argv[], const char *getoptstr, const char *defaultConfig, bool daemonize = true);
+        virtual ~ServerMain();
 
         virtual void MainLoop();
         virtual void Usage();
         void WritePidFile();
         void PrepareSigmask();
     
-        void RegisterShutdownCallback(CCallback *callback);
+        void RegisterShutdownCallback(Callback *callback);
 
-        static CServerMain &GetServer();
-        static CServerMain *GetServerPtr();
+        static ServerMain &GetServer();
+        static ServerMain *GetServerPtr();
 
         FString mHostname;
         FString mConfigFile;
         FString mLogFile;
         FString mPidFile;
         bool mDaemon;
-        CLogManager mLogManager;
-        CServiceConfig mServiceConfig;
-        CMutex mCallbackMutex;
-        std::set<CCallback*> mShutdownCallbacks;
+        LogManager mLogManager;
+        ServiceConfig mServiceConfig;
+        Mutex mCallbackMutex;
+        std::set<Callback*> mShutdownCallbacks;
         sigset_t mSigmask;
     protected:
-        static CMutex sSingletonMutex;
-        static CServerMain* sSingletonPtr;
+        static Mutex sSingletonMutex;
+        static ServerMain* sSingletonPtr;
     };
 };
 #endif

@@ -6,12 +6,12 @@
 #include "DbConnection.h"
 #include "DbException.h"
 
-ofstream CDbConnection::sDebugOutputFile;
-CMutex CDbConnection::sDebugOutputMutex;
-bool CDbConnection::sDebugSql = false;
+ofstream DbConnection::sDebugOutputFile;
+Mutex DbConnection::sDebugOutputMutex;
+bool DbConnection::sDebugSql = false;
 
 
-CDbConnection::CDbConnection()
+DbConnection::DbConnection()
 {
     m_did_init = false;
     m_reconnect = false;
@@ -27,12 +27,12 @@ CDbConnection::CDbConnection()
 }
 
 
-CDbConnection::~CDbConnection()
+DbConnection::~DbConnection()
 {
 }
 
 
-bool CDbConnection::Init(const FString& db, const FString& user, const FString& pass,
+bool DbConnection::Init(const FString& db, const FString& user, const FString& pass,
                          const FString& host, const FString& socket, unsigned int retries)
 {
     if (m_did_init) return true;
@@ -55,52 +55,52 @@ bool CDbConnection::Init(const FString& db, const FString& user, const FString& 
 }
 
 
-bool CDbConnection::execute2(const FString& sql)
+bool DbConnection::execute2(const FString& sql)
 {
     if (!execute(sql))
     {
         hlog(HLOG_DEBUG, "DB Error: [%u] %s", m_errno, m_error.c_str());
         hlog(HLOG_DEBUG, "SQL: %s", sql.c_str());
-        throw CDbException(m_error, m_errno, sql);
+        throw DbException(m_error, m_errno, sql);
     }
 
     return true;
 }
 
 
-CDbResult CDbConnection::store2(const FString& sql)
+DbResult DbConnection::store2(const FString& sql)
 {
-    CDbResult ret = store(sql);
+    DbResult ret = store(sql);
 
     if (!ret)
     {
         hlog(HLOG_DEBUG, "DB Error: [%u] %s", m_errno, m_error.c_str());
         hlog(HLOG_DEBUG, "SQL: %s", sql.c_str());
-        throw CDbException(m_error, m_errno, sql);
+        throw DbException(m_error, m_errno, sql);
     }
 
     return ret;
 }
 
 
-CDbResult CDbConnection::use2(const FString& sql)
+DbResult DbConnection::use2(const FString& sql)
 {
-    CDbResult ret = use(sql);
+    DbResult ret = use(sql);
 
     if (!ret)
     {
         hlog(HLOG_DEBUG, "DB Error: [%u] %s", m_errno, m_error.c_str());
         hlog(HLOG_DEBUG, "SQL: %s", sql.c_str());
-        throw CDbException(m_error, m_errno, sql);
+        throw DbException(m_error, m_errno, sql);
     }
 
     return ret;
 }
 
 
-void CDbConnection::debugFile(const char *filename)
+void DbConnection::debugFile(const char *filename)
 {
-    CAutoUnlockMutex lock(sDebugOutputMutex);
+    AutoUnlockMutex lock(sDebugOutputMutex);
 
     if (sDebugSql) sDebugOutputFile.close();
 
@@ -124,7 +124,7 @@ void CDbConnection::debugFile(const char *filename)
 }
 
 
-void CDbConnection::logSql(const FString &sql, const struct timeval &executionTime)
+void DbConnection::logSql(const FString &sql, const struct timeval &executionTime)
 {
 #if defined(FORTE_NO_BOOST) || !defined(FORTE_WITH_DATETIME)
     FString logMsg(FStringFC(), "%04u.%06u [%u]: %s", 
@@ -135,19 +135,19 @@ void CDbConnection::logSql(const FString &sql, const struct timeval &executionTi
     gettimeofday(&tv, NULL);
     FString logMsg(FStringFC(), "%04u.%06u %s.%03u [%u]: %s", 
                    (unsigned)executionTime.tv_sec, (unsigned)executionTime.tv_usec, 
-                   CTime::to_str(tv.tv_sec, "US/Pacific").c_str(), 
+                   FTime::to_str(tv.tv_sec, "US/Pacific").c_str(), 
                    (unsigned)tv.tv_usec / 1000, (unsigned)pthread_self(), sql.c_str());
 #endif
-    CAutoUnlockMutex lock(sDebugOutputMutex);
+    AutoUnlockMutex lock(sDebugOutputMutex);
     if (sDebugSql) sDebugOutputFile << logMsg << endl;
 }
 
 
-void CDbConnection::autoCommit(bool enabled)
+void DbConnection::autoCommit(bool enabled)
 {
     if (m_autocommit == false && m_queries_pending)
     {
-        hlog(HLOG_ERR, "CDbConnection::autoCommit() called with pending queries; committing pending queries");
+        hlog(HLOG_ERR, "DbConnection::autoCommit() called with pending queries; committing pending queries");
         commit();
     }
 
@@ -156,20 +156,20 @@ void CDbConnection::autoCommit(bool enabled)
 }
 
 
-void CDbConnection::begin()
+void DbConnection::begin()
 {
     FString sql;
-    hlog(HLOG_DEBUG, "CDbConnection::begin()");
+    hlog(HLOG_DEBUG, "DbConnection::begin()");
     sql.Format("begin");
     execute(sql);
     m_queries_pending = true;
 }
 
 
-void CDbConnection::commit()
+void DbConnection::commit()
 {
     FString sql;
-    hlog(HLOG_DEBUG, "CDbConnection::commit()");
+    hlog(HLOG_DEBUG, "DbConnection::commit()");
     if (m_autocommit == true)
         hlog(HLOG_WARN, "commit() called while autocommit enabled");
     sql.Format("commit");
@@ -178,10 +178,10 @@ void CDbConnection::commit()
 }
 
 
-void CDbConnection::rollback()
+void DbConnection::rollback()
 {
     FString sql;
-    hlog(HLOG_DEBUG, "CDbConnection::rollback()");
+    hlog(HLOG_DEBUG, "DbConnection::rollback()");
     if (m_autocommit == true)
         hlog(HLOG_WARN, "rollback() called while autocommit enabled");
     sql.Format("rollback");

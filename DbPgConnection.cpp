@@ -1,29 +1,29 @@
 #ifndef FORTE_NO_DB
 #ifndef FORTE_NO_POSTGRESQL
 
-// CDbPgConnection.cpp
+// DbPgConnection.cpp
 #include "Forte.h"
 #include "DbPgConnection.h"
 #include "DbPgResult.h"
 #include "DbException.h"
 #include "AutoMutex.h"
 
-CDbPgConnection::CDbPgConnection()
+DbPgConnection::DbPgConnection()
 :
-    CDbConnection()
+    DbConnection()
 {
     m_db = NULL;
     m_db_type = "postgresql";
 }
 
 
-CDbPgConnection::~CDbPgConnection()
+DbPgConnection::~DbPgConnection()
 {
     Close();
 }
 
 
-bool CDbPgConnection::Init(PGconn *db)
+bool DbPgConnection::Init(PGconn *db)
 {
     m_db = db;
     m_did_init = true;
@@ -32,7 +32,7 @@ bool CDbPgConnection::Init(PGconn *db)
 }
 
 
-bool CDbPgConnection::Connect(void)
+bool DbPgConnection::Connect(void)
 {
     bool ret;
     unsigned int tries = m_retries + 1;
@@ -98,7 +98,7 @@ bool CDbPgConnection::Connect(void)
 }
 
 
-bool CDbPgConnection::Close(void)
+bool DbPgConnection::Close(void)
 {
     if (m_db != NULL) PQfinish(m_db);
     m_db = NULL;
@@ -106,11 +106,11 @@ bool CDbPgConnection::Close(void)
 }
 
 
-CDbResult CDbPgConnection::query(const FString& sql)
+DbResult DbPgConnection::query(const FString& sql)
 {
     unsigned int tries_remaining = m_retries + 1;
     struct timeval tv_start, tv_end;
-    CDbPgResult res;
+    DbPgResult res;
     int code;
 
     // init
@@ -154,7 +154,7 @@ CDbResult CDbPgConnection::query(const FString& sql)
             case (CONNECTION_BAD + 1000):
             case PGRES_BAD_RESPONSE:
                 if (m_queries_pending)
-                    throw CDbException("connection lost during transaction", m_errno, sql);
+                    throw DbException("connection lost during transaction", m_errno, sql);
                 // try reconnecting
                 Connect();
                 --tries_remaining;
@@ -182,32 +182,32 @@ CDbResult CDbPgConnection::query(const FString& sql)
 }
 
 
-bool CDbPgConnection::execute(const FString& sql)
+bool DbPgConnection::execute(const FString& sql)
 {
     return query(sql);
 }
 
 
-CDbResult CDbPgConnection::store(const FString& sql)
+DbResult DbPgConnection::store(const FString& sql)
 {
     return query(sql);
 }
 
 
-CDbResult CDbPgConnection::use(const FString& sql)
+DbResult DbPgConnection::use(const FString& sql)
 {
     return query(sql);
 }
 
 
-bool CDbPgConnection::isTemporaryError() const
+bool DbPgConnection::isTemporaryError() const
 {
     return (m_errno == PGRES_COPY_OUT ||
             m_errno == PGRES_COPY_IN);
 }
 
 
-FString CDbPgConnection::escape(const char *str)
+FString DbPgConnection::escape(const char *str)
 {
     FString ret, sql(str);;
     char *foo = new char[2 + 2 * sql.length()];
@@ -220,8 +220,8 @@ FString CDbPgConnection::escape(const char *str)
     else
     {
         // use deprecated function
-        static CMutex mutex;
-        CAutoUnlockMutex lock(mutex);
+        static Mutex mutex;
+        AutoUnlockMutex lock(mutex);
         PQescapeString(foo, sql, sql.length());
     }
 

@@ -13,144 +13,144 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(CForteException, CForteThreadPoolDispatcherException);
+    EXCEPTION_SUBCLASS(ForteException, ForteThreadPoolDispatcherException);
 
-    class CDispatcherThread;
-    class CDispatcher : public Object
+    class DispatcherThread;
+    class Dispatcher : public Object
     {
     public:
-        CDispatcher();
-        virtual ~CDispatcher();
+        Dispatcher();
+        virtual ~Dispatcher();
 
         virtual void pause(void) = 0;
         virtual void resume(void) = 0;
 
-        virtual void enqueue(CEvent *e) = 0;
+        virtual void enqueue(Event *e) = 0;
         virtual bool accepting(void) = 0;
-        virtual int getQueuedEvents(int maxEvents, std::list<CEvent*> &queuedEvents) = 0;
-        virtual int getRunningEvents(int maxEvents, std::list<CEvent*> &runningEvents) = 0;
+        virtual int getQueuedEvents(int maxEvents, std::list<Event*> &queuedEvents) = 0;
+        virtual int getRunningEvents(int maxEvents, std::list<Event*> &runningEvents) = 0;
     
-        void registerThread(CDispatcherThread *thr);
-        void unregisterThread(CDispatcherThread *thr);
+        void registerThread(DispatcherThread *thr);
+        void unregisterThread(DispatcherThread *thr);
         FString mDispatcherName;
     protected:
         bool mPaused;
         volatile bool mShutdown;
-        std::vector<CDispatcherThread*> mThreads;
-        CMutex mThreadsLock;
+        std::vector<DispatcherThread*> mThreads;
+        Mutex mThreadsLock;
     };
-    class CDispatcherThread : public CThread
+    class DispatcherThread : public Thread
     {
-        friend class CThreadPoolDispatcher;
-        friend class COnDemandDispatcher;
+        friend class ThreadPoolDispatcher;
+        friend class OnDemandDispatcher;
     public:
-        CDispatcherThread();
-        virtual ~CDispatcherThread();
+        DispatcherThread();
+        virtual ~DispatcherThread();
 
     protected:
-        CDispatcher *mDispatcher;
+        Dispatcher *mDispatcher;
         bool mRegistered;
         // pointer to the event being handled by this thread, NULL if idle.
         // YOU MUST LOCK dispatcher's mNotifyMutex while accessing this data
-        CEvent *mEventPtr;
+        Event *mEventPtr;
     };
-    class CThreadPoolDispatcher;
-    class CThreadPoolDispatcherManager : public CDispatcherThread
+    class ThreadPoolDispatcher;
+    class ThreadPoolDispatcherManager : public DispatcherThread
     {
     public:
-        inline CThreadPoolDispatcherManager(CThreadPoolDispatcher *disp)
-            {mDispatcher = (CDispatcher*)disp; initialized();};
+        inline ThreadPoolDispatcherManager(ThreadPoolDispatcher *disp)
+            {mDispatcher = (Dispatcher*)disp; initialized();};
     protected:
         virtual void *run(void);
     };
-    class CThreadPoolDispatcherWorker : public CDispatcherThread
+    class ThreadPoolDispatcherWorker : public DispatcherThread
     {
     public:
-        CThreadPoolDispatcherWorker(CThreadPoolDispatcher *disp);
-        virtual ~CThreadPoolDispatcherWorker();
+        ThreadPoolDispatcherWorker(ThreadPoolDispatcher *disp);
+        virtual ~ThreadPoolDispatcherWorker();
     protected:
         virtual void *run(void);
         time_t mLastPeriodicCall;
     };
-    class CThreadPoolDispatcher : public CDispatcher
+    class ThreadPoolDispatcher : public Dispatcher
     {
-        friend class CThreadPoolDispatcherManager;
-        friend class CThreadPoolDispatcherWorker;
+        friend class ThreadPoolDispatcherManager;
+        friend class ThreadPoolDispatcherWorker;
     public:
-        CThreadPoolDispatcher(CRequestHandler &requestHandler,
+        ThreadPoolDispatcher(RequestHandler &requestHandler,
                               const int minThreads, const int maxThreads, 
                               const int minSpareThreads, const int maxSpareThreads,
                               const int deepQueue, const int maxDepth, const char *name);
-        virtual ~CThreadPoolDispatcher();
+        virtual ~ThreadPoolDispatcher();
         virtual void pause(void);
         virtual void resume(void);
-        virtual void enqueue(CEvent *e);
+        virtual void enqueue(Event *e);
         virtual bool accepting(void);
 
-        inline int getQueuedEvents(int maxEvents, std::list<CEvent*> &queuedEvents)
+        inline int getQueuedEvents(int maxEvents, std::list<Event*> &queuedEvents)
             { return mEventQueue.getEventCopies(maxEvents, queuedEvents); }
-        int getRunningEvents(int maxEvents, std::list<CEvent*> &runningEvents);
+        int getRunningEvents(int maxEvents, std::list<Event*> &runningEvents);
 
     protected:
-        CRequestHandler &mRequestHandler;
+        RequestHandler &mRequestHandler;
         unsigned int mMinThreads;
         unsigned int mMaxThreads;
         unsigned int mMinSpareThreads;
         unsigned int mMaxSpareThreads;
-        CSemaphore mThreadSem;
-        CSemaphore mSpareThreadSem;
-        CMutex mNotifyLock;
-        CThreadCondition mNotify;
-        CEventQueue mEventQueue;
-        CThreadPoolDispatcherManager mManagerThread;
+        Semaphore mThreadSem;
+        Semaphore mSpareThreadSem;
+        Mutex mNotifyLock;
+        ThreadCondition mNotify;
+        EventQueue mEventQueue;
+        ThreadPoolDispatcherManager mManagerThread;
     };
 
-    class COnDemandDispatcher;
-    class COnDemandDispatcherManager : public CDispatcherThread
+    class OnDemandDispatcher;
+    class OnDemandDispatcherManager : public DispatcherThread
     {
     public:
-        inline COnDemandDispatcherManager(COnDemandDispatcher *disp)
-            {mDispatcher = (CDispatcher*)disp; initialized();};
+        inline OnDemandDispatcherManager(OnDemandDispatcher *disp)
+            {mDispatcher = (Dispatcher*)disp; initialized();};
     protected:
         virtual void *run(void);
     };
-    class COnDemandDispatcherWorker : public CDispatcherThread
+    class OnDemandDispatcherWorker : public DispatcherThread
     {
     public:
-        COnDemandDispatcherWorker(COnDemandDispatcher *disp, CEvent *event);
-        ~COnDemandDispatcherWorker();
+        OnDemandDispatcherWorker(OnDemandDispatcher *disp, Event *event);
+        ~OnDemandDispatcherWorker();
     protected:
         virtual void *run(void);
-        auto_ptr<CEvent> mEvent;
+        auto_ptr<Event> mEvent;
     };
 
 
-    class COnDemandDispatcher : public CDispatcher
+    class OnDemandDispatcher : public Dispatcher
     {
-        friend class COnDemandDispatcherManager;
-        friend class COnDemandDispatcherWorker;
+        friend class OnDemandDispatcherManager;
+        friend class OnDemandDispatcherWorker;
     public:
-        COnDemandDispatcher(CRequestHandler &requestHandler,
+        OnDemandDispatcher(RequestHandler &requestHandler,
                             const int maxThreads,
                             const int deepQueue, const int maxDepth, const char *name);
-        virtual ~COnDemandDispatcher();
+        virtual ~OnDemandDispatcher();
         virtual void pause(void);
         virtual void resume(void);
-        virtual void enqueue(CEvent *e);
+        virtual void enqueue(Event *e);
         virtual bool accepting(void);
 
-        inline int getQueuedEvents(int maxEvents, std::list<CEvent*> &queuedEvents)
+        inline int getQueuedEvents(int maxEvents, std::list<Event*> &queuedEvents)
             { return mEventQueue.getEventCopies(maxEvents, queuedEvents); }
-        int getRunningEvents(int maxEvents, std::list<CEvent*> &runningEvents);
+        int getRunningEvents(int maxEvents, std::list<Event*> &runningEvents);
 
     protected:
-        CRequestHandler &mRequestHandler;
+        RequestHandler &mRequestHandler;
         unsigned int mMaxThreads;
-        CSemaphore mThreadSem;
-        CMutex mNotifyLock;
-        CThreadCondition mNotify;
-        CEventQueue mEventQueue;
-        COnDemandDispatcherManager mManagerThread;
+        Semaphore mThreadSem;
+        Mutex mNotifyLock;
+        ThreadCondition mNotify;
+        EventQueue mEventQueue;
+        OnDemandDispatcherManager mManagerThread;
     };
 };
 #endif

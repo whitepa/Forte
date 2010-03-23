@@ -2,14 +2,14 @@
 #include "Forte.h"
 
 
-CLogTimer::CLogTimer(int level, const FString& log_str) :
+LogTimer::LogTimer(int level, const FString& log_str) :
     m_level(level), m_log_str(log_str)
 {
     gettimeofday(&m_start, NULL);
 }
 
 
-CLogTimer::~CLogTimer()
+LogTimer::~LogTimer()
 {
     FString stmp;
     int m, s, us;

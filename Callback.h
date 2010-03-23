@@ -13,17 +13,17 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(CForteException, CForteCallbackException);
-    class CCallback : public Object
+    EXCEPTION_SUBCLASS(ForteException, ForteCallbackException);
+    class Callback : public Object
     {
     public:
-        CCallback() {};
-        virtual ~CCallback() {};
+        Callback() {};
+        virtual ~Callback() {};
         virtual void operator()(void *arg = NULL) const = 0;
         virtual void execute(void *arg = NULL) const = 0;
     };
 
-    class CStaticCallback : public CCallback
+    class CStaticCallback : public Callback
     {
     public:
         typedef void (*Method)(void);
@@ -42,7 +42,7 @@ namespace Forte
         Method method;
     };
 
-    class CStaticParamCallback : public CCallback
+    class CStaticParamCallback : public Callback
     {
     public:
         typedef void (*Method)(void *);
@@ -59,19 +59,19 @@ namespace Forte
             }
         void operator()(void *arg) const
             {
-                if (!method) throw CForteCallbackException("Invalid Callback");
+                if (!method) throw ForteCallbackException("Invalid Callback");
                 (*method)(arg);
             }
         void execute(void *arg) const
             {
-                if (!method) throw CForteCallbackException("Invalid Callback");
+                if (!method) throw ForteCallbackException("Invalid Callback");
                 (*method)(arg);
             }
         Method method;
     };
 
     template < class Class >
-    class CInstanceCallback : public CCallback
+    class CInstanceCallback : public Callback
     {
     public:
         typedef void (Class::*Method)(void);
@@ -94,7 +94,7 @@ namespace Forte
     };
 
     template < class Class >
-    class CInstanceParamCallback : public CCallback
+    class CInstanceParamCallback : public Callback
     {
     public:
         typedef void (Class::*Method)(void *);
@@ -117,7 +117,7 @@ namespace Forte
     };
 
 #ifndef FORTE_NO_BOOST
-    class CFunctorCallback : public CCallback
+    class CFunctorCallback : public Callback
     {
     public:
         CFunctorCallback(boost::function<void()> func)

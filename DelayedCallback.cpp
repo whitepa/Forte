@@ -4,38 +4,38 @@
 // (this was done out of ease of implementation)
 // therefore: minimum delay is 1 second (might be anywhere from 0 - 1 second)
 
-CMutex CDelayedCallback::sLock;
-CMutex CDelayedCallback::sThreadLock;
-CMutex CDelayedCallback::sNotifyLock;
-CThreadCondition CDelayedCallback::sNotify(CDelayedCallback::sNotifyLock);
-CThread * CDelayedCallback::sCallbackThread;
+Mutex DelayedCallback::sLock;
+Mutex DelayedCallback::sThreadLock;
+Mutex DelayedCallback::sNotifyLock;
+ThreadCondition DelayedCallback::sNotify(DelayedCallback::sNotifyLock);
+Thread * DelayedCallback::sCallbackThread;
 
-std::set<unsigned int> CDelayedCallback::sTimes;
-CallbackMap CDelayedCallback::sCallbacks;
-std::map<CCallback *, unsigned int> CDelayedCallback::sLookup;
+std::set<unsigned int> DelayedCallback::sTimes;
+CallbackMap DelayedCallback::sCallbacks;
+std::map<Callback *, unsigned int> DelayedCallback::sLookup;
 
 
 
-void CDelayedCallback::registerCallback(CCallback *callback, unsigned int delay)
+void DelayedCallback::registerCallback(Callback *callback, unsigned int delay)
 {
-    CAutoUnlockMutex lock(sLock);
+    AutoUnlockMutex lock(sLock);
     // insert new callback into array of callbacks, sorted by execution time
     time_t now = time(0);
     time_t runtime = now + delay;
     hlog(HLOG_DEBUG, "registerCallback(): now %u; registering a callback for time %u",
          now, runtime);
     sTimes.insert(runtime);
-    sCallbacks.insert(pair<unsigned int, CCallback*>(runtime,callback));
-    sLookup.insert(pair<CCallback*,unsigned int>(callback,runtime));
+    sCallbacks.insert(pair<unsigned int, Callback*>(runtime,callback));
+    sLookup.insert(pair<Callback*,unsigned int>(callback,runtime));
     if (sCallbackThread == NULL)
         startCallbackThread();
 }
 
-void CDelayedCallback::unregisterCallback(CCallback *callback)
+void DelayedCallback::unregisterCallback(Callback *callback)
 {
-    CAutoUnlockMutex lock(sLock);
+    AutoUnlockMutex lock(sLock);
     // remove from array
-    std::map<CCallback*,unsigned int>::iterator i;
+    std::map<Callback*,unsigned int>::iterator i;
     i = sLookup.find(callback);
     if (i == sLookup.end())
     {
@@ -51,7 +51,7 @@ void CDelayedCallback::unregisterCallback(CCallback *callback)
     // we are traversing a list looking for a match in O(n) time
     for (ci = range.first; ci != range.second; ++ci)
     {
-        CCallback *c = (*ci).second;
+        Callback *c = (*ci).second;
         if (c == callback)
         {
             sLookup.erase((*ci).second);
@@ -68,54 +68,54 @@ void CDelayedCallback::unregisterCallback(CCallback *callback)
     }
 }
 
-void CDelayedCallback::startCallbackThread(void)
+void DelayedCallback::startCallbackThread(void)
 {
-    CAutoUnlockMutex lock(sThreadLock);
+    AutoUnlockMutex lock(sThreadLock);
     if (sCallbackThread != NULL)
-        throw CForteDelayedCallbackException("sCallbackThread not NULL");
-    sCallbackThread = new CDelayedCallbackThread();
+        throw ForteDelayedCallbackException("sCallbackThread not NULL");
+    sCallbackThread = new DelayedCallbackThread();
 }
-void CDelayedCallback::stopCallbackThread(void)
+void DelayedCallback::stopCallbackThread(void)
 {
-    CAutoUnlockMutex lock(sThreadLock);
+    AutoUnlockMutex lock(sThreadLock);
     if (sCallbackThread == NULL)
-        throw CForteDelayedCallbackException("sCallbackThread is NULL");
+        throw ForteDelayedCallbackException("sCallbackThread is NULL");
     delete sCallbackThread;
     sCallbackThread = NULL;
 }
 
-void * CDelayedCallbackThread::run(void)
+void * DelayedCallbackThread::run(void)
 {
     mThreadName.Format("dly-callback");
     hlog(HLOG_DEBUG, "delayed callback thread starting");
-    CAutoUnlockMutex lock(CDelayedCallback::sNotifyLock);
+    AutoUnlockMutex lock(DelayedCallback::sNotifyLock);
     while (!mThreadShutdown)
     {
-        std::list<CCallback *> executeList;
+        std::list<Callback *> executeList;
         {
             time_t now = time(0);
-            CAutoUnlockMutex dataLock(CDelayedCallback::sLock);
-//            hlog(HLOG_DEBUG, "delayed callback thread:  next execute time is %u", (CDelayedCallback::sTimes.size() != 0)?*(CDelayedCallback::sTimes.begin()):0);
+            AutoUnlockMutex dataLock(DelayedCallback::sLock);
+//            hlog(HLOG_DEBUG, "delayed callback thread:  next execute time is %u", (DelayedCallback::sTimes.size() != 0)?*(DelayedCallback::sTimes.begin()):0);
             std::set<unsigned int>::iterator ti;
-            ti = CDelayedCallback::sTimes.begin();
-            while (ti != CDelayedCallback::sTimes.end() && *ti <= (unsigned)now)
+            ti = DelayedCallback::sTimes.begin();
+            while (ti != DelayedCallback::sTimes.end() && *ti <= (unsigned)now)
             {
-                CallbackRange range = CDelayedCallback::sCallbacks.equal_range(*ti);
+                CallbackRange range = DelayedCallback::sCallbacks.equal_range(*ti);
                 CallbackMap::iterator i;
                 for (i = range.first; i != range.second; ++i)
                 {
                     hlog(HLOG_DEBUG, "time is %u, executing callback for time %u", now, (*i).first);
-                    CCallback *c = (*i).second;
+                    Callback *c = (*i).second;
                     executeList.push_back(c);
-                    CDelayedCallback::sLookup.erase((*i).second);
-                    CDelayedCallback::sCallbacks.erase(i);
+                    DelayedCallback::sLookup.erase((*i).second);
+                    DelayedCallback::sCallbacks.erase(i);
                 }
                 hlog(HLOG_DEBUG, "out of range loop");
-                CDelayedCallback::sTimes.erase(ti);
-                ti = CDelayedCallback::sTimes.begin();
+                DelayedCallback::sTimes.erase(ti);
+                ti = DelayedCallback::sTimes.begin();
             }
         }
-        std::list<CCallback *>::iterator i;
+        std::list<Callback *>::iterator i;
         // execute all the callbacks here (after data has been unlocked)
         // (this is done to avoid deadlock if a callback calls unregisterCallback() on itself)
         for (i = executeList.begin(); i!=executeList.end(); ++i)
@@ -129,7 +129,7 @@ void * CDelayedCallbackThread::run(void)
         gettimeofday(&now, 0);
         timeout.tv_sec = now.tv_sec + 1; // wake up every second
         timeout.tv_nsec = now.tv_usec * 1000;
-        CDelayedCallback::sNotify.timedwait(timeout);
+        DelayedCallback::sNotify.timedwait(timeout);
     }
     hlog(HLOG_DEBUG, "delayed callback thread stopping");
     return NULL;

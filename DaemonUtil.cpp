@@ -5,13 +5,13 @@
 #include <sys/stat.h>
 #include "Forte.h"
 
-void CDaemonUtil::Daemonize(void)
+void DaemonUtil::Daemonize(void)
 {
     if (!ForkDaemon())
         exit(0);
 }
 
-bool CDaemonUtil::ForkDaemon(void)
+bool DaemonUtil::ForkDaemon(void)
 {
     // TODO: figure out how to handle failures of these system calls
     // in the child(ren), and propogate the error back to the parent.
@@ -21,7 +21,7 @@ bool CDaemonUtil::ForkDaemon(void)
     // Fork off the parent process
     pid = fork();
     if (pid < 0) {
-        throw CForkFailedException();
+        throw ForkFailedException();
     }
     // If we got a good PID, then we are the parent.
     else if (pid > 0) {

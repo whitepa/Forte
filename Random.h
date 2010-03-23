@@ -6,7 +6,7 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(CForteException, CForteRandomException);
+    EXCEPTION_SUBCLASS(ForteException, ForteRandomException);
 
     class Random : public Object
     {

@@ -1,7 +1,7 @@
 #include "Forte.h"
 #define EVQ_MAX_DEPTH 65536
 
-CEventQueue::CEventQueue() :
+EventQueue::EventQueue() :
     mBlockingMode(true),
     mShutdown(false),
     mMaxDepth(EVQ_MAX_DEPTH),
@@ -10,7 +10,7 @@ CEventQueue::CEventQueue() :
     mNotify = NULL;
 }
 
-CEventQueue::CEventQueue(int maxdepth) :
+EventQueue::EventQueue(int maxdepth) :
     mBlockingMode(true),
     mShutdown(false),
     mMaxDepth((maxdepth <= EVQ_MAX_DEPTH) ? maxdepth : EVQ_MAX_DEPTH),
@@ -19,7 +19,7 @@ CEventQueue::CEventQueue(int maxdepth) :
     mNotify = NULL;
 }
 
-CEventQueue::CEventQueue(int maxdepth, CThreadCondition *notifier) :
+EventQueue::EventQueue(int maxdepth, ThreadCondition *notifier) :
     mBlockingMode(true),
     mShutdown(false),
     mMaxDepth((maxdepth <= EVQ_MAX_DEPTH) ? maxdepth : EVQ_MAX_DEPTH),
@@ -28,14 +28,14 @@ CEventQueue::CEventQueue(int maxdepth, CThreadCondition *notifier) :
     mNotify = notifier;
 }
 
-CEventQueue::~CEventQueue()
+EventQueue::~EventQueue()
 {
-    CAutoUnlockMutex lock(mMutex);
+    AutoUnlockMutex lock(mMutex);
     // delete all events in queue
-    std::list<CEvent*>::iterator i;
+    std::list<Event*>::iterator i;
     for (i = mQueue.begin(); i != mQueue.end(); ++i)
     {
-        CEvent *e = *i;
+        Event *e = *i;
         if (e != NULL)
             delete e;
     }
@@ -43,21 +43,21 @@ CEventQueue::~CEventQueue()
     mEmptyCondition.broadcast();
 }
 
-void CEventQueue::add(CEvent *e)
+void EventQueue::add(Event *e)
 {
     // check for NULL event
     if (e == NULL)
-        throw CForteEventQueueException("attempt to add NULL event to queue");
+        throw ForteEventQueueException("attempt to add NULL event to queue");
     if (mShutdown)
-        throw CForteEventQueueException("unable to add event: queue is shutting down");
+        throw ForteEventQueueException("unable to add event: queue is shutting down");
     if (mBlockingMode)
         mMaxDepth.wait();
     // XXX race condition
-    CAutoUnlockMutex lock(mMutex);
+    AutoUnlockMutex lock(mMutex);
     if (!mBlockingMode && mMaxDepth.trywait() == -1 && errno == EAGAIN)
     {
         // non blocking mode and max depth, delete the oldest entry
-        std::list<CEvent*>::iterator i;
+        std::list<Event*>::iterator i;
         i = mQueue.begin();
         if (i != mQueue.end())
         {
@@ -73,14 +73,14 @@ void CEventQueue::add(CEvent *e)
     if (mNotify) mNotify->signal();
 }
 
-CEvent * CEventQueue::get(void)
+Event * EventQueue::get(void)
 {
-    CAutoUnlockMutex lock(mMutex);
-    std::list<CEvent*>::iterator i;
+    AutoUnlockMutex lock(mMutex);
+    std::list<Event*>::iterator i;
     i = mQueue.begin();
     if (i == mQueue.end())
         return NULL;
-    CEvent *ret = *i;
+    Event *ret = *i;
     mQueue.pop_front();
     mMaxDepth.post();
     if (mQueue.empty())
@@ -88,16 +88,16 @@ CEvent * CEventQueue::get(void)
     return ret;
 }
 
-int CEventQueue::getEventCopies(int maxEvents, std::list<CEvent*> &result)
+int EventQueue::getEventCopies(int maxEvents, std::list<Event*> &result)
 {
     result.clear();
-    CAutoUnlockMutex lock(mMutex);
-    std::list<CEvent*>::iterator i;
+    AutoUnlockMutex lock(mMutex);
+    std::list<Event*>::iterator i;
     int count = 0;
     for (i = mQueue.begin(); i != mQueue.end() && maxEvents-- > 0;
          ++i)
     {
-        CEvent *e = *i;
+        Event *e = *i;
         if (e != NULL)
         {
             result.push_back(e->copy());

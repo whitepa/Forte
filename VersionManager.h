@@ -2,33 +2,33 @@
 #define __VersionManager_h
 namespace Forte
 {
-    class CUtilVersion;
-    class CVersionManager {
+    class UtilVersion;
+    class VersionManager {
     public:
-        CVersionManager() {};
-        virtual ~CVersionManager() {};
+        VersionManager() {};
+        virtual ~VersionManager() {};
 
         static inline void RegisterVersionString(const char *str)
             {
-                CAutoUnlockMutex lock(sLock);
+                AutoUnlockMutex lock(sLock);
                 sVersionStrings.push_back(std::string(str));
             }
         static inline void VersionVector(std::vector<std::string> &vec)
             {
                 vec.clear();
-                CAutoUnlockMutex lock(sLock);
+                AutoUnlockMutex lock(sLock);
                 vec = sVersionStrings;
             }
     protected:
-        static CMutex sLock;
+        static Mutex sLock;
         static std::vector<std::string> sVersionStrings;
-        static CUtilVersion sUtilVersion;
+        static UtilVersion sUtilVersion;
     };
 
-    class CUtilVersion {
+    class UtilVersion {
     public:
-        CUtilVersion();
-        virtual ~CUtilVersion() {};
+        UtilVersion();
+        virtual ~UtilVersion() {};
     };
 };
 #endif

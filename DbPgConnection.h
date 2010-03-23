@@ -12,11 +12,11 @@
 
 namespace Forte
 {
-    class CDbPgConnection : public CDbConnection
+    class DbPgConnection : public DbConnection
     {
     public:
-        CDbPgConnection();
-        virtual ~CDbPgConnection();
+        DbPgConnection();
+        virtual ~DbPgConnection();
 
         // initialization
         virtual bool Init(PGconn *db);
@@ -27,8 +27,8 @@ namespace Forte
 
         // queries
         virtual bool execute(const FString& sql);
-        virtual CDbResult store(const FString& sql);
-        virtual CDbResult use(const FString& sql);
+        virtual DbResult store(const FString& sql);
+        virtual DbResult use(const FString& sql);
 
         // error info
         virtual bool isTemporaryError() const;
@@ -39,8 +39,8 @@ namespace Forte
         virtual FString escape(const char *str);
 
     private:
-        CDbResult query(const FString& sql);
-        CDbPgResult m_last_res;
+        DbResult query(const FString& sql);
+        DbPgResult m_last_res;
         PGconn *m_db;
     };
 };

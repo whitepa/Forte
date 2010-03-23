@@ -8,20 +8,20 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(CForteException, CForteEventQueueException);
+    EXCEPTION_SUBCLASS(ForteException, ForteEventQueueException);
 
-    class CEventQueue : public Object
+    class EventQueue : public Object
     {
     public:
-        CEventQueue();
-        CEventQueue(int maxdepth);
-        CEventQueue(int maxdepth, CThreadCondition *notifier);
-        virtual ~CEventQueue();
+        EventQueue();
+        EventQueue(int maxdepth);
+        EventQueue(int maxdepth, ThreadCondition *notifier);
+        virtual ~EventQueue();
 
-        void add(CEvent *e);
-        CEvent * get(void);
+        void add(Event *e);
+        Event * get(void);
         inline bool accepting(void) { return (!mShutdown && ((mMaxDepth.getvalue() > 0) ? true : false));}
-        inline int depth(void) {CAutoUnlockMutex lock(mMutex); return mQueue.size();};
+        inline int depth(void) {AutoUnlockMutex lock(mMutex); return mQueue.size();};
 
         /// set to true (default) to block on full queue.
         /// set to false to drop old events (and delete them) on full queue
@@ -35,7 +35,7 @@ namespace Forte
         /// queue is emptied.  If the queue is already empty upon calling
         /// waitUntilEmpty(), it will return immediately.
         inline void waitUntilEmpty(void) { 
-            CAutoUnlockMutex lock(mMutex); 
+            AutoUnlockMutex lock(mMutex); 
             if (mQueue.empty())
                 return;
             else
@@ -44,18 +44,18 @@ namespace Forte
 
         /// getEventCopies retreives copies of the next maxEvents in the queue
         ///
-        int getEventCopies(int maxEvents, std::list<CEvent*> &result);
+        int getEventCopies(int maxEvents, std::list<Event*> &result);
 
         int mDeepThresh;
         int mLastDepth;
     protected:
         bool mBlockingMode;
         bool mShutdown;
-        std::list<CEvent*> mQueue;
-        CSemaphore mMaxDepth;
-        CMutex mMutex;
-        CThreadCondition mEmptyCondition;
-        CThreadCondition *mNotify;
+        std::list<Event*> mQueue;
+        Semaphore mMaxDepth;
+        Mutex mMutex;
+        ThreadCondition mEmptyCondition;
+        ThreadCondition *mNotify;
     };
 };
 #endif

@@ -6,7 +6,7 @@
 
 using namespace Forte;
 
-CXMLNode::CXMLNode(const FString& name, xmlNodePtr parent)
+XMLNode::XMLNode(const FString& name, xmlNodePtr parent)
 {
     FString stripped;
     stripControls(stripped, name);
@@ -14,12 +14,12 @@ CXMLNode::CXMLNode(const FString& name, xmlNodePtr parent)
 }
 
 
-CXMLNode::~CXMLNode()
+XMLNode::~XMLNode()
 {
 }
 
 
-FString CXMLNode::getProp(const char *name) const
+FString XMLNode::getProp(const char *name) const
 {
     FString ret;
     xmlChar *str;
@@ -36,7 +36,7 @@ FString CXMLNode::getProp(const char *name) const
 }
 
 
-void CXMLNode::setProp(const char *name, const char *value)
+void XMLNode::setProp(const char *name, const char *value)
 {
     FString stripped;
     stripControls(stripped, value);
@@ -44,13 +44,13 @@ void CXMLNode::setProp(const char *name, const char *value)
 }
 
 
-void CXMLNode::delProp(const char *name)
+void XMLNode::delProp(const char *name)
 {
     xmlUnsetProp(m_node, BAD_CAST name);
 }
 
 
-FString CXMLNode::getText() const
+FString XMLNode::getText() const
 {
     FString ret;
     xmlChar *str;
@@ -67,7 +67,7 @@ FString CXMLNode::getText() const
 }
 
 
-void CXMLNode::nuke()
+void XMLNode::nuke()
 {
     xmlUnlinkNode(m_node);
     xmlFreeNode(m_node);
@@ -75,7 +75,7 @@ void CXMLNode::nuke()
 }
 
 
-void CXMLNode::stripControls(FString &dest,  
+void XMLNode::stripControls(FString &dest,  
                              const char *src 
     )
 {

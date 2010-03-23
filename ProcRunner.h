@@ -17,7 +17,7 @@ namespace Forte
         static ProcRunner* get();
         static ProcRunner& getRef();
         static ProcRunner* s_singleton;
-        static CMutex s_mutex;
+        static Mutex s_mutex;
 
     public:
         // API

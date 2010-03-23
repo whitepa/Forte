@@ -6,10 +6,10 @@
 #include <unistd.h>
 
 // constants
-const char *CClusterLock::LOCK_PATH = "/var/lock";
-const unsigned CClusterLock::DEFAULT_TIMEOUT = 120;
-const int CClusterLock::TIMER_SIGNAL = SIGRTMIN + 10;
-const char *CClusterLock::VALID_LOCK_CHARS =
+const char *ClusterLock::LOCK_PATH = "/var/lock";
+const unsigned ClusterLock::DEFAULT_TIMEOUT = 120;
+const int ClusterLock::TIMER_SIGNAL = SIGRTMIN + 10;
+const char *ClusterLock::VALID_LOCK_CHARS =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
     "0123456789"
@@ -17,25 +17,25 @@ const char *CClusterLock::VALID_LOCK_CHARS =
 
 
 // statics
-CMutex CClusterLock::s_mutex;
-std::map<FString, CMutex> CClusterLock::s_mutex_map;
-bool CClusterLock::s_sigactionInitialized = false;
+Mutex ClusterLock::s_mutex;
+std::map<FString, Mutex> ClusterLock::s_mutex_map;
+bool ClusterLock::s_sigactionInitialized = false;
 
 // ctor/dtor
-CClusterLock::CClusterLock(const FString& name, unsigned timeout, const FString& errorString)
+ClusterLock::ClusterLock(const FString& name, unsigned timeout, const FString& errorString)
 {
     init();
     lock(name, timeout);
 }
 
 
-CClusterLock::CClusterLock()
+ClusterLock::ClusterLock()
 {
     init();
 }
 
 
-CClusterLock::~CClusterLock()
+ClusterLock::~ClusterLock()
 {
     unlock();
     fini();
@@ -43,13 +43,13 @@ CClusterLock::~CClusterLock()
 
 
 // helpers
-void CClusterLock::sig_action(int sig, siginfo_t *info, void *context)
+void ClusterLock::sig_action(int sig, siginfo_t *info, void *context)
 {
     // cout << pthread_self() << "  caught signal " << sig << endl;
 }
 
 
-void CClusterLock::init()
+void ClusterLock::init()
 {
     struct sigaction sa;
     sigevent_t se;
@@ -62,13 +62,13 @@ void CClusterLock::init()
     FileSystem::get()->mkdir(LOCK_PATH, 0777, true);
 
     {
-        CAutoUnlockMutex lock(s_mutex);
+        AutoUnlockMutex lock(s_mutex);
         if (!s_sigactionInitialized)
         {
             // init sigaction (once per process)
             memset(&sa, 0, sizeof(sa));
             sigemptyset(&sa.sa_mask);
-            sa.sa_sigaction = &CClusterLock::sig_action;
+            sa.sa_sigaction = &ClusterLock::sig_action;
             sa.sa_flags = SA_SIGINFO;
             sigaction(TIMER_SIGNAL, &sa, NULL);
             s_sigactionInitialized = true;
@@ -108,14 +108,14 @@ void CClusterLock::init()
 }
 
 
-void CClusterLock::fini()
+void ClusterLock::fini()
 {
     timer_delete(m_timer);
 }
 
 
 // lock/unlock
-void CClusterLock::lock(const FString& name, unsigned timeout, const FString& errorString)
+void ClusterLock::lock(const FString& name, unsigned timeout, const FString& errorString)
 {
     struct itimerspec ts;
     bool locked, timed_out;
@@ -136,7 +136,7 @@ void CClusterLock::lock(const FString& name, unsigned timeout, const FString& er
 
     // assign mutex
     {
-        CAutoUnlockMutex lock(s_mutex);
+        AutoUnlockMutex lock(s_mutex);
         m_mutex = &s_mutex_map[filename];
     }
 
@@ -217,7 +217,7 @@ void CClusterLock::lock(const FString& name, unsigned timeout, const FString& er
 }
 
 
-void CClusterLock::unlock()
+void ClusterLock::unlock()
 {
     // clear name
     m_name.clear();

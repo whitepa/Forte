@@ -3,10 +3,10 @@
 
 volatile bool g_shutdown = false;
 
-CMutex       CServerMain::sSingletonMutex;
-CServerMain* CServerMain::sSingletonPtr;
+Mutex       ServerMain::sSingletonMutex;
+ServerMain* ServerMain::sSingletonPtr;
 
-CServerMain::CServerMain(int argc, char * const argv[], 
+ServerMain::ServerMain(int argc, char * const argv[], 
                          const char *getoptstr, const char *defaultConfig,
                          bool daemonize) :
     mConfigFile(defaultConfig),
@@ -14,9 +14,9 @@ CServerMain::CServerMain(int argc, char * const argv[],
 {
     // set the singleton pointer
     {
-        CAutoUnlockMutex lock(sSingletonMutex);
+        AutoUnlockMutex lock(sSingletonMutex);
         if (sSingletonPtr != NULL)
-            throw CForteServerMainException("only one ServerMain object may exist");
+            throw ForteServerMainException("only one ServerMain object may exist");
         else
             sSingletonPtr = this;
     }
@@ -74,15 +74,15 @@ CServerMain::CServerMain(int argc, char * const argv[],
     
 }
 
-CServerMain::~CServerMain()
+ServerMain::~ServerMain()
 {
     g_shutdown = true;
 
     // call the shutdown callbacks
     hlog(HLOG_DEBUG, "ServerMain shutdown: calling shutdown callbacks...");
     {
-        CAutoUnlockMutex lock(mCallbackMutex);
-        std::set<CCallback*>::iterator i;
+        AutoUnlockMutex lock(mCallbackMutex);
+        std::set<Callback*>::iterator i;
         for (i = mShutdownCallbacks.begin();
              i != mShutdownCallbacks.end();
              i++)
@@ -98,42 +98,42 @@ CServerMain::~CServerMain()
     unlink(mPidFile.c_str());
 
     // unset the singleton pointer
-    CAutoUnlockMutex lock(sSingletonMutex);
+    AutoUnlockMutex lock(sSingletonMutex);
     sSingletonPtr = NULL;
 }
 
-void CServerMain::RegisterShutdownCallback(CCallback *callback)
+void ServerMain::RegisterShutdownCallback(Callback *callback)
 {
     hlog(HLOG_DEBUG, "registering shutdown callback");
-    CAutoUnlockMutex lock(mCallbackMutex);
+    AutoUnlockMutex lock(mCallbackMutex);
     mShutdownCallbacks.insert(callback);
 }
 
-CServerMain& CServerMain::GetServer()
+ServerMain& ServerMain::GetServer()
 {
-    // return a reference to the CServerMain object
-    CAutoUnlockMutex lock(sSingletonMutex);
+    // return a reference to the ServerMain object
+    AutoUnlockMutex lock(sSingletonMutex);
     if (sSingletonPtr == NULL)
-        throw CForteEmptyReferenceException("ServerMain object does not exist");
+        throw ForteEmptyReferenceException("ServerMain object does not exist");
     else
         return *sSingletonPtr;
 }
 
-CServerMain* CServerMain::GetServerPtr()
+ServerMain* ServerMain::GetServerPtr()
 {
-    // return a pointer to the CServerMain object
-    CAutoUnlockMutex lock(sSingletonMutex);
+    // return a pointer to the ServerMain object
+    AutoUnlockMutex lock(sSingletonMutex);
     if (sSingletonPtr == NULL)
-        throw CForteEmptyReferenceException("ServerMain object does not exist");
+        throw ForteEmptyReferenceException("ServerMain object does not exist");
     else
         return sSingletonPtr;
 }
 
-void CServerMain::Usage()
+void ServerMain::Usage()
 {
     cout << "Incorrect usage." << endl;
 }
-void CServerMain::WritePidFile()
+void ServerMain::WritePidFile()
 {
     FILE *file;
     if ((file = fopen(mPidFile.c_str(), "r")) != NULL)
@@ -163,7 +163,7 @@ void CServerMain::WritePidFile()
                         FString err;
                         err.Format("forte process already running on pid %u\n",
                                    old_pid);
-                        throw CForteServerMainException(err);
+                        throw ForteServerMainException(err);
                     }
                 }
             }
@@ -176,7 +176,7 @@ void CServerMain::WritePidFile()
     {
         FString err;
         err.Format("Unable to write to pid file %s\n", mPidFile.c_str());
-        throw CForteServerMainException(err);
+        throw ForteServerMainException(err);
     }
     else
     {
@@ -185,7 +185,7 @@ void CServerMain::WritePidFile()
     }
 }
 
-void CServerMain::PrepareSigmask()
+void ServerMain::PrepareSigmask()
 {
     sigemptyset(&mSigmask);
     sigaddset(&mSigmask, SIGINT);
@@ -196,7 +196,7 @@ void CServerMain::PrepareSigmask()
     pthread_sigmask(SIG_BLOCK, &mSigmask, NULL);
 }
 
-void CServerMain::MainLoop()
+void ServerMain::MainLoop()
 {
     // loop to receive signals
     int quit = 0;

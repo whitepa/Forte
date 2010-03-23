@@ -18,25 +18,25 @@
 // and would facilitate a brute force attack on the encrypted version if they were also contained in
 // the ciphertext.
 
-EXCEPTION_SUBCLASS(CForteException, CForteSecureEnvelopeEncoderException);
+EXCEPTION_SUBCLASS(ForteException, ForteSecureEnvelopeEncoderException);
 
-class CSecureEnvelopeEncoder {
+class SecureEnvelopeEncoder {
 public:
-    CSecureEnvelopeEncoder(const CKeyBuffer &publicKey) : mPublicKey(publicKey, NULL) {};
-    virtual ~CSecureEnvelopeEncoder() {};
+    SecureEnvelopeEncoder(const KeyBuffer &publicKey) : mPublicKey(publicKey, NULL) {};
+    virtual ~SecureEnvelopeEncoder() {};
 
     // Encode an account number as described above.  numClear is the number of characters
     // to provide in cleartext in the obscured version of the account number.
     FString & encode(const FString &accountNumber, unsigned int numClear, FString &out);
 protected:
-    CPublicKey mPublicKey;
+    PublicKey mPublicKey;
 };
 
-class CSecureEnvelopeDecoder {
+class SecureEnvelopeDecoder {
 public:
-    CSecureEnvelopeDecoder(const CKeyBuffer &privateKey, const char *passphrase) :
+    SecureEnvelopeDecoder(const KeyBuffer &privateKey, const char *passphrase) :
         mPrivateKey(privateKey, passphrase) {};
-    virtual ~CSecureEnvelopeDecoder() {};
+    virtual ~SecureEnvelopeDecoder() {};
 
     // Decode an account number.
     FString & decode(const FString &encoded, FString &out);
@@ -46,7 +46,7 @@ public:
     static bool isEncoded(const std::string &data);
 
 protected:
-    CPrivateKey mPrivateKey;
+    PrivateKey mPrivateKey;
 };
 
 #endif

@@ -9,27 +9,27 @@
 #include "FString.h"
 namespace Forte
 {
-    class CEvent : public Object {
+    class Event : public Object {
     public:
-        CEvent() {};
-        CEvent(unsigned int userTypeInfo) : mUserTypeInfo(userTypeInfo) {};
-        virtual ~CEvent() {}
-        virtual CEvent * copy() = 0;
+        Event() {};
+        Event(unsigned int userTypeInfo) : mUserTypeInfo(userTypeInfo) {};
+        virtual ~Event() {}
+        virtual Event * copy() = 0;
         int mServerID;
         struct timeval mStartTime;
         unsigned int mUserTypeInfo;
     };
 
-    class CRequestEvent : public CEvent {
+    class RequestEvent : public Event {
     public:
-        CRequestEvent() {};
-        virtual ~CRequestEvent() {}
+        RequestEvent() {};
+        virtual ~RequestEvent() {}
         int mFd;
         struct in_addr mClient;
         struct timeval mTime;
 
-        virtual CEvent *copy() {
-            CRequestEvent *e = new CRequestEvent;
+        virtual Event *copy() {
+            RequestEvent *e = new RequestEvent;
             e->mServerID = mServerID;
             e->mStartTime = mStartTime;
             e->mUserTypeInfo = mUserTypeInfo;
@@ -40,24 +40,24 @@ namespace Forte
         }
     };
 
-    class CObservableEvent : public CEvent {
+    class ObservableEvent : public Event {
     public:
-        CObservableEvent() {};
-        CObservableEvent(unsigned int subsysID,
+        ObservableEvent() {};
+        ObservableEvent(unsigned int subsysID,
                          unsigned int eventType,
                          const char *eventData) :
             mSubsysID(subsysID),
             mEventType(eventType),
             mEventData(eventData) {};
-        virtual ~CObservableEvent() {}
+        virtual ~ObservableEvent() {}
     
         unsigned int mSubsysID;
         unsigned int mEventType;
         unsigned int mObserverID; // set differently as handed to each observer
         FString mEventData;
     
-        virtual CEvent *copy() {
-            CObservableEvent *e = new CObservableEvent;
+        virtual Event *copy() {
+            ObservableEvent *e = new ObservableEvent;
             e->mServerID = mServerID;
             e->mStartTime = mStartTime;
             e->mUserTypeInfo = mUserTypeInfo;

@@ -5,10 +5,10 @@
 #include "AutoMutex.h"
 namespace Forte
 {
-    class CServiceConfig : public Object {
+    class ServiceConfig : public Object {
     public:
-        CServiceConfig();
-        CServiceConfig(const char *configFile);
+        ServiceConfig();
+        ServiceConfig(const char *configFile);
 
         void ReadConfigFile(const char *configFile);
 
@@ -20,7 +20,7 @@ namespace Forte
 
     protected:
 
-        CMutex mMutex;
+        Mutex mMutex;
         StringHashMap mConfig;
     };
 };

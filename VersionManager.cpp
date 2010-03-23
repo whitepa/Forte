@@ -1,14 +1,14 @@
 #include "Forte.h"
 
-CMutex CVersionManager::sLock;
-std::vector<std::string> CVersionManager::sVersionStrings;
+Mutex VersionManager::sLock;
+std::vector<std::string> VersionManager::sVersionStrings;
 
-CUtilVersion CVersionManager::sUtilVersion;
+UtilVersion VersionManager::sUtilVersion;
 
 
-CUtilVersion::CUtilVersion()
+UtilVersion::UtilVersion()
 { 
     FString ver;
     ver.Format("forte library version 1.1.0 revision %s", REVISION);
-    CVersionManager::RegisterVersionString(ver);
+    VersionManager::RegisterVersionString(ver);
 }

@@ -10,7 +10,7 @@
 namespace Forte
 {
 
-    EXCEPTION_SUBCLASS(CForteException, EClusterLock);
+    EXCEPTION_SUBCLASS(ForteException, EClusterLock);
 
     EXCEPTION_SUBCLASS(EClusterLock, 
                        EClusterLockTimeout);
@@ -21,12 +21,12 @@ namespace Forte
     EXCEPTION_SUBCLASS(EClusterLock,
                        EClusterLockFile);
 
-    class CClusterLock : public Object
+    class ClusterLock : public Object
     {
     public:
-        CClusterLock();
-        CClusterLock(const FString& name, unsigned timeout = 120, const FString& errorString = "");
-        virtual ~CClusterLock();
+        ClusterLock();
+        ClusterLock(const FString& name, unsigned timeout = 120, const FString& errorString = "");
+        virtual ~ClusterLock();
 
         void unlock();
         void lock(const FString& name, unsigned timeout, const FString& errorString = "");
@@ -44,7 +44,7 @@ namespace Forte
         AutoFD m_fd;
         std::auto_ptr<FileSystem::AdvisoryLock> m_lock;
         timer_t m_timer;
-        CMutex *m_mutex;
+        Mutex *m_mutex;
 
         // helpers
         void init();
@@ -52,8 +52,8 @@ namespace Forte
         static void sig_action(int sig, siginfo_t *info, void *context);
 
         // statics
-        static CMutex s_mutex;
-        static std::map<FString, CMutex> s_mutex_map;
+        static Mutex s_mutex;
+        static std::map<FString, Mutex> s_mutex_map;
         static bool s_sigactionInitialized;
     };
 };

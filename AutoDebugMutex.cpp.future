@@ -3,27 +3,27 @@
 #include "Forte.h"
 
 // normal mutex
-CMutex::~CMutex()
+Mutex::~Mutex()
 {
     pthread_mutex_destroy(&m_pthread_mutex);
 }
 
-int CMutex::lock()
+int Mutex::lock()
 {
     return pthread_mutex_lock(&m_pthread_mutex);
 }
 
-int CMutex::unlock()
+int Mutex::unlock()
 {
     return pthread_mutex_unlock(&m_pthread_mutex);
 }
 
-int CMutex::trylock()
+int Mutex::trylock()
 {
     return pthread_mutex_trylock(&m_pthread_mutex);
 }
 
-int CMutex::timedlock(const struct timespec& timeout)
+int Mutex::timedlock(const struct timespec& timeout)
 {
     struct timespec abs_time;
 
@@ -49,9 +49,9 @@ int CMutex::timedlock(const struct timespec& timeout)
 
 
 // DEBUG mutex
-CDebugMutex::CDebugMutex(const pthread_mutexattr_t *attr)
+DebugMutex::DebugMutex(const pthread_mutexattr_t *attr)
 :
-    CMutex(attr)
+    Mutex(attr)
 {
     pthread_mutexattr_t dbg_attr;
     int type = PTHREAD_MUTEX_ERRORCHECK;
@@ -71,7 +71,7 @@ CDebugMutex::CDebugMutex(const pthread_mutexattr_t *attr)
 }
 
 
-int CDebugMutex::lock()
+int DebugMutex::lock()
 {
     // attempt to acquire lock
     int ret = pthread_mutex_trylock(&m_pthread_mutex);
@@ -111,7 +111,7 @@ int CDebugMutex::lock()
     return ret;
 }
 
-int CDebugMutex::unlock()
+int DebugMutex::unlock()
 {
     m_attr_mutex.lock();
     m_owner = 0;
@@ -120,7 +120,7 @@ int CDebugMutex::unlock()
     return pthread_mutex_unlock(&m_pthread_mutex);
 }
 
-int CDebugMutex::trylock()
+int DebugMutex::trylock()
 {
     int ret = pthread_mutex_trylock(&m_pthread_mutex);
 
@@ -149,7 +149,7 @@ int CDebugMutex::trylock()
     return ret;
 }
 
-int CDebugMutex::timedlock(const struct timespec& timeout)
+int DebugMutex::timedlock(const struct timespec& timeout)
 {
     struct timespec abs_time;
     int ret;

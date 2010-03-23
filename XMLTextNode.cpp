@@ -5,8 +5,8 @@
 
 using namespace Forte;
 
-CXMLTextNode::CXMLTextNode(const FString& name, const FString& text, xmlNodePtr parent) :
-    CXMLNode()
+XMLTextNode::XMLTextNode(const FString& name, const FString& text, xmlNodePtr parent) :
+    XMLNode()
 {
     FString stripped;
     stripControls(stripped, text);

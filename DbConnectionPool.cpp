@@ -4,46 +4,46 @@
 #include "DbConnectionPool.h"
 #include "DbConnection.h"
 
-auto_ptr<CDbConnectionPool> CDbConnectionPool::spInstance;
-CMutex CDbConnectionPool::sSingletonMutex;
+auto_ptr<DbConnectionPool> DbConnectionPool::spInstance;
+Mutex DbConnectionPool::sSingletonMutex;
 
-CDbConnectionPool& CDbConnectionPool::GetInstance() {
+DbConnectionPool& DbConnectionPool::GetInstance() {
     if (spInstance.get() == NULL) {
-        CAutoUnlockMutex lock(sSingletonMutex);
+        AutoUnlockMutex lock(sSingletonMutex);
         if (spInstance.get() == NULL) {
-            spInstance.reset(new CDbConnectionPool());
+            spInstance.reset(new DbConnectionPool());
         }
     }
     return *spInstance;
 }
 
-CDbConnectionPool& CDbConnectionPool::GetInstance(CServiceConfig &configObj) {
+DbConnectionPool& DbConnectionPool::GetInstance(ServiceConfig &configObj) {
     if (spInstance.get() == NULL) {
-        CAutoUnlockMutex lock(sSingletonMutex);
+        AutoUnlockMutex lock(sSingletonMutex);
         if (spInstance.get() == NULL) {
-            spInstance.reset(new CDbConnectionPool(configObj));
+            spInstance.reset(new DbConnectionPool(configObj));
         }
     }
     return *spInstance;
 }
 
 
-CDbConnectionPool::CDbConnectionPool() : 
-    mDbType(CServerMain::GetServer().mServiceConfig.Get("db_type")),
-    mDbName(CServerMain::GetServer().mServiceConfig.Get("db_name")),
-    mDbUser(CServerMain::GetServer().mServiceConfig.Get("db_user")),
-    mDbPassword(CServerMain::GetServer().mServiceConfig.Get("db_pass")),
-    mDbHost(CServerMain::GetServer().mServiceConfig.Get("db_host")),
-    mDbSock(CServerMain::GetServer().mServiceConfig.Get("db_socket")),
-    mPoolSize(CServerMain::GetServer().mServiceConfig.GetInteger("db_poolsize"))
+DbConnectionPool::DbConnectionPool() : 
+    mDbType(ServerMain::GetServer().mServiceConfig.Get("db_type")),
+    mDbName(ServerMain::GetServer().mServiceConfig.Get("db_name")),
+    mDbUser(ServerMain::GetServer().mServiceConfig.Get("db_user")),
+    mDbPassword(ServerMain::GetServer().mServiceConfig.Get("db_pass")),
+    mDbHost(ServerMain::GetServer().mServiceConfig.Get("db_host")),
+    mDbSock(ServerMain::GetServer().mServiceConfig.Get("db_socket")),
+    mPoolSize(ServerMain::GetServer().mServiceConfig.GetInteger("db_poolsize"))
 {
     if (mDbType.empty())
-        throw CForteDbConnectionPoolException("'db_type' must be specified in the database configuration");
-    if (CServerMain::GetServer().mServiceConfig.Get("db_poolsize").empty())
-        throw CForteDbConnectionPoolException("'db_poolsize' must be specified in the database configuration");
+        throw ForteDbConnectionPoolException("'db_type' must be specified in the database configuration");
+    if (ServerMain::GetServer().mServiceConfig.Get("db_poolsize").empty())
+        throw ForteDbConnectionPoolException("'db_poolsize' must be specified in the database configuration");
 }
 
-CDbConnectionPool::CDbConnectionPool(CServiceConfig &configObj) :
+DbConnectionPool::DbConnectionPool(ServiceConfig &configObj) :
     mDbType(configObj.Get("db_type")),
     mDbName(configObj.Get("db_name")),
     mDbUser(configObj.Get("db_user")),
@@ -53,49 +53,49 @@ CDbConnectionPool::CDbConnectionPool(CServiceConfig &configObj) :
     mPoolSize(configObj.GetInteger("db_poolsize"))
 {
     if (mDbType.empty())
-        throw CForteDbConnectionPoolException("'db_type' must be specified in the database configuration");
+        throw ForteDbConnectionPoolException("'db_type' must be specified in the database configuration");
     if (configObj.Get("db_poolsize").empty())
-        throw CForteDbConnectionPoolException("'db_poolsize' must be specified in the database configuration");
+        throw ForteDbConnectionPoolException("'db_poolsize' must be specified in the database configuration");
 }
 
-CDbConnectionPool::~CDbConnectionPool() {
+DbConnectionPool::~DbConnectionPool() {
 }
 
-CDbConnection& CDbConnectionPool::GetDbConnection() {
-    CAutoUnlockMutex lock(mPoolMutex);
-    CDbConnection * pDb;
+DbConnection& DbConnectionPool::GetDbConnection() {
+    AutoUnlockMutex lock(mPoolMutex);
+    DbConnection * pDb;
 
     if (mFreeConnections.size() == 0)
     {
-        CDbConnection *new_db = NULL;
+        DbConnection *new_db = NULL;
 
         if (false) { }
 #ifndef FORTE_NO_MYSQL
         else if (!mDbType.CompareNoCase("mysql"))
         {
-            new_db = static_cast<CDbConnection*>(new CDbMyConnection());
+            new_db = static_cast<DbConnection*>(new DbMyConnection());
         }
 #endif
 #ifndef FORTE_NO_POSTGRESQL
         else if (!mDbType.CompareNoCase("postgresql"))
         {
-            new_db = static_cast<CDbConnection*>(new CDbPgConnection());
+            new_db = static_cast<DbConnection*>(new DbPgConnection());
         }
 #endif
 #ifndef FORTE_NO_SQLITE
         else if (!mDbType.CompareNoCase("sqlite"))
         {
-            new_db = static_cast<CDbConnection*>(new CDbLiteConnection());
+            new_db = static_cast<DbConnection*>(new DbLiteConnection());
         }
 #endif
         else
         {
             FString err;
             err.Format("Unrecognized database type: %s", mDbType.c_str());
-            throw CForteDbConnectionPoolException(err);
+            throw ForteDbConnectionPoolException(err);
         }
 
-        auto_ptr<CDbConnection> pNewDb(new_db);
+        auto_ptr<DbConnection> pNewDb(new_db);
         
         if (mDbSock.empty())
         {
@@ -103,7 +103,7 @@ CDbConnection& CDbConnectionPool::GetDbConnection() {
                 FString err;
                 err.Format("Could not initialize database connection: %s",
                            pNewDb->m_error.c_str());
-                throw CForteDbConnectionPoolException(err.c_str());
+                throw ForteDbConnectionPoolException(err.c_str());
             }
         }
         else
@@ -112,7 +112,7 @@ CDbConnection& CDbConnectionPool::GetDbConnection() {
                 FString err;
                 err.Format("Could not initialize socket database connection: %s",
                            pNewDb->m_error.c_str());
-                throw CForteDbConnectionPoolException(err.c_str());
+                throw ForteDbConnectionPoolException(err.c_str());
             }
         }
         mUsedConnections.insert(mUsedConnections.end(), pNewDb.get());
@@ -125,7 +125,7 @@ CDbConnection& CDbConnectionPool::GetDbConnection() {
     return *pDb;
 }
 
-void CDbConnectionPool::ReleaseDbConnection(CDbConnection& db)
+void DbConnectionPool::ReleaseDbConnection(DbConnection& db)
 {
     // make sure the connection has no pending queries
     if (db.hasPendingQueries())
@@ -133,17 +133,17 @@ void CDbConnectionPool::ReleaseDbConnection(CDbConnection& db)
         hlog(HLOG_ERR, "ReleaseDbConnection(): connection has uncommitted transaction!");
         db.rollback();
     }
-    CAutoUnlockMutex lock(mPoolMutex);
+    AutoUnlockMutex lock(mPoolMutex);
     
     // place this connection in the free pool, and remove it from the in-use pool
-    set<CDbConnection*>::iterator iConnection = mUsedConnections.find(&db);
+    set<DbConnection*>::iterator iConnection = mUsedConnections.find(&db);
     mFreeConnections.push_back(*iConnection);
     mUsedConnections.erase(iConnection);
 
     if (mFreeConnections.size() > mPoolSize)
     {
         // have too many connections in the pool, delete one
-        CDbConnection * pOldConnection = mFreeConnections.front();
+        DbConnection * pOldConnection = mFreeConnections.front();
         mFreeConnections.pop_front();
         delete pOldConnection;
     }

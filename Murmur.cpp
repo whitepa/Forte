@@ -30,7 +30,7 @@ void Murmur64::Update(const void *data, size_t size)
     const size_t n = (8 - b) % 8;
 
     // verify
-    if (n > size) throw CForteMurmerException("FORTE_MURMUR_TOO_SMALL");
+    if (n > size) throw ForteMurmerException("FORTE_MURMUR_TOO_SMALL");
 
 #ifdef DEBUG_MURMUR
     // debug logging

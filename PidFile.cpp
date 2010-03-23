@@ -1,6 +1,6 @@
 #include "Forte.h"
 
-CPidFile::CPidFile(const char *path) :
+PidFile::PidFile(const char *path) :
     mPath(path)
 {
     
@@ -22,7 +22,7 @@ CPidFile::CPidFile(const char *path) :
                 hlog(HLOG_DEBUG, "loaded cmdline from running process at PID %u", oldpid);
                 throw EAlreadyRunning();
             }
-            catch (CForteFStringLoadFileException &e)
+            catch (ForteFStringLoadFileException &e)
             {
                 // pidfile does exist, but no associated running process
                 hlog(HLOG_DEBUG, "no process currently at PID %u; unlinking pidfile", oldpid);
@@ -36,7 +36,7 @@ CPidFile::CPidFile(const char *path) :
             unlink(path);
         }
     }
-    catch (CForteFStringLoadFileException &e)
+    catch (ForteFStringLoadFileException &e)
     {
         hlog(HLOG_DEBUG, "no pidfile; will create");
         // pidfile doesn't exist, no problem.
@@ -55,7 +55,7 @@ CPidFile::CPidFile(const char *path) :
 }
 
 
-CPidFile::~CPidFile()
+PidFile::~PidFile()
 {
     // delete the pidfile
     hlog(HLOG_DEBUG, "deleting pidfile");

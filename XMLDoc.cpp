@@ -6,9 +6,9 @@
 
 using namespace Forte;
 
-CMutex CXMLDoc::s_mutex;
+Mutex XMLDoc::s_mutex;
 
-CXMLDoc::CXMLDoc()
+XMLDoc::XMLDoc()
 {
     hlog(HLOG_DEBUG4, "Locking XML mutex");
     s_mutex.lock();
@@ -16,7 +16,7 @@ CXMLDoc::CXMLDoc()
 }
 
 
-CXMLDoc::CXMLDoc(const FString& xml)
+XMLDoc::XMLDoc(const FString& xml)
 {
     hlog(HLOG_DEBUG4, "Locking XML mutex");
     s_mutex.lock();
@@ -26,12 +26,12 @@ CXMLDoc::CXMLDoc(const FString& xml)
     {
         hlog(HLOG_DEBUG4, "Unlocking XML mutex");
         s_mutex.unlock();
-        throw CForteXMLDocException("FORTE_XML_PARSE_ERROR");
+        throw ForteXMLDocException("FORTE_XML_PARSE_ERROR");
     }
 }
 
 
-CXMLDoc::~CXMLDoc()
+XMLDoc::~XMLDoc()
 {
     if (m_doc != NULL) xmlFreeDoc(m_doc);
     xmlCleanupParser();
@@ -40,7 +40,7 @@ CXMLDoc::~CXMLDoc()
 }
 
 
-CXMLNode CXMLDoc::createDocument(const FString& root_name)
+XMLNode XMLDoc::createDocument(const FString& root_name)
 {
     xmlNodePtr root;
     if (m_doc != NULL) xmlFreeDoc(m_doc);
@@ -51,7 +51,7 @@ CXMLNode CXMLDoc::createDocument(const FString& root_name)
 }
 
 
-FString CXMLDoc::toString() const
+FString XMLDoc::toString() const
 {
     FString ret;
     xmlChar *buf;

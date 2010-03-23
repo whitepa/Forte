@@ -3,17 +3,17 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-CException::CException()
+Exception::Exception()
 {
     FTrace::getStack(mStack);
 }
 
-CException::CException(const char *description) :
+Exception::Exception(const char *description) :
     mDescription(description)
 {
     FTrace::getStack(mStack);
 }
-CException::CException(const FStringFC &fc, const char *format, ...)
+Exception::Exception(const FStringFC &fc, const char *format, ...)
 {
     va_list ap;
     int size;
@@ -28,16 +28,16 @@ CException::CException(const FStringFC &fc, const char *format, ...)
 
     FTrace::getStack(mStack);
 }
-CException::CException(const CException& other) :
+Exception::Exception(const Exception& other) :
     mDescription(other.mDescription),
     mStack(other.mStack)
 {
 }
-CException::~CException() throw()
+Exception::~Exception() throw()
 {
 }
 
-std::string CException::extendedDescription()
+std::string Exception::extendedDescription()
 {
     FString stack;
     FTrace::formatStack(mStack, stack);
@@ -45,7 +45,7 @@ std::string CException::extendedDescription()
 }
 
 
-void CException::pretty_trace_log(int log_level)
+void Exception::pretty_trace_log(int log_level)
 {
     std::list<void*>::const_iterator si;
     std::vector<FString>::iterator li;
@@ -90,7 +90,7 @@ void CException::pretty_trace_log(int log_level)
 }
 
 
-FString CException::pretty_frame(const std::vector<FString>& mapping, void *address)
+FString Exception::pretty_frame(const std::vector<FString>& mapping, void *address)
 {
     ProcRunner *proc = ProcRunner::get();
     FString stmp, cmd, mod, name, func, file, output;

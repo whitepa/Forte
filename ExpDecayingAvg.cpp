@@ -1,10 +1,10 @@
 #include "Forte.h"
 
-CMutex                          CExpDecayingAvg::sThrMutex;
-CExpDecayingAvgThread*          CExpDecayingAvg::sThread = NULL;
-std::set<CExpDecayingAvg*>      CExpDecayingAvg::sObjs;
+Mutex                          ExpDecayingAvg::sThrMutex;
+ExpDecayingAvgThread*          ExpDecayingAvg::sThread = NULL;
+std::set<ExpDecayingAvg*>      ExpDecayingAvg::sObjs;
 
-CExpDecayingAvg::CExpDecayingAvg(int dampingTime) :
+ExpDecayingAvg::ExpDecayingAvg(int dampingTime) :
     mDampingTime(dampingTime)
 {
     reset();
@@ -12,63 +12,63 @@ CExpDecayingAvg::CExpDecayingAvg(int dampingTime) :
     // one thread handles updates of all decaying avg objects
     if (sThread == NULL)
     {
-        CAutoUnlockMutex lock(sThrMutex);
+        AutoUnlockMutex lock(sThrMutex);
         if (sThread == NULL)
         {
-            sThread = new CExpDecayingAvgThread();
+            sThread = new ExpDecayingAvgThread();
             // register a shutdown callback to delete the new thread
-            CServerMain::GetServer().RegisterShutdownCallback(
-                new CStaticCallback(&(CExpDecayingAvg::shutdown)));
+            ServerMain::GetServer().RegisterShutdownCallback(
+                new CStaticCallback(&(ExpDecayingAvg::shutdown)));
         }
     }
-    CAutoUnlockMutex lock(sThrMutex);
+    AutoUnlockMutex lock(sThrMutex);
     sObjs.insert(this);
 }
-CExpDecayingAvg::~CExpDecayingAvg()
+ExpDecayingAvg::~ExpDecayingAvg()
 {
-    CAutoUnlockMutex lock(sThrMutex);
+    AutoUnlockMutex lock(sThrMutex);
     sObjs.erase(this);
 }
-void CExpDecayingAvg::shutdown(void)
+void ExpDecayingAvg::shutdown(void)
 {
     // static method to delete the update thread
     hlog(HLOG_DEBUG, "ExpDecayingAvg: update thread shutting down");
-    CAutoUnlockMutex lock(sThrMutex);
+    AutoUnlockMutex lock(sThrMutex);
     if (sThread != NULL)
         delete sThread;
 }
-void CExpDecayingAvg::reset(void)
+void ExpDecayingAvg::reset(void)
 {
-    CAutoUnlockMutex lock(mLock);
+    AutoUnlockMutex lock(mLock);
     gettimeofday(&mLastUpdate, NULL);
     mLastAvg = 0.0;
     mInput = 0.0;
     mResetInputUponUpdate = true;
 }
-void CExpDecayingAvg::update(void)
+void ExpDecayingAvg::update(void)
 {
     // called by the update thread to recompute the average
-    CAutoUnlockMutex lock(mLock);
+    AutoUnlockMutex lock(mLock);
     mLastAvg += (1.0 - expf((float)-UPDATE_DELAY / (float)mDampingTime))*(mInput - mLastAvg);
     if (mResetInputUponUpdate) mInput = 0.0;
 }
-float CExpDecayingAvg::set(float input)
+float ExpDecayingAvg::set(float input)
 {
-    CAutoUnlockMutex lock(mLock);
+    AutoUnlockMutex lock(mLock);
     mInput = input;
     mResetInputUponUpdate = false;
     return mLastAvg;
 }
-float CExpDecayingAvg::increment(float amount)
+float ExpDecayingAvg::increment(float amount)
 {
-    CAutoUnlockMutex lock(mLock);
+    AutoUnlockMutex lock(mLock);
     mInput += amount;
     mResetInputUponUpdate = true;
     return mLastAvg;
 }
 
 // this thread loops through all the existing objects and updates them
-void * CExpDecayingAvgThread::run(void)
+void * ExpDecayingAvgThread::run(void)
 {
     // XXX note: this code (incorrectly) assumes that it takes zero time
     // to update all the averages.  As a result, the higher the number of averages
@@ -79,12 +79,12 @@ void * CExpDecayingAvgThread::run(void)
     hlog(HLOG_DEBUG, "exponential decaying average updater thread starting up");
     while (!mThreadShutdown)
     {
-        std::set<CExpDecayingAvg*>::iterator i;
-        for (i = CExpDecayingAvg::sObjs.begin();
-             i != CExpDecayingAvg::sObjs.end();
+        std::set<ExpDecayingAvg*>::iterator i;
+        for (i = ExpDecayingAvg::sObjs.begin();
+             i != ExpDecayingAvg::sObjs.end();
              ++i)
         {
-            CExpDecayingAvg *obj = *i;
+            ExpDecayingAvg *obj = *i;
             if (obj != NULL)
             {
                 obj->update();

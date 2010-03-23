@@ -10,11 +10,11 @@
 
 namespace Forte
 {
-    class CDbLiteConnection : public CDbConnection
+    class DbLiteConnection : public DbConnection
     {
     public:
-        CDbLiteConnection();
-        virtual ~CDbLiteConnection();
+        DbLiteConnection();
+        virtual ~DbLiteConnection();
 
         // initialization
         virtual bool Init(struct sqlite3 *db);
@@ -25,8 +25,8 @@ namespace Forte
 
         // queries
         virtual bool execute(const FString& sql);
-        virtual CDbResult store(const FString& sql);
-        virtual CDbResult use(const FString& sql);
+        virtual DbResult store(const FString& sql);
+        virtual DbResult use(const FString& sql);
 
         // error info
         virtual bool isTemporaryError() const;
@@ -38,7 +38,7 @@ namespace Forte
 
     private:
         void set_error();
-        CDbResult query(const FString& sql);
+        DbResult query(const FString& sql);
         struct sqlite3 *m_db;
 
     public:

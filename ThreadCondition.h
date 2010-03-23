@@ -5,11 +5,11 @@
 #include "AutoMutex.h"
 namespace Forte
 {
-    class CThreadCondition
+    class ThreadCondition
     {
     public:
-        inline CThreadCondition(CMutex &lock) : mLock(lock) { pthread_cond_init(&mCond, NULL); };
-        inline ~CThreadCondition() { pthread_cond_destroy(&mCond); };
+        inline ThreadCondition(Mutex &lock) : mLock(lock) { pthread_cond_init(&mCond, NULL); };
+        inline ~ThreadCondition() { pthread_cond_destroy(&mCond); };
     
         inline int signal() { return pthread_cond_signal(&mCond); };
         inline int broadcast() { return pthread_cond_broadcast(&mCond); };
@@ -27,7 +27,7 @@ namespace Forte
             }
     
     protected:
-        CMutex &mLock;
+        Mutex &mLock;
         pthread_cond_t mCond;
     };
 };

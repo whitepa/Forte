@@ -76,7 +76,7 @@ FString::FString(const struct sockaddr *sa)
         char buf[INET_ADDRSTRLEN];
         if (!inet_ntop(sa->sa_family, &(((struct sockaddr_in *)sa)->sin_addr),
                        buf, INET_ADDRSTRLEN))
-            throw CForteFStringException(FStringFC(), "%s", strerror(errno));
+            throw ForteFStringException(FStringFC(), "%s", strerror(errno));
         assign(buf);
     }
     else if (sa->sa_family == AF_INET6)
@@ -84,11 +84,11 @@ FString::FString(const struct sockaddr *sa)
         char buf[INET6_ADDRSTRLEN];
         if (!inet_ntop(sa->sa_family, &(((struct sockaddr_in *)sa)->sin_addr),
                        buf, INET6_ADDRSTRLEN))
-            throw CForteFStringException(FStringFC(), "%s", strerror(errno));
+            throw ForteFStringException(FStringFC(), "%s", strerror(errno));
         assign(buf);
     }
     else
-        throw CForteFStringUnknownAddressFamily(FStringFC(), "AF %d not supported", sa->sa_family);
+        throw ForteFStringUnknownAddressFamily(FStringFC(), "AF %d not supported", sa->sa_family);
 }
 
 
@@ -365,14 +365,14 @@ FString & FString::LoadFile(const char *filename, unsigned int max_len, FString 
     if (filename == NULL || strlen(filename) == 0)
     {
         hlog(HLOG_DEBUG, "FString failed load a file with an empty filename");
-        throw CForteFStringLoadFileException("invalid filename");
+        throw ForteFStringLoadFileException("invalid filename");
     }
 
 
     if ((file = fopen(filename, "r")) == NULL)
     {
         hlog(HLOG_DEBUG, "FString failed load file: %s", filename);
-        throw CForteFStringLoadFileException(FStringFC(),
+        throw ForteFStringLoadFileException(FStringFC(),
                                              "unable to open file '%s'",
                                              filename);
     }
@@ -397,17 +397,17 @@ void FString::SaveFile(const char *filename, const FString &in)
     FILE *file;
 
     if (filename == NULL || strlen(filename) == 0)
-        throw CForteFStringException("invalid filename");
+        throw ForteFStringException("invalid filename");
 
     if ((file = fopen(filename, "w")) == NULL)
-        throw CForteFStringException(FStringFC(),
+        throw ForteFStringException(FStringFC(),
                                      "unable to open file '%s'", filename);
     size_t status = fwrite(in.c_str(), in.size(), 1, file);
 
     fclose(file);
     if (status < 1)
     {
-        throw CForteFStringException(FStringFC(), 
+        throw ForteFStringException(FStringFC(), 
                                      "failed to write to file '%s'", filename);
     }
 }

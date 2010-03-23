@@ -1,24 +1,24 @@
 #include "Forte.h"
 
-CDispatcher::CDispatcher() :
+Dispatcher::Dispatcher() :
     mPaused(false),
     mShutdown(false)
 {}
-CDispatcher::~CDispatcher()
+Dispatcher::~Dispatcher()
 {
     // XXX
 }
 
-void CDispatcher::registerThread(CDispatcherThread *thr)
+void Dispatcher::registerThread(DispatcherThread *thr)
 {
-    CAutoUnlockMutex lock(mThreadsLock); 
+    AutoUnlockMutex lock(mThreadsLock); 
     mThreads.push_back(thr);
 }
-void CDispatcher::unregisterThread(CDispatcherThread *thr)
+void Dispatcher::unregisterThread(DispatcherThread *thr)
 {
     hlog(HLOG_DEBUG, "unregisterThread()");
-    CAutoUnlockMutex lock(mThreadsLock);
-    std::vector<CDispatcherThread*>::iterator i;
+    AutoUnlockMutex lock(mThreadsLock);
+    std::vector<DispatcherThread*>::iterator i;
     for (i = mThreads.begin(); i!=mThreads.end(); ++i)
     {
         if (*i == thr)
@@ -28,23 +28,23 @@ void CDispatcher::unregisterThread(CDispatcherThread *thr)
         }
     }
 }
-//CDispatcherThread::CDispatcherThread() :
-//    CThread(true) // use self deleting threads
+//DispatcherThread::DispatcherThread() :
+//    Thread(true) // use self deleting threads
 //{}
 //    // detach ourselves, since no one will be joining us
 //    pthread_detach(mThread);
 //}
-CDispatcherThread::CDispatcherThread() :
+DispatcherThread::DispatcherThread() :
     mEventPtr(NULL)
 {}
-CDispatcherThread::~CDispatcherThread()
+DispatcherThread::~DispatcherThread()
 {
     // XXX
 }
 ////////////////////////////// Thread pool dispatcher
-void * CThreadPoolDispatcherManager::run(void)
+void * ThreadPoolDispatcherManager::run(void)
 {
-    CThreadPoolDispatcher *disp = dynamic_cast<CThreadPoolDispatcher*>(mDispatcher);
+    ThreadPoolDispatcher *disp = dynamic_cast<ThreadPoolDispatcher*>(mDispatcher);
     mThreadName.Format("%s-disp-%u", disp->mDispatcherName.c_str(), (unsigned)mThread);
     
     // start initial worker threads
@@ -53,7 +53,7 @@ void * CThreadPoolDispatcherManager::run(void)
         disp->mThreadSem.wait();
         try
         {
-            new CThreadPoolDispatcherWorker(disp);
+            new ThreadPoolDispatcherWorker(disp);
         }
         catch (...)
         {
@@ -91,7 +91,7 @@ void * CThreadPoolDispatcherManager::run(void)
                 {
                     // create a new worker thread
                     try {
-                        new CThreadPoolDispatcherWorker(disp);
+                        new ThreadPoolDispatcherWorker(disp);
                     } catch (...) {
                         // XXX log err
                         disp->mThreadSem.post();
@@ -106,8 +106,8 @@ void * CThreadPoolDispatcherManager::run(void)
         {
             // too many spare threads, shut one down
 //            hlog(HLOG_DEBUG, "shutting down a thread");
-            CAutoUnlockMutex lock(disp->mThreadsLock);
-            std::vector<CDispatcherThread*>::iterator i = disp->mThreads.begin();
+            AutoUnlockMutex lock(disp->mThreadsLock);
+            std::vector<DispatcherThread*>::iterator i = disp->mThreads.begin();
             (*i)->shutdown();
         }
         lastNew = (numNew > 0) ? numNew : 0;
@@ -124,9 +124,9 @@ void * CThreadPoolDispatcherManager::run(void)
          disp->mDispatcherName.c_str());
 
     // tell all workers to shutdown
-    std::vector<CDispatcherThread*>::iterator ti;
+    std::vector<DispatcherThread*>::iterator ti;
     {
-        CAutoUnlockMutex lock(disp->mThreadsLock);
+        AutoUnlockMutex lock(disp->mThreadsLock);
         for (ti = disp->mThreads.begin(); ti != disp->mThreads.end(); ti++)
             (*ti)->shutdown();
         // when the threads shutdown, they will delete themselves, and remove
@@ -150,25 +150,25 @@ void * CThreadPoolDispatcherManager::run(void)
     return NULL;
 }
 
-CThreadPoolDispatcherWorker::CThreadPoolDispatcherWorker(CThreadPoolDispatcher *disp) :
+ThreadPoolDispatcherWorker::ThreadPoolDispatcherWorker(ThreadPoolDispatcher *disp) :
     mLastPeriodicCall(time(0))
 {
-    mSelfDelete = true; // workers should self-delete
-    mDispatcher = (CDispatcher*)disp;
+//    mSelfDelete = true; // workers should self-delete
+    mDispatcher = (Dispatcher*)disp;
     disp->registerThread(this);
     initialized();
 }
-CThreadPoolDispatcherWorker::~CThreadPoolDispatcherWorker()
+ThreadPoolDispatcherWorker::~ThreadPoolDispatcherWorker()
 {
-    CThreadPoolDispatcher *disp = dynamic_cast<CThreadPoolDispatcher*>(mDispatcher);
+    ThreadPoolDispatcher *disp = dynamic_cast<ThreadPoolDispatcher*>(mDispatcher);
     assert(disp != NULL);
     disp->mRequestHandler.cleanup();
     disp->unregisterThread(this);
     disp->mThreadSem.post();
 }
-void * CThreadPoolDispatcherWorker::run(void)
+void * ThreadPoolDispatcherWorker::run(void)
 {
-    CThreadPoolDispatcher *disp = dynamic_cast<CThreadPoolDispatcher*>(mDispatcher);
+    ThreadPoolDispatcher *disp = dynamic_cast<ThreadPoolDispatcher*>(mDispatcher);
     mThreadName.Format("%s-pool-%u", mDispatcher->mDispatcherName.c_str(), (unsigned)mThread);
     
     // call the request handler's initialization hook
@@ -177,24 +177,24 @@ void * CThreadPoolDispatcherWorker::run(void)
     // pull events from the request queue
     while (!mThreadShutdown)
     {
-        CAutoUnlockMutex lock(disp->mNotifyLock);
+        AutoUnlockMutex lock(disp->mNotifyLock);
         while (disp->mPaused == false &&
                !mThreadShutdown)
         {
-            auto_ptr<CEvent> event(disp->mEventQueue.get());
+            auto_ptr<Event> event(disp->mEventQueue.get());
             if (event.get() == NULL) break;
             // set event pointer here
             mEventPtr = event.get();
             // set start time
             gettimeofday(&(mEventPtr->mStartTime), NULL);
             {
-                CAutoLockMutex unlock(disp->mNotifyLock);
+                AutoLockMutex unlock(disp->mNotifyLock);
                 // process the request
                 try
                 {
                     disp->mRequestHandler.handler(event.get());
                 }
-                catch (CException &e)
+                catch (Exception &e)
                 {
                     hlog(HLOG_ERR, "exception thrown in event handler: %s",
                          e.getDescription().c_str());
@@ -235,7 +235,7 @@ void * CThreadPoolDispatcherWorker::run(void)
     return NULL;
 }
 
-CThreadPoolDispatcher::CThreadPoolDispatcher(CRequestHandler &requestHandler,
+ThreadPoolDispatcher::ThreadPoolDispatcher(RequestHandler &requestHandler,
                                              const int minThreads, const int maxThreads, 
                                              const int minSpareThreads, const int maxSpareThreads,
                                              const int deepQueue, const int maxDepth, const char *name):
@@ -252,7 +252,7 @@ CThreadPoolDispatcher::CThreadPoolDispatcher(CRequestHandler &requestHandler,
 {
     mDispatcherName = name;
 }
-CThreadPoolDispatcher::~CThreadPoolDispatcher()
+ThreadPoolDispatcher::~ThreadPoolDispatcher()
 {
     // stop accepting new events
     mEventQueue.shutdown();
@@ -264,26 +264,26 @@ CThreadPoolDispatcher::~CThreadPoolDispatcher()
     //  is dealloced and worker threads are still around trying to access data)
     mManagerThread.waitForShutdown();
 }
-void CThreadPoolDispatcher::pause(void) { mPaused = 1; }
-void CThreadPoolDispatcher::resume(void) { mPaused = 0; mNotify.broadcast(); }
-void CThreadPoolDispatcher::enqueue(CEvent *e)
+void ThreadPoolDispatcher::pause(void) { mPaused = 1; }
+void ThreadPoolDispatcher::resume(void) { mPaused = 0; mNotify.broadcast(); }
+void ThreadPoolDispatcher::enqueue(Event *e)
 { 
     if (mShutdown)
-        throw CForteThreadPoolDispatcherException("dispatcher is shutting down; no new events are being accepted");
+        throw ForteThreadPoolDispatcherException("dispatcher is shutting down; no new events are being accepted");
     mEventQueue.add(e); 
 }
-bool CThreadPoolDispatcher::accepting(void) { return mEventQueue.accepting(); }
+bool ThreadPoolDispatcher::accepting(void) { return mEventQueue.accepting(); }
 
-int CThreadPoolDispatcher::getRunningEvents(int maxEvents,
-                                            std::list<CEvent*> &runningEvents)
+int ThreadPoolDispatcher::getRunningEvents(int maxEvents,
+                                            std::list<Event*> &runningEvents)
 {
     // loop through the dispatcher threads
-    CAutoUnlockMutex lock(mNotifyLock);
-    std::vector<CDispatcherThread*>::iterator i;
+    AutoUnlockMutex lock(mNotifyLock);
+    std::vector<DispatcherThread*>::iterator i;
     int count = 0;
     for (i = mThreads.begin(); i != mThreads.end(); ++i)
     {
-        CDispatcherThread *dt = *i;
+        DispatcherThread *dt = *i;
         // copy each event
         if (dt != NULL && dt->mEventPtr != NULL)
         {
@@ -296,20 +296,20 @@ int CThreadPoolDispatcher::getRunningEvents(int maxEvents,
 
 /////////////////////////// On demand dispatcher
 
-void * COnDemandDispatcherManager::run(void)
+void * OnDemandDispatcherManager::run(void)
 {
-    COnDemandDispatcher *disp = dynamic_cast<COnDemandDispatcher*>(mDispatcher);
+    OnDemandDispatcher *disp = dynamic_cast<OnDemandDispatcher*>(mDispatcher);
     mThreadName.Format("dsp-od-%u", (unsigned)mThread);
     
-    CAutoUnlockMutex lock(disp->mNotifyLock);
+    AutoUnlockMutex lock(disp->mNotifyLock);
     while (1) // always check for queued events before shutting down
     {
-        CEvent *event;
+        Event *event;
         while (!disp->mPaused && (event = disp->mEventQueue.get()))
         {
-            CAutoLockMutex unlock(disp->mNotifyLock);
+            AutoLockMutex unlock(disp->mNotifyLock);
             disp->mThreadSem.wait();
-            new COnDemandDispatcherWorker(disp, event);
+            new OnDemandDispatcherWorker(disp, event);
         }
         if (disp->mShutdown) break;
 
@@ -323,11 +323,11 @@ void * COnDemandDispatcherManager::run(void)
 
     // signal any workers to shutdown
     {
-        std::vector<CDispatcherThread*>::iterator i;
-        CAutoUnlockMutex thrlock(disp->mThreadsLock);
+        std::vector<DispatcherThread*>::iterator i;
+        AutoUnlockMutex thrlock(disp->mThreadsLock);
         for (i = disp->mThreads.begin(); i != disp->mThreads.end(); ++i)
         {
-            CDispatcherThread *thr = *i;
+            DispatcherThread *thr = *i;
             if (thr != NULL) thr->shutdown();
         }
     }    
@@ -336,7 +336,7 @@ void * COnDemandDispatcherManager::run(void)
     while (1)
     {
         {
-            CAutoUnlockMutex thrlock(disp->mThreadsLock);
+            AutoUnlockMutex thrlock(disp->mThreadsLock);
             if (disp->mThreads.size() == 0)
                 break;
         }
@@ -345,32 +345,32 @@ void * COnDemandDispatcherManager::run(void)
     hlog(HLOG_DEBUG, "dispatcher shutdown complete");
     return NULL;
 }
-COnDemandDispatcherWorker::COnDemandDispatcherWorker(COnDemandDispatcher *disp, CEvent *event) :
+OnDemandDispatcherWorker::OnDemandDispatcherWorker(OnDemandDispatcher *disp, Event *event) :
     mEvent(event)
 {
-    mSelfDelete = true; // workers should self-delete
-    mDispatcher = (CDispatcher*)disp;
+//    mSelfDelete = true; // workers should self-delete
+    mDispatcher = (Dispatcher*)disp;
     disp->registerThread(this);
     initialized();
 }
-COnDemandDispatcherWorker::~COnDemandDispatcherWorker()
+OnDemandDispatcherWorker::~OnDemandDispatcherWorker()
 {
-    COnDemandDispatcher *disp = dynamic_cast<COnDemandDispatcher*>(mDispatcher);
+    OnDemandDispatcher *disp = dynamic_cast<OnDemandDispatcher*>(mDispatcher);
     disp->mRequestHandler.cleanup();
     disp->unregisterThread(this);
     disp->mThreadSem.post();
 }
 
-void * COnDemandDispatcherWorker::run()
+void * OnDemandDispatcherWorker::run()
 {
-    COnDemandDispatcher *disp = dynamic_cast<COnDemandDispatcher*>(mDispatcher);
+    OnDemandDispatcher *disp = dynamic_cast<OnDemandDispatcher*>(mDispatcher);
     mThreadName.Format("%s-od-%u", mDispatcher->mDispatcherName.c_str(), (unsigned)mThread);
     disp->mRequestHandler.init();
     disp->mRequestHandler.handler(mEvent.get());
     return NULL;
 }
 
-COnDemandDispatcher::COnDemandDispatcher(CRequestHandler &requestHandler,
+OnDemandDispatcher::OnDemandDispatcher(RequestHandler &requestHandler,
                                          const int maxThreads,
                                          const int deepQueue, const int maxDepth, const char *name):
     mRequestHandler(requestHandler),
@@ -382,7 +382,7 @@ COnDemandDispatcher::COnDemandDispatcher(CRequestHandler &requestHandler,
 {
     mDispatcherName = name;
 }
-COnDemandDispatcher::~COnDemandDispatcher()
+OnDemandDispatcher::~OnDemandDispatcher()
 {
     // stop accepting new events
     mEventQueue.shutdown();
@@ -394,22 +394,22 @@ COnDemandDispatcher::~COnDemandDispatcher()
     //  is dealloced and worker threads are still around trying to access data)
     mManagerThread.waitForShutdown();
 }
-void COnDemandDispatcher::pause(void) { mPaused = 1; }
-void COnDemandDispatcher::resume(void) { mPaused = 0; mNotify.signal(); }
-void COnDemandDispatcher::enqueue(CEvent *e) { mEventQueue.add(e); }
-bool COnDemandDispatcher::accepting(void) { return mEventQueue.accepting(); }
-int COnDemandDispatcher::getRunningEvents(int maxEvents,
-                                  std::list<CEvent*> &runningEvents)
+void OnDemandDispatcher::pause(void) { mPaused = 1; }
+void OnDemandDispatcher::resume(void) { mPaused = 0; mNotify.signal(); }
+void OnDemandDispatcher::enqueue(Event *e) { mEventQueue.add(e); }
+bool OnDemandDispatcher::accepting(void) { return mEventQueue.accepting(); }
+int OnDemandDispatcher::getRunningEvents(int maxEvents,
+                                  std::list<Event*> &runningEvents)
 {
     // lock the notify lock to prevent threads from freeing events while
     // we are copying them
-    CAutoUnlockMutex lock(mNotifyLock);
-    std::vector<CDispatcherThread*>::iterator i;
+    AutoUnlockMutex lock(mNotifyLock);
+    std::vector<DispatcherThread*>::iterator i;
     int count = 0;
     // loop through the dispatcher threads
     for (i = mThreads.begin(); i != mThreads.end(); ++i)
     {
-        CDispatcherThread *dt = *i;
+        DispatcherThread *dt = *i;
         // copy each event
         if (dt != NULL && dt->mEventPtr != NULL)
         {

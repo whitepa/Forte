@@ -61,7 +61,7 @@ namespace Forte
         static unsigned int sInitialized;
     protected:
         static FTraceThreadInfo* getThreadInfo(void) __attribute__ ((no_instrument_function));
-        static CThreadKey sTraceKey;
+        static ThreadKey sTraceKey;
         static FTrace *sInstance;
     };
 

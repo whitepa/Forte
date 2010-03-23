@@ -1,11 +1,11 @@
 #ifndef FORTE_NO_OPENSSL
 #include "SecureEnvelope.h"
 
-FString & CSecureEnvelopeEncoder::encode(const FString &accountNumber, 
+FString & SecureEnvelopeEncoder::encode(const FString &accountNumber, 
                                               unsigned int numClear, FString &out)
 {
     if (accountNumber.length() < numClear || accountNumber.find_first_of('$') != std::string::npos)
-        throw CForteSecureEnvelopeEncoderException("invalid account number");
+        throw ForteSecureEnvelopeEncoderException("invalid account number");
     out.clear();
     out.reserve(accountNumber.length() + 130);
     int obscuredChars = accountNumber.length() - numClear;
@@ -17,13 +17,13 @@ FString & CSecureEnvelopeEncoder::encode(const FString &accountNumber,
     toEncrypt.append(Random::GetRandomData(obscuredChars));
     for (int i = 0; i < obscuredChars; ++i)
         toEncrypt.append(1, accountNumber[i] ^ toEncrypt[i]); // bitwise XOR with the random data
-    CRSAString encrypted(toEncrypt, mPublicKey);
+    RSAString encrypted(toEncrypt, mPublicKey);
     out.append(1, '$');
     out.append(encrypted);
     return out;
 }
 
-FString & CSecureEnvelopeDecoder::decode(const FString &encoded, FString &out)
+FString & SecureEnvelopeDecoder::decode(const FString &encoded, FString &out)
 {
     out.clear();
     size_t obscuredChars = encoded.find_first_not_of('X');
@@ -34,7 +34,7 @@ FString & CSecureEnvelopeDecoder::decode(const FString &encoded, FString &out)
         out = encoded;
         return out;
     }
-    CRSAString encrypted(encoded.Mid(dollarPos + 1));
+    RSAString encrypted(encoded.Mid(dollarPos + 1));
 //    cout << "ENCRYPTED: " << encrypted << endl;
     FString decrypted;
     // decrypt it
@@ -47,16 +47,16 @@ FString & CSecureEnvelopeDecoder::decode(const FString &encoded, FString &out)
     return out;
 }
 
-FString & CSecureEnvelopeDecoder::obscured(const FString &encoded, FString &out)
+FString & SecureEnvelopeDecoder::obscured(const FString &encoded, FString &out)
 {
     size_t dollarPos;
     if ((dollarPos = encoded.find_first_of('$')) == std::string::npos)
-        throw CForteSecureEnvelopeEncoderException("unable to decode data");
+        throw ForteSecureEnvelopeEncoderException("unable to decode data");
     out.assign(encoded.Left(dollarPos));
     return out;
 }
 
-bool CSecureEnvelopeDecoder::isEncoded(const std::string &data)
+bool SecureEnvelopeDecoder::isEncoded(const std::string &data)
 {
     // XXX improve this!
     size_t obscuredChars = data.find_first_not_of('X');

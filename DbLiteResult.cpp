@@ -6,8 +6,8 @@
 #include "DbLiteResult.h"
 #include "DbLiteConnection.h"
 
-// CDbLiteResult class
-int CDbLiteResult::Load(sqlite3_stmt *stmt)
+// DbLiteResult class
+int DbLiteResult::Load(sqlite3_stmt *stmt)
 {
     LiteData *data = dynamic_cast<LiteData*>(m_data);
 
@@ -21,8 +21,8 @@ int CDbLiteResult::Load(sqlite3_stmt *stmt)
 }
 
 
-// CDbLiteResult::LiteData class
-CDbLiteResult::LiteData::LiteData()
+// DbLiteResult::LiteData class
+DbLiteResult::LiteData::LiteData()
 :
     Data()
 {
@@ -31,12 +31,12 @@ CDbLiteResult::LiteData::LiteData()
 }
 
 
-CDbLiteResult::LiteData::~LiteData()
+DbLiteResult::LiteData::~LiteData()
 {
 }
 
 
-int CDbLiteResult::LiteData::Load(sqlite3_stmt *stmt)
+int DbLiteResult::LiteData::Load(sqlite3_stmt *stmt)
 {
     int i, n, err, type;
     Val val;
@@ -114,13 +114,13 @@ int CDbLiteResult::LiteData::Load(sqlite3_stmt *stmt)
 }
 
 
-bool CDbLiteResult::LiteData::isOkay() const
+bool DbLiteResult::LiteData::isOkay() const
 {
     return m_okay;
 }
 
 
-bool CDbLiteResult::LiteData::fetchRow(CDbResultRow& row /*OUT*/)
+bool DbLiteResult::LiteData::fetchRow(DbResultRow& row /*OUT*/)
 {
     Row::iterator ri;
     if (m_next_row == m_res.end()) return false;
@@ -139,31 +139,31 @@ bool CDbLiteResult::LiteData::fetchRow(CDbResultRow& row /*OUT*/)
 }
 
 
-size_t CDbLiteResult::LiteData::getNumColumns()
+size_t DbLiteResult::LiteData::getNumColumns()
 {
     return m_col_names.size();
 }
 
 
-FString CDbLiteResult::LiteData::getColumnName(size_t i)
+FString DbLiteResult::LiteData::getColumnName(size_t i)
 {
     return m_col_names[i];
 }
 
 
-size_t CDbLiteResult::LiteData::getFieldLength(size_t i)
+size_t DbLiteResult::LiteData::getFieldLength(size_t i)
 {
     return (*m_current_row)[i].first.size();
 }
 
 
-size_t CDbLiteResult::LiteData::getNumRows()
+size_t DbLiteResult::LiteData::getNumRows()
 {
     return m_res.size();
 }
 
 
-bool CDbLiteResult::LiteData::seek(size_t offset)
+bool DbLiteResult::LiteData::seek(size_t offset)
 {
     size_t i;
 

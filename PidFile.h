@@ -4,10 +4,10 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS2(CException, EAlreadyRunning, "Process is already running");
-    EXCEPTION_SUBCLASS2(CException, EPidfileOpenFailed, "Failed to create pidfile");
+    EXCEPTION_SUBCLASS2(Exception, EAlreadyRunning, "Process is already running");
+    EXCEPTION_SUBCLASS2(Exception, EPidfileOpenFailed, "Failed to create pidfile");
 
-    class CPidFile : public Object
+    class PidFile : public Object
     {
     public:
         /// Create a PID file in the filesystem at the given path.
@@ -16,9 +16,9 @@ namespace Forte
         ///  Desired directory for pidfile does not exist or cannot be written
         ///
         ///
-        CPidFile(const char *path);
+        PidFile(const char *path);
 
-        virtual ~CPidFile();
+        virtual ~PidFile();
 
     protected:
         FString mPath;

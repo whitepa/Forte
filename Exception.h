@@ -10,14 +10,14 @@
 
 namespace Forte
 {
-    class CException : public Object
+    class Exception : public Object
     {
     public:
-        CException();
-        CException(const char *description);
-        CException(const FStringFC &fc, const char *format, ...)  __attribute__((format(printf,3,4)));
-        CException(const CException& other);
-        virtual ~CException() throw();
+        Exception();
+        Exception(const char *description);
+        Exception(const FStringFC &fc, const char *format, ...)  __attribute__((format(printf,3,4)));
+        Exception(const Exception& other);
+        virtual ~Exception() throw();
         inline std::string &getDescription() { return mDescription; };
         inline std::string &what() { return mDescription; };
         std::string extendedDescription();
@@ -29,12 +29,12 @@ namespace Forte
     };
 
 #define EXCEPTION_CLASS(NAME)                                           \
-    class NAME : public CException                                      \
+    class NAME : public Exception                                       \
     {                                                                   \
     public:                                                             \
         inline NAME() {}                                                \
         inline NAME(const char *description) :                          \
-            CException(description) {}                                  \
+            Exception(description) {}                                   \
         inline NAME(const FStringFC &fc, const char *format, ...)       \
             __attribute__((format(printf,3,4)))                         \
             {                                                           \
@@ -48,7 +48,7 @@ namespace Forte
                 mDescription.vFormat(format, size, ap);                 \
                 va_end(ap);                                             \
             }                                                           \
-    }
+    };
 
 #define EXCEPTION_SUBCLASS(PARENT, NAME)                                \
     class NAME : public PARENT                                          \
@@ -69,7 +69,7 @@ namespace Forte
                 mDescription.vFormat(format, size, ap);                 \
                 va_end(ap);                                             \
             }                                                           \
-    }
+    };
 
 #define EXCEPTION_SUBCLASS2(PARENT, NAME, DESC)                         \
     class NAME : public PARENT                                          \
@@ -95,21 +95,21 @@ namespace Forte
                                                                         \
                 mDescription += ": " + tmp;                             \
             }                                                           \
-    }
+    };
 
 
-    EXCEPTION_SUBCLASS(CException, CForteException);
-    EXCEPTION_SUBCLASS2(CForteException, CForteEmptyReferenceException, "Empty Reference");
-    EXCEPTION_SUBCLASS2(CForteException, CForteUnimplementedException, "Unimplemented");
-    EXCEPTION_SUBCLASS2(CForteException, CForteUninitializedException, "Uninitialized");
-    EXCEPTION_SUBCLASS2(CForteException, EUnimplemented, "Unimplemented");
+    EXCEPTION_SUBCLASS(Exception, ForteException);
+    EXCEPTION_SUBCLASS2(ForteException, ForteEmptyReferenceException, "Empty Reference");
+    EXCEPTION_SUBCLASS2(ForteException, ForteUnimplementedException, "Unimplemented");
+    EXCEPTION_SUBCLASS2(ForteException, ForteUninitializedException, "Uninitialized");
+    EXCEPTION_SUBCLASS2(ForteException, EUnimplemented, "Unimplemented");
 
 
-// FString is used in CException, so FString cannot include
+// FString is used in Exception, so FString cannot include
 // Exception.h easily. best thing to do is just declare the FString
 // exceptions here
-    EXCEPTION_SUBCLASS2(CForteException, CForteFStringException, "FString");
-    EXCEPTION_SUBCLASS2(CForteFStringException, CForteFStringLoadFileException, "LoadFile");
-    EXCEPTION_SUBCLASS2(CForteFStringException, CForteFStringUnknownAddressFamily, "Unknown address family");
+    EXCEPTION_SUBCLASS2(ForteException, ForteFStringException, "FString");
+    EXCEPTION_SUBCLASS2(ForteFStringException, ForteFStringLoadFileException, "LoadFile");
+    EXCEPTION_SUBCLASS2(ForteFStringException, ForteFStringUnknownAddressFamily, "Unknown address family");
 };
 #endif
