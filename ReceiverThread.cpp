@@ -7,7 +7,7 @@
 
 // this thread just loops and accepts connections
 
-void * ReceiverThread::run(void)
+void * Forte::ReceiverThread::run(void)
 {
     // init thread name
     mThreadName.Format("%s-recv-%u", mName.c_str(), (unsigned)mThread);
@@ -47,7 +47,7 @@ void * ReceiverThread::run(void)
     if (!inet_aton(mBindIP, &(bind_addr.sin_addr)))
         throw ForteReceiverThreadException(FStringFC(), "invalid bind IP: %s", mBindIP.c_str());
 
-    if (bind(m, (struct sockaddr *)&bind_addr, sizeof(struct sockaddr_in))==-1)
+    if (::bind(m, (struct sockaddr *)&bind_addr, sizeof(struct sockaddr_in))==-1)
         throw ForteReceiverThreadException(FStringFC(), "failed to bind: %s", strerror(errno));
 
     if (listen(m, backlog)==-1)

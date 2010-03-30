@@ -1,7 +1,9 @@
 #ifndef __Forte__Context_h__
 #define __Forte__Context_h__
 
+#include "Exception.h"
 #include "Object.h"
+#include "AutoMutex.h"
 #include <boost/shared_ptr.hpp>
 
 // TODO: thread safety!
@@ -22,15 +24,16 @@ namespace Forte
      * extensively, as this provides a simple reference counting
      * mechanism for objects contained in the context.  Contexts may
      * also be copied, at which time setting an object in the copy
-     * will not affect the original context.  TODO: Warn about Getting
-     * a reference, then removing an object from the context.  TODO:
-     * make this thread safe (locking around map operations)
+     * will not affect the original context.
      **/
     class Context
     {
     public:
         Context() {};
-        Context(const Context &other) { throw EUnimplemented(); }
+        Context(const Context &other) {
+            AutoUnlockMutex lock(other.mLock);
+            mObjectMap = other.mObjectMap;
+        }
         virtual ~Context() {};
 
         /**
@@ -61,23 +64,24 @@ namespace Forte
          * be automatically created using an appropriate factory.
          **/
         template <typename ValueType>
-        shared_ptr<ValueType> Get(const char *key) const {
+        boost::shared_ptr<ValueType> Get(const char *key) const {
             ObjectMap::const_iterator i;
             if ((i = mObjectMap.find(key)) == mObjectMap.end())
                 // TODO: use a factory to create one?
                 throw EInvalidKey(key);
-            shared_ptr<ValueType> ptr(dynamic_pointer_cast<ValueType>((*i).second));
+            boost::shared_ptr<ValueType> ptr(
+                boost::dynamic_pointer_cast<ValueType>((*i).second));
             if (!ptr)
                 throw EContextTypeMismatch(); // TODO: include types in error message
-            return ptr;            
+            return ptr;
         }
         
         /**
          * Set() stores a reference to an object in the Context.
          **/
-        template<typename ValueType>
-        void Set(const char *key, ValueType *ref) {
-            mObjectMap[key] = ObjectPtr(ref);
+        void Set(const char *key, ObjectPtr obj) {
+            Forte::AutoUnlockMutex lock(mLock);
+            mObjectMap[key] = obj;
         }
 
         /**
@@ -88,16 +92,34 @@ namespace Forte
          * Remove() will remove a single object from the Context.
          **/
         void Remove(const char *key) {
-            mObjectMap.erase(key);
+            // we must not cause object deletions while holding the lock
+            ObjectPtr obj;
+            {
+                Forte::AutoUnlockMutex lock(mLock);
+                if (mObjectMap.find(key) != mObjectMap.end())
+                {
+                    obj = mObjectMap[key];
+                    mObjectMap.erase(key);
+                }
+            }
+            // object goes out of scope and is deleted here, after the
+            // lock has been released.
         }
 
         /**
          * Clear() will remove all references from the Context.
          **/
         void Clear(void) {
-            mObjectMap.clear();
+            // we must not cause object deletions while holding the lock
+            ObjectMap localCopy;
+            {
+                Forte::AutoUnlockMutex lock(mLock);
+                localCopy = mObjectMap;
+                mObjectMap.clear();
+            }
         }
     protected:
+        mutable Forte::Mutex mLock;
         ObjectMap mObjectMap;
     };
 };

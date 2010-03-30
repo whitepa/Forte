@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE ( context_test1 )
     // verify invalid keys throws
     BOOST_CHECK_THROW(c.Get<LogManager>("forte.logManager"), EInvalidKey);
     
-    c.Set("forte.config", new ServiceConfig());
+    c.Set("forte.config", ObjectPtr(new ServiceConfig()));
 
     BOOST_CHECK_THROW(c.Get<ServiceConfig>("forte.config.fail"), EInvalidKey);
 
@@ -59,13 +59,13 @@ BOOST_AUTO_TEST_CASE ( context_test1 )
 
     // verify objects are destroyed and reference counts work correctly
     BOOST_CHECK(TestClass::mCount == 0);
-    c.Set("testobject", new TestClass());
+    c.Set("testobject", ObjectPtr(new TestClass()));
     BOOST_CHECK(TestClass::mCount == 1);
     c.Remove("testobject");
     BOOST_CHECK(TestClass::mCount == 0);
     BOOST_CHECK_THROW(c.Get<TestClass>("testobject"), EInvalidKey);
 
-    c.Set("testobject", new TestClass());
+    c.Set("testobject", ObjectPtr(new TestClass()));
     BOOST_CHECK(TestClass::mCount == 1);
     {
         Forte::ObjectPtr oPtr(c.Get("testobject"));
@@ -78,9 +78,9 @@ BOOST_AUTO_TEST_CASE ( context_test1 )
     BOOST_CHECK(TestClass::mCount == 0);
 
     // test object replacement and up-casting:
-    c.Set("testobject", new TestClass());
+    c.Set("testobject", ObjectPtr(new TestClass()));
     BOOST_CHECK( TestClass::mCount == 1 );
-    c.Set("testobject", new TestClassDerived());
+    c.Set("testobject", ObjectPtr(new TestClassDerived()));
     BOOST_CHECK( TestClass::mCount == 1 );
     {
         Forte::ObjectPtr oPtr(c.Get("testobject"));
@@ -92,8 +92,12 @@ BOOST_AUTO_TEST_CASE ( context_test1 )
     }
     BOOST_CHECK(TestClass::mCount == 0);
 
+
+    // The rest of this file was just me screwing around with lambda
+    // stuff for Context Predicates, please disregard:
+
 //    boost::bind( boost::mem_fn(&Forte::Context::GetRef<TestClass>), _1, "testobject");
-    c.Set("testobject", new TestClassDerived());
+    c.Set("testobject", ObjectPtr(new TestClassDerived()));
     BOOST_CHECK( TestClass::mCount == 1 );
     bll::bind( &Context::Get<TestClass>, bll::_1, "testobject");  // functor to retrieve object from context
 
@@ -106,18 +110,27 @@ BOOST_AUTO_TEST_CASE ( context_test1 )
 
     // Not sure how to bind this such that 'c' is the parameter:
     g(*(f(c)));
+
+//    bll::bind( ,g(*(f(bll::_1))) == 1)
     
 //    boost::function<bool(Context&)> h =
 //    bll::bind(f, bll::_1);
 //    (bll::unlambda(g)(*(bll::unlambda(f)(bll::_1))) == 1);
 //    boost::bind(bll::unlambda(g),
 
+    boost::function<bool(bool)> h = 
+        (bll::_1 == true);
+    BOOST_CHECK( h(true) == true );
 
+//    boost::function<shared_ptr(Context&)> i = 
+    bll::bind(bll::unlambda(f),bll::_1);
+//    BOOST_CHECK( h(true) == true );
+        
 //    h(c);
 
     std::set<FString> validStrs;
     validStrs.insert("validStr");
-    c.Set("checkedvalue", new CheckedStringEnum(validStrs));
+    c.Set("checkedvalue", ObjectPtr(new CheckedStringEnum(validStrs)));
     c.Get<CheckedStringEnum>("checkedvalue")->Set("validStr");
     
 //        bll::bind(bll::bind(&Context::GetRef<TestClass>, bll::_1, "testobject"),bll::_1);

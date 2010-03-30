@@ -20,6 +20,7 @@ SRCS =	\
 	Base64.cpp \
 	CheckedValue.cpp \
 	ClusterLock.cpp \
+	ContextPredicate.cpp \
 	Curl.cpp \
 	DaemonUtil.cpp \
 	DbConnection.cpp \
@@ -35,6 +36,7 @@ SRCS =	\
 	DbLiteResult.cpp \
 	Dispatcher.cpp \
 	EventQueue.cpp \
+	EventPredicate.cpp \
 	Exception.cpp \
 	ExpDecayingAvg.cpp \
 	FileSystem.cpp \
@@ -57,6 +59,9 @@ SRCS =	\
 	SecureString.cpp \
 	ServerMain.cpp \
 	ServiceConfig.cpp \
+	State.cpp \
+	StateMachine.cpp \
+	StateRegion.cpp \
 	Thread.cpp \
 	ThreadKey.cpp \
 	ThreadPoolDispatcher.cpp \
@@ -94,7 +99,6 @@ HEADERS = \
 	DelayedCallback.h \
 	Dispatcher.h \
 	Event.h \
-	EventObserver.h \
 	EventQueue.h \
 	Exception.h \
 	ExpDecayingAvg.h \

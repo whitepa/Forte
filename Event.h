@@ -14,12 +14,14 @@ namespace Forte
     class Event : public Object {
     public:
         Event() {};
-        Event(unsigned int userTypeInfo) : mUserTypeInfo(userTypeInfo) {};
+        Event(const FString &name) : mName(name) {};
         virtual ~Event() {}
-        virtual Event * copy() = 0;
+
+        const FString &GetName(void) const { return mName; }
+
         int mServerID;
         struct timeval mStartTime;
-        unsigned int mUserTypeInfo;
+        FString mName;
     };
 
     class RequestEvent : public Event {
@@ -29,45 +31,7 @@ namespace Forte
         int mFd;
         struct in_addr mClient;
         struct timeval mTime;
-
-        virtual Event *copy() {
-            RequestEvent *e = new RequestEvent;
-            e->mServerID = mServerID;
-            e->mStartTime = mStartTime;
-            e->mUserTypeInfo = mUserTypeInfo;
-            e->mFd = mFd;
-            e->mClient = mClient;
-            e->mTime = mTime;
-            return e;
-        }
     };
 
-    class ObservableEvent : public Event {
-    public:
-        ObservableEvent() {};
-        ObservableEvent(unsigned int subsysID,
-                         unsigned int eventType,
-                         const char *eventData) :
-            mSubsysID(subsysID),
-            mEventType(eventType),
-            mEventData(eventData) {};
-        virtual ~ObservableEvent() {}
-    
-        unsigned int mSubsysID;
-        unsigned int mEventType;
-        unsigned int mObserverID; // set differently as handed to each observer
-        FString mEventData;
-    
-        virtual Event *copy() {
-            ObservableEvent *e = new ObservableEvent;
-            e->mServerID = mServerID;
-            e->mStartTime = mStartTime;
-            e->mUserTypeInfo = mUserTypeInfo;
-            e->mSubsysID = mSubsysID;
-            e->mEventType = mEventType;
-            e->mEventData = mEventData;
-            return e;
-        }
-    };
 };
 #endif

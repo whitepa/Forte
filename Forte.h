@@ -30,6 +30,7 @@ using namespace Forte;
 #include "ClusterLock.h"
 //#include "Config.h"
 #include "Context.h"
+#include "ContextPredicate.h"
 
 #ifndef FORTE_NO_CURL
 #include "Curl.h"
@@ -61,7 +62,6 @@ using namespace Forte;
 #include "DaemonUtil.h"
 #include "Dispatcher.h"
 #include "Event.h"
-#include "EventObserver.h"
 #include "EventQueue.h"
 #include "Exception.h"
 #include "ExpDecayingAvg.h"
@@ -86,6 +86,7 @@ using namespace Forte;
 #include "Semaphore.h"
 #include "ServiceConfig.h"
 #include "ServerMain.h"
+#include "StateMachine.h"
 #include "Thread.h"
 #include "ThreadCondition.h"
 #include "ThreadKey.h"
