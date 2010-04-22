@@ -19,6 +19,7 @@ SRCS =	\
 	AutoMutex.cpp \
 	Base64.cpp \
 	CheckedValue.cpp \
+	Clock.cpp \
 	ClusterLock.cpp \
 	ContextPredicate.cpp \
 	Curl.cpp \
@@ -78,6 +79,7 @@ HEADERS = \
 	AutoMutex.h \
 	Base64.h \
 	Callback.h \
+	Clock.h \
 	Condition.h \
 	ControlFile.h \
 	Curl.h \
