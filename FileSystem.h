@@ -15,7 +15,7 @@
 namespace Forte
 {
 // typed exceptions
-    EXCEPTION_SUBCLASS(ForteException, ForteFileSystemException);
+    EXCEPTION_CLASS(ForteFileSystemException);
     EXCEPTION_SUBCLASS(ForteFileSystemException, ForteFileSystemCopyException);
     EXCEPTION_SUBCLASS(ForteFileSystemException, ForteFileSystemLinkException);
     EXCEPTION_SUBCLASS(ForteFileSystemException, ForteFileSystemMkdirException);
