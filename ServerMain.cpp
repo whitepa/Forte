@@ -1,5 +1,6 @@
 #include "Forte.h"
 #include <csignal>
+#include <boost/make_shared.hpp>
 
 volatile bool g_shutdown = false;
 
@@ -13,6 +14,7 @@ ServerMain::ServerMain(int argc, char * const argv[],
     mDaemon(daemonize)
 {
     // set the singleton pointer
+    // TODO: get rid of this singleton stuff.
     {
         AutoUnlockMutex lock(sSingletonMutex);
         if (sSingletonPtr != NULL)
@@ -20,6 +22,7 @@ ServerMain::ServerMain(int argc, char * const argv[],
         else
             sSingletonPtr = this;
     }
+
     mLogManager.SetGlobalLogMask(HLOG_NODEBUG); // suppress debug logging
     // get the hostname
     {

@@ -19,6 +19,11 @@ namespace Forte
                 AutoUnlockMutex lock(sLock);
                 vec = sVersionStrings;
             }
+        static inline void LogVersions(void)
+            {
+                foreach(const std::string &v, sVersionStrings)
+                    hlog(HLOG_INFO, "%s", v.c_str());
+            }
     protected:
         static Mutex sLock;
         static std::vector<std::string> sVersionStrings;

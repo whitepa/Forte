@@ -1,6 +1,7 @@
 #ifndef __ServerMain_h
 #define __ServerMain_h
 
+#include "Context.h"
 #include "LogManager.h"
 #include "ServiceConfig.h"
 #include "AutoMutex.h"
@@ -37,6 +38,7 @@ namespace Forte
         FString mPidFile;
         bool mDaemon;
         LogManager mLogManager;
+        Context mContext;
         ServiceConfig mServiceConfig;
         Mutex mCallbackMutex;
         std::set<Callback*> mShutdownCallbacks;

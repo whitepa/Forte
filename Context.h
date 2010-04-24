@@ -6,7 +6,6 @@
 #include "AutoMutex.h"
 #include <boost/shared_ptr.hpp>
 
-// TODO: thread safety!
 // TODO: How to set certain keys as read-only?
 
 namespace Forte
@@ -52,6 +51,7 @@ namespace Forte
          **/
         ObjectPtr Get(const char *key) const {
             ObjectMap::const_iterator i;
+            Forte::AutoUnlockMutex lock(mLock);
             if ((i = mObjectMap.find(key)) == mObjectMap.end())
                 // TODO: use a factory to create one?
                 throw EInvalidKey();
@@ -66,6 +66,7 @@ namespace Forte
         template <typename ValueType>
         boost::shared_ptr<ValueType> Get(const char *key) const {
             ObjectMap::const_iterator i;
+            Forte::AutoUnlockMutex lock(mLock);
             if ((i = mObjectMap.find(key)) == mObjectMap.end())
                 // TODO: use a factory to create one?
                 throw EInvalidKey(key);
@@ -77,7 +78,8 @@ namespace Forte
         }
         
         /**
-         * Set() stores a reference to an object in the Context.
+         * Set() stores a reference to an object in the Context.  Any
+         * previous entry with the same key will be replaced.
          **/
         void Set(const char *key, ObjectPtr obj) {
             Forte::AutoUnlockMutex lock(mLock);
@@ -122,6 +124,7 @@ namespace Forte
         mutable Forte::Mutex mLock;
         ObjectMap mObjectMap;
     };
+    typedef boost::shared_ptr<Context> ContextPtr;
 };
 
 #endif

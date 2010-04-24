@@ -19,6 +19,8 @@ SRCS =	\
 	AutoMutex.cpp \
 	Base64.cpp \
 	CheckedValue.cpp \
+	CheckedValuePollThread.cpp \
+	Clock.cpp \
 	ClusterLock.cpp \
 	ContextPredicate.cpp \
 	Curl.cpp \

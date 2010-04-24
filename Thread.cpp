@@ -13,7 +13,7 @@ Thread * Thread::myThread(void)
 {
     Thread *thr = reinterpret_cast<Thread*>(pthread_getspecific(sThreadKey));
     if (thr == NULL)
-        throw ForteThreadException("Thread::myThread() called from unknown thread");
+        throw EThread("Thread::myThread() called from unknown thread");
     return thr;
 }
 void * Thread::startThread(void *obj)
@@ -69,9 +69,9 @@ void * Thread::startThread(void *obj)
 
     // notify that shutdown is complete
     hlog(HLOG_DEBUG, "broadcasting thread shutdown");
-    AutoUnlockMutex lock(thr->mShutdownNotifyLock);
+    AutoUnlockMutex lock(thr->mShutdownCompleteLock);
     thr->mShutdownComplete = true;
-    thr->mShutdownNotify.broadcast();
+    thr->mShutdownCompleteCondition.broadcast();
 
     return retval;
 }
@@ -85,15 +85,31 @@ void Thread::initialized()
 
 void Thread::waitForShutdown()
 {
-    AutoUnlockMutex lock(mShutdownNotifyLock);
+    AutoUnlockMutex lock(mShutdownCompleteLock);
     if (mShutdownComplete) return;
-    mShutdownNotify.wait();
+    mShutdownCompleteCondition.wait();
+}
+
+void Thread::interruptibleSleep(const struct timeval &interval, bool throwRequested)
+{
+    struct timeval now, abs;
+    gettimeofday(&now, 0);
+    abs = now + interval;
+    struct timespec abstime;
+    abstime.tv_sec = abs.tv_sec;
+    abstime.tv_nsec = abs.tv_usec * 1000;
+
+    AutoUnlockMutex lock(mShutdownRequestedLock);
+    if (mThreadShutdown) return;
+    if (mShutdownRequested.timedwait(abstime) != ETIMEDOUT &&
+        throwRequested)
+        throw EThreadShutdown();
 }
 
 Thread::~Thread()
 {
-    // make sure the shutdown flag is set
-    mThreadShutdown = true;
+    // tell the thread to shut down
+    shutdown();
 
     // join the pthread
     // (this will block until the thread exits)
