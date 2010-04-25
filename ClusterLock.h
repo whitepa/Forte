@@ -4,6 +4,7 @@
 #include "Types.h"
 #include "AutoMutex.h"
 #include "FileSystem.h"
+#include "Timer.h"
 #include <csignal>
 #include <ctime>
 
@@ -31,7 +32,7 @@ namespace Forte
         void unlock();
         void lock(const FString& name, unsigned timeout, const FString& errorString = "");
 
-        inline FString getName() const { return m_name; }
+        inline FString getName() const { return mName; }
     
         // constants
         static const char *LOCK_PATH;
@@ -40,11 +41,11 @@ namespace Forte
         static const char *VALID_LOCK_CHARS;
 
     protected:
-        FString m_name;
-        AutoFD m_fd;
-        std::auto_ptr<FileSystem::AdvisoryLock> m_lock;
-        timer_t m_timer;
-        Mutex *m_mutex;
+        FString mName;
+        AutoFD mFD;
+        std::auto_ptr<FileSystem::AdvisoryLock> mLock;
+        Timer mTimer;
+        Mutex *mMutex;
 
         // helpers
         void init();
@@ -52,9 +53,9 @@ namespace Forte
         static void sig_action(int sig, siginfo_t *info, void *context);
 
         // statics
-        static Mutex s_mutex;
-        static std::map<FString, Mutex> s_mutex_map;
-        static bool s_sigactionInitialized;
+        static Mutex sMutex;
+        static std::map<FString, Mutex> sMutexMap;
+        static bool sSigactionInitialized;
     };
 };
 #endif

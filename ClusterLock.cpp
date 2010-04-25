@@ -17,12 +17,13 @@ const char *ClusterLock::VALID_LOCK_CHARS =
 
 
 // statics
-Mutex ClusterLock::s_mutex;
-std::map<FString, Mutex> ClusterLock::s_mutex_map;
-bool ClusterLock::s_sigactionInitialized = false;
+Mutex ClusterLock::sMutex;
+std::map<FString, Mutex> ClusterLock::sMutexMap;
+bool ClusterLock::sSigactionInitialized = false;
 
 // ctor/dtor
 ClusterLock::ClusterLock(const FString& name, unsigned timeout, const FString& errorString)
+    : mTimer()
 {
     init();
     lock(name, timeout);
@@ -30,6 +31,7 @@ ClusterLock::ClusterLock(const FString& name, unsigned timeout, const FString& e
 
 
 ClusterLock::ClusterLock()
+    : mTimer()
 {
     init();
 }
@@ -53,17 +55,16 @@ void ClusterLock::init()
 {
     struct sigaction sa;
     sigevent_t se;
-    int err;
 
     // init members
-    m_mutex = NULL;
+    mMutex = NULL;
 
     // create lock path
     FileSystem::get()->mkdir(LOCK_PATH, 0777, true);
 
     {
-        AutoUnlockMutex lock(s_mutex);
-        if (!s_sigactionInitialized)
+        AutoUnlockMutex lock(sMutex);
+        if (!sSigactionInitialized)
         {
             // init sigaction (once per process)
             memset(&sa, 0, sizeof(sa));
@@ -71,7 +72,7 @@ void ClusterLock::init()
             sa.sa_sigaction = &ClusterLock::sig_action;
             sa.sa_flags = SA_SIGINFO;
             sigaction(TIMER_SIGNAL, &sa, NULL);
-            s_sigactionInitialized = true;
+            sSigactionInitialized = true;
         }
     }
     // init sigevent
@@ -81,36 +82,23 @@ void ClusterLock::init()
     se.sigev_notify = SIGEV_SIGNAL | SIGEV_THREAD_ID;
     se._sigev_un._tid = (long int)syscall(SYS_gettid);
 
-    // create timer
-    int tries = 0;
-    while ((err = timer_create(CLOCK_MONOTONIC, &se, &m_timer)) != 0)
+    try
     {
-        if (err == -EAGAIN)
-        {
-            if (++tries < 100)
-            {
-                hlog(HLOG_DEBUG, "got EAGAIN from timer_create");
-                usleep(100000); // TODO: should we subtract from the timeout?
-                continue;                
-            }
-            else
-            {
-                err = errno;
-                throw EClusterLockUnvailable("LOCK_TIMER_FAIL|||" +
-                                             FileSystem::get()->strerror(err));
-            }
-        }
-        err = errno;
-
-        throw EClusterLock("LOCK_TIMER_FAIL|||" +
-                           FileSystem::get()->strerror(err));
+        mTimer.Init(se);        
     }
+    catch (ETimer& e)
+    {
+        // translate error to what we are expected to throw
+        throw EClusterLockUnvailable(FStringFC(),
+                                     "LOCK_TIMER_FAIL|||%s", 
+                                     e.what().c_str());
+    }
+
 }
 
 
 void ClusterLock::fini()
 {
-    timer_delete(m_timer);
 }
 
 
@@ -128,25 +116,34 @@ void ClusterLock::lock(const FString& name, unsigned timeout, const FString& err
         throw EClusterLock("LOCK_INVALID_NAME|||" + name);
     }
 
+    if (name.empty())
+    {
+        throw EClusterLock("LOCK_INVALID_NAME|||" + name);
+    }
+
     // prepend default path?
     if (name.Left(1) != "/") filename = LOCK_PATH + FString("/") + name;
 
     // changing lock names?
-    if (filename != m_name) unlock();
+    if (filename != mName && (!mName.empty()))
+    {
+        hlog(HLOG_INFO, "CClusterLock - reusing lock with a different name");
+        unlock();
+    }
 
     // assign mutex
     {
-        AutoUnlockMutex lock(s_mutex);
-        m_mutex = &s_mutex_map[filename];
+        AutoUnlockMutex lock(sMutex);
+        mMutex = &sMutexMap[filename];
     }
 
     // open file?
-    if (m_fd == -1)
+    if (mFD == -1)
     {
-        m_name = filename;
-        m_fd = open(filename, O_RDWR | O_CREAT | O_NOATIME, 0600);
+        mName = filename;
+        mFD = open(filename, O_RDWR | O_CREAT | O_NOATIME, 0600);
 
-        if (m_fd == -1)
+        if (mFD == -1)
         {
             err = errno;
 
@@ -159,28 +156,28 @@ void ClusterLock::lock(const FString& name, unsigned timeout, const FString& err
                 errorString);
         }
 
-        ftruncate(m_fd, 1);
-        m_lock.reset(new FileSystem::AdvisoryLock(m_fd, 0, 1));
+        ftruncate(mFD, 1);
+        mLock.reset(new FileSystem::AdvisoryLock(mFD, 0, 1));
     }
 
     // start timer
     memset(&ts, 0, sizeof(ts));
     ts.it_value.tv_sec = timeout;
-    timer_settime(m_timer, 0, &ts, NULL);
+    timer_settime(mTimer.TimerID(), 0, &ts, NULL);
 
     // acquire mutex?
-    if ((err = m_mutex->timedlock(ts.it_value)) == 0)
+    if ((err = mMutex->timedlock(ts.it_value)) == 0)
     {
         // acquire lock?
-        if (!(locked = m_lock->exclusiveLock(true)))
+        if (!(locked = mLock->exclusiveLock(true)))
         {
             // release mutex
-            m_mutex->unlock();
-            m_mutex = NULL;
+            mMutex->unlock();
+            mMutex = NULL;
         }
 
         // did the lock timeout?
-        timer_gettime(m_timer, &ts);
+        timer_gettime(mTimer.TimerID(), &ts);
         timed_out = (ts.it_value.tv_sec == 0 && ts.it_value.tv_nsec == 0);
     }
     else
@@ -188,13 +185,13 @@ void ClusterLock::lock(const FString& name, unsigned timeout, const FString& err
         // set flags
         locked = false;
         timed_out = (err == ETIMEDOUT);
-        m_mutex = NULL;
+        mMutex = NULL;
         cout << pthread_self() << "  err = " << err << endl;
     }
 
     // stop timer
     memset(&ts, 0, sizeof(ts));
-    timer_settime(m_timer, 0, &ts, NULL);
+    timer_settime(mTimer.TimerID(), 0, &ts, NULL);
 
     // got the lock?
     if (!locked)
@@ -220,22 +217,22 @@ void ClusterLock::lock(const FString& name, unsigned timeout, const FString& err
 void ClusterLock::unlock()
 {
     // clear name
-    m_name.clear();
+    mName.clear();
 
     // locked?
-    if (m_fd != -1)
+    if (mFD != -1)
     {
         // release lock
-        m_lock->unlock();
-        m_lock.reset();
-        m_fd.close();
+        mLock->unlock();
+        mLock.reset();
+        mFD.close();
     }
 
     // release mutex?
-    if (m_mutex != NULL)
+    if (mMutex != NULL)
     {
-        m_mutex->unlock();
-        m_mutex = NULL;
+        mMutex->unlock();
+        mMutex = NULL;
     }
 }
 
