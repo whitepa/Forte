@@ -13,7 +13,7 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(ForteException, ForteCallbackException);
+    EXCEPTION_SUBCLASS(Exception, ForteCallbackException);
     class Callback : public Object
     {
     public:

@@ -5,7 +5,7 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(ForteException, ForteMurmerException);
+    EXCEPTION_SUBCLASS(Exception, ForteMurmerException);
 
 
     class Murmur64

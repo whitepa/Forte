@@ -117,7 +117,7 @@ ServerMain& ServerMain::GetServer()
     // return a reference to the ServerMain object
     AutoUnlockMutex lock(sSingletonMutex);
     if (sSingletonPtr == NULL)
-        throw ForteEmptyReferenceException("ServerMain object does not exist");
+        throw EEmptyReference("ServerMain object does not exist");
     else
         return *sSingletonPtr;
 }
@@ -127,7 +127,7 @@ ServerMain* ServerMain::GetServerPtr()
     // return a pointer to the ServerMain object
     AutoUnlockMutex lock(sSingletonMutex);
     if (sSingletonPtr == NULL)
-        throw ForteEmptyReferenceException("ServerMain object does not exist");
+        throw EEmptyReference("ServerMain object does not exist");
     else
         return sSingletonPtr;
 }

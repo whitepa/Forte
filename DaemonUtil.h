@@ -5,7 +5,7 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS2(ForteException, ForkFailedException, "fork() failed");
+    EXCEPTION_SUBCLASS2(Exception, ForkFailedException, "fork() failed");
 
     class DaemonUtil : public Object
     {

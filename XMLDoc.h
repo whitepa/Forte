@@ -11,7 +11,7 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(ForteException, ForteXMLDocException);
+    EXCEPTION_SUBCLASS(Exception, ForteXMLDocException);
 
     class XMLDoc
     {

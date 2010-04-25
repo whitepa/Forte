@@ -11,7 +11,7 @@ using namespace boost;
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(ForteException, ForteEventQueueException);
+    EXCEPTION_SUBCLASS(Exception, ForteEventQueueException);
 
     class EventQueue : public Object
     {

@@ -10,7 +10,7 @@
 namespace Forte
 {
 
-    EXCEPTION_SUBCLASS(ForteException, EClusterLock);
+    EXCEPTION_SUBCLASS(Exception, EClusterLock);
 
     EXCEPTION_SUBCLASS(EClusterLock, 
                        EClusterLockTimeout);

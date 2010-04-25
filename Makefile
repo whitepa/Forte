@@ -24,6 +24,7 @@ SRCS =	\
 	ClusterLock.cpp \
 	ContextPredicate.cpp \
 	Curl.cpp \
+	CurlFactory.cpp \
 	DaemonUtil.cpp \
 	DbConnection.cpp \
 	DbMyConnection.cpp \

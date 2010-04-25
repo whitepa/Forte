@@ -8,7 +8,7 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(ForteException, ForteDbRowException);
+    EXCEPTION_SUBCLASS(Exception, ForteDbRowException);
 
     typedef std::vector<const char*> DbResultRow;
 

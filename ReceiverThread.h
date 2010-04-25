@@ -6,7 +6,7 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(ForteException, ForteReceiverThreadException);
+    EXCEPTION_SUBCLASS(Exception, ForteReceiverThreadException);
 
     class ReceiverThread : public Thread
     {

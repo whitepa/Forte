@@ -98,18 +98,16 @@ namespace Forte
     };
 
 
-    EXCEPTION_SUBCLASS(Exception, ForteException);
-    EXCEPTION_SUBCLASS2(ForteException, ForteEmptyReferenceException, "Empty Reference");
-    EXCEPTION_SUBCLASS2(ForteException, ForteUnimplementedException, "Unimplemented");
-    EXCEPTION_SUBCLASS2(ForteException, ForteUninitializedException, "Uninitialized");
-    EXCEPTION_SUBCLASS2(ForteException, EUnimplemented, "Unimplemented");
+    EXCEPTION_SUBCLASS2(Exception, EEmptyReference, "Empty Reference");
+    EXCEPTION_SUBCLASS2(Exception, EUnimplemented, "Unimplemented");
+    EXCEPTION_SUBCLASS2(Exception, EUninitialized, "Uninitialized");
 
-
-// FString is used in Exception, so FString cannot include
-// Exception.h easily. best thing to do is just declare the FString
-// exceptions here
-    EXCEPTION_SUBCLASS2(ForteException, ForteFStringException, "FString");
-    EXCEPTION_SUBCLASS2(ForteFStringException, ForteFStringLoadFileException, "LoadFile");
-    EXCEPTION_SUBCLASS2(ForteFStringException, ForteFStringUnknownAddressFamily, "Unknown address family");
+    // FString is used in Exception, so FString cannot include
+    // Exception.h easily. best thing to do is just declare the FString
+    // exceptions here
+    EXCEPTION_SUBCLASS2(Exception, EFString, "FString");
+    EXCEPTION_SUBCLASS2(EFString, EFStringLoadFile, "LoadFile");
+    EXCEPTION_SUBCLASS2(EFString, EFStringUnknownAddressFamily, 
+                        "Unknown address family");
 };
 #endif

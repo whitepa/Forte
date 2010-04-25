@@ -13,7 +13,7 @@ using namespace boost::posix_time;
 
 #define TO_TIME_T(s, tz) FTime::f_to_time_t(__FILE__, __LINE__, # s, s, tz)
 
-EXCEPTION_SUBCLASS(ForteException, ForteFTimeException);
+EXCEPTION_SUBCLASS(Exception, ForteFTimeException);
 
 class FTime {
 public:

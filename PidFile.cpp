@@ -22,7 +22,7 @@ PidFile::PidFile(const char *path) :
                 hlog(HLOG_DEBUG, "loaded cmdline from running process at PID %u", oldpid);
                 throw EAlreadyRunning();
             }
-            catch (ForteFStringLoadFileException &e)
+            catch (EFStringLoadFile &e)
             {
                 // pidfile does exist, but no associated running process
                 hlog(HLOG_DEBUG, "no process currently at PID %u; unlinking pidfile", oldpid);
@@ -36,7 +36,7 @@ PidFile::PidFile(const char *path) :
             unlink(path);
         }
     }
-    catch (ForteFStringLoadFileException &e)
+    catch (EFStringLoadFile &e)
     {
         hlog(HLOG_DEBUG, "no pidfile; will create");
         // pidfile doesn't exist, no problem.

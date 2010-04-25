@@ -5,7 +5,7 @@
 #include <openssl/bio.h>
 #include <openssl/rsa.h>
 
-EXCEPTION_SUBCLASS(ForteException, ForteSecureStringException);
+EXCEPTION_SUBCLASS(Exception, ForteSecureStringException);
 
 class PublicKey;
 class PrivateKey;

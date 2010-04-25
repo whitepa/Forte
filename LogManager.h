@@ -40,7 +40,7 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(ForteException, ForteLogException);
+    EXCEPTION_SUBCLASS(Exception, ForteLogException);
 
     class LogMsg : public Object {
     public:
@@ -145,7 +145,7 @@ namespace Forte
     
         inline static LogManager* GetInstancePtr() { return sLogManager; }
         inline static LogManager & getInstance() { 
-            if (sLogManager) return *sLogManager; else throw ForteEmptyReferenceException("no log manager instance");
+            if (sLogManager) return *sLogManager; else throw EEmptyReference("no log manager instance");
         }
 
         void BeginLogging(); // start logging on stderr

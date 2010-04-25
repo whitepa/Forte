@@ -30,7 +30,7 @@ XMLBlob::XMLBlob(const FString &in) :
     readOnly(true)
 {
     // parse the incoming XML string
-    throw ForteUnimplementedException("XML parsing not implemented");
+    throw EUnimplemented("XML parsing not implemented");
 }
 
 void XMLBlob::beginChild(const char *name)

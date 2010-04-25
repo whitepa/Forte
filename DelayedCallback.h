@@ -9,7 +9,7 @@ namespace Forte
     typedef std::multimap<unsigned int, Callback *> CallbackMap;
     typedef std::pair<CallbackMap::iterator,CallbackMap::iterator> CallbackRange;
 
-    EXCEPTION_SUBCLASS(ForteException, ForteDelayedCallbackException);
+    EXCEPTION_SUBCLASS(Exception, ForteDelayedCallbackException);
 
     class DelayedCallback : public Object
     {

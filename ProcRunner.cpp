@@ -49,7 +49,7 @@ ProcRunner& ProcRunner::getRef()
 
     if (s_singleton == NULL)
     {
-        throw ForteEmptyReferenceException("ProcRunner pointer is invalid");
+        throw EEmptyReference("ProcRunner pointer is invalid");
     }
 
     return *s_singleton;

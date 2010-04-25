@@ -14,7 +14,7 @@ volatile extern bool g_shutdown;
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(ForteException, ForteServerMainException);
+    EXCEPTION_SUBCLASS(Exception, ForteServerMainException);
 
     class ServerMain : public Object
     {

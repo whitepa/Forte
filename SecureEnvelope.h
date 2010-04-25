@@ -18,7 +18,7 @@
 // and would facilitate a brute force attack on the encrypted version if they were also contained in
 // the ciphertext.
 
-EXCEPTION_SUBCLASS(ForteException, ForteSecureEnvelopeEncoderException);
+EXCEPTION_SUBCLASS(Exception, ForteSecureEnvelopeEncoderException);
 
 class SecureEnvelopeEncoder {
 public:

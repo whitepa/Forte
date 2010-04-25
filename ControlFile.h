@@ -21,7 +21,7 @@
 // Work units are added to the control file with the enqueue() method.
 // A thread may claim a work unit with the claim() method.
 
-EXCEPTION_SUBCLASS(ForteException, ForteControlFileException);
+EXCEPTION_SUBCLASS(Exception, ForteControlFileException);
 
 template < typename Header, typename Record >
 class ControlFile

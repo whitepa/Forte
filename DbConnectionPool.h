@@ -9,7 +9,7 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(ForteException, ForteDbConnectionPoolException);
+    EXCEPTION_SUBCLASS(Exception, ForteDbConnectionPoolException);
 
 // A pool of database connections.
     class DbConnectionPool {

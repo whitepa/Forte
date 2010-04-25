@@ -32,7 +32,7 @@ FileSystem& FileSystem::getRef()
 
     if (s_singleton == NULL)
     {
-        throw ForteEmptyReferenceException("FileSystem pointer is invalid");
+        throw EEmptyReference("FileSystem pointer is invalid");
     }
 
     return *s_singleton;

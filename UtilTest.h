@@ -4,7 +4,7 @@
 namespace Forte
 {
 
-    EXCEPTION_SUBCLASS(ForteException, ForteUnilTestException);
+    EXCEPTION_SUBCLASS(Exception, ForteUnilTestException);
 
     class TestRequestHandler : public RequestHandler
     {
