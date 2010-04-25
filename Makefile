@@ -68,6 +68,7 @@ SRCS =	\
 	Thread.cpp \
 	ThreadKey.cpp \
 	ThreadPoolDispatcher.cpp \
+	Timer.cpp \
 	UrlString.cpp \
 	Util.cpp \
 	VersionManager.cpp \
