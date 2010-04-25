@@ -22,45 +22,55 @@
 using namespace Forte;
 
 // class data
-ProcRunner* ProcRunner::s_singleton = NULL;
-Mutex ProcRunner::s_mutex;
+ProcRunner* ProcRunner::sSingleton = NULL;
+Mutex ProcRunner::sMutex;
 
 
 // class methods
 ProcRunner* ProcRunner::get()
 {
     // double-checked locking pattern
-    if (s_singleton == NULL)
+    if (sSingleton == NULL)
     {
-        AutoUnlockMutex lock(s_mutex);
+        AutoUnlockMutex lock(sMutex);
 
-        if (s_singleton == NULL)
+        if (sSingleton == NULL)
         {
-            s_singleton = new ProcRunner();
+            sSingleton = new ProcRunner();
         }
     }
 
-    return s_singleton;
+    return sSingleton;
 }
 
 ProcRunner& ProcRunner::getRef()
 {
     ProcRunner::get();
 
-    if (s_singleton == NULL)
+    if (sSingleton == NULL)
     {
         throw EEmptyReference("ProcRunner pointer is invalid");
     }
 
-    return *s_singleton;
+    return *sSingleton;
+}
+
+void ProcRunner::DeleteSingleton()
+{
+    // double-checked locking
+    if (sSingleton != NULL)
+    {
+        AutoUnlockMutex lock(sMutex);
+        if (sSingleton != NULL) delete sSingleton;
+    }
 }
 
 
 // methods
 int ProcRunner::run(const FString& command, 
-		    const FString& cwd, 
-		    FString *output, 
-		    int timeout,
+                    const FString& cwd, 
+                    FString *output, 
+                    unsigned int timeout,
                     const StrStrMap *env)
 {
     if (cwd.empty()) hlog(HLOG_DEBUG3, "run(%s)", command.c_str());
@@ -78,13 +88,10 @@ int ProcRunner::run(const FString& command,
     {
         ServerMain& main = ServerMain::GetServer();
         log_child = (main.mServiceConfig.GetInteger("log_child") != 0);
-        stmp = main.mServiceConfig.Get("child_timeout");
-        if (timeout == -1) timeout = (stmp.empty() ? 120 : stmp.asUnsignedInteger());
     }
     catch (Exception &e)
     {
         // there won't always be a ServerMain defined
-        if (timeout == -1) timeout = 120;
     }
 
     // open temp log file
@@ -237,7 +244,7 @@ int ProcRunner::run(const FString& command,
                 if (WEXITSTATUS(status) != 0)
                 {
                     stmp.Format("Child exited with status code %d", 
-				WEXITSTATUS(status));
+                                WEXITSTATUS(status));
                     hlog(HLOG_DEBUG, "%s", stmp.c_str());
                     break;
                 }
@@ -247,26 +254,34 @@ int ProcRunner::run(const FString& command,
             }
         }
 
-	clock_gettime(CLOCK_MONOTONIC, &current_time);
-	elapsed_time = current_time - start_time;
+        clock_gettime(CLOCK_MONOTONIC, &current_time);
+        elapsed_time = current_time - start_time;
 
         // check for timeout
         if (timeout != 0)
-        {    
-	    //OLD WAY
+        {
+            //OLD WAY
             //elapsed = time(NULL) - start;
             //if (elapsed > timeout)
-	    if (elapsed_time.tv_sec > timeout)
+            if (elapsed_time.tv_sec > timeout)
             {
-                if (killpg(pid, 9) == -1)
+                if (killpg(pid, 15) == -1)
                 {
-                    hlog(HLOG_ERR, "failed to killpg(%u): %s", 
-			 (unsigned)pid, strerror(errno));
-                    hlog(HLOG_DEBUG, "calling kill(%u, 9)", (unsigned)pid);
-                    kill(pid, 9);
+                    if (killpg(pid, 9) == -1)
+                    {
+                        hlog(HLOG_ERR, "failed to killpg(%u): %s",
+                             (unsigned)pid, strerror(errno));
+                        hlog(HLOG_DEBUG, "calling kill(%u, 9)", (unsigned)pid);
+
+                        if (kill(pid, 9) == -1)
+                        {
+                            hlog(HLOG_ERR, "failed to kill -9 (%u): %s",
+                                 (unsigned)pid, strerror(errno));
+                        }
+                    }
                 }
                 wait4(pid, &status, 0, &usage);  // wait for death to
-						 // clean up zombie
+                // clean up zombie
                 sec = usage.ru_utime.tv_sec + usage.ru_stime.tv_sec;
                 usec = usage.ru_utime.tv_usec + usage.ru_stime.tv_usec;
                 if (usec > 1000000) { sec++; usec -= 1000000; }
@@ -285,7 +300,7 @@ int ProcRunner::run(const FString& command,
         if (g_shutdown)
         {
             stmp.Format("Server is shutting down... "
-			"abandoning child process %u", pid);
+                        "abandoning child process %u", pid);
             hlog(HLOG_ERR, "%s", stmp.c_str());
             ret = -1;
             break;
@@ -294,13 +309,13 @@ int ProcRunner::run(const FString& command,
         // determine how long to sleep before checking process for
         // termination again
 
-	//OLD WAY
+        //OLD WAY
         //gettimeofday(&current_time, NULL);
         //total_msec = 1000 * (current_time.tv_sec - start_time.tv_sec);
         //total_msec += (current_time.tv_usec - start_time.tv_usec + 500) / 1000;
         total_msec = 
-	    (elapsed_time.tv_nsec + (elapsed_time.tv_sec * 1000000000))
-	    / 1000000;
+            (elapsed_time.tv_nsec + (elapsed_time.tv_sec * 1000000000))
+            / 1000000;
 
         if (total_msec < 1000)
         {

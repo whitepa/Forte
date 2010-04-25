@@ -5,6 +5,12 @@
 #include "AutoMutex.h"
 #include "Object.h"
 
+//TODO: better shorter constants
+#define PROC_RUNNER_NO_TIMEOUT        0
+#define PROC_RUNNER_DEFAULT_TIMEOUT 120
+#define PROC_RUNNER_LONG_TIMEOUT    300
+
+
 namespace Forte
 {
     class ProcRunner : public Object
@@ -12,20 +18,21 @@ namespace Forte
     public:
         // ctor/dtor
         virtual ~ProcRunner() { }
-    
+        void DeleteSingleton();
+
         // singleton
         static ProcRunner* get();
         static ProcRunner& getRef();
-        static ProcRunner* s_singleton;
-        static Mutex s_mutex;
+        static ProcRunner* sSingleton;
+        static Mutex sMutex;
 
     public:
         // API
         // timeout: -1 = default, 0 = none
         virtual int run(const FString& command, 
-                        const FString& cwd = "", 
-                        FString *output = NULL,
-                        int timeout = -1, 
+                        const FString& cwd, 
+                        FString *output,
+                        unsigned int timeout, 
                         const StrStrMap *env = NULL);
 
         virtual int run_background(const FString& command, 

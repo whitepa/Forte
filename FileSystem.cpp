@@ -725,7 +725,7 @@ void FileSystem::file_copy(const FString& from, const FString& to, mode_t mode)
                    proc->shell_escape(from).c_str(),
                    proc->shell_escape(to).c_str());
 
-    if (proc->run(command, "", 0) != 0)
+    if (proc->run(command, "", 0, PROC_RUNNER_NO_TIMEOUT) != 0)
     {
         stmp.Format("FORTE_COPY_FAIL|||%s|||%s", from.c_str(), to.c_str());
         throw EFileSystemCopy(stmp);
