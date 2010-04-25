@@ -37,7 +37,7 @@ namespace Forte
         ~Curl();
 
         // interface
-        void setURL(const FString& url);
+        virtual void setURL(const FString& url);
         void setRecvHeaderCB(header_cb_t func, void *data = NULL);
         void setRecvCB(data_cb_t func, void *data = NULL);
         void setInternalCB(void);
@@ -51,6 +51,7 @@ namespace Forte
         void setNoSignal(bool nosignal = true);
         void setConnectTimeout(long timeout);
         void setMaxTransferTime(long max_xfer_time);
+        void setThrowOnHTTPError(bool shouldThrow = true);
 
         /// Set a low speed threshold, under which the transfer will be aborted.
         void setLowSpeed(int bps, int time);
@@ -60,9 +61,14 @@ namespace Forte
 
         FString mBuf;
     protected:
-        CURL *m_handle;
-        static bool s_did_init;
-        char m_error_buffer[CURL_ERROR_SIZE + 1];
+        CURL *mHandle;
+        static bool sDidInit;
+        char mErrorBuffer[CURL_ERROR_SIZE + 1];
+
+        void checkResolvConf();
+        FString mURL; // this needs to be saved for curl
+        bool mThrowOnHTTPError;
+        time_t mLastMtime;
     };
 
 

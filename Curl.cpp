@@ -2,24 +2,27 @@
 #ifndef FORTE_NO_CURL
 #include "Forte.h"
 
+#include "FileSystem.h"
+#include <resolv.h>
+
 // macros
 #define SET_CURL_OPT(OPTION, VALUE)                                     \
     {                                                                   \
-        int errCode = curl_easy_setopt(m_handle, OPTION, VALUE);        \
+        int errCode = curl_easy_setopt(mHandle, OPTION, VALUE);        \
         if (errCode != CURLE_OK)                                        \
         {                                                               \
             FString err(FStringFC(),                                    \
                         "CURL_FAIL_SETOPT|||%s|||%s",                   \
-                        #OPTION, m_error_buffer);                       \
+                        #OPTION, mErrorBuffer);                       \
             throw CurlException(errCode, err);                          \
         }                                                               \
     }
 
 
 // statics
-bool Curl::s_did_init = false;
+bool Curl::sDidInit = false;
 
-static size_t curlInternalDataCB(void *buffer, size_t size, 
+static size_t curlInternalDataCB(void *buffer, size_t size,
                                  size_t nmemb, void *userp)
 {
     if (userp != NULL)
@@ -37,55 +40,55 @@ void Curl::setInternalCB(void)
 
 void Curl::Init(long flags)
 {
-    if (!s_did_init)
-    {
-        s_did_init = true;
-        curl_global_init(flags);
-    }
+    sDidInit = true;
 }
 
 
 void Curl::Cleanup()
 {
-    if (s_did_init)
-    {
-        s_did_init = false;
-        curl_global_cleanup();
-    }
+    sDidInit = false;
 }
 
 
 // class methods
 Curl::Curl() :
-    m_handle(NULL)
+    mHandle(NULL), mThrowOnHTTPError(false)
 {
+    if (!sDidInit)
+    {
+        throw CurlException(0, "Failed to call curl_global_init");
+    }
+
+    // load resolv.conf once per thread
+    mLastMtime = 0;
+
     // get curl handle
-    if ((m_handle = curl_easy_init()) == NULL)
+    if ((mHandle = curl_easy_init()) == NULL)
     {
         throw CurlException(CURLE_FAILED_INIT, "CURL_FAIL_INIT");
     }
 
-    if (curl_easy_setopt(m_handle, CURLOPT_ERRORBUFFER, m_error_buffer) != CURLE_OK)
+    memset(mErrorBuffer, 0, sizeof(mErrorBuffer));
+    if (curl_easy_setopt(mHandle, CURLOPT_ERRORBUFFER, mErrorBuffer) != CURLE_OK)
     {
         throw CurlException(CURLE_FAILED_INIT, "CURL_FAIL_INIT");
     }
 
-    memset(m_error_buffer, 0, sizeof(m_error_buffer));
     setRecvHeader(false); // no header in the body by default
 }
 
 
 Curl::~Curl()
 {
-    if (m_handle != NULL) curl_easy_cleanup(m_handle);
+    if (mHandle != NULL) curl_easy_cleanup(mHandle);
 }
 
 
 void Curl::setURL(const FString& url)
 {
-    SET_CURL_OPT(CURLOPT_URL, url.c_str());
+    mURL = url;
+    SET_CURL_OPT(CURLOPT_URL, mURL.c_str());
 }
-
 
 void Curl::setRecvHeaderCB(header_cb_t func, void *data)
 {
@@ -168,22 +171,71 @@ void Curl::setLowSpeed(int bps, int time)
     SET_CURL_OPT(CURLOPT_LOW_SPEED_TIME, time);
 }
 
+void Curl::setThrowOnHTTPError(bool shouldThrow)
+{
+    mThrowOnHTTPError = shouldThrow;
+}
 
 void Curl::reset()
 {
     mBuf.clear();
-    curl_easy_reset(m_handle);
+    curl_easy_reset(mHandle);
 }
 
+//TODO: move to resolver manager class so this is only done once per thread
+void Curl::checkResolvConf()
+{
+    struct stat st;
+    FileSystem& fs(FileSystem::getRef());
+    if (fs.stat("/etc/resolv.conf", &st) == 0)
+    {
+        if (st.st_mtime != mLastMtime)
+        {
+            mLastMtime = st.st_mtime;
+            res_nclose(&_res);
+
+            if (res_ninit(&_res) != 0)
+            {
+                hlog(HLOG_WARN, "res_init failed. "
+                     "continuing with cached. errno: %i", errno);
+            }
+            else
+            {
+                hlog(HLOG_INFO, "resolv.conf changed. reloaded.");
+            }
+        }
+    }
+    else
+    {
+        hlog(HLOG_WARN, "could not stat /etc/resolv.conf. "
+             "continuing with cached. errno: %i", errno);
+    }
+}
 
 void Curl::perform()
 {
     mBuf.clear();
-    int errCode = curl_easy_perform(m_handle);
+
+    checkResolvConf();
+
+    int errCode = curl_easy_perform(mHandle);
     if (errCode != CURLE_OK)
     {
-        FString err(FStringFC(), "CURL_FAIL_XFER|||%s", m_error_buffer);
+        FString err(FStringFC(), "CURL_FAIL_XFER|||%s|||%s", 
+                    mErrorBuffer, mURL.c_str());
         throw CurlException(errCode, err);
+    }
+
+    if (mThrowOnHTTPError)
+    {
+        int httpRetCode = 0;
+        curl_easy_getinfo(mHandle, CURLINFO_RESPONSE_CODE, &httpRetCode);
+
+        if (httpRetCode >= 400) // Should we accept 200 only?
+        {
+            FString err(FStringFC(), "CURL_FAIL_XFER|||%i", httpRetCode);
+            throw CurlException(errCode, err);
+        }
     }
 }
 
