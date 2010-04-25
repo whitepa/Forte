@@ -15,19 +15,19 @@
 namespace Forte
 {
 // typed exceptions
-    EXCEPTION_SUBCLASS(Exception, ForteFileSystemException);
-    EXCEPTION_SUBCLASS(ForteFileSystemException, ForteFileSystemCopyException);
-    EXCEPTION_SUBCLASS(ForteFileSystemException, ForteFileSystemLinkException);
-    EXCEPTION_SUBCLASS(ForteFileSystemException, ForteFileSystemMkdirException);
-    EXCEPTION_SUBCLASS(ForteFileSystemException, ForteFileSystemReadlinkException);
-    EXCEPTION_SUBCLASS(ForteFileSystemException, ForteFileSystemRenameException);
-    EXCEPTION_SUBCLASS(ForteFileSystemException, ForteFileSystemResolveSymlinkException);
+    EXCEPTION_SUBCLASS(Exception, EFileSystem);
+    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemCopy);
+    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemLink);
+    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemMkdir);
+    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemReadlink);
+    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemRename);
+    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemResolveSymlink);
 //not used yet, might be desirable
-//EXCEPTION_SUBCLASS(ForteFileSystemResolveSymlinkException, ForteFileSystemResolveSymlinkBroken);
-//EXCEPTION_SUBCLASS(ForteFileSystemResolveSymlinkException, ForteFileSystemResolveSymlinkLoop);
-    EXCEPTION_SUBCLASS(ForteFileSystemException, ForteFileSystemSymLinkException);
-    EXCEPTION_SUBCLASS(ForteFileSystemException, ForteFileSystemTouchException);
-    EXCEPTION_SUBCLASS(ForteFileSystemException, ForteFileSystemUnlinkException);
+//EXCEPTION_SUBCLASS(EFileSystemResolveSymlink, ForteFileSystemResolveSymlinkBroken);
+//EXCEPTION_SUBCLASS(EFileSystemResolveSymlink, ForteFileSystemResolveSymlinkLoop);
+    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemSymLink);
+    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemTouch);
+    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemUnlink);
 
 
     class FileSystem : public Object

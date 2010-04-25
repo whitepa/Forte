@@ -84,13 +84,13 @@ void FileSystem::touch(const FString& file)
     if ((fd = ::open(file, O_WRONLY | O_CREAT, 0666)) == AutoFD::NONE)
     {
         stmp.Format("FORTE_TOUCH_FAIL|||%s|||%s", file.c_str(), strerror(errno).c_str());
-        throw ForteFileSystemTouchException(stmp);
+        throw EFileSystemTouch(stmp);
     }
 
     if (gettimeofday(&(tv[0]), NULL) == -1)
     {
         stmp.Format("FORTE_TOUCH_FAIL|||%s|||%s", file.c_str(), strerror(errno).c_str());
-        throw ForteFileSystemTouchException(stmp);
+        throw EFileSystemTouch(stmp);
     }
 
     memcpy(&(tv[0]), &(tv[1]), sizeof(tv[0]));
@@ -98,7 +98,7 @@ void FileSystem::touch(const FString& file)
     if (::futimes(fd, tv) == -1)
     {
         stmp.Format("FORTE_TOUCH_FAIL|||%s|||%s", file.c_str(), strerror(errno).c_str());
-        throw ForteFileSystemTouchException(stmp);
+        throw EFileSystemTouch(stmp);
     }
 }
 
@@ -178,7 +178,10 @@ void FileSystem::unlink(const FString& path, bool unlink_children,
     // recursive delete?
     if (unlink_children)
     {
-        struct dirent *entry;
+        int err_number;
+        struct dirent entry;
+        struct dirent *result;
+
         struct stat st;
         AutoFD dir;
 
@@ -186,17 +189,52 @@ void FileSystem::unlink(const FString& path, bool unlink_children,
         // NOTE: use lstat() so we don't follow symlinks
         if (lstat(path, &st) == 0 && S_ISDIR(st.st_mode))
         {
-            if ((dir = opendir(path)).dir() != NULL)
-            {
-                while ((entry = readdir(dir)) != NULL)
-                {
-                    stmp = entry->d_name;
+            errno = 0;
+            dir = opendir(path);
 
-                    if (stmp != "." && stmp != "..")
-                    {
-                        unlink(path + "/" + entry->d_name, true, progress_callback, callback_data);
-                    }
+            if (dir.dir() == NULL || errno != 0)
+            {
+                if (errno == ENOENT)
+                {
+                    // the thing we're trying to unlink is gone, great!
+                    return;
                 }
+
+                //else, we could not work with this dir to delete it
+                stmp.Format("FORTE_UNLINK_FAIL|||%s|||%s|||%i",
+                            path.c_str(),
+                            strerror(errno).c_str(),
+                            errno);
+                throw EFileSystemUnlink(stmp);
+            }
+
+            err_number = 0;
+            while ((err_number = readdir_r(dir, &entry, &result)) == 0
+                   && result != NULL)
+            {
+                stmp = entry.d_name;
+
+                if (stmp != "." && stmp != "..")
+                {
+                    unlink(path + "/" + entry.d_name,
+                           true, progress_callback, callback_data);
+                }
+            }
+
+            // when finished we should get NULL for readdir_r and no error.
+            if (err_number != 0)
+            {
+                if (errno == ENOENT)
+                {
+                    // the thing we're trying to unlink is gone, great!
+                    return;
+                }
+
+                stmp.Format("FORTE_UNLINK_FAIL|||%s|||%s|||%i",
+                            path.c_str(),
+                            strerror(err_number).c_str(),
+                            err_number);
+                throw EFileSystemUnlink(stmp);
             }
         }
     }
@@ -225,7 +263,7 @@ void FileSystem::unlinkat(int dir_fd, const FString& path)
     if (err != 0)
     {
         stmp.Format("FORTE_UNLINK_FAIL|||%s|||%s", path.c_str(), strerror(errno).c_str());
-        throw ForteFileSystemUnlinkException(stmp);
+        throw EFileSystemUnlink(stmp);
     }
 }
 
@@ -245,7 +283,7 @@ void FileSystem::unlink_helper(const FString& path)
     if (err != 0)
     {
         stmp.Format("FORTE_UNLINK_FAIL|||%s|||%s", path.c_str(), strerror(errno).c_str());
-        throw ForteFileSystemUnlinkException(stmp);
+        throw EFileSystemUnlink(stmp);
     }
 }
 
@@ -259,7 +297,7 @@ void FileSystem::rename(const FString& from, const FString& to)
     {
         stmp.Format("FORTE_RENAME_FAIL|||%s|||%s|||%s",
                     from.c_str(), to.c_str(), strerror(errno).c_str());
-        throw ForteFileSystemRenameException(stmp);
+        throw EFileSystemRename(stmp);
     }
 }
 
@@ -275,7 +313,7 @@ void FileSystem::renameat(int dir_from_fd, const FString& from,
     {
         stmp.Format("FORTE_RENAME_FAIL|||%s|||%s|||%s",
                     from.c_str(), to.c_str(), strerror(errno).c_str());
-        throw ForteFileSystemRenameException(stmp);
+        throw EFileSystemRename(stmp);
     }
 }
 
@@ -296,7 +334,7 @@ void FileSystem::mkdir(const FString& path, mode_t mode, bool make_parents)
     {
         // early exit?
         if (S_ISDIR(st.st_mode)) return;
-        else throw ForteFileSystemMkdirException(FStringFC(), 
+        else throw EFileSystemMkdir(FStringFC(), 
                                                   "FORTE_MKDIR_FAIL_IN_THE_WAY|||%s", 
                                                   path.c_str());
     }
@@ -318,13 +356,13 @@ void FileSystem::mkdir(const FString& path, mode_t mode, bool make_parents)
         {
             if (err == 0)
             {
-                throw ForteFileSystemMkdirException(FStringFC(), 
+                throw EFileSystemMkdir(FStringFC(), 
                                                      "FORTE_MKDIR_SUBSEQUENTLY_DELETED|||%s",
                                                      path.c_str());
             }
 
             stmp = strerror(err);
-            throw ForteFileSystemMkdirException(FStringFC(), "FORTE_MKDIR_FAIL_ERR|||%s|||%s",
+            throw EFileSystemMkdir(FStringFC(), "FORTE_MKDIR_FAIL_ERR|||%s|||%s",
                              path.c_str(), stmp.c_str());
         }
     }
@@ -347,13 +385,13 @@ void FileSystem::mkdirat(int dir_fd, const FString& path, mode_t mode)
     {
         if (err == 0)
         {
-            throw ForteFileSystemMkdirException(FStringFC(), 
+            throw EFileSystemMkdir(FStringFC(), 
                                                  "FORTE_MKDIR_SUBSEQUENTLY_DELETED|||%s",
                                                  path.c_str());
         }
 
         stmp = strerror(err);
-        throw ForteFileSystemMkdirException(FStringFC(), "FORTE_MKDIR_FAIL_ERR|||%s|||%s",
+        throw EFileSystemMkdir(FStringFC(), "FORTE_MKDIR_FAIL_ERR|||%s|||%s",
                                              path.c_str(), stmp.c_str());
     }
 }
@@ -368,7 +406,7 @@ void FileSystem::link(const FString& from, const FString& to)
     {
         stmp.Format("FORTE_CREATE_HARD_LINK_FAIL|||%s|||%s|||%s",
                     from.c_str(), to.c_str(), strerror(errno).c_str());
-        throw ForteFileSystemLinkException(stmp);
+        throw EFileSystemLink(stmp);
     }
 }
 
@@ -383,7 +421,7 @@ void FileSystem::linkat(int dir_from_fd, const FString& from, int dir_to_fd, con
     {
         stmp.Format("FORTE_CREATE_HARD_LINK_FAIL|||%s|||%s|||%s",
                     from.c_str(), to.c_str(), strerror(errno).c_str());
-        throw ForteFileSystemLinkException(stmp);
+        throw EFileSystemLink(stmp);
     }
 }
 
@@ -397,7 +435,7 @@ void FileSystem::symlink(const FString& from, const FString& to)
     {
         stmp.Format("FORTE_CREATE_SYMLINK_FAIL|||%s|||%s|||%s",
                     from.c_str(), to.c_str(), strerror(errno).c_str());
-        throw ForteFileSystemSymLinkException(stmp);
+        throw EFileSystemSymLink(stmp);
     }
 }
 
@@ -412,7 +450,7 @@ void FileSystem::symlinkat(const FString& from, int dir_to_fd, const FString& to
     {
         stmp.Format("FORTE_CREATE_SYMLINK_FAIL|||%s|||%s|||%s",
                     from.c_str(), to.c_str(), strerror(errno).c_str());
-        throw ForteFileSystemSymLinkException(stmp);
+        throw EFileSystemSymLink(stmp);
     }
 }
 
@@ -427,7 +465,7 @@ FString FileSystem::readlink(const FString& path)
     if ((rc = ::readlink(path, buf, sizeof(buf))) == -1)
     {
         stmp.Format("FORTE_READ_SYMLINK_FAIL|||%s|||%s", path.c_str(), strerror(errno).c_str());
-        throw ForteFileSystemReadlinkException(stmp);
+        throw EFileSystemReadlink(stmp);
     }
 
     buf[std::min<size_t>(rc, sizeof(buf) - 1)] = 0;
@@ -453,7 +491,7 @@ FString FileSystem::resolve_symlink(const FString& path)
         if (visited.find(ret) != visited.end())
         {
             stmp.Format("FORTE_RESOLVE_SYMLINK_LOOP|||%s|||%s", path.c_str(), ret.c_str());
-            throw ForteFileSystemResolveSymlinkException(stmp);
+            throw EFileSystemResolveSymlink(stmp);
         }
 
         visited[ret] = true;
@@ -464,7 +502,7 @@ FString FileSystem::resolve_symlink(const FString& path)
             rc = errno;
             hlog(HLOG_DEBUG4, "FileSystem::%s(): unable to stat %s", __FUNCTION__, ret.c_str());
             stmp.Format("FORTE_RESOLVE_SYMLINK_BROKEN|||%s|||%s", path.c_str(), ret.c_str());
-            throw ForteFileSystemResolveSymlinkException(stmp);
+            throw EFileSystemResolveSymlink(stmp);
         }
 
         if (!S_ISLNK(st.st_mode)) return ret;
@@ -478,7 +516,7 @@ FString FileSystem::resolve_symlink(const FString& path)
         {
             stmp.Format("FORTE_RESOLVE_SYMLINK_FAIL|||%s|||%s|||%s", path.c_str(), ret.c_str(),
                         strerror(errno).c_str());
-            throw ForteFileSystemResolveSymlinkException(stmp);
+            throw EFileSystemResolveSymlink(stmp);
         }
 
         buf[std::min<size_t>(rc, sizeof(buf) - 1)] = 0;
@@ -490,7 +528,7 @@ FString FileSystem::resolve_symlink(const FString& path)
 
     // too many iterations
     stmp.Format("FORTE_RESOLVE_SYMLINK_TOO_MANY|||%s|||%u", path.c_str(), MAX_RESOLVE);
-    throw ForteFileSystemResolveSymlinkException(stmp);
+    throw EFileSystemResolveSymlink(stmp);
 }
 
 
@@ -516,7 +554,7 @@ FString FileSystem::fully_resolve_symlink(const FString& path)
         if (visited.find(ret) != visited.end())
         {
             stmp.Format("FORTE_RESOLVE_SYMLINK_LOOP|||%s|||%s", path.c_str(), ret.c_str());
-            throw ForteFileSystemResolveSymlinkException(stmp);
+            throw EFileSystemResolveSymlink(stmp);
         }
 
         visited[ret] = true;
@@ -525,7 +563,7 @@ FString FileSystem::fully_resolve_symlink(const FString& path)
         if (i++ > MAX_RESOLVE)
         {
             stmp.Format("FORTE_RESOLVE_SYMLINK_TOO_MANY|||%s|||%u", path.c_str(), MAX_RESOLVE);
-            throw ForteFileSystemResolveSymlinkException(stmp);
+            throw EFileSystemResolveSymlink(stmp);
         }
 
         // init
@@ -552,7 +590,7 @@ FString FileSystem::fully_resolve_symlink(const FString& path)
                 rc = errno;
                 stmp.Format("FORTE_RESOLVE_SYMLINK_BROKEN|||%s|||%s",
                             path.c_str(), partial.c_str());
-                throw ForteFileSystemResolveSymlinkException(stmp);
+                throw EFileSystemResolveSymlink(stmp);
             }
 
             // is partial path a link?
@@ -690,7 +728,7 @@ void FileSystem::file_copy(const FString& from, const FString& to, mode_t mode)
     if (proc->run(command, "", 0) != 0)
     {
         stmp.Format("FORTE_COPY_FAIL|||%s|||%s", from.c_str(), to.c_str());
-        throw ForteFileSystemCopyException(stmp);
+        throw EFileSystemCopy(stmp);
     }
 }
 
@@ -765,7 +803,7 @@ void FileSystem::deep_copy_helper(const FString& base_from,
     {
         hlog(HLOG_ERR, "Unable to perform deep copy on %s: directory is gone",
              path.c_str());
-        throw ForteFileSystemCopyException(FStringFC(), "FORTE_DEEP_COPY_FAIL|||%s", rel.c_str());
+        throw EFileSystemCopy(FStringFC(), "FORTE_DEEP_COPY_FAIL|||%s", rel.c_str());
     }
 
     // create this directory
@@ -777,7 +815,7 @@ void FileSystem::deep_copy_helper(const FString& base_from,
     catch (Exception &e)
     {
         hlog(HLOG_ERR, "%s", e.getDescription().c_str());
-        throw ForteFileSystemCopyException(FStringFC(), "FORTE_DEEP_COPY_FAIL|||%s", rel.c_str());
+        throw EFileSystemCopy(FStringFC(), "FORTE_DEEP_COPY_FAIL|||%s", rel.c_str());
     }
 
     // copy the directory's entries
@@ -793,7 +831,7 @@ void FileSystem::deep_copy_helper(const FString& base_from,
         {
             hlog(HLOG_ERR, "Unable to perform deep copy on %s: directory is gone",
                  path.c_str());
-            throw ForteFileSystemCopyException(FStringFC(), "FORTE_DEEP_COPY_FAIL|||%s", rel.c_str());
+            throw EFileSystemCopy(FStringFC(), "FORTE_DEEP_COPY_FAIL|||%s", rel.c_str());
         }
         else if (S_ISDIR(st.st_mode))
         {
@@ -810,7 +848,7 @@ void FileSystem::deep_copy_helper(const FString& base_from,
             catch (Exception &e)
             {
                 hlog(HLOG_ERR, "%s", e.getDescription().c_str());
-                throw ForteFileSystemCopyException(FStringFC(), "FORTE_DEEP_COPY_FAIL|||%s", rel.c_str());
+                throw EFileSystemCopy(FStringFC(), "FORTE_DEEP_COPY_FAIL|||%s", rel.c_str());
             }
         }
     }
@@ -831,7 +869,7 @@ void FileSystem::copy(const FString &from_path,
 
     if (stat(from_path, &st) != 0)
     {
-        throw ForteFileSystemCopyException(FStringFC(), "FORTE_COPY_FAIL|||%s|||%s",
+        throw EFileSystemCopy(FStringFC(), "FORTE_COPY_FAIL|||%s|||%s",
                                             from_path.c_str(), to_path.c_str());
     }
 
@@ -902,7 +940,7 @@ void FileSystem::copy_helper(const FString& from_path,
 
             if (!in.good() || !out.good())
             {
-                throw ForteFileSystemCopyException("FORTE_COPY_FAIL|||" + from_path + "|||" + to_path);
+                throw EFileSystemCopy("FORTE_COPY_FAIL|||" + from_path + "|||" + to_path);
             }
 
             while (in.good())
@@ -920,7 +958,7 @@ void FileSystem::copy_helper(const FString& from_path,
 
                 if (g_shutdown)
                 {
-                    throw ForteFileSystemCopyException("FORTE_COPY_FAIL_SHUTDOWN|||" + 
+                    throw EFileSystemCopy("FORTE_COPY_FAIL_SHUTDOWN|||" + 
                                                         from_path + "|||" + to_path);
                 }
             }
