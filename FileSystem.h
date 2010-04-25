@@ -80,6 +80,7 @@ namespace Forte
         // singleton
         static FileSystem* get();
         static FileSystem& getRef();
+        static void DeleteSingleton();
 
         // types
         typedef std::map<ino_t, std::string> InodeMap;
@@ -146,8 +147,8 @@ namespace Forte
         // ctor/dtor/singleton
         FileSystem();
         virtual ~FileSystem();
-        static FileSystem *s_singleton;
-        static Mutex s_mutex;
+        static FileSystem *sSingleton;
+        static Mutex sMutex;
     };
 
 // inline funcs for legacy code support

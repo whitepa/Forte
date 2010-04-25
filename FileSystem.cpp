@@ -11,33 +11,43 @@ const unsigned MAX_RESOLVE = 1000;
 
 
 // statics
-Mutex FileSystem::s_mutex;
-FileSystem* FileSystem::s_singleton = NULL;
+Mutex FileSystem::sMutex;
+FileSystem* FileSystem::sSingleton = NULL;
 
 FileSystem* FileSystem::get()
 {
     // double-checked locking
-    if (s_singleton == NULL)
+    if (sSingleton == NULL)
     {
-        AutoUnlockMutex lock(s_mutex);
-        if (s_singleton == NULL) s_singleton = new FileSystem();
+        AutoUnlockMutex lock(sMutex);
+        if (sSingleton == NULL) sSingleton = new FileSystem();
     }
 
-    return (FileSystem*)s_singleton;
+    return (FileSystem*)sSingleton;
 }
 
 FileSystem& FileSystem::getRef()
 {
     FileSystem::get();
 
-    if (s_singleton == NULL)
+    if (sSingleton == NULL)
     {
         throw EEmptyReference("FileSystem pointer is invalid");
     }
 
-    return *s_singleton;
+    return *sSingleton;
 }
 
+void FileSystem::DeleteSingleton()
+{
+    // double-checked locking
+    if (sSingleton != NULL)
+    {
+        AutoUnlockMutex lock(sMutex);
+        if (sSingleton != NULL) 
+            delete sSingleton;
+    }
+}
 
 // ctor/dtor
 FileSystem::FileSystem()
