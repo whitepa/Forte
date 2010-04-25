@@ -9,7 +9,8 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(Exception, ForteDbConnectionPoolException);
+    EXCEPTION_SUBCLASS(Exception, EDbConnectionPool);
+    EXCEPTION_SUBCLASS(Exception, EDbConnectionPoolOpenConnections);
 
 // A pool of database connections.
     class DbConnectionPool {
@@ -24,6 +25,7 @@ namespace Forte
 
         DbConnection& GetDbConnection();
         void ReleaseDbConnection(DbConnection& connection);
+        void DeleteConnections();
 
     private:
         static auto_ptr<DbConnectionPool> spInstance;

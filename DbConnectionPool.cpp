@@ -38,9 +38,9 @@ DbConnectionPool::DbConnectionPool() :
     mPoolSize(ServerMain::GetServer().mServiceConfig.GetInteger("db_poolsize"))
 {
     if (mDbType.empty())
-        throw ForteDbConnectionPoolException("'db_type' must be specified in the database configuration");
+        throw EDbConnectionPool("'db_type' must be specified in the database configuration");
     if (ServerMain::GetServer().mServiceConfig.Get("db_poolsize").empty())
-        throw ForteDbConnectionPoolException("'db_poolsize' must be specified in the database configuration");
+        throw EDbConnectionPool("'db_poolsize' must be specified in the database configuration");
 }
 
 DbConnectionPool::DbConnectionPool(ServiceConfig &configObj) :
@@ -53,12 +53,31 @@ DbConnectionPool::DbConnectionPool(ServiceConfig &configObj) :
     mPoolSize(configObj.GetInteger("db_poolsize"))
 {
     if (mDbType.empty())
-        throw ForteDbConnectionPoolException("'db_type' must be specified in the database configuration");
+        throw EDbConnectionPool("'db_type' must be specified in the database configuration");
     if (configObj.Get("db_poolsize").empty())
-        throw ForteDbConnectionPoolException("'db_poolsize' must be specified in the database configuration");
+        throw EDbConnectionPool("'db_poolsize' must be specified in the database configuration");
 }
 
 DbConnectionPool::~DbConnectionPool() {
+}
+
+void DbConnectionPool::DeleteConnections()
+{
+    AutoUnlockMutex lock(mPoolMutex);
+    if (mUsedConnections.size() > 0)
+    {
+        throw EDbConnectionPoolOpenConnections("Connections are still open");
+    }
+
+    DbConnection* pDb;
+    while (mFreeConnections.size() > 0)
+    {
+        pDb = mFreeConnections.back();
+        mFreeConnections.pop_back();
+        delete pDb;
+    }
+
+    mFreeConnections.erase(mFreeConnections.begin(), mFreeConnections.end());
 }
 
 DbConnection& DbConnectionPool::GetDbConnection() {
@@ -92,7 +111,7 @@ DbConnection& DbConnectionPool::GetDbConnection() {
         {
             FString err;
             err.Format("Unrecognized database type: %s", mDbType.c_str());
-            throw ForteDbConnectionPoolException(err);
+            throw EDbConnectionPool(err);
         }
 
         auto_ptr<DbConnection> pNewDb(new_db);
@@ -103,7 +122,7 @@ DbConnection& DbConnectionPool::GetDbConnection() {
                 FString err;
                 err.Format("Could not initialize database connection: %s",
                            pNewDb->m_error.c_str());
-                throw ForteDbConnectionPoolException(err.c_str());
+                throw EDbConnectionPool(err.c_str());
             }
         }
         else
@@ -112,7 +131,7 @@ DbConnection& DbConnectionPool::GetDbConnection() {
                 FString err;
                 err.Format("Could not initialize socket database connection: %s",
                            pNewDb->m_error.c_str());
-                throw ForteDbConnectionPoolException(err.c_str());
+                throw EDbConnectionPool(err.c_str());
             }
         }
         mUsedConnections.insert(mUsedConnections.end(), pNewDb.get());
