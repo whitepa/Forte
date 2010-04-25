@@ -420,7 +420,7 @@ Logfile & LogManager::getLogfile(const char *path)
     foreach (Logfile *logfile, mLogfiles)
         if (!(logfile->mPath.Compare(path)))
             return *logfile;
-    throw ForteLogException(FStringFC(), "not currently logging to '%s'", path);
+    throw ELog(FStringFC(), "not currently logging to '%s'", path);
 }
 
 void LogManager::Log(int level, const char *fmt, ...)

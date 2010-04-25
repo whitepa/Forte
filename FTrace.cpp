@@ -224,17 +224,19 @@ void FTrace::dumpProfiling(unsigned int num)
         const FProfileData * const &pd(pdp.second);
         profileSet.insert(*pd);
     }
-    hlog(HLOG_DEBUG, "profiling information collected on %u distinct functions",
-         i.profileData.size());
+    hlog(HLOG_DEBUG, "profiling information collected on %llu distinct functions",
+         (u64) i.profileData.size());
     if (num == 0)
         num = profileSet.size();
     unsigned int c = 0;
     foreach (const FProfileData &pd, profileSet)
     {
         if (c++ >= num) break;
-        hlog(HLOG_DEBUG, "%016x: %d calls, %04d.%06d spent, %04d.%06d total", 
-             pd.mFunction, pd.mCalls, pd.mSpent.tv_sec, pd.mSpent.tv_usec, 
-             pd.mTotalSpent.tv_sec, pd.mTotalSpent.tv_usec);
+        hlog(HLOG_DEBUG, "%016llx: %lld calls, "
+             "%04lld.%06lld spent, %04lld.%06lld total", 
+             (u64) pd.mFunction, (u64) pd.mCalls, (u64) pd.mSpent.tv_sec, 
+             (u64) pd.mSpent.tv_usec, (u64) pd.mTotalSpent.tv_sec, 
+             (u64) pd.mTotalSpent.tv_usec);
         if (pd.mStackSample.size() > 0)
         {
             FString stack;

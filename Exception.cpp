@@ -84,7 +84,7 @@ void Exception::pretty_trace_log(int log_level)
 
         for (li = trace.begin(); li != trace.end(); ++li)
         {
-            hlog(log_level, *li);
+            hlog(log_level, "%s", li->c_str());
         }
     }
 }

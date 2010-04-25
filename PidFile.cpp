@@ -32,7 +32,7 @@ PidFile::PidFile(const char *path) :
         else // PID == PID
         {
             // stale pid file
-            hlog(HLOG_DEBUG, "unlinking stale pidfile", oldpid);
+            hlog(HLOG_DEBUG, "unlinking stale pidfile %u", oldpid);
             unlink(path);
         }
     }

@@ -40,7 +40,7 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(Exception, ForteLogException);
+    EXCEPTION_SUBCLASS(Exception, ELog);
 
     class LogMsg : public Object {
     public:
@@ -170,7 +170,7 @@ namespace Forte
         void PathFilterList(const char *path, std::vector<LogFilter> &filters);
         void PathList(std::vector<FString> &paths);
     
-        void Log(int level, const char *fmt, ...);
+        void Log(int level, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
         void LogMsgVa(int level, const char *fmt, va_list ap);
         void LogMsgVa(const char * func, const char *file, int line, int level, const char *fmt, va_list ap);
 
@@ -197,7 +197,7 @@ namespace Forte
 // hermes API compatibility:
 //void hlog(int level, const char* fmt, ...);
 
-void _hlog(const char *func, const char *file, int line, int level, const char * fmt, ...);
+void _hlog(const char *func, const char *file, int line, int level, const char * fmt, ...) __attribute__((format(printf, 5, 6)));
 #define hlog(level, fmt...) _hlog(__FUNCTION__, __FILE__, __LINE__, level, fmt)
 
 #endif

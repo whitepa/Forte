@@ -384,7 +384,9 @@ int ProcRunner::run(const FString& command,
             if (log_child) hlog(HLOG_DEBUG, "CHILD: %s", buf);
         }
 
-        if (i >= n) hlog(HLOG_DEBUG, "Child output logging truncated at %u lines", n);
+        if (i >= n) 
+            hlog(HLOG_DEBUG, 
+                 "Child output logging truncated at %llu lines", (u64) n);
 
         // cleanup
         in.close();
