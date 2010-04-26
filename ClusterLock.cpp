@@ -158,7 +158,7 @@ void ClusterLock::lock(const FString& name, unsigned timeout, const FString& err
         }
 
         ftruncate(mFD, 1);
-        mLock.reset(new FileSystem::AdvisoryLock(mFD, 0, 1));
+        mLock.reset(new AdvisoryLock(mFD, 0, 1));
     }
 
     // start timer

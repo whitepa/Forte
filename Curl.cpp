@@ -2,7 +2,6 @@
 #ifndef FORTE_NO_CURL
 #include "Forte.h"
 
-#include "FileSystem.h"
 #include <resolv.h>
 
 // macros
@@ -186,8 +185,7 @@ void Curl::reset()
 void Curl::checkResolvConf()
 {
     struct stat st;
-    FileSystem& fs(FileSystem::getRef());
-    if (fs.stat("/etc/resolv.conf", &st) == 0)
+    if (mFileSystem.Stat("/etc/resolv.conf", &st) == 0)
     {
         if (st.st_mtime != mLastMtime)
         {

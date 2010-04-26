@@ -9,46 +9,6 @@
 // constants
 const unsigned MAX_RESOLVE = 1000;
 
-
-// statics
-Mutex FileSystem::sMutex;
-FileSystem* FileSystem::sSingleton = NULL;
-
-FileSystem* FileSystem::get()
-{
-    // double-checked locking
-    if (sSingleton == NULL)
-    {
-        AutoUnlockMutex lock(sMutex);
-        if (sSingleton == NULL) sSingleton = new FileSystem();
-    }
-
-    return (FileSystem*)sSingleton;
-}
-
-FileSystem& FileSystem::getRef()
-{
-    FileSystem::get();
-
-    if (sSingleton == NULL)
-    {
-        throw EEmptyReference("FileSystem pointer is invalid");
-    }
-
-    return *sSingleton;
-}
-
-void FileSystem::DeleteSingleton()
-{
-    // double-checked locking
-    if (sSingleton != NULL)
-    {
-        AutoUnlockMutex lock(sMutex);
-        if (sSingleton != NULL) 
-            delete sSingleton;
-    }
-}
-
 // ctor/dtor
 FileSystem::FileSystem()
 {
@@ -93,13 +53,14 @@ void FileSystem::Touch(const FString& file)
 
     if ((fd = ::open(file, O_WRONLY | O_CREAT, 0666)) == AutoFD::NONE)
     {
-        stmp.Format("FORTE_TOUCH_FAIL|||%s|||%s", file.c_str(), strerror(errno).c_str());
+        stmp.Format("FORTE_TOUCH_FAIL|||%s|||%s", 
+                    file.c_str(), StrError(errno).c_str());
         throw EFileSystemTouch(stmp);
     }
 
     if (gettimeofday(&(tv[0]), NULL) == -1)
     {
-        stmp.Format("FORTE_TOUCH_FAIL|||%s|||%s", file.c_str(), strerror(errno).c_str());
+        stmp.Format("FORTE_TOUCH_FAIL|||%s|||%s", file.c_str(), StrError(errno).c_str());
         throw EFileSystemTouch(stmp);
     }
 
@@ -107,7 +68,7 @@ void FileSystem::Touch(const FString& file)
 
     if (::futimes(fd, tv) == -1)
     {
-        stmp.Format("FORTE_TOUCH_FAIL|||%s|||%s", file.c_str(), strerror(errno).c_str());
+        stmp.Format("FORTE_TOUCH_FAIL|||%s|||%s", file.c_str(), StrError(errno).c_str());
         throw EFileSystemTouch(stmp);
     }
 }
@@ -213,7 +174,7 @@ void FileSystem::Unlink(const FString& path, bool unlink_children,
                 //else, we could not work with this dir to delete it
                 stmp.Format("FORTE_UNLINK_FAIL|||%s|||%s|||%i",
                             path.c_str(),
-                            strerror(errno).c_str(),
+                            StrError(errno).c_str(),
                             errno);
                 throw EFileSystemUnlink(stmp);
             }
@@ -226,7 +187,7 @@ void FileSystem::Unlink(const FString& path, bool unlink_children,
 
                 if (stmp != "." && stmp != "..")
                 {
-                    unlink(path + "/" + entry.d_name,
+                    Unlink(path + "/" + entry.d_name,
                            true, progress_callback, callback_data);
                 }
             }
@@ -242,7 +203,7 @@ void FileSystem::Unlink(const FString& path, bool unlink_children,
 
                 stmp.Format("FORTE_UNLINK_FAIL|||%s|||%s|||%i",
                             path.c_str(),
-                            strerror(err_number).c_str(),
+                            StrError(err_number).c_str(),
                             err_number);
                 throw EFileSystemUnlink(stmp);
             }
@@ -272,7 +233,7 @@ void FileSystem::UnlinkAt(int dir_fd, const FString& path)
 
     if (err != 0)
     {
-        stmp.Format("FORTE_UNLINK_FAIL|||%s|||%s", path.c_str(), strerror(errno).c_str());
+        stmp.Format("FORTE_UNLINK_FAIL|||%s|||%s", path.c_str(), StrError(errno).c_str());
         throw EFileSystemUnlink(stmp);
     }
 }
@@ -292,7 +253,8 @@ void FileSystem::unlinkHelper(const FString& path)
 
     if (err != 0)
     {
-        stmp.Format("FORTE_UNLINK_FAIL|||%s|||%s", path.c_str(), strerror(errno).c_str());
+        stmp.Format("FORTE_UNLINK_FAIL|||%s|||%s", 
+                    path.c_str(), StrError(errno).c_str());
         throw EFileSystemUnlink(stmp);
     }
 }
@@ -306,7 +268,7 @@ void FileSystem::Rename(const FString& from, const FString& to)
     if (::rename(from.c_str(), to.c_str()) != 0)
     {
         stmp.Format("FORTE_RENAME_FAIL|||%s|||%s|||%s",
-                    from.c_str(), to.c_str(), strerror(errno).c_str());
+                    from.c_str(), to.c_str(), StrError(errno).c_str());
         throw EFileSystemRename(stmp);
     }
 }
@@ -322,7 +284,7 @@ void FileSystem::RenameAt(int dir_from_fd, const FString& from,
     if (::renameat(dir_from_fd, from.c_str(), dir_to_fd, to.c_str()) != 0)
     {
         stmp.Format("FORTE_RENAME_FAIL|||%s|||%s|||%s",
-                    from.c_str(), to.c_str(), strerror(errno).c_str());
+                    from.c_str(), to.c_str(), StrError(errno).c_str());
         throw EFileSystemRename(stmp);
     }
 }
@@ -344,9 +306,9 @@ void FileSystem::MakeDir(const FString& path, mode_t mode, bool make_parents)
     {
         // early exit?
         if (S_ISDIR(st.st_mode)) return;
-        else throw EFileSystemMkdir(FStringFC(), 
-                                                  "FORTE_MKDIR_FAIL_IN_THE_WAY|||%s", 
-                                                  path.c_str());
+        else throw EFileSystemMakeDir(FStringFC(), 
+                                      "FORTE_MAKEDIR_FAIL_IN_THE_WAY|||%s", 
+                                      path.c_str());
     }
     else
     {
@@ -366,14 +328,15 @@ void FileSystem::MakeDir(const FString& path, mode_t mode, bool make_parents)
         {
             if (err == 0)
             {
-                throw EFileSystemMkdir(FStringFC(), 
-                                                     "FORTE_MKDIR_SUBSEQUENTLY_DELETED|||%s",
-                                                     path.c_str());
+                throw EFileSystemMakeDir(FStringFC(), 
+                                         "FORTE_MAKEDIR_SUBSEQUENTLY_DELETED|||%s",
+                                         path.c_str());
             }
 
-            stmp = strerror(err);
-            throw EFileSystemMkdir(FStringFC(), "FORTE_MKDIR_FAIL_ERR|||%s|||%s",
-                             path.c_str(), stmp.c_str());
+            stmp = StrError(err);
+            throw EFileSystemMakeDir(FStringFC(), 
+                                     "FORTE_MAKEDIR_FAIL_ERR|||%s|||%s",
+                                     path.c_str(), stmp.c_str());
         }
     }
 }
@@ -395,14 +358,14 @@ void FileSystem::MakeDirAt(int dir_fd, const FString& path, mode_t mode)
     {
         if (err == 0)
         {
-            throw EFileSystemMkdir(FStringFC(), 
-                                                 "FORTE_MKDIR_SUBSEQUENTLY_DELETED|||%s",
-                                                 path.c_str());
+            throw EFileSystemMakeDir(FStringFC(), 
+                                     "FORTE_MAKEDIR_SUBSEQUENTLY_DELETED|||%s",
+                                     path.c_str());
         }
 
-        stmp = strerror(err);
-        throw EFileSystemMkdir(FStringFC(), "FORTE_MKDIR_FAIL_ERR|||%s|||%s",
-                                             path.c_str(), stmp.c_str());
+        stmp = StrError(err);
+        throw EFileSystemMakeDir(FStringFC(), "FORTE_MAKEDIR_FAIL_ERR|||%s|||%s",
+                                 path.c_str(), stmp.c_str());
     }
 }
 
@@ -415,7 +378,7 @@ void FileSystem::Link(const FString& from, const FString& to)
     if (::link(from.c_str(), to.c_str()) != 0)
     {
         stmp.Format("FORTE_CREATE_HARD_LINK_FAIL|||%s|||%s|||%s",
-                    from.c_str(), to.c_str(), strerror(errno).c_str());
+                    from.c_str(), to.c_str(), StrError(errno).c_str());
         throw EFileSystemLink(stmp);
     }
 }
@@ -430,7 +393,7 @@ void FileSystem::LinkAt(int dir_from_fd, const FString& from, int dir_to_fd, con
     if (::linkat(dir_from_fd, from.c_str(), dir_to_fd, to.c_str(), 0) != 0)
     {
         stmp.Format("FORTE_CREATE_HARD_LINK_FAIL|||%s|||%s|||%s",
-                    from.c_str(), to.c_str(), strerror(errno).c_str());
+                    from.c_str(), to.c_str(), StrError(errno).c_str());
         throw EFileSystemLink(stmp);
     }
 }
@@ -444,7 +407,7 @@ void FileSystem::SymLink(const FString& from, const FString& to)
     if (::symlink(from.c_str(), to.c_str()) != 0)
     {
         stmp.Format("FORTE_CREATE_SYMLINK_FAIL|||%s|||%s|||%s",
-                    from.c_str(), to.c_str(), strerror(errno).c_str());
+                    from.c_str(), to.c_str(), StrError(errno).c_str());
         throw EFileSystemSymLink(stmp);
     }
 }
@@ -459,7 +422,7 @@ void FileSystem::SymLinkAt(const FString& from, int dir_to_fd, const FString& to
     if (::symlinkat(from.c_str(), dir_to_fd, to.c_str()) != 0)
     {
         stmp.Format("FORTE_CREATE_SYMLINK_FAIL|||%s|||%s|||%s",
-                    from.c_str(), to.c_str(), strerror(errno).c_str());
+                    from.c_str(), to.c_str(), StrError(errno).c_str());
         throw EFileSystemSymLink(stmp);
     }
 }
@@ -474,7 +437,7 @@ FString FileSystem::ReadLink(const FString& path)
 
     if ((rc = ::readlink(path, buf, sizeof(buf))) == -1)
     {
-        stmp.Format("FORTE_READ_SYMLINK_FAIL|||%s|||%s", path.c_str(), strerror(errno).c_str());
+        stmp.Format("FORTE_READ_SYMLINK_FAIL|||%s|||%s", path.c_str(), StrError(errno).c_str());
         throw EFileSystemReadlink(stmp);
     }
 
@@ -500,8 +463,9 @@ FString FileSystem::ResolveSymLink(const FString& path)
         // check visited map
         if (visited.find(ret) != visited.end())
         {
-            stmp.Format("FORTE_RESOLVE_SYMLINK_LOOP|||%s|||%s", path.c_str(), ret.c_str());
-            throw EFileSystemResolveSymlink(stmp);
+            stmp.Format("FORTE_RESOLVE_SYMLINK_LOOP|||%s|||%s", 
+                        path.c_str(), ret.c_str());
+            throw EFileSystemResolveSymLink(stmp);
         }
 
         visited[ret] = true;
@@ -512,7 +476,7 @@ FString FileSystem::ResolveSymLink(const FString& path)
             rc = errno;
             hlog(HLOG_DEBUG4, "FileSystem::%s(): unable to stat %s", __FUNCTION__, ret.c_str());
             stmp.Format("FORTE_RESOLVE_SYMLINK_BROKEN|||%s|||%s", path.c_str(), ret.c_str());
-            throw EFileSystemResolveSymlink(stmp);
+            throw EFileSystemResolveSymLink(stmp);
         }
 
         if (!S_ISLNK(st.st_mode)) return ret;
@@ -525,8 +489,8 @@ FString FileSystem::ResolveSymLink(const FString& path)
         if ((rc = ::readlink(ret, buf, sizeof(buf))) == -1)
         {
             stmp.Format("FORTE_RESOLVE_SYMLINK_FAIL|||%s|||%s|||%s", path.c_str(), ret.c_str(),
-                        strerror(errno).c_str());
-            throw EFileSystemResolveSymlink(stmp);
+                        StrError(errno).c_str());
+            throw EFileSystemResolveSymLink(stmp);
         }
 
         buf[std::min<size_t>(rc, sizeof(buf) - 1)] = 0;
@@ -538,7 +502,7 @@ FString FileSystem::ResolveSymLink(const FString& path)
 
     // too many iterations
     stmp.Format("FORTE_RESOLVE_SYMLINK_TOO_MANY|||%s|||%u", path.c_str(), MAX_RESOLVE);
-    throw EFileSystemResolveSymlink(stmp);
+    throw EFileSystemResolveSymLink(stmp);
 }
 
 
@@ -563,8 +527,9 @@ FString FileSystem::FullyResolveSymLink(const FString& path)
         // check visited map
         if (visited.find(ret) != visited.end())
         {
-            stmp.Format("FORTE_RESOLVE_SYMLINK_LOOP|||%s|||%s", path.c_str(), ret.c_str());
-            throw EFileSystemResolveSymlink(stmp);
+            stmp.Format("FORTE_RESOLVE_SYMLINK_LOOP|||%s|||%s", 
+                        path.c_str(), ret.c_str());
+            throw EFileSystemResolveSymLink(stmp);
         }
 
         visited[ret] = true;
@@ -572,8 +537,9 @@ FString FileSystem::FullyResolveSymLink(const FString& path)
         // check for too many recursions
         if (i++ > MAX_RESOLVE)
         {
-            stmp.Format("FORTE_RESOLVE_SYMLINK_TOO_MANY|||%s|||%u", path.c_str(), MAX_RESOLVE);
-            throw EFileSystemResolveSymlink(stmp);
+            stmp.Format("FORTE_RESOLVE_SYMLINK_TOO_MANY|||%s|||%u", 
+                        path.c_str(), MAX_RESOLVE);
+            throw EFileSystemResolveSymLink(stmp);
         }
 
         // init
@@ -600,7 +566,7 @@ FString FileSystem::FullyResolveSymLink(const FString& path)
                 rc = errno;
                 stmp.Format("FORTE_RESOLVE_SYMLINK_BROKEN|||%s|||%s",
                             path.c_str(), partial.c_str());
-                throw EFileSystemResolveSymlink(stmp);
+                throw EFileSystemResolveSymLink(stmp);
             }
 
             // is partial path a link?
@@ -881,7 +847,7 @@ void FileSystem::Copy(const FString &from_path,
     if (stat(from_path, &st) != 0)
     {
         throw EFileSystemCopy(FStringFC(), "FORTE_COPY_FAIL|||%s|||%s",
-                                            from_path.c_str(), to_path.c_str());
+                              from_path.c_str(), to_path.c_str());
     }
 
     copyHelper(from_path, to_path, st, inode_map, size_copied, progress_callback, callback_data);
@@ -970,7 +936,7 @@ void FileSystem::copyHelper(const FString& from_path,
                 if (g_shutdown)
                 {
                     throw EFileSystemCopy("FORTE_COPY_FAIL_SHUTDOWN|||" + 
-                                                        from_path + "|||" + to_path);
+                                          from_path + "|||" + to_path);
                 }
             }
 

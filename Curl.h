@@ -62,6 +62,9 @@ namespace Forte
 
         FString mBuf;
     protected:
+        //TODO: pull this from the application context
+        FileSystem mFileSystem;
+
         CURL *mHandle;
         static bool sDidInit;
         char mErrorBuffer[CURL_ERROR_SIZE + 1];

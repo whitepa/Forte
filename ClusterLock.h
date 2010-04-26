@@ -85,11 +85,8 @@ namespace Forte
         static const char *VALID_LOCK_CHARS;
 
     protected:
-        FString mName;
-        AutoFD mFD;
-        std::auto_ptr<FileSystem::AdvisoryLock> mLock;
-        Timer mTimer;
-        Mutex *mMutex;
+        //TODO: Pull this from the application context
+        FileSystem mFileSystem;
 
         FString mName;
         AutoFD mFD;

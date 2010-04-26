@@ -23,6 +23,8 @@ namespace Forte
         timer_t TimerID();
     
     protected:
+        //TODO: pull this from the application context
+        FileSystem mFileSystem;
         timer_t mTimer;
         bool mValidTimer;
     };

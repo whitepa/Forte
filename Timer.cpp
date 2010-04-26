@@ -56,12 +56,12 @@ void Timer::Init(sigevent_t& se)
             {
                 err = errno;
                 throw ETimer("LOCK_TIMER_FAIL|||" +
-                             FileSystem::get()->strerror(err));
+                             mFileSystem.StrError(err));
             }
         }
         err = errno;
 
-        throw ETimer(FileSystem::get()->strerror(err));
+        throw ETimer(mFileSystem.StrError(err));
     }
     mValidTimer = true;
     //hlog(HLOG_DEBUG4, "Timer Create %u", mTimer);
