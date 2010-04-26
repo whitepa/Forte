@@ -60,7 +60,8 @@ void ClusterLock::init()
     mMutex = NULL;
 
     // create lock path
-    FileSystem::get()->mkdir(LOCK_PATH, 0777, true);
+    //TODO: get this from the application context
+    mFileSystem.MakeDir(LOCK_PATH, 0777, true);
 
     {
         AutoUnlockMutex lock(sMutex);
@@ -148,11 +149,11 @@ void ClusterLock::lock(const FString& name, unsigned timeout, const FString& err
             err = errno;
 
             hlog(HLOG_DEBUG, "could not open lock file: %s", 
-                 FileSystem::get()->strerror(err).c_str());
+                 mFileSystem.StrError(err).c_str());
 
             throw EClusterLockFile(
                 errorString.empty() ? "LOCK_FAIL|||" + filename 
-                + "|||" + FileSystem::get()->strerror(err) : 
+                + "|||" + mFileSystem.StrError(err) : 
                 errorString);
         }
 
@@ -236,3 +237,56 @@ void ClusterLock::unlock()
     }
 }
 
+
+
+//////////////// Advisory Locking ////////////////
+
+
+ClusterLock::AdvisoryLock::AdvisoryLock(int fd, off64_t start, off64_t len, short whence)
+{
+    m_fd = fd;
+    m_lock.l_whence = whence;
+    m_lock.l_start = start;
+    m_lock.l_len = len;
+}
+
+/// getLock gets the first lock that blocks the lock description
+///
+ClusterLock::AdvisoryLock ClusterLock::AdvisoryLock::getLock(bool exclusive)
+{
+    AdvisoryLock lock(*this);
+    if (exclusive)
+        lock.m_lock.l_type = F_WRLCK;
+    else
+        lock.m_lock.l_type = F_RDLCK;
+    fcntl(m_fd, F_GETLK, &lock);
+    return lock;
+}
+
+/// sharedLock will return true on success, false if the lock failed
+///
+bool ClusterLock::AdvisoryLock::sharedLock(bool wait)
+{
+    m_lock.l_type = F_RDLCK;
+    if (fcntl(m_fd, wait ? F_SETLKW : F_SETLK, &m_lock) == -1)
+        return false;
+    return true;
+}
+
+/// exclusiveLock will return true on success, false if the lock failed
+///
+bool ClusterLock::AdvisoryLock::exclusiveLock(bool wait)
+{
+    m_lock.l_type = F_WRLCK;
+    if (fcntl(m_fd, wait ? F_SETLKW : F_SETLK, &m_lock) == -1)
+        return false;
+    return true;
+}
+
+/// unlock will remove the current lock
+///
+void ClusterLock::AdvisoryLock::unlock(void)
+{
+    m_lock.l_type = F_UNLCK;
+    fcntl(m_fd, F_SETLK, &m_lock);
+}

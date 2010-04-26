@@ -5,6 +5,7 @@
 #include "Types.h"
 #include "Object.h"
 #include <curl/curl.h>
+#include "FileSystem.h"
 
 namespace Forte
 {

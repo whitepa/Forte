@@ -33,15 +33,8 @@ namespace Forte
     class FileSystem : public Object
     {
     public:
-        // helper classes
-        class AdvisoryLock
-        {
-        public:
-            AdvisoryLock(int fd, off64_t start, off64_t len, short whence = SEEK_SET);
-        
-            /// getLock returns a lock description equivalent to the lock
-            /// currently blocking us.
-            AdvisoryLock getLock(bool exclusive = false);
+        FileSystem();
+        virtual ~FileSystem();
 
             /// sharedLock will return true on success, false if the lock failed
             ///
@@ -87,62 +80,79 @@ namespace Forte
         typedef void (*progress_callback_t)(uint64_t, void*);
 
         // interface
-        virtual FString getcwd();
-        virtual void touch(const FString& file);
-        virtual bool file_exists(const FString& filename);
-        virtual int stat(const FString& path, struct stat *st);
-        virtual bool is_dir(const FString& path);
-        virtual int lstat(const FString& path, struct stat *st);
-        virtual int statat(int dir_fd, const FString& path, struct stat *st);
-        virtual int lstatat(int dir_fd, const FString& path, struct stat *st);
-        virtual int fstatat(int dir_fd, const FString& path, struct stat *st, int flags = 0);
-        virtual void unlink(const FString& path, bool unlink_children = false,
+        virtual FString GetCWD();
+        virtual void Touch(const FString& file);
+        virtual bool FileExists(const FString& filename);
+        virtual int Stat(const FString& path, struct stat *st);
+        virtual bool IsDir(const FString& path);
+        virtual int LStat(const FString& path, struct stat *st);
+        virtual int StatAt(int dir_fd, const FString& path, struct stat *st);
+        virtual int LStatAt(int dir_fd, const FString& path, struct stat *st);
+
+        virtual int FStatAt(
+            int dir_fd, 
+            const FString& path, 
+            struct stat *st, 
+            int flags = 0);
+
+        /**
+         * \ref unlinkHelper
+         **/
+        virtual void Unlink(const FString& path, bool unlink_children = false,
                             progress_callback_t progress_callback = NULL,
-                            void *callback_data = NULL); // see unlink_helper() below
-        virtual void unlinkat(int dir_fd, const FString& path);
-        virtual void rename(const FString& from, const FString& to);
-        virtual void renameat(int dir_from_fd, const FString& from,
+                            void *callback_data = NULL);
+
+        virtual void UnlinkAt(int dir_fd, const FString& path);
+        virtual void Rename(const FString& from, const FString& to);
+        virtual void RenameAt(int dir_from_fd, const FString& from,
                               int dir_to_fd, const FString& to);
-        virtual void mkdir(const FString& path, mode_t mode = 0777, bool make_parents = false);
-        virtual void mkdirat(int dir_fd, const FString& path, mode_t mode = 0777);
-        inline void mkdir_all(const FString& path, mode_t mode = 0777) { mkdir(path, mode, true); }
-        virtual void link(const FString& from, const FString& to);
-        virtual void linkat(int dir_from_fd, const FString& from, int dir_to_fd, const FString& to);
-        virtual void symlink(const FString& from, const FString& to);
-        virtual void symlinkat(const FString& from, int dir_to_fd, const FString& to);
-        virtual FString readlink(const FString& path);
-        virtual FString resolve_symlink(const FString& path);
-        virtual FString fully_resolve_symlink(const FString& path);
-        virtual FString make_rel_path(const FString& base, const FString& path);
-        virtual FString resolve_rel_path(const FString& base, const FString& path);
-        virtual void file_copy(const FString& from, const FString& to, mode_t mode = 0777);
-        virtual FString file_get_contents(const FString& filename);
-        virtual void file_put_contents(const FString& filename, const FString& data);
+        virtual void MakeDir(const FString& path, mode_t mode = 0777, bool make_parents = false);
+        virtual void MakeDirAt(int dir_fd, const FString& path, mode_t mode = 0777);
+
+        inline void MakeFullPath(const FString& path, mode_t mode = 0777) 
+        { 
+            MakeDir(path, mode, true); 
+        }
+
+        virtual void Link(const FString& from, const FString& to);
+        virtual void LinkAt(int dir_from_fd, const FString& from, 
+                            int dir_to_fd, const FString& to);
+
+        virtual void SymLink(const FString& from, const FString& to);
+        virtual void SymLinkAt(const FString& from, int dir_to_fd, const FString& to);
+        virtual FString ReadLink(const FString& path);
+        virtual FString ResolveSymLink(const FString& path);
+        virtual FString FullyResolveSymLink(const FString& path);
+
+        virtual FString MakeRelativePath(const FString& base, 
+                                         const FString& path);
+        virtual FString ResolveRelativePath(const FString& base, 
+                                            const FString& path);
+
+        virtual void FileCopy(const FString& from, 
+                               const FString& to, 
+                               mode_t mode = 0777);
+
+        virtual FString FileGetContents(const FString& filename);
+        virtual void FilePutContents(const FString& filename, 
+                                     const FString& data);
 
         /// deep_copy copies a directory tree from 'source' to 'dest'.
-        virtual void deep_copy(const FString& source, const FString& dest, 
-                               progress_callback_t progress_callback = NULL,
-                               void *callback_data = NULL);
-        virtual void deep_copy_helper(const FString& source, const FString& dest, 
-                                      const FString& dir, 
-                                      InodeMap &inode_map, uint64_t &size_copied,
-                                      progress_callback_t progress_callback = NULL,
-                                      void *callback_data = NULL);
-        virtual void copy(const FString& from_path, const FString& to_path,
+        virtual void DeepCopy(const FString& source, const FString& dest, 
+                              progress_callback_t progress_callback = NULL,
+                              void *callback_data = NULL);
+
+
+        virtual void Copy(const FString& from_path, const FString& to_path,
                           progress_callback_t progress_callback = NULL,
                           void *callback_data = NULL);
-        virtual void copy_helper(const FString& from_path, const FString& to_path, 
-                                 const struct stat& st,
-                                 InodeMap &inode_map/*IN-OUT*/, uint64_t &size_copied/*IN-OUT*/,
-                                 progress_callback_t progress_callback = NULL,
-                                 void *callback_data = NULL);
+
 
         // error messages
-        virtual FString strerror(int err /*errno*/) const;
+        virtual FString StrError(int err /*errno*/) const;
 
     protected:
         // helpers
-        virtual void unlink_helper(const FString& path);  // unlink just one path (no recursion)
 
         // ctor/dtor/singleton
         FileSystem();
@@ -151,20 +161,20 @@ namespace Forte
         static Mutex sMutex;
     };
 
-// inline funcs for legacy code support
-    inline bool file_exists(const FString& filename)
-    {
-        return FileSystem::get()->file_exists(filename);
-    }
+        virtual void deepCopyHelper(
+            const FString& source, 
+            const FString& dest, 
+            const FString& dir, 
+            InodeMap &inode_map, 
+            uint64_t &size_copied,
+            progress_callback_t progress_callback = NULL,
+            void *callback_data = NULL);
 
-    inline FString file_get_contents(const FString& filename)
-    {
-        return FileSystem::get()->file_get_contents(filename);
-    }
 
-    inline void file_put_contents(const FString& filename, const FString& data)
-    {
-        FileSystem::get()->file_put_contents(filename, data);
-    }
+        /**
+         * unlink just one path (no recursion)
+         **/
+        virtual void unlinkHelper(const FString& path);  
+    };
 };
 #endif
