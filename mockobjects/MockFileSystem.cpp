@@ -2,28 +2,9 @@
 
 using namespace Forte;
 
-FileSystem * MockFileSystem::s_real_fs = NULL;
-MockFileSystem * MockFileSystem::s_mock_fs = NULL;
-
-void MockFileSystem::SetupSingleton()
+void MockFileSystem::StatFS(const FString& path, struct statfs *st)
 {
-    get(); // make sure we create a real singleton first
-    CAutoUnlockMutex lock(FileSystem::sMutex);
-    if (s_real_fs == NULL) // must be a real FS in the singleton
-        s_real_fs = FileSystem::sSingleton;
-    if (s_mock_fs == NULL)
-        s_mock_fs = new MockFileSystem();
-    FileSystem::sSingleton = s_mock_fs;
-}
-
-void MockFileSystem::RealSingleton()
-{
-    get(); // make sure we create a real singleton first
-    CAutoUnlockMutex lock(FileSystem::sMutex);
-    if (s_real_fs == NULL) // must be a real FS in the singleton
-        s_real_fs = FileSystem::sSingleton;
-    else
-        FileSystem::sSingleton = s_real_fs;
+    //TODO: make this settable and gettable
 }
 
 

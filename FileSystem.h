@@ -7,6 +7,7 @@
 #include "AutoFD.h"
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/statfs.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <dirent.h>
@@ -41,6 +42,9 @@ namespace Forte
         virtual FString GetCWD();
         virtual void Touch(const FString& file);
         virtual bool FileExists(const FString& filename);
+
+        virtual void StatFS(const FString& path, struct statfs *st);
+
         virtual int Stat(const FString& path, struct stat *st);
         virtual bool IsDir(const FString& path);
         virtual int LStat(const FString& path, struct stat *st);

@@ -18,7 +18,7 @@ LIBS = \
 	-L$(TARGETDIR) \
 	$(FORTE_LIBS) \
 
-LIB=$(TARGETDIR)/libfortemockobjects.a
+LIB=$(TARGETDIR)/libfortemock.a
 
 SRCS = \
 	MockCurl.cpp \

@@ -8,16 +8,11 @@ namespace Forte
     class MockFileSystem : public FileSystem
     {
     public:
-        static void SetupSingleton();
-        static void RealSingleton();
-    public:
-        // mock stuff:
-        //mocked up function
-        //helper functions
-        //helper data
+        void StatFS(const FString& path, struct statfs *st);
 
         FString file_get_contents(const FString& filename);
-        void file_put_contents(const FString& filename, const FString& data, bool append=false);
+        void file_put_contents(const FString& filename, 
+                               const FString& data, bool append=false);
         void clearFileMap();
         StrStrMap* getFileMap();
 
@@ -40,27 +35,9 @@ namespace Forte
         map<FString, bool> m_fileExistsResultMap;
         void setFileExistsResult(const FString& path, bool result);
 
-        /*
-          FString getcwd();
-          void touch(const FString& file);
-          int lstat(const FString& path, struct stat *st);
-          void unlink(const FString& path, bool unlink_children = false);
-          void rename(const FString& from, const FString& to);
-          inline void mkdir_all(const FString& path, mode_t mode = 0777) { mkdir(path, mode, true); }
-          void link(const FString& from, const FString& to);
-          void symlink(const FString& from, const FString& to);
-          FString readlink(const FString& path);
-          FString resolve_symlink(const FString& path);
-          FString fully_resolve_symlink(const FString& path);
-          FString make_rel_path(const FString& base, const FString& path);
-          FString resolve_rel_path(const FString& base, const FString& path);
-        */
+
     protected:
-
         StrStrMap m_files;
-        static FileSystem *s_real_fs;
-        static MockFileSystem *s_mock_fs;
-
     };
 }
 

@@ -102,6 +102,22 @@ bool FileSystem::IsDir(const FString& path)
     }
 }
 
+void FileSystem::StatFS(const FString& path, struct statfs *st)
+{
+    hlog(HLOG_DEBUG4, "FileSystem::%s(%s)", __FUNCTION__, path.c_str());
+    //TODO: check return codes, return appropriate values
+    int ret = ::statfs(path.c_str(), st);
+    switch (ret)
+    {
+    case 0:
+        return;
+        break;
+
+    default:
+        //todo: throw exceptions based on error code given
+        throw EFileSystem("StatFS");
+    }
+}
 
 int FileSystem::Stat(const FString& path, struct stat *st)
 {

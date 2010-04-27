@@ -1,29 +1,6 @@
 #include "MockProcRunner.h"
 
-ProcRunner * MockProcRunner::s_real_pr = NULL;
-MockProcRunner * MockProcRunner::s_mock_pr = NULL;
-
-void MockProcRunner::SetupSingleton()
-{
-    get(); // make sure we create a real singleton first
-    CAutoUnlockMutex lock(ProcRunner::sMutex);
-    if (s_real_pr == NULL) // must be a real FS in the singleton
-        s_real_pr = ProcRunner::sSingleton;
-    if (s_mock_pr == NULL)
-        s_mock_pr = new MockProcRunner();
-    ProcRunner::sSingleton = s_mock_pr;
-}
-
-void MockProcRunner::RealSingleton()
-{
-    get(); // make sure we create a real singleton first
-    CAutoUnlockMutex lock(ProcRunner::sMutex);
-    if (s_real_pr == NULL) // must be a real FS in the singleton
-        s_real_pr = ProcRunner::sSingleton;
-    else
-        ProcRunner::sSingleton = s_real_pr;
-}
-
+using namespace Forte;
 
 int MockProcRunner::run(const FString& command, 
                         const FString& cwd,
