@@ -106,14 +106,52 @@ void FileSystem::StatFS(const FString& path, struct statfs *st)
 {
     hlog(HLOG_DEBUG4, "FileSystem::%s(%s)", __FUNCTION__, path.c_str());
     //TODO: check return codes, return appropriate values
-    int ret = ::statfs(path.c_str(), st);
-    switch (ret)
+
+    if (::statfs(path.c_str(), st) == 0)
     {
-    case 0:
         return;
+    }
+
+    hlog(HLOG_DEBUG, "statfs returned error code errno %i, %s", 
+         errno, StrError(errno).c_str());
+
+
+    switch (errno)
+    {
+
+    case ENOENT:
+        hlog(HLOG_DEBUG, "throwing ENoEnt");
+        throw EFileSystemNoEnt("StatFS");
         break;
 
+    case EFAULT:
+        hlog(HLOG_DEBUG, "throwing EFault");
+        throw EFileSystemFault("StatFS");
+        break;
+
+
+    case ENOTDIR:
+        hlog(HLOG_DEBUG, "throwing ENotDir");
+        throw EFileSystemNotDir("StatFS");
+        break;
+
+
+/* possible errors
+       EACCES
+       EBADF
+       EFAULT
+       EINTR
+       EIO
+       ELOOP
+       ENAMETOOLONG
+       ENOENT
+       ENOMEM
+       ENOSYS
+       ENOTDIR
+       EOVERFLOW
+*/
     default:
+        hlog(HLOG_DEBUG, "throwing general exception");
         //todo: throw exceptions based on error code given
         throw EFileSystem("StatFS");
     }

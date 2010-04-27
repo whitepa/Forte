@@ -17,6 +17,13 @@ namespace Forte
 {
     // typed exceptions
     EXCEPTION_SUBCLASS(Exception, EFileSystem);
+
+    // general system call exceptions (move to Exception.h?)
+    //EXCEPTION_SUBCLASS(Exception, ENotDir);
+    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemNotDir);
+    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemFault);
+    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemNoEnt);
+
     EXCEPTION_SUBCLASS(EFileSystem, EFileSystemCopy);
     EXCEPTION_SUBCLASS(EFileSystem, EFileSystemLink);
     EXCEPTION_SUBCLASS(EFileSystem, EFileSystemMakeDir);
