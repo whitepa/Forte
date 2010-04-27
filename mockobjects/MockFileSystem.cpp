@@ -5,6 +5,13 @@ using namespace Forte;
 void MockFileSystem::StatFS(const FString& path, struct statfs *st)
 {
     //TODO: make this settable and gettable
+    if (st == NULL)
+    {
+        return;
+    }
+
+    st->f_blocks = 100;
+    st->f_bfree = 50;
 }
 
 
