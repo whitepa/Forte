@@ -39,8 +39,8 @@ void ProcFileSystem::UptimeRead(Uptime& uptime)
         hlog(HLOG_DEBUG4, "found %s -> %s", 
              secondsUp.c_str(), secondsIdle.c_str());
 
-        uptime.secondsUp = secondsUp.AsDouble();
-        uptime.secondsIdle = secondsIdle.AsDouble();
+        uptime.mSecondsUp = secondsUp.AsDouble();
+        uptime.mSecondsIdle = secondsIdle.AsDouble();
     }
     else
     {

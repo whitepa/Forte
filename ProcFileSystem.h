@@ -31,8 +31,8 @@ namespace Forte
         class Uptime
         {
         public:
-            double secondsUp;     ///< Seconds since last reboot
-            double secondsIdle;   ///< Amount of time spent idle
+            double mSecondsUp;     ///< Seconds since last reboot
+            double mSecondsIdle;   ///< Amount of time spent idle
         };
 
         /**

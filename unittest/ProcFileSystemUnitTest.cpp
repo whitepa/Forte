@@ -31,8 +31,8 @@ BOOST_AUTO_TEST_CASE(UptimeMockContents)
     ProcFileSystem::Uptime uptime;
     procFileSystem.UptimeRead(uptime);
     
-    BOOST_CHECK_EQUAL(uptime.secondsUp, 30782.38);
-    BOOST_CHECK_EQUAL(uptime.secondsIdle, 29768.69);
+    BOOST_CHECK_EQUAL(uptime.mSecondsUp, 30782.38);
+    BOOST_CHECK_EQUAL(uptime.mSecondsIdle, 29768.69);
 }
 
 BOOST_AUTO_TEST_CASE(UptimeVerifyRealOutput)
@@ -50,10 +50,10 @@ BOOST_AUTO_TEST_CASE(UptimeVerifyRealOutput)
     ProcFileSystem::Uptime uptime;
     procFileSystem.UptimeRead(uptime);
     
-    BOOST_CHECK_GT(uptime.secondsUp, 100); // just want to make sure
-                                           // we got a number
+    BOOST_CHECK_GT(uptime.mSecondsUp, 100); // just want to make sure
+                                            // we got a number
 
-    BOOST_CHECK_GT(uptime.secondsIdle, 100); //same
+    BOOST_CHECK_GT(uptime.mSecondsIdle, 100); //same
 }
 
 
