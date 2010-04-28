@@ -7,7 +7,7 @@
 using namespace boost;
 using namespace Forte;
 
-ProcFileSystem::ProcFileSystem(Context& ctxt)
+ProcFileSystem::ProcFileSystem(const Context& ctxt)
     : mContext(ctxt)
 {
 }

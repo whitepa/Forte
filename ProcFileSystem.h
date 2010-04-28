@@ -21,7 +21,7 @@ namespace Forte
     class ProcFileSystem : public Object
     {
     public:
-        ProcFileSystem(Context& ctxt);
+        ProcFileSystem(const Context& ctxt);
         virtual ~ProcFileSystem();
 
         /**
@@ -42,7 +42,7 @@ namespace Forte
 
 
     protected:
-        Context &mContext;
+        const Context &mContext;
     };
 
     typedef boost::shared_ptr<ProcFileSystem> ProcFileSystemPtr;

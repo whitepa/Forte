@@ -10,7 +10,7 @@ LogManager logManager;
 
 BOOST_AUTO_TEST_CASE(StatFS)
 {
-    hlog(HLOG_INFO, "%s()", __FUNCTION__);
+    hlog(HLOG_INFO, "StatFS");
     FileSystem f;
     struct statfs st;
     f.StatFS("/", &st);
@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(StatFS)
 
 BOOST_AUTO_TEST_CASE(StatFSPathDoesNotExist)
 {
-    hlog(HLOG_INFO, "%s()", __FUNCTION__);
+    hlog(HLOG_INFO, "StatFSPathDoesNotExist");
     FileSystem f;
     struct statfs st;
     BOOST_CHECK_THROW(f.StatFS("pathdoesnotexist", &st), EFileSystemNoEnt);
