@@ -5,6 +5,7 @@
 #include <vector>
 #include <set>
 #include <math.h>
+#include <stdlib.h>
 #include <arpa/inet.h>
 
 #define NOPOS	std::string::npos
@@ -57,21 +58,27 @@ namespace Forte
         inline int CompareNoCase(const char *str) const {
             return strcasecmp(c_str(), str);
         }
-        inline unsigned int asUnsignedInteger(void) const { return strtoul(c_str(), NULL, 0); }
-        inline int asInteger(void) const { return strtol(c_str(), NULL, 0); }
-        inline unsigned long long asUInt64(void) const { return strtoull(c_str(), NULL, 0); }
-        inline unsigned long asUInt32(void) const { return strtoul(c_str(), NULL, 0); }
-        inline long long asInt64(void) const { return strtoll(c_str(), NULL, 0); }
-        inline long asInt32(void) const { return strtol(c_str(), NULL, 0); }
 
-        inline bool isNumeric(void) const
+        inline double AsDouble(void) const {
+            //TODO: set errno to 0 before calling, check errno after the call
+            return strtod(c_str(), NULL); 
+        }
+
+        inline unsigned int AsUnsignedInteger(void) const { return strtoul(c_str(), NULL, 0); }
+        inline int AsInteger(void) const { return strtol(c_str(), NULL, 0); }
+        inline unsigned long long AsUInt64(void) const { return strtoull(c_str(), NULL, 0); }
+        inline unsigned long AsUInt32(void) const { return strtoul(c_str(), NULL, 0); }
+        inline long long AsInt64(void) const { return strtoll(c_str(), NULL, 0); }
+        inline long AsInt32(void) const { return strtol(c_str(), NULL, 0); }
+
+        inline bool IsNumeric(void) const
             {
                 if (empty()) return false;
                 char *c; 
                 strtod(c_str(), &c); 
                 return (*c == '\0'); 
             }
-        inline bool isUnsignedNumeric(void) const
+        inline bool IsUnsignedNumeric(void) const
             {
                 if (empty()) return false;
                 char *c; 
@@ -81,25 +88,25 @@ namespace Forte
         /// Split a multi-line string into single line components.  Line endings are
         /// automatically detected.  If trim is true, external whitespace will be trimmed
         /// from each line.  Line endings may be CR, LF, or CRLF, and must all be the same.
-        int lineSplit(std::vector<FString> &lines, bool trim = false) const;
+        int LineSplit(std::vector<FString> &lines, bool trim = false) const;
 
         /// Split a delimited string into its components.  Delimiters will not appear in
         /// the output.  If trim is true, external whitespace will be trimmed 
         /// from each component.
-        int explode(const char *delim, std::vector<FString> &components, bool trim=false, const char* strip_chars = " \t\r\n") const;
-        int explode(const char *delim, std::vector<std::string> &components, bool trim=false, const char* strip_chars = " \t\r\n") const;
+        int Explode(const char *delim, std::vector<FString> &components, bool trim=false, const char* strip_chars = " \t\r\n") const;
+        int Explode(const char *delim, std::vector<std::string> &components, bool trim=false, const char* strip_chars = " \t\r\n") const;
 
         /// Combine multiple components into a single string.  Glue will be used
         /// between each component.
-        FString& implode(const char *glue, const std::vector<FString> &components);
-        FString& implode(const char *glue, const std::vector<std::string> &components);
-        FString& implode(const char *glue, const std::set<FString> &components);
+        FString& Implode(const char *glue, const std::vector<FString> &components);
+        FString& Implode(const char *glue, const std::vector<std::string> &components);
+        FString& Implode(const char *glue, const std::set<FString> &components);
 
-        /// Scale Computing's split() and join(), similar to the above implode() and explode()
+        /// Scale Computing's split() and Join(), similar to the above Implode() and Explode()
         std::vector<FString> split(const char *separator, size_t max_parts = 0) const;
-        static FString join(const std::vector<FString>& array, const char *separator);
-        static FString join(const std::vector<std::string>& array, const char *separator);
-        static FString join(const std::vector<const char*>& array, const char *separator);
+        static FString Join(const std::vector<FString>& array, const char *separator);
+        static FString Join(const std::vector<std::string>& array, const char *separator);
+        static FString Join(const std::vector<const char*>& array, const char *separator);
 
         // file I/O
         static FString & LoadFile(const char *filename, unsigned int max_len, FString &out);

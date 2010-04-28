@@ -587,5 +587,5 @@ FString LogManager::LogMaskStr(int mask)
             levels.push_back(levelstr[i]);
         }
     }
-    return FString::join(levels, "|");
+    return FString::Join(levels, "|");
 }

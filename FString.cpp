@@ -188,7 +188,7 @@ FString& FString::MakeLower()
     return *this;
 }
 
-int FString::lineSplit(std::vector<FString> &lines, bool trim) const
+int FString::LineSplit(std::vector<FString> &lines, bool trim) const
 {
     size_t delim=0, len = length();
     lines.clear();
@@ -203,14 +203,14 @@ int FString::lineSplit(std::vector<FString> &lines, bool trim) const
         if (str[delim] == '\r' &&
             delim < len - 1 && // might be another character
             str[delim+1] == '\n')
-            return explode("\r\n", lines, trim);
+            return Explode("\r\n", lines, trim);
         else if (str[delim] == '\r')
-            return explode("\r", lines, trim);
+            return Explode("\r", lines, trim);
         else
-            return explode("\n", lines, trim);
+            return Explode("\n", lines, trim);
     }
 }
-int FString::explode(const char *delim, std::vector<std::string> &components, bool trim, const char* strip_chars) const
+int FString::Explode(const char *delim, std::vector<std::string> &components, bool trim, const char* strip_chars) const
 {
     size_t cur=0,next=0, dlen = strlen(delim);
     components.clear();
@@ -229,7 +229,7 @@ int FString::explode(const char *delim, std::vector<std::string> &components, bo
     return components.size();
 }
 
-int FString::explode(const char *delim, std::vector<FString> &components, bool trim, const char* strip_chars) const
+int FString::Explode(const char *delim, std::vector<FString> &components, bool trim, const char* strip_chars) const
 {
     size_t cur=0,next=0, dlen = strlen(delim);
     components.clear();
@@ -248,7 +248,7 @@ int FString::explode(const char *delim, std::vector<FString> &components, bool t
     return components.size();
 }
 
-FString& FString::implode(const char *glue, const std::vector<FString> &components)
+FString& FString::Implode(const char *glue, const std::vector<FString> &components)
 {
     clear();
     std::vector<FString>::const_iterator i;
@@ -262,7 +262,7 @@ FString& FString::implode(const char *glue, const std::vector<FString> &componen
     return *this;
 }
 
-FString& FString::implode(const char *glue, const std::vector<std::string> &components)
+FString& FString::Implode(const char *glue, const std::vector<std::string> &components)
 {
     clear();
     std::vector<std::string>::const_iterator i;
@@ -277,7 +277,7 @@ FString& FString::implode(const char *glue, const std::vector<std::string> &comp
 }
 
 
-FString& FString::implode(const char *glue, const std::set<FString> &components)
+FString& FString::Implode(const char *glue, const std::set<FString> &components)
 {
     clear();
     std::set<FString>::const_iterator i;
@@ -311,7 +311,7 @@ std::vector<FString> FString::split(const char *separator, size_t max_parts) con
 }
 
 
-FString FString::join(const std::vector<FString>& array, const char *separator)
+FString FString::Join(const std::vector<FString>& array, const char *separator)
 {
     std::vector<FString>::const_iterator vi;
     FString str;
@@ -326,7 +326,7 @@ FString FString::join(const std::vector<FString>& array, const char *separator)
 }
 
 
-FString FString::join(const std::vector<std::string>& array, const char *separator)
+FString FString::Join(const std::vector<std::string>& array, const char *separator)
 {
     std::vector<std::string>::const_iterator vi;
     FString str;
@@ -341,7 +341,7 @@ FString FString::join(const std::vector<std::string>& array, const char *separat
 }
 
 
-FString FString::join(const std::vector<const char*>& array, const char *separator)
+FString FString::Join(const std::vector<const char*>& array, const char *separator)
 {
     std::vector<const char*>::const_iterator vi;
     FString str;

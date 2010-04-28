@@ -571,7 +571,7 @@ int ProcRunner::rsh(const FString& ip, const FString& command, FString *output, 
     pos = tmpout.find_last_of('\n');
     if (output != NULL) *output = tmpout.Left((pos == NOPOS) ? 0 : pos);
     if (err != 0) return err;
-    err = tmpout.Mid(pos + 1).asInteger();
+    err = tmpout.Mid(pos + 1).AsInteger();
     return err;
 }
 

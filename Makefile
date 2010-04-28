@@ -54,6 +54,7 @@ SRCS =	\
 	OnDemandDispatcher.cpp \
 	OpenSSLInitializer.cpp \
 	PidFile.cpp \
+	ProcFileSystem.cpp \
 	ProcRunner.cpp \
 	Random.cpp \
 	ReceiverThread.cpp \

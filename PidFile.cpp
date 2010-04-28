@@ -10,7 +10,7 @@ PidFile::PidFile(const char *path) :
     try
     {
         FString::LoadFile(path, 0x100, pidstr);
-        int oldpid = pidstr.asInteger();
+        int oldpid = pidstr.AsInteger();
         if (oldpid != getpid())
         {
             FString procfile(FStringFC(), "/proc/%u/cmdline", oldpid);

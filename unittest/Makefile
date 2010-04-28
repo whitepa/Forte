@@ -15,11 +15,13 @@ CCARGS += -Wall -ggdb
 INCLUDE = \
 	-I. \
 	-I.. \
+	-I../mockobjects \
 	$(BOOST_INCLUDE) 
 
 LIBS = \
 	-L$(TARGETDIR) \
 	$(FORTE_LIBS) \
+	$(FORTE_MOCK_LIBS) \
 	$(BOOST_LIBS) \
 	$(BOOST_FS_LIB) \
 	$(BOOST_SYSTEM_LIB) \

@@ -111,7 +111,7 @@ Thread::~Thread()
     // tell the thread to shut down
     shutdown();
 
-    // join the pthread
+    // Join the pthread
     // (this will block until the thread exits)
     pthread_join(mThread, NULL);
 }

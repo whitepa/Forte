@@ -10,9 +10,11 @@ namespace Forte
     public:
         void StatFS(const FString& path, struct statfs *st);
 
-        FString file_get_contents(const FString& filename);
-        void file_put_contents(const FString& filename, 
-                               const FString& data, bool append=false);
+        FString FileGetContents(const FString& filename);
+        void FilePutContents(const FString& filename, 
+                             const FString& data, 
+                             bool append=false);
+
         void clearFileMap();
         StrStrMap* getFileMap();
 

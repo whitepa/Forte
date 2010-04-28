@@ -53,7 +53,7 @@ bool DbPgConnection::Connect(void)
         if (parts.size() > 1)
         {
             params.push_back(stmp);
-            stmp.Format("port=%u", parts[1].asUnsignedInteger());
+            stmp.Format("port=%u", parts[1].AsUnsignedInteger());
         }
     }
 
@@ -69,7 +69,7 @@ bool DbPgConnection::Connect(void)
     params.push_back(stmp);
 
     // build the conn_info string
-    conn_info = FString::join(params, "\n");
+    conn_info = FString::Join(params, "\n");
 
     // connect to the server
     do

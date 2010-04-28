@@ -65,7 +65,7 @@ void Exception::pretty_trace_log(int log_level)
         // get /proc/<pid>/maps
         cmd.Format("cat /proc/%u/maps | awk '{print $1\" \"$6}'", getpid());
         output = ProcRunner::get()->read_pipe(cmd, &rc);
-        output.lineSplit(mapping, true);
+        output.LineSplit(mapping, true);
 
         if (rc != 0)
         {
@@ -137,7 +137,7 @@ FString Exception::pretty_frame(const std::vector<FString>& mapping, void *addre
     }
 
     // parse output
-    output.Trim().lineSplit(lines, true);
+    output.Trim().LineSplit(lines, true);
 
     if (lines.size() < 2)
     {

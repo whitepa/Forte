@@ -15,14 +15,14 @@ void MockFileSystem::StatFS(const FString& path, struct statfs *st)
 }
 
 
-FString MockFileSystem::file_get_contents(const FString& filename)
+FString MockFileSystem::FileGetContents(const FString& filename)
 {
     return m_files[filename];
 }
 
-
-void MockFileSystem::file_put_contents(const FString& filename, const FString& data,
-				       bool append)
+void MockFileSystem::FilePutContents(const FString& filename, 
+                                     const FString& data,
+                                     bool append)
 {
     m_files[filename] = data;
 }
