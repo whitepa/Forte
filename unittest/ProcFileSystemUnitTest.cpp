@@ -14,7 +14,7 @@ using namespace Forte;
 
 LogManager logManager;
 
-BOOST_AUTO_TEST_CASE(UptimeHappyPath)
+BOOST_AUTO_TEST_CASE(UptimeMockContents)
 {
     hlog(HLOG_INFO, "Uptime");
     Context c;
@@ -33,6 +33,27 @@ BOOST_AUTO_TEST_CASE(UptimeHappyPath)
     
     BOOST_CHECK_EQUAL(uptime.secondsUp, 30782.38);
     BOOST_CHECK_EQUAL(uptime.secondsIdle, 29768.69);
+}
+
+BOOST_AUTO_TEST_CASE(UptimeVerifyRealOutput)
+{
+    hlog(HLOG_INFO, "UptimeVerifyRealOutput");
+    Context c;
+    // setup
+    shared_ptr<FileSystem> fsptr(new FileSystem());
+    c.Set("FileSystem", fsptr);
+
+    // construct
+    ProcFileSystem procFileSystem(c);
+
+    // test uptime
+    ProcFileSystem::Uptime uptime;
+    procFileSystem.UptimeRead(uptime);
+    
+    BOOST_CHECK_GT(uptime.secondsUp, 100); // just want to make sure
+                                           // we got a number
+
+    BOOST_CHECK_GT(uptime.secondsIdle, 100); //same
 }
 
 
