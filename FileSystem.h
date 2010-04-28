@@ -146,5 +146,7 @@ namespace Forte
          **/
         virtual void unlinkHelper(const FString& path);  
     };
+
+    typedef boost::shared_ptr<FileSystem> FileSystemPtr;
 };
 #endif
