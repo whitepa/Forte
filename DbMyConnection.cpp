@@ -10,9 +10,9 @@ DbMyConnection::DbMyConnection()
 :
     DbConnection()
 {
-    mysql_init(&m_mysql);
-    m_db_type = "mysql";
-    m_db = NULL;
+    mysql_init(&mMySQL);
+    mDBType = "mysql";
+    mDB = NULL;
 }
 
 
@@ -23,14 +23,14 @@ DbMyConnection::DbMyConnection(const MySQLOptionArray& options)
     unsigned i, n = options.size();
 
     // basic init
-    mysql_init(&m_mysql);
-    m_db_type = "mysql";
-    m_db = NULL;
+    mysql_init(&mMySQL);
+    mDBType = "mysql";
+    mDB = NULL;
     
     // plus des options
     for (i=0; i<n; i++)
     {
-        mysql_options(&m_mysql, options[i].first, options[i].second);
+        mysql_options(&mMySQL, options[i].first, options[i].second);
     }
 }
 
@@ -43,9 +43,9 @@ DbMyConnection::~DbMyConnection()
 
 bool DbMyConnection::Init(MYSQL *mysql)
 {
-    m_db = mysql;
-    m_did_init = true;
-    m_reconnect = false;
+    mDB = mysql;
+    mDidInit = true;
+    mReconnect = false;
     return true;
 }
 
@@ -53,21 +53,21 @@ bool DbMyConnection::Init(MYSQL *mysql)
 bool DbMyConnection::Connect(void)
 {
     bool ret;
-    unsigned int tries = m_retries + 1;
+    unsigned int tries = mRetries + 1;
 
     do
     {
         const char *sock = NULL;
-        if (m_socket.length() > 0) sock = m_socket.c_str();
-        m_db = mysql_real_connect(&m_mysql, m_host, m_user, m_password,
-                                  m_db_name, 0, sock, 0);
-        ret = (m_db != NULL);
+        if (mSocket.length() > 0) sock = mSocket.c_str();
+        mDB = mysql_real_connect(&mMySQL, mHost, mUser, mPassword,
+                                  mDBName, 0, sock, 0);
+        ret = (mDB != NULL);
 
         if (!ret)
         {
-            m_errno = mysql_errno(&m_mysql);
+            mErrno = mysql_errno(&mMySQL);
 
-            switch (m_errno)
+            switch (mErrno)
             {
             //// soft failures, keep retrying:
             case ER_CON_COUNT_ERROR:
@@ -84,19 +84,19 @@ bool DbMyConnection::Connect(void)
             }
         }
 
-        if (!ret && tries > 0) usleep(m_query_retry_delay * 1000);
+        if (!ret && tries > 0) usleep(mQueryRetryDelay * 1000);
     }
     while (!ret && tries > 0);
 
-    if (!ret) m_error = mysql_error(&m_mysql);
+    if (!ret) mError = mysql_error(&mMySQL);
     return ret;
 }
 
 
 bool DbMyConnection::Close(void)
 {
-    if (m_db != NULL) mysql_close(m_db);
-    m_db = NULL;
+    if (mDB != NULL) mysql_close(mDB);
+    mDB = NULL;
     return true;
 }
 
@@ -104,48 +104,48 @@ bool DbMyConnection::Close(void)
 bool DbMyConnection::execute(const FString& sql)
 {
     bool ret;
-    unsigned int tries_remaining = m_retries + 1;
+    unsigned int tries_remaining = mRetries + 1;
     struct timeval tv_start, tv_end;
 
     // init
-    m_tries = 0;
-    m_errno = 0;
-    m_error.clear();
+    mTries = 0;
+    mErrno = 0;
+    mError.clear();
 
-    if (m_db == NULL && !Connect()) // try to repair the connection
+    if (mDB == NULL && !Connect()) // try to repair the connection
     {
-        m_error.assign("NULL database handle in DbMyConnection::execute()");
+        mError.assign("NULL database handle in DbMyConnection::execute()");
         return false;
     }
 
-    if (m_autocommit == false) m_queries_pending = true;
+    if (mAutoCommit == false) mQueriesPending = true;
 
     do
     {
         // run query
-        m_tries++;
+        mTries++;
         gettimeofday(&tv_start, NULL);
-        if (m_db == NULL)
+        if (mDB == NULL)
         {
-            m_error.assign("NULL database handle before query");
+            mError.assign("NULL database handle before query");
             return false;
         }
-        ret = mysql_real_query(m_db, sql, sql.length());
+        ret = mysql_real_query(mDB, sql, sql.length());
         gettimeofday(&tv_end, NULL);
         if (sDebugSql) logSql(sql, tv_end - tv_start);
 
         // check for errors
         if (ret)
         {
-            m_errno = mysql_errno(m_db);
+            mErrno = mysql_errno(mDB);
 
-            switch(m_errno)
+            switch(mErrno)
             {
             //// soft failures, keep retrying:
             case CR_SERVER_GONE_ERROR:
             case CR_SERVER_LOST:
-                if (m_queries_pending)
-                    throw DbException("connection lost during transaction", m_errno, sql);
+                if (mQueriesPending)
+                    throw DbException("connection lost during transaction", mErrno, sql);
                 // try reconnecting
                 hlog(HLOG_WARN, "MySQL connection lost, reconnecting...");
                 Connect();
@@ -161,13 +161,13 @@ bool DbMyConnection::execute(const FString& sql)
     }
     while (ret && tries_remaining > 0);
 
-    if (m_db == NULL)
+    if (mDB == NULL)
     {
-        m_error.assign("NULL database handle after query in DbMyConnection:execute()");
+        mError.assign("NULL database handle after query in DbMyConnection:execute()");
         return false;
     }
 
-    if (ret) m_error = mysql_error(m_db);
+    if (ret) mError = mysql_error(mDB);
     return !(ret);
 }
 
@@ -180,14 +180,14 @@ DbResult DbMyConnection::store(const FString& sql)
     while (result_ptr == NULL && tries--)
     {
         if (!execute(sql)) return result;
-        if ((result_ptr = mysql_store_result(m_db))!=NULL)
+        if ((result_ptr = mysql_store_result(mDB))!=NULL)
         {
             result = result_ptr;
         }
         else
         {
             hlog(HLOG_ERR, "DbMyConnection::store(): NULL result after successful query; errno=%u error=%s",
-                 mysql_errno(m_db), mysql_error(m_db));
+                 mysql_errno(mDB), mysql_error(mDB));
             // throttle back a bit
             usleep(100000); // sleep 0.1 second
         }
@@ -200,18 +200,18 @@ DbResult DbMyConnection::use(const FString& sql)
 {
     DbMyResult result;
     if (!execute(sql)) return result;
-    result = mysql_use_result(m_db);
+    result = mysql_use_result(mDB);
     return result;
 }
 
 
 bool DbMyConnection::isTemporaryError() const
 {
-    return (m_errno == ER_GET_TEMPORARY_ERRMSG ||
-            m_errno == ER_TRANS_CACHE_FULL ||
-            m_errno == ER_LOCK_DEADLOCK ||
-            m_errno == ER_LOCK_WAIT_TIMEOUT ||
-            m_errno == ER_TABLE_DEF_CHANGED);
+    return (mErrno == ER_GET_TEMPORARY_ERRMSG ||
+            mErrno == ER_TRANS_CACHE_FULL ||
+            mErrno == ER_LOCK_DEADLOCK ||
+            mErrno == ER_LOCK_WAIT_TIMEOUT ||
+            mErrno == ER_TABLE_DEF_CHANGED);
 }
 
 

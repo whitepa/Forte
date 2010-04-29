@@ -17,16 +17,16 @@ Murmur64::Murmur64()
 
 void Murmur64::Init(uint64_t seed)
 {
-    m_k = 0;
-    m_h = seed;
-    m_len = 0;
+    mK = 0;
+    mHash = seed;
+    mLen = 0;
 }
 
 
 void Murmur64::Update(const void *data, size_t size)
 {
     const char *cdata = (const char*)(data);
-    const size_t b = (m_len % 8);
+    const size_t b = (mLen % 8);
     const size_t n = (8 - b) % 8;
 
     // verify
@@ -38,7 +38,7 @@ void Murmur64::Update(const void *data, size_t size)
     {
         uint64_t x = 0;
         memcpy(&x, data, min<int>(size, 8));
-        hlog(HLOG_DEBUG4, "m_k = %016llx  [on entry]", m_k);
+        hlog(HLOG_DEBUG4, "mK = %016llx  [on entry]", mK);
         hlog(HLOG_DEBUG4, "data = %016llx", x);
     }
 #endif
@@ -54,18 +54,18 @@ void Murmur64::Update(const void *data, size_t size)
     case 2:
     case 1:
     {
-        char *ck = (char*)&m_k;
+        char *ck = (char*)&mK;
         memcpy(ck + b, cdata, n);
 #ifdef DEBUG_MURMUR
-        hlog(HLOG_DEBUG4, "m_k = %016llx  [after alignment]", m_k);
-        hlog(HLOG_DEBUG4, "k = %016llx", m_k);
+        hlog(HLOG_DEBUG4, "mK = %016llx  [after alignment]", mK);
+        hlog(HLOG_DEBUG4, "k = %016llx", mK);
 #endif
-        m_k *= c_m;
-        m_k ^= m_k >> c_r;
-        m_k *= c_m;
-        m_h ^= m_k;
-        m_h *= c_m;
-        m_k = 0;
+        mK *= c_m;
+        mK ^= mK >> c_r;
+        mK *= c_m;
+        mHash ^= mK;
+        mHash *= c_m;
+        mK = 0;
         break;
     }
     case 0:
@@ -90,8 +90,8 @@ void Murmur64::Update(const void *data, size_t size)
         k ^= k >> c_r;
         k *= c_m;
 
-        m_h ^= k;
-        m_h *= c_m;
+        mHash ^= k;
+        mHash *= c_m;
     }
 
     // do leftover bytes
@@ -106,10 +106,10 @@ void Murmur64::Update(const void *data, size_t size)
     case 3:
     case 2:
     case 1:
-        m_k = 0;
-        memcpy(&m_k, edata, leftover);
+        mK = 0;
+        memcpy(&mK, edata, leftover);
 #ifdef DEBUG_MURMUR
-        hlog(HLOG_DEBUG4, "m_k = %016llx  [leftover bytes]", m_k);
+        hlog(HLOG_DEBUG4, "mK = %016llx  [leftover bytes]", mK);
 #endif
         break;
     case 0:
@@ -118,42 +118,42 @@ void Murmur64::Update(const void *data, size_t size)
     }
 
     // record amount completed
-    m_len += size;
+    mLen += size;
 }
 
 
 void Murmur64::Final()
 {
-    uint64_t final = m_len;
+    uint64_t final = mLen;
 
     // add length data
     Update(&final, 8);
 
     // apply any remaining bytes
-    if (m_k != 0)
+    if (mK != 0)
     {
 #ifdef DEBUG_MURMUR
-        hlog(HLOG_DEBUG4, "k = %016llx", m_k);
+        hlog(HLOG_DEBUG4, "k = %016llx", mK);
 #endif
-        m_k *= c_m;
-        m_k ^= m_k >> c_r;
-        m_k *= c_m;
-        m_h ^= m_k;
-        m_h *= c_m;
-        m_k = 0;
+        mK *= c_m;
+        mK ^= mK >> c_r;
+        mK *= c_m;
+        mHash ^= mK;
+        mHash *= c_m;
+        mK = 0;
     }
 
     // perform final mixing
-    m_h ^= m_h >> c_r;
-    m_h *= c_m;
-    m_h ^= m_h >> c_r;
+    mHash ^= mHash >> c_r;
+    mHash *= c_m;
+    mHash ^= mHash >> c_r;
 }
 
 
 FString Murmur64::toStr() const
 {
     FString ret;
-    ret.Format("%016llx", (u64)m_h);
+    ret.Format("%016llx", (u64)mHash);
     return ret;
 }
 

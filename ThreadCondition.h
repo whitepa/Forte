@@ -13,9 +13,9 @@ namespace Forte
     
         inline int signal() { return pthread_cond_signal(&mCond); };
         inline int broadcast() { return pthread_cond_broadcast(&mCond); };
-        inline int wait() { return pthread_cond_wait(&mCond, &(mLock.m_pthread_mutex)); };
+        inline int wait() { return pthread_cond_wait(&mCond, &(mLock.mPThreadMutex)); };
         inline int timedwait(const struct timespec &abstime)
-            { return pthread_cond_timedwait(&mCond, &(mLock.m_pthread_mutex), &abstime); };
+            { return pthread_cond_timedwait(&mCond, &(mLock.mPThreadMutex), &abstime); };
         inline int timedwait(const int seconds)
             {
                 struct timeval tv;

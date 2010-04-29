@@ -23,54 +23,54 @@ namespace Forte
 
         template <class T>
         AnyPtr(T* x)
-            : m_a(x), m_t(&functions<T>::table)
+            : mAny(x), mTable(&functions<T>::table)
             {}
 
         AnyPtr()
-            : m_a(NULL), m_t(NULL)
+            : mAny(NULL), mTable(NULL)
             {}
 
         ~AnyPtr()
-            { if (m_a) Delete(); }
+            { if (mAny) Delete(); }
 
         template <class T>
         AnyPtr & operator=(T* x)
-            { m_a = x; m_t = &functions<T>::table; return *this; }
+            { mAny = x; mTable = &functions<T>::table; return *this; }
 
         void Delete() {
-            assert(m_a != NULL);
-            m_t->Delete(m_a);
-            m_a = NULL;
+            assert(mAny != NULL);
+            mTable->Delete(mAny);
+            mAny = NULL;
         }
         AnyPtr Clone() const {
             AnyPtr o(*this);
-            o.m_a = m_t->Clone(m_a);
+            o.mAny = mTable->Clone(mAny);
             return o;
         }
         const std::type_info& GetType() const {
-            return m_t->GetType(m_a);
+            return mTable->GetType(mAny);
         }
         template<typename ValueType>
         ValueType* PtrCast() {
             if (!(typeid(ValueType) == GetType()))
                 throw ETypeMismatch();
-            return static_cast<ValueType*>(m_a);
+            return static_cast<ValueType*>(mAny);
         }
 
         template<typename ValueType>
         ValueType& RefCast() {
             if (!(typeid(ValueType) == GetType()))
                 throw ETypeMismatch();
-            if (!m_a)
+            if (!mAny)
                 throw EInvalidReference();
-            return *static_cast<ValueType*>(m_a);
+            return *static_cast<ValueType*>(mAny);
         }
 
         template<typename ValueType>
         ValueType& RefCast2() {
-            if (!m_a)
+            if (!mAny)
                 throw EInvalidReference();
-            ValueType *vtPtr = dynamic_cast<ValueType*>(m_a);
+            ValueType *vtPtr = dynamic_cast<ValueType*>(mAny);
             if (vtPtr == NULL)
                 throw ETypeMismatch();
             else
@@ -102,8 +102,8 @@ namespace Forte
             }
         };
     private:
-        void* m_a;
-        table* m_t;
+        void* mAny;
+        table* mTable;
     };
 
     template<class T>

@@ -10,9 +10,9 @@ DbLiteConnection::DbLiteConnection()
 :
     DbConnection()
 {
-    m_db_type = "sqlite";
-    m_db = NULL;
-    m_flags = SQLITE_OPEN_READWRITE;
+    mDBType = "sqlite";
+    mDB = NULL;
+    mFlags = SQLITE_OPEN_READWRITE;
 }
 
 
@@ -24,24 +24,24 @@ DbLiteConnection::~DbLiteConnection()
 
 void DbLiteConnection::set_error()
 {
-    if (m_db != NULL)
+    if (mDB != NULL)
     {
-        m_errno = sqlite3_errcode(m_db);
-        m_error = sqlite3_errmsg(m_db);
+        mErrno = sqlite3_errcode(mDB);
+        mError = sqlite3_errmsg(mDB);
     }
     else
     {
-        m_errno = SQLITE_ERROR;
-        m_error = "Connection is gone.";
+        mErrno = SQLITE_ERROR;
+        mError = "Connection is gone.";
     }
 }
 
 
 bool DbLiteConnection::Init(struct sqlite3 *db)
 {
-    m_db = db;
-    m_did_init = true;
-    m_reconnect = false;
+    mDB = db;
+    mDidInit = true;
+    mReconnect = false;
     return true;
 }
 
@@ -50,24 +50,24 @@ bool DbLiteConnection::Connect()
 {
     int err;
 
-    if (m_db != NULL && !Close()) return false;
+    if (mDB != NULL && !Close()) return false;
 
-    err = sqlite3_open_v2(m_db_name, &m_db, m_flags, NULL);
+    err = sqlite3_open_v2(mDBName, &mDB, mFlags, NULL);
 
     if (err == SQLITE_OK)
     {
-        sqlite3_busy_timeout(m_db, 250);
+        sqlite3_busy_timeout(mDB, 250);
         return true;
     }
 
-    if (m_db != NULL)
+    if (mDB != NULL)
     {
         set_error();
     }
     else
     {
-        m_errno = SQLITE_NOMEM;
-        m_error = "Out of memory";
+        mErrno = SQLITE_NOMEM;
+        mError = "Out of memory";
     }
 
     return false;
@@ -76,9 +76,9 @@ bool DbLiteConnection::Connect()
 
 bool DbLiteConnection::Close()
 {
-    if (sqlite3_close(m_db) == SQLITE_OK)
+    if (sqlite3_close(mDB) == SQLITE_OK)
     {
-        m_db = NULL;
+        mDB = NULL;
         return true;
     }
 
@@ -89,7 +89,7 @@ bool DbLiteConnection::Close()
 
 DbResult DbLiteConnection::query(const FString& sql)
 {
-    unsigned int tries_remaining = m_retries + 1;
+    unsigned int tries_remaining = mRetries + 1;
     struct timeval tv_start, tv_end;
     DbLiteResult res;
     sqlite3_stmt *stmt = NULL;
@@ -97,40 +97,40 @@ DbResult DbLiteConnection::query(const FString& sql)
     const char *tail = NULL;
 
     // init
-    m_tries = 0;
-    m_errno = SQLITE_OK;
-    m_error.clear();
+    mTries = 0;
+    mErrno = SQLITE_OK;
+    mError.clear();
 
-    if (m_db == NULL)
+    if (mDB == NULL)
     {
         set_error();
         return res;
     }
 
-    if (m_autocommit == false) m_queries_pending = true;
+    if (mAutoCommit == false) mQueriesPending = true;
 
     // while queries remain in the given sql, and we have some tries left...
     while (remain.length() && tries_remaining > 0)
     {
         // prepare statement
-        m_errno = sqlite3_prepare_v2(m_db, remain, remain.length(), &stmt, &tail);
+        mErrno = sqlite3_prepare_v2(mDB, remain, remain.length(), &stmt, &tail);
         if (stmt == NULL) break;
 
         do
         {
             // run query
-            m_tries++;
+            mTries++;
             gettimeofday(&tv_start, NULL);
-            m_errno = res.Load(stmt);
+            mErrno = res.Load(stmt);
             gettimeofday(&tv_end, NULL);
             if (sDebugSql) logSql(remain, tv_end - tv_start);
 
             // check for errors
-            if (m_errno != SQLITE_OK)
+            if (mErrno != SQLITE_OK)
             {
                 res.Clear();
 
-                switch (m_errno)
+                switch (mErrno)
                 {
                     //// soft failures, keep retrying:
                 case SQLITE_BUSY:
@@ -182,8 +182,8 @@ DbResult DbLiteConnection::use(const FString& sql)
 
 bool DbLiteConnection::isTemporaryError() const
 {
-    return (m_errno == SQLITE_BUSY ||
-            m_errno == SQLITE_LOCKED);
+    return (mErrno == SQLITE_BUSY ||
+            mErrno == SQLITE_LOCKED);
 }
 
 

@@ -5,29 +5,29 @@
 
 DbResult::DbResult()
 {
-    m_data = NULL;
+    mData = NULL;
 }
 
 
 void DbResult::Clear()
 {
-    if (m_data) m_data->Release();
-    m_data = NULL;
+    if (mData) mData->Release();
+    mData = NULL;
 }
 
 
 DbResult& DbResult::operator =(const DbResult& other)
 {
-    return (*this = other.m_data);
+    return (*this = other.mData);
 }
 
 
 DbResult& DbResult::operator =(DbResult::Data *data)
 {
-    // ordered so that "*this = this->m_data;" will still work
+    // ordered so that "*this = this->mData;" will still work
     if (data) data->AddRef();
-    if (m_data) m_data->Release();
-    m_data = data;
+    if (mData) mData->Release();
+    mData = data;
     return *this;
 }
 

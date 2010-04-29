@@ -10,7 +10,7 @@ XMLTextNode::XMLTextNode(const FString& name, const FString& text, xmlNodePtr pa
 {
     FString stripped;
     stripControls(stripped, text);
-    m_node = xmlNewTextChild(parent, NULL, BAD_CAST name.c_str(), BAD_CAST stripped.c_str());
+    mNode = xmlNewTextChild(parent, NULL, BAD_CAST name.c_str(), BAD_CAST stripped.c_str());
 }
 
 #endif

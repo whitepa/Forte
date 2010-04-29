@@ -28,8 +28,8 @@ class ControlFile
 {
 public:
     // constants
-    static const unsigned s_lock_timeout;
-    static const size_t s_max_cache_size;
+    static const unsigned sLockTimeout;
+    static const size_t sMaxCacheSize;
 
     typedef struct {
         uint32_t version;
@@ -49,7 +49,7 @@ public:
 
 public:
     // ctor/dtor
-    ControlFile(const FString& filename) : m_filename(filename) { }
+    ControlFile(const FString& filename) : mFilename(filename) { }
     virtual ~ControlFile() { }
 
     // interface
@@ -96,7 +96,7 @@ public:
                      time_t update_if_older_than /*IN*/);
     
     // accessors
-    inline FString getFilename() const { return m_filename; }
+    inline FString getFilename() const { return mFilename; }
     
 private:
     // helpers
@@ -106,8 +106,8 @@ private:
 
 protected:
     // data members
-    FString m_filename;
-    AutoFD m_fd;
+    FString mFilename;
+    AutoFD mFD;
 };
 
 #include "ControlFile.cpp"

@@ -17,23 +17,23 @@ namespace Forte
     {
     public:
         XMLDoc();
-        XMLDoc(xmlDocPtr doc) : m_doc(doc) { }
+        XMLDoc(xmlDocPtr doc) : mDoc(doc) { }
         XMLDoc(const FString& xml);
         virtual ~XMLDoc();
 
     public:
-        inline XMLNode getRootNode() const { return XMLNode(m_doc->children); }
+        inline XMLNode getRootNode() const { return XMLNode(mDoc->children); }
         XMLNode createDocument(const FString& root_name);
         FString toString() const;
 
         inline operator XMLNode() const { return getRootNode(); }
         inline operator FString() const { return toString(); }
-        inline operator xmlDocPtr() { return m_doc; }
-        inline operator const xmlDocPtr() const { return m_doc; }
+        inline operator xmlDocPtr() { return mDoc; }
+        inline operator const xmlDocPtr() const { return mDoc; }
 
     protected:
-        static Mutex s_mutex;  // lock for all libxml2 access
-        xmlDocPtr m_doc;
+        static Mutex sMutex;  // lock for all libxml2 access
+        xmlDocPtr mDoc;
     };
 };
 #endif

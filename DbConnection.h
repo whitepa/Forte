@@ -37,7 +37,7 @@ namespace Forte
         virtual void begin();
         virtual void commit();
         virtual void rollback();
-        inline bool hasPendingQueries() { return m_queries_pending; }
+        inline bool hasPendingQueries() { return mQueriesPending; }
     
         // misc.
         virtual uint64_t InsertID() = 0;
@@ -48,35 +48,35 @@ namespace Forte
         static void debugFile(const char *filename);
         void logSql(const FString &sql, const struct timeval &executionTime);
 
-        bool m_log_queries;     // flag to turn (hlog) logging on/off on
+        bool mLogQueries;     // flag to turn (hlog) logging on/off on
         // the fly (should be used when temporary
         // logging is needed, auto connection will
         // turn this off when released)
-        inline void logQueries(bool log) { m_log_queries = log; }
+        inline void logQueries(bool log) { mLogQueries = log; }
 
         // error information
-        FString m_error;        // last database error
-        unsigned int m_errno;   // last database error code
-        unsigned int m_tries;   // number of tries it took to execute the last query
+        FString mError;        // last database error
+        unsigned int mErrno;   // last database error code
+        unsigned int mTries;   // number of tries it took to execute the last query
         virtual bool isTemporaryError() const = 0;
     
         // retry configuration
-        unsigned int m_retries;     // number of times to retry failed queries / connections
-        unsigned int m_query_retry_delay; // delay between retries in milliseconds
+        unsigned int mRetries;     // number of times to retry failed queries / connections
+        unsigned int mQueryRetryDelay; // delay between retries in milliseconds
 
         // db information
-        FString m_db_type;      // mysql, postgresql, etc.
-        FString m_db_name;
-        FString m_user;
-        FString m_password;
-        FString m_host;
-        FString m_socket;
+        FString mDBType;      // mysql, postgresql, etc.
+        FString mDBName;
+        FString mUser;
+        FString mPassword;
+        FString mHost;
+        FString mSocket;
 
     protected:
-        bool m_did_init;
-        bool m_reconnect;
-        bool m_queries_pending;
-        bool m_autocommit;
+        bool mDidInit;
+        bool mReconnect;
+        bool mQueriesPending;
+        bool mAutoCommit;
 
         static ofstream sDebugOutputFile;
         static Mutex sDebugOutputMutex;

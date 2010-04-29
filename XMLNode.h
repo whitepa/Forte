@@ -13,12 +13,12 @@ namespace Forte
     class XMLNode
     {
     public:
-        XMLNode() : m_node(NULL) { }
-        XMLNode(xmlNodePtr node) : m_node(node) { *this = node; }
+        XMLNode() : mNode(NULL) { }
+        XMLNode(xmlNodePtr node) : mNode(node) { *this = node; }
         XMLNode(const FString& name, xmlNodePtr parent = NULL);
-        XMLNode(const XMLNode& other) : m_node(other.m_node) { *this = other; }
-        XMLNode& operator =(const XMLNode& other) { m_node = other.m_node; return *this; }
-        XMLNode& operator =(const xmlNodePtr node) { m_node = node; return *this; }
+        XMLNode(const XMLNode& other) : mNode(other.mNode) { *this = other; }
+        XMLNode& operator =(const XMLNode& other) { mNode = other.mNode; return *this; }
+        XMLNode& operator =(const xmlNodePtr node) { mNode = node; return *this; }
         virtual ~XMLNode();
 
     public:
@@ -28,12 +28,12 @@ namespace Forte
         FString getText() const;
         void nuke();   // detach and delete this node and all of its subchildren
 
-        inline FString getName() const { return m_node == NULL ? "" : FString((const char*)m_node->name); }
-        inline xmlNodePtr getChildren() const { return m_node == NULL ? NULL : m_node->children; }
-        inline xmlNodePtr getNext() const { return m_node == NULL ? NULL : m_node->next; }
-        inline xmlNodePtr getParent() const { return m_node == NULL ? NULL : m_node->parent; }
-        inline operator xmlNodePtr() { return m_node; }
-        inline operator const xmlNodePtr() const { return m_node; }
+        inline FString getName() const { return mNode == NULL ? "" : FString((const char*)mNode->name); }
+        inline xmlNodePtr getChildren() const { return mNode == NULL ? NULL : mNode->children; }
+        inline xmlNodePtr getNext() const { return mNode == NULL ? NULL : mNode->next; }
+        inline xmlNodePtr getParent() const { return mNode == NULL ? NULL : mNode->parent; }
+        inline operator xmlNodePtr() { return mNode; }
+        inline operator const xmlNodePtr() const { return mNode; }
 
     protected:
         friend class XMLDoc;
@@ -44,7 +44,7 @@ namespace Forte
                                   const char *src  ///< Source string, ASCII or MBS
             );
 
-        xmlNodePtr m_node;
+        xmlNodePtr mNode;
     };
 };
 #endif

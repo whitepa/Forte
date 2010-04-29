@@ -9,7 +9,7 @@
 // DbLiteResult class
 int DbLiteResult::Load(sqlite3_stmt *stmt)
 {
-    LiteData *data = dynamic_cast<LiteData*>(m_data);
+    LiteData *data = dynamic_cast<LiteData*>(mData);
 
     if (data == NULL)
     {
@@ -26,8 +26,8 @@ DbLiteResult::LiteData::LiteData()
 :
     Data()
 {
-    m_okay = true;
-    m_current_row = m_next_row = m_res.end();
+    mOkay = true;
+    mCurrentRow = mNextRow = mRes.end();
 }
 
 
@@ -43,9 +43,9 @@ int DbLiteResult::LiteData::Load(sqlite3_stmt *stmt)
     Row row;
 
     // clear data
-    m_okay = false;  // in case of some exception being thrown
-    m_col_names.clear();
-    m_res.clear();
+    mOkay = false;  // in case of some exception being thrown
+    mColNames.clear();
+    mRes.clear();
     n = sqlite3_column_count(stmt);
 
     // run statement
@@ -81,7 +81,7 @@ int DbLiteResult::LiteData::Load(sqlite3_stmt *stmt)
         }
 
         // store row
-        m_res.push_back(row);
+        mRes.push_back(row);
     }
 
     // check code
@@ -90,46 +90,46 @@ int DbLiteResult::LiteData::Load(sqlite3_stmt *stmt)
     if (err == SQLITE_OK)
     {
         // load column names
-        m_col_names.resize(n);
+        mColNames.resize(n);
 
         for (i=0; i<n; i++)
         {
-            m_col_names.push_back(sqlite3_column_name(stmt, i));
+            mColNames.push_back(sqlite3_column_name(stmt, i));
         }
 
         // okay
-        m_next_row = m_res.begin();
-        m_okay = true;
+        mNextRow = mRes.begin();
+        mOkay = true;
     }
     else
     {
         // not okay
-        m_next_row = m_res.end();
-        m_okay = false;
+        mNextRow = mRes.end();
+        mOkay = false;
     }
 
     // done
-    m_current_row = m_res.end();
+    mCurrentRow = mRes.end();
     return err;
 }
 
 
 bool DbLiteResult::LiteData::isOkay() const
 {
-    return m_okay;
+    return mOkay;
 }
 
 
 bool DbLiteResult::LiteData::fetchRow(DbResultRow& row /*OUT*/)
 {
     Row::iterator ri;
-    if (m_next_row == m_res.end()) return false;
-    m_current_row = m_next_row;
-    ++m_next_row;
+    if (mNextRow == mRes.end()) return false;
+    mCurrentRow = mNextRow;
+    ++mNextRow;
     row.clear();
-    row.reserve(m_current_row->size());
+    row.reserve(mCurrentRow->size());
     
-    for (ri = m_current_row->begin(); ri != m_current_row->end(); ++ri)
+    for (ri = mCurrentRow->begin(); ri != mCurrentRow->end(); ++ri)
     {
         if (ri->second) row.push_back(NULL);
         else row.push_back(ri->first.c_str());
@@ -141,25 +141,25 @@ bool DbLiteResult::LiteData::fetchRow(DbResultRow& row /*OUT*/)
 
 size_t DbLiteResult::LiteData::getNumColumns()
 {
-    return m_col_names.size();
+    return mColNames.size();
 }
 
 
 FString DbLiteResult::LiteData::getColumnName(size_t i)
 {
-    return m_col_names[i];
+    return mColNames[i];
 }
 
 
 size_t DbLiteResult::LiteData::getFieldLength(size_t i)
 {
-    return (*m_current_row)[i].first.size();
+    return (*mCurrentRow)[i].first.size();
 }
 
 
 size_t DbLiteResult::LiteData::getNumRows()
 {
-    return m_res.size();
+    return mRes.size();
 }
 
 
@@ -167,16 +167,16 @@ bool DbLiteResult::LiteData::seek(size_t offset)
 {
     size_t i;
 
-    m_current_row = m_res.end();
-    m_next_row = m_res.begin();
+    mCurrentRow = mRes.end();
+    mNextRow = mRes.begin();
 
-    for (i=0; i<offset && m_next_row != m_res.end(); i++)
+    for (i=0; i<offset && mNextRow != mRes.end(); i++)
     {
-        m_current_row = m_next_row;
-        ++m_next_row;
+        mCurrentRow = mNextRow;
+        ++mNextRow;
     }
 
-    return (m_next_row != m_res.end());
+    return (mNextRow != mRes.end());
 }
 
 #endif

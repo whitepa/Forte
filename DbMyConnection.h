@@ -36,12 +36,12 @@ namespace Forte
         virtual bool isTemporaryError() const;
     
         // misc.
-        virtual uint64_t InsertID() { return mysql_insert_id(m_db); }
-        virtual uint64_t AffectedRows() { return mysql_affected_rows(m_db); }
+        virtual uint64_t InsertID() { return mysql_insert_id(mDB); }
+        virtual uint64_t AffectedRows() { return mysql_affected_rows(mDB); }
         virtual FString escape(const char *str);
 
     private:
-        MYSQL m_mysql, *m_db;
+        MYSQL mMySQL, *mDB;
     };
 };
 #endif

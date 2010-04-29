@@ -3,9 +3,9 @@
 
 
 LogTimer::LogTimer(int level, const FString& log_str) :
-    m_level(level), m_log_str(log_str)
+    mLevel(level), mLogStr(log_str)
 {
-    gettimeofday(&m_start, NULL);
+    gettimeofday(&mStart, NULL);
 }
 
 
@@ -15,9 +15,9 @@ LogTimer::~LogTimer()
     int m, s, us;
 
     // log end time
-    gettimeofday(&m_end, NULL);
-    s = m_end.tv_sec - m_start.tv_sec;
-    us = m_end.tv_usec - m_start.tv_usec;
+    gettimeofday(&mEnd, NULL);
+    s = mEnd.tv_sec - mStart.tv_sec;
+    us = mEnd.tv_usec - mStart.tv_usec;
 
     if (us < 0)
     {
@@ -30,5 +30,5 @@ LogTimer::~LogTimer()
     s %= 60;
 
     stmp.Format("%02u:%02u.%03u", m, s, us/1000);
-    hlog(m_level, "%s", m_log_str.Replace("@TIME@", stmp).c_str());
+    hlog(mLevel, "%s", mLogStr.Replace("@TIME@", stmp).c_str());
 }

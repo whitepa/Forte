@@ -34,14 +34,14 @@ namespace Forte
         virtual bool isTemporaryError() const;
     
         // misc.
-        virtual uint64_t InsertID() { return m_last_res.InsertID(); }
-        virtual uint64_t AffectedRows() { return strtoull(PQcmdTuples(m_last_res), NULL, 0); }
+        virtual uint64_t InsertID() { return mLastRes.InsertID(); }
+        virtual uint64_t AffectedRows() { return strtoull(PQcmdTuples(mLastRes), NULL, 0); }
         virtual FString escape(const char *str);
 
     private:
         DbResult query(const FString& sql);
-        DbPgResult m_last_res;
-        PGconn *m_db;
+        DbPgResult mLastRes;
+        PGconn *mDB;
     };
 };
 #endif

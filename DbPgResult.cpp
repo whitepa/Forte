@@ -16,15 +16,15 @@ DbPgResult::DbPgResult(PGresult *result)
 
 DbPgResult::operator PGresult*()
 {
-    PgData *data = dynamic_cast<PgData*>(m_data);
+    PgData *data = dynamic_cast<PgData*>(mData);
     if (data == NULL) return NULL;
-    return data->m_result;
+    return data->mResult;
 }
 
 
 uint64_t DbPgResult::InsertID()
 {
-    PgData *data = dynamic_cast<PgData*>(m_data);
+    PgData *data = dynamic_cast<PgData*>(mData);
     if (data == NULL) return 0;
     return data->InsertID();
 }
@@ -35,16 +35,16 @@ DbPgResult::PgData::PgData(PGresult *res)
 :
     Data()
 {
-    m_result = res;
-    m_num_rows = (size_t)PQntuples(m_result);
-    m_num_cols = (size_t)PQnfields(m_result);
-    m_current_row = 0;
+    mResult = res;
+    mNumRows = (size_t)PQntuples(mResult);
+    mNumCols = (size_t)PQnfields(mResult);
+    mCurrentRow = 0;
 }
 
 
 DbPgResult::PgData::~PgData()
 {
-    if (m_result != NULL) PQclear(m_result);
+    if (mResult != NULL) PQclear(mResult);
 }
 
 
@@ -52,9 +52,9 @@ bool DbPgResult::PgData::isOkay() const
 {
     bool ret = false;
 
-    if (m_result != NULL)
+    if (mResult != NULL)
     {
-        ExecStatusType code = PQresultStatus(m_result);
+        ExecStatusType code = PQresultStatus(mResult);
 
         switch (code)
         {
@@ -79,43 +79,43 @@ bool DbPgResult::PgData::fetchRow(DbResultRow& row /*OUT*/)
     char *val;
 
     row.clear();
-    if (m_current_row >= m_num_rows) return false;
-    row.reserve(m_num_cols);
+    if (mCurrentRow >= mNumRows) return false;
+    row.reserve(mNumCols);
 
-    for (i=0; i<m_num_cols; i++)
+    for (i=0; i<mNumCols; i++)
     {
-        val = PQgetvalue(m_result, m_current_row, i);
-        if (val[0] == 0 && PQgetisnull(m_result, m_current_row, i)) val = NULL;
+        val = PQgetvalue(mResult, mCurrentRow, i);
+        if (val[0] == 0 && PQgetisnull(mResult, mCurrentRow, i)) val = NULL;
         row.push_back(val);
     }
 
-    m_current_row++;
+    mCurrentRow++;
     return true;
 }
 
 
 size_t DbPgResult::PgData::getNumColumns()
 {
-    return m_num_cols;
+    return mNumCols;
 }
 
 
 FString DbPgResult::PgData::getColumnName(size_t i)
 {
-    return PQfname(m_result, (int)i);
+    return PQfname(mResult, (int)i);
 }
 
 
 size_t DbPgResult::PgData::getFieldLength(size_t i)
 {
-    return (size_t)PQgetlength(m_result, m_current_row, i);
+    return (size_t)PQgetlength(mResult, mCurrentRow, i);
 }
 
 
 uint64_t DbPgResult::PgData::InsertID()
 {
-    if (m_num_rows != 1 || m_num_cols != 1) return 0;
-    char *val = PQgetvalue(m_result, 0, 0);
+    if (mNumRows != 1 || mNumCols != 1) return 0;
+    char *val = PQgetvalue(mResult, 0, 0);
     return strtoull(val, NULL, 10);
 }
 

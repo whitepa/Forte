@@ -12,12 +12,12 @@ namespace Forte
     public:
         inline Mutex(const pthread_mutexattr_t *attr = NULL)
             {
-                pthread_mutex_init(&m_pthread_mutex, attr);
+                pthread_mutex_init(&mPThreadMutex, attr);
             }
-        inline ~Mutex() {pthread_mutex_destroy(&m_pthread_mutex);}
-        inline int lock() {return pthread_mutex_lock(&m_pthread_mutex);}
-        inline int unlock() {return pthread_mutex_unlock(&m_pthread_mutex);}
-        inline int trylock() {return pthread_mutex_trylock(&m_pthread_mutex);}
+        inline ~Mutex() {pthread_mutex_destroy(&mPThreadMutex);}
+        inline int lock() {return pthread_mutex_lock(&mPThreadMutex);}
+        inline int unlock() {return pthread_mutex_unlock(&mPThreadMutex);}
+        inline int trylock() {return pthread_mutex_trylock(&mPThreadMutex);}
         inline int timedlock(const struct timespec& timeout)
             {
                 struct timespec abs_time;
@@ -35,34 +35,34 @@ namespace Forte
                     abs_time.tv_sec++;
                     abs_time.tv_nsec -= 1000000000;
                 }
-                return pthread_mutex_timedlock(&m_pthread_mutex, &abs_time);
+                return pthread_mutex_timedlock(&mPThreadMutex, &abs_time);
             }
     protected:
-        pthread_mutex_t m_pthread_mutex;
+        pthread_mutex_t mPThreadMutex;
     };
 
     class AutoLockMutex : public Object {
     public:
-        inline AutoLockMutex(Mutex &mutex):m_mutex(mutex) {m_mutex.unlock();}
-        inline ~AutoLockMutex() {m_mutex.lock();}
+        inline AutoLockMutex(Mutex &mutex):mMutex(mutex) {mMutex.unlock();}
+        inline ~AutoLockMutex() {mMutex.lock();}
     private:
-        Mutex &m_mutex;
+        Mutex &mMutex;
     };
 
     class AutoUnlockMutex : public Object {
     public:
-        inline AutoUnlockMutex(Mutex &mutex):m_mutex(mutex) {m_mutex.lock();}
-        inline ~AutoUnlockMutex() {m_mutex.unlock();}
+        inline AutoUnlockMutex(Mutex &mutex):mMutex(mutex) {mMutex.lock();}
+        inline ~AutoUnlockMutex() {mMutex.unlock();}
     private:
-        Mutex &m_mutex;
+        Mutex &mMutex;
     };
 
     class AutoUnlockOnlyMutex : public Object {
     public:
-        inline AutoUnlockOnlyMutex(Mutex &mutex):m_mutex(mutex) { }
-        inline ~AutoUnlockOnlyMutex() { m_mutex.unlock(); }
+        inline AutoUnlockOnlyMutex(Mutex &mutex):mMutex(mutex) { }
+        inline ~AutoUnlockOnlyMutex() { mMutex.unlock(); }
     private:
-        Mutex &m_mutex;
+        Mutex &mMutex;
     };
 };
 #endif

@@ -16,9 +16,9 @@ DbMyResult::DbMyResult(MYSQL_RES *result)
 
 DbMyResult::operator MYSQL_RES*()
 {
-    MyData *data = dynamic_cast<MyData*>(m_data);
+    MyData *data = dynamic_cast<MyData*>(mData);
     if (data == NULL) return NULL;
-    return data->m_result;
+    return data->mResult;
 }
 
 
@@ -26,28 +26,28 @@ DbMyResult::operator MYSQL_RES*()
 DbMyResult::MyData::MyData(MYSQL_RES *res)
 :
     Data(),
-    m_result(NULL),
-    m_row(NULL),
-    m_num_cols(0)
+    mResult(NULL),
+    mRow(NULL),
+    mNumCols(0)
 {
     if (res != NULL)
     {
-        m_result = res;
-        m_row = NULL;
-        m_num_cols = (size_t)mysql_num_fields(m_result);
+        mResult = res;
+        mRow = NULL;
+        mNumCols = (size_t)mysql_num_fields(mResult);
     }
 }
 
 
 DbMyResult::MyData::~MyData()
 {
-    if (m_result != NULL) mysql_free_result(m_result);
+    if (mResult != NULL) mysql_free_result(mResult);
 }
 
 
 bool DbMyResult::MyData::isOkay() const
 {
-    return (m_result != NULL);
+    return (mResult != NULL);
 }
 
 
@@ -58,16 +58,16 @@ bool DbMyResult::MyData::fetchRow(DbResultRow& row /*OUT*/)
 
     row.clear();
 
-    if (m_result == NULL) return false;
+    if (mResult == NULL) return false;
 
-    m_row = mysql_fetch_row(m_result);
-    ret = (m_row != NULL);
+    mRow = mysql_fetch_row(mResult);
+    ret = (mRow != NULL);
     if (!ret) return false;
-    row.reserve(m_num_cols);
+    row.reserve(mNumCols);
 
-    for (i=0; i<m_num_cols; i++)
+    for (i=0; i<mNumCols; i++)
     {
-        row.push_back(m_row[i]);
+        row.push_back(mRow[i]);
     }
     
     return ret;
@@ -76,14 +76,14 @@ bool DbMyResult::MyData::fetchRow(DbResultRow& row /*OUT*/)
 
 size_t DbMyResult::MyData::getNumColumns()
 {
-    return m_num_cols;
+    return mNumCols;
 }
 
 
 FString DbMyResult::MyData::getColumnName(size_t i)
 {
-    if (m_result == NULL) return "";
-    MYSQL_FIELD *fields = mysql_fetch_fields(m_result);
+    if (mResult == NULL) return "";
+    MYSQL_FIELD *fields = mysql_fetch_fields(mResult);
     if (fields == NULL) return FString();
     return fields[i].name;
 }
@@ -91,22 +91,22 @@ FString DbMyResult::MyData::getColumnName(size_t i)
 
 size_t DbMyResult::MyData::getFieldLength(size_t i)
 {
-    if (m_result == NULL) return 0;
-    unsigned long *lengths = mysql_fetch_lengths(m_result);
+    if (mResult == NULL) return 0;
+    unsigned long *lengths = mysql_fetch_lengths(mResult);
     if (lengths == NULL) return 0;
     return (size_t)lengths[i];
 }
 
 size_t DbMyResult::MyData::getNumRows()
 {
-    if (m_result == NULL) return 0;
-    return mysql_num_rows(m_result);
+    if (mResult == NULL) return 0;
+    return mysql_num_rows(mResult);
 }
 
 bool DbMyResult::MyData::seek(size_t offset)
 {
-    if (m_result == NULL) return false;
-    mysql_data_seek(m_result, offset);
+    if (mResult == NULL) return false;
+    mysql_data_seek(mResult, offset);
     return true;
 }
 

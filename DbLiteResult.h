@@ -41,10 +41,10 @@ namespace Forte
             typedef std::vector<Val> Row;
             typedef std::list<Row> RowList;
             typedef std::vector<FString> NameVector;
-            RowList::iterator m_current_row, m_next_row;
-            NameVector m_col_names;
-            RowList m_res;
-            bool m_okay;
+            RowList::iterator mCurrentRow, mNextRow;
+            NameVector mColNames;
+            RowList mRes;
+            bool mOkay;
         };
 
     public:

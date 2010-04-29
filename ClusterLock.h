@@ -47,8 +47,8 @@ namespace Forte
             void unlock(void);
 
         protected:
-            struct flock m_lock;
-            int m_fd;
+            struct flock mLock;
+            int mFD;
         };
 
         class AdvisoryAutoUnlock
@@ -56,16 +56,16 @@ namespace Forte
         public:
         AdvisoryAutoUnlock(int fd, off64_t start, off64_t len, bool exclusive, 
                            short whence = SEEK_SET) :
-            m_advisoryLock(fd, start, len, whence)
+            mAdvisoryLock(fd, start, len, whence)
             {
                 if (exclusive)
-                    m_advisoryLock.exclusiveLock();
+                    mAdvisoryLock.exclusiveLock();
                     else
-                        m_advisoryLock.sharedLock();
+                        mAdvisoryLock.sharedLock();
                 }
-            virtual ~AdvisoryAutoUnlock() { m_advisoryLock.unlock(); }
+            virtual ~AdvisoryAutoUnlock() { mAdvisoryLock.unlock(); }
         protected:
-            AdvisoryLock m_advisoryLock;
+            AdvisoryLock mAdvisoryLock;
         };
 
     public:

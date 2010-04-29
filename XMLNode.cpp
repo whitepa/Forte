@@ -10,7 +10,7 @@ XMLNode::XMLNode(const FString& name, xmlNodePtr parent)
 {
     FString stripped;
     stripControls(stripped, name);
-    m_node = xmlNewChild(parent, NULL, BAD_CAST stripped.c_str(), NULL);
+    mNode = xmlNewChild(parent, NULL, BAD_CAST stripped.c_str(), NULL);
 }
 
 
@@ -24,7 +24,7 @@ FString XMLNode::getProp(const char *name) const
     FString ret;
     xmlChar *str;
 
-    str = xmlGetProp(m_node, BAD_CAST name);
+    str = xmlGetProp(mNode, BAD_CAST name);
 
     if (str != NULL)
     {
@@ -40,13 +40,13 @@ void XMLNode::setProp(const char *name, const char *value)
 {
     FString stripped;
     stripControls(stripped, value);
-    xmlSetProp(m_node, BAD_CAST name, BAD_CAST stripped.c_str());
+    xmlSetProp(mNode, BAD_CAST name, BAD_CAST stripped.c_str());
 }
 
 
 void XMLNode::delProp(const char *name)
 {
-    xmlUnsetProp(m_node, BAD_CAST name);
+    xmlUnsetProp(mNode, BAD_CAST name);
 }
 
 
@@ -55,7 +55,7 @@ FString XMLNode::getText() const
     FString ret;
     xmlChar *str;
 
-    str = xmlNodeGetContent(m_node);
+    str = xmlNodeGetContent(mNode);
 
     if (str != NULL)
     {
@@ -69,9 +69,9 @@ FString XMLNode::getText() const
 
 void XMLNode::nuke()
 {
-    xmlUnlinkNode(m_node);
-    xmlFreeNode(m_node);
-    m_node = NULL;
+    xmlUnlinkNode(mNode);
+    xmlFreeNode(mNode);
+    mNode = NULL;
 }
 
 

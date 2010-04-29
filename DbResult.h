@@ -16,7 +16,7 @@ namespace Forte
         {
         public:
             // ctor/dtor
-            Data() { m_count = 0; }
+            Data() { mCount = 0; }
             virtual ~Data() { }
 
             // abstract interface
@@ -32,17 +32,17 @@ namespace Forte
             virtual bool fetchRow(DbRow& row /*OUT*/);
 
             // memory management (use within a single thread only)
-            void AddRef() { m_count++; };
-            void Release() { if (--m_count == 0) delete this; };
+            void AddRef() { mCount++; };
+            void Release() { if (--mCount == 0) delete this; };
         private:
-            int m_count;
+            int mCount;
         };
 
     public:
         // ctor/dtor
         DbResult();
-        DbResult(const DbResult& other) { m_data = NULL; *this = other; }
-        DbResult(Data *data) { m_data = NULL; *this = data; }
+        DbResult(const DbResult& other) { mData = NULL; *this = other; }
+        DbResult(Data *data) { mData = NULL; *this = data; }
         virtual ~DbResult() { Clear(); }
 
         // copy operators
@@ -53,18 +53,18 @@ namespace Forte
         void Clear();
 
         // delegated members, a.k.a. the interface
-        inline operator bool() const  { return (m_data != NULL) && m_data->isOkay(); }
-        inline bool operator !() const { return (m_data == NULL) || !m_data->isOkay(); }
-        inline bool isOkay() { return (m_data != NULL) && m_data->isOkay(); }
-        inline bool fetchRow(DbResultRow& row) { return (m_data != NULL) && m_data->fetchRow(row); }
-        inline bool fetchRow(DbRow& row) { return (m_data != NULL) && m_data->fetchRow(row); }
-        inline size_t getNumColumns() { return (m_data ? m_data->getNumColumns() : 0); }
-        inline FString getColumnName(size_t i) { return (m_data ? m_data->getNumColumns() : 0); }
-        inline size_t getFieldLength(size_t i) { return (m_data ? m_data->getFieldLength(i) : 0); }
-        inline size_t getNumRows() { return (m_data ? m_data->getNumRows() : 0); }
-        inline bool seek(size_t offset) { return (m_data ? m_data->seek(offset) : false); }
+        inline operator bool() const  { return (mData != NULL) && mData->isOkay(); }
+        inline bool operator !() const { return (mData == NULL) || !mData->isOkay(); }
+        inline bool isOkay() { return (mData != NULL) && mData->isOkay(); }
+        inline bool fetchRow(DbResultRow& row) { return (mData != NULL) && mData->fetchRow(row); }
+        inline bool fetchRow(DbRow& row) { return (mData != NULL) && mData->fetchRow(row); }
+        inline size_t getNumColumns() { return (mData ? mData->getNumColumns() : 0); }
+        inline FString getColumnName(size_t i) { return (mData ? mData->getNumColumns() : 0); }
+        inline size_t getFieldLength(size_t i) { return (mData ? mData->getFieldLength(i) : 0); }
+        inline size_t getNumRows() { return (mData ? mData->getNumRows() : 0); }
+        inline bool seek(size_t offset) { return (mData ? mData->seek(offset) : false); }
     protected:
-        Data *m_data;
+        Data *mData;
     };
 };
 #endif

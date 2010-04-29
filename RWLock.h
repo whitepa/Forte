@@ -25,12 +25,12 @@ namespace Forte
         void _read_unlock(const char *file, unsigned line);
 
     private:
-        Semaphore m_main_lock;
-        Semaphore m_read_lock_mutex;
-        Semaphore m_read_lock_atomic;
-        Semaphore m_read_lock_count;
-        FString m_file;
-        unsigned m_line;
+        Semaphore mMainLock;
+        Semaphore mReadLockMutex;
+        Semaphore mReadLockAtomic;
+        Semaphore mReadLockCount;
+        FString mFile;
+        unsigned mLine;
     };
 
 #define write_lock() _write_lock(__FILE__, __LINE__)

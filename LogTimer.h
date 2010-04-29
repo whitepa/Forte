@@ -12,9 +12,9 @@ namespace Forte
         ~LogTimer();
 
     protected:
-        int m_level;
-        FString m_log_str;
-        struct timeval m_start, m_end;
+        int mLevel;
+        FString mLogStr;
+        struct timeval mStart, mEnd;
     };
 };
 #endif

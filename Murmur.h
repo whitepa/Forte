@@ -15,15 +15,15 @@ namespace Forte
         void Init(uint64_t seed = 0xAAAAAAAAAAAAAAAALL);
         void Update(const void *data, size_t size);
         void Final();
-        inline uint64_t GetHash() const { return m_h; }
-        inline operator uint64_t() const { return m_h; }
+        inline uint64_t GetHash() const { return mHash; }
+        inline operator uint64_t() const { return mHash; }
         FString toStr() const;
         inline operator FString() const { return toStr(); }
 
     private:
-        uint64_t m_k;
-        uint64_t m_h;
-        uint64_t m_len;
+        uint64_t mK;
+        uint64_t mHash;
+        uint64_t mLen;
         static const uint64_t c_m;
         static const uint64_t c_r;
     };

@@ -244,10 +244,10 @@ void ClusterLock::unlock()
 
 ClusterLock::AdvisoryLock::AdvisoryLock(int fd, off64_t start, off64_t len, short whence)
 {
-    m_fd = fd;
-    m_lock.l_whence = whence;
-    m_lock.l_start = start;
-    m_lock.l_len = len;
+    mFD = fd;
+    mLock.l_whence = whence;
+    mLock.l_start = start;
+    mLock.l_len = len;
 }
 
 /// getLock gets the first lock that blocks the lock description
@@ -256,10 +256,10 @@ ClusterLock::AdvisoryLock ClusterLock::AdvisoryLock::getLock(bool exclusive)
 {
     AdvisoryLock lock(*this);
     if (exclusive)
-        lock.m_lock.l_type = F_WRLCK;
+        lock.mLock.l_type = F_WRLCK;
     else
-        lock.m_lock.l_type = F_RDLCK;
-    fcntl(m_fd, F_GETLK, &lock);
+        lock.mLock.l_type = F_RDLCK;
+    fcntl(mFD, F_GETLK, &lock);
     return lock;
 }
 
@@ -267,8 +267,8 @@ ClusterLock::AdvisoryLock ClusterLock::AdvisoryLock::getLock(bool exclusive)
 ///
 bool ClusterLock::AdvisoryLock::sharedLock(bool wait)
 {
-    m_lock.l_type = F_RDLCK;
-    if (fcntl(m_fd, wait ? F_SETLKW : F_SETLK, &m_lock) == -1)
+    mLock.l_type = F_RDLCK;
+    if (fcntl(mFD, wait ? F_SETLKW : F_SETLK, &mLock) == -1)
         return false;
     return true;
 }
@@ -277,8 +277,8 @@ bool ClusterLock::AdvisoryLock::sharedLock(bool wait)
 ///
 bool ClusterLock::AdvisoryLock::exclusiveLock(bool wait)
 {
-    m_lock.l_type = F_WRLCK;
-    if (fcntl(m_fd, wait ? F_SETLKW : F_SETLK, &m_lock) == -1)
+    mLock.l_type = F_WRLCK;
+    if (fcntl(mFD, wait ? F_SETLKW : F_SETLK, &mLock) == -1)
         return false;
     return true;
 }
@@ -287,6 +287,6 @@ bool ClusterLock::AdvisoryLock::exclusiveLock(bool wait)
 ///
 void ClusterLock::AdvisoryLock::unlock(void)
 {
-    m_lock.l_type = F_UNLCK;
-    fcntl(m_fd, F_SETLK, &m_lock);
+    mLock.l_type = F_UNLCK;
+    fcntl(mFD, F_SETLK, &mLock);
 }

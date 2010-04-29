@@ -32,17 +32,17 @@ namespace Forte
         virtual bool isTemporaryError() const;
     
         // misc.
-        virtual uint64_t InsertID() { return sqlite3_last_insert_rowid(m_db); }
-        virtual uint64_t AffectedRows() { return sqlite3_changes(m_db); }
+        virtual uint64_t InsertID() { return sqlite3_last_insert_rowid(mDB); }
+        virtual uint64_t AffectedRows() { return sqlite3_changes(mDB); }
         virtual FString escape(const char *str);
 
     private:
         void set_error();
         DbResult query(const FString& sql);
-        struct sqlite3 *m_db;
+        struct sqlite3 *mDB;
 
     public:
-        int m_flags;
+        int mFlags;
     };
 };
 #endif

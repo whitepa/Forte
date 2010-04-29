@@ -12,29 +12,29 @@ namespace Forte
     {
     public:
         static const int NONE = -1;
-        AutoFD(int fd = NONE) : m_dir(NULL), m_fd(fd) { }
-        AutoFD(DIR *dir) : m_dir(dir) { if (m_dir != NULL) m_fd = dirfd(dir); }
+        AutoFD(int fd = NONE) : mDir(NULL), mFD(fd) { }
+        AutoFD(DIR *dir) : mDir(dir) { if (mDir != NULL) mFD = dirfd(dir); }
         ~AutoFD() { close(); }
         inline void close() {
-            if (m_dir != NULL) { closedir(m_dir); m_dir = NULL; m_fd = NONE; }
-            if (m_fd != NONE) { ::close(m_fd); m_fd = NONE; }
+            if (mDir != NULL) { closedir(mDir); mDir = NULL; mFD = NONE; }
+            if (mFD != NONE) { ::close(mFD); mFD = NONE; }
         }
-        inline void release() { m_dir = NULL; m_fd = NONE; }
-        inline int fd() const { return m_fd; }
-        inline DIR* dir() { return m_dir; }
-        inline const DIR* dir() const { return m_dir; }
-        inline operator int() const { return m_fd; }
-        inline operator DIR*() { return m_dir; }
-        inline operator const DIR*() const { return m_dir; }
-        inline AutoFD& operator =(int fd) { close(); m_fd = fd; return *this; }
+        inline void release() { mDir = NULL; mFD = NONE; }
+        inline int fd() const { return mFD; }
+        inline DIR* dir() { return mDir; }
+        inline const DIR* dir() const { return mDir; }
+        inline operator int() const { return mFD; }
+        inline operator DIR*() { return mDir; }
+        inline operator const DIR*() const { return mDir; }
+        inline AutoFD& operator =(int fd) { close(); mFD = fd; return *this; }
         inline AutoFD& operator =(DIR *dir) {
             close();
-            if ((m_dir = dir) != NULL) m_fd = dirfd(m_dir);
+            if ((mDir = dir) != NULL) mFD = dirfd(mDir);
             return *this;
         }
     private:
-        DIR *m_dir;
-        int m_fd;
+        DIR *mDir;
+        int mFD;
     };
 };
 

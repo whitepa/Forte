@@ -32,9 +32,9 @@ namespace Forte
 
         protected:
             friend class DbMyResult;
-            MYSQL_RES *m_result;
-            MYSQL_ROW m_row;
-            size_t m_num_cols;
+            MYSQL_RES *mResult;
+            MYSQL_ROW mRow;
+            size_t mNumCols;
         };
 
     public:

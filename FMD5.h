@@ -71,7 +71,7 @@ namespace Forte
         unsigned char md5[16];
 
     protected:
-        MD5_CTX m_ctx;
+        MD5_CTX mCTX;
 
 // ctor/dtor
     public:
@@ -82,13 +82,13 @@ namespace Forte
 
 // operations
     public:
-        inline void Init() { MD5Init(&m_ctx); }
-        inline void Update(const void *data, unsigned size) { MD5Update(&m_ctx, (unsigned char*)data, size); }
-        inline void Final() { MD5Final(md5, &m_ctx); }
+        inline void Init() { MD5Init(&mCTX); }
+        inline void Update(const void *data, unsigned size) { MD5Update(&mCTX, (unsigned char*)data, size); }
+        inline void Final() { MD5Final(md5, &mCTX); }
         MD5& operator=(const MD5& other)
             {
                 memcpy(md5, other.md5, 16);
-                memcpy(&m_ctx, &other.m_ctx, sizeof(m_ctx));
+                memcpy(&mCTX, &other.mCTX, sizeof(mCTX));
                 return *this;
             }
         MD5& operator=(const FString& str) { return *this = AtoMD5(str); }

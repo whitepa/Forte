@@ -12,8 +12,8 @@ DbPgConnection::DbPgConnection()
 :
     DbConnection()
 {
-    m_db = NULL;
-    m_db_type = "postgresql";
+    mDB = NULL;
+    mDBType = "postgresql";
 }
 
 
@@ -25,9 +25,9 @@ DbPgConnection::~DbPgConnection()
 
 bool DbPgConnection::Init(PGconn *db)
 {
-    m_db = db;
-    m_did_init = true;
-    m_reconnect = false;
+    mDB = db;
+    mDidInit = true;
+    mReconnect = false;
     return true;
 }
 
@@ -35,20 +35,20 @@ bool DbPgConnection::Init(PGconn *db)
 bool DbPgConnection::Connect(void)
 {
     bool ret;
-    unsigned int tries = m_retries + 1;
+    unsigned int tries = mRetries + 1;
     FString conn_info, stmp;
     vector<FString> params, parts;
 
     // build parameters
-    if (!m_socket.empty())
+    if (!mSocket.empty())
     {
-        stmp.Format("host='%s'", escape(m_socket).c_str());
+        stmp.Format("host='%s'", escape(mSocket).c_str());
     }
     else
     {
-        parts = m_host.split(":");
-        m_host = parts[0];
-        stmp.Format("host='%s'", escape(m_host).c_str());
+        parts = mHost.split(":");
+        mHost = parts[0];
+        stmp.Format("host='%s'", escape(mHost).c_str());
 
         if (parts.size() > 1)
         {
@@ -59,13 +59,13 @@ bool DbPgConnection::Connect(void)
 
     params.push_back(stmp);
 
-    stmp.Format("dbname='%s'", escape(m_db_name).c_str());
+    stmp.Format("dbname='%s'", escape(mDBName).c_str());
     params.push_back(stmp);
 
-    stmp.Format("user='%s'", escape(m_user).c_str());
+    stmp.Format("user='%s'", escape(mUser).c_str());
     params.push_back(stmp);
 
-    stmp.Format("password='%s'", escape(m_password).c_str());
+    stmp.Format("password='%s'", escape(mPassword).c_str());
     params.push_back(stmp);
 
     // build the conn_info string
@@ -75,22 +75,22 @@ bool DbPgConnection::Connect(void)
     do
     {
         Close();
-        m_db = PQconnectdb(conn_info);
-        ret = (PQstatus(m_db) == CONNECTION_OK);
+        mDB = PQconnectdb(conn_info);
+        ret = (PQstatus(mDB) == CONNECTION_OK);
 
         if (!ret)
         {
-            m_errno = PQstatus(m_db) + 1000;
+            mErrno = PQstatus(mDB) + 1000;
             --tries;
         }
 
-        if (!ret && tries > 0) usleep(m_query_retry_delay * 1000);
+        if (!ret && tries > 0) usleep(mQueryRetryDelay * 1000);
     }
     while (!ret && tries > 0);
 
     if (!ret)
     {
-        m_error = PQerrorMessage(m_db);
+        mError = PQerrorMessage(mDB);
         Close();
     }
 
@@ -100,40 +100,40 @@ bool DbPgConnection::Connect(void)
 
 bool DbPgConnection::Close(void)
 {
-    if (m_db != NULL) PQfinish(m_db);
-    m_db = NULL;
+    if (mDB != NULL) PQfinish(mDB);
+    mDB = NULL;
     return true;
 }
 
 
 DbResult DbPgConnection::query(const FString& sql)
 {
-    unsigned int tries_remaining = m_retries + 1;
+    unsigned int tries_remaining = mRetries + 1;
     struct timeval tv_start, tv_end;
     DbPgResult res;
     int code;
 
     // init
-    m_tries = 0;
-    m_errno = 0;
-    m_error.clear();
+    mTries = 0;
+    mErrno = 0;
+    mError.clear();
 
-    if (m_db == NULL)
+    if (mDB == NULL)
     {
-        m_error.assign("Connection is gone.");
-        m_errno = CONNECTION_BAD + 1000;
-        m_last_res = res;
+        mError.assign("Connection is gone.");
+        mErrno = CONNECTION_BAD + 1000;
+        mLastRes = res;
         return res;
     }
 
-    if (m_autocommit == false) m_queries_pending = true;
+    if (mAutoCommit == false) mQueriesPending = true;
 
     do
     {
         // run query
-        m_tries++;
+        mTries++;
         gettimeofday(&tv_start, NULL);
-        res = PQexec(m_db, sql);
+        res = PQexec(mDB, sql);
         gettimeofday(&tv_end, NULL);
         if (sDebugSql) logSql(sql, tv_end - tv_start);
         if ((PGresult*)res == NULL) code = CONNECTION_BAD + 1000;
@@ -145,16 +145,16 @@ DbResult DbPgConnection::query(const FString& sql)
              (code != PGRES_COMMAND_OK) &&
              (code != PGRES_TUPLES_OK)))
         {
-            m_errno = code;
+            mErrno = code;
             res.Clear();
 
-            switch (m_errno)
+            switch (mErrno)
             {
             //// soft failures, keep retrying:
             case (CONNECTION_BAD + 1000):
             case PGRES_BAD_RESPONSE:
-                if (m_queries_pending)
-                    throw DbException("connection lost during transaction", m_errno, sql);
+                if (mQueriesPending)
+                    throw DbException("connection lost during transaction", mErrno, sql);
                 // try reconnecting
                 Connect();
                 --tries_remaining;
@@ -169,15 +169,15 @@ DbResult DbPgConnection::query(const FString& sql)
     }
     while (!res && tries_remaining > 0);
 
-    m_last_res = res;
+    mLastRes = res;
 
-    if (m_db == NULL)
+    if (mDB == NULL)
     {
-        m_error.assign("Connection lost; unable to reestablish.");
+        mError.assign("Connection lost; unable to reestablish.");
         return res;
     }
 
-    if (!res) m_error = PQerrorMessage(m_db);
+    if (!res) mError = PQerrorMessage(mDB);
     return res;
 }
 
@@ -202,8 +202,8 @@ DbResult DbPgConnection::use(const FString& sql)
 
 bool DbPgConnection::isTemporaryError() const
 {
-    return (m_errno == PGRES_COPY_OUT ||
-            m_errno == PGRES_COPY_IN);
+    return (mErrno == PGRES_COPY_OUT ||
+            mErrno == PGRES_COPY_IN);
 }
 
 
@@ -212,10 +212,10 @@ FString DbPgConnection::escape(const char *str)
     FString ret, sql(str);;
     char *foo = new char[2 + 2 * sql.length()];
 
-    if (m_db != NULL)
+    if (mDB != NULL)
     {
         // use correct method
-        PQescapeStringConn(m_db, foo, sql, sql.length(), NULL);
+        PQescapeStringConn(mDB, foo, sql, sql.length(), NULL);
     }
     else
     {

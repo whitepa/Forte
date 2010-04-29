@@ -37,10 +37,10 @@ namespace Forte
 
         protected:
             friend class DbPgResult;
-            PGresult *m_result;
-            size_t m_num_rows;
-            size_t m_num_cols;
-            size_t m_current_row;
+            PGresult *mResult;
+            size_t mNumRows;
+            size_t mNumCols;
+            size_t mCurrentRow;
         };
 
     public:
