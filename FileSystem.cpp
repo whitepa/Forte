@@ -113,7 +113,7 @@ void FileSystem::StatFS(const FString& path, struct statfs *st)
     }
 
     hlog(HLOG_DEBUG, "statfs returned error code errno %i, %s", 
-         errno, StrError(errno).c_str());
+         errno, strerror(errno));
 
 
     switch (errno)
