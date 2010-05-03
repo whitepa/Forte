@@ -16,12 +16,12 @@ LIB_INSTALL_PATH = $(PREFIX)/lib
 INCLUDE = $(DB_INCLUDE) $(XML_INCLUDE) $(BOOST_INCLUDE) -I.
 CCARGS += -Wall -DFORTE_FUNCTION_TRACING
 SRCS =	\
-	AutoMutex.cpp \
 	Base64.cpp \
 	CheckedValue.cpp \
-	CheckedValuePollThread.cpp \
 	Clock.cpp \
 	ClusterLock.cpp \
+	Collector.cpp \
+	CollectorPollThread.cpp \
 	ContextPredicate.cpp \
 	Curl.cpp \
 	CurlFactory.cpp \
