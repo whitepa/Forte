@@ -25,11 +25,13 @@ using namespace Forte;
 #include "AutoFD.h"
 #include "AutoMutex.h"
 #include "Base64.h"
+#include "CheckedDouble.h"
 #include "CheckedInt32.h"
 #include "CheckedStringEnum.h"
 #include "Clock.h"
 #include "ClusterLock.h"
 //#include "Config.h"
+#include "Collector.h"
 #include "Context.h"
 #include "ContextPredicate.h"
 
@@ -78,6 +80,7 @@ using namespace Forte;
 #ifndef FORTE_NO_OPENSSL
 #include "OpenSSLInitializer.h"
 #endif
+#include "ProcFileSystem.h"
 #include "ProcRunner.h"
 #include "PidFile.h"
 #include "Random.h"

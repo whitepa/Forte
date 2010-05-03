@@ -8,6 +8,12 @@
 
 // TODO: How to set certain keys as read-only?
 
+// Macro to allow easy scoping of objects out of the context
+#define CGET(key, type, name)                                   \
+    shared_ptr<type> name_Ptr = mContext.Get<type>(#key);       \
+    type &name(*name_Ptr);
+
+
 namespace Forte
 {
     EXCEPTION_CLASS(EContext);
