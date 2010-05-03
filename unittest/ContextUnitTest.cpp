@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(UptimeMockContents)
     shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
     fsptr->FilePutContents("/proc/uptime", "30782.38 29768.69\n");
 
-    c.Set("FileSystem", fsptr);
+    c.Set("forte.FileSystem", fsptr);
 
     // construct
     ProcFileSystem procFileSystem(c);

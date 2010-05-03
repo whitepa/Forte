@@ -22,7 +22,7 @@ void ProcFileSystem::UptimeRead(Uptime& uptime)
     // read information in the form of "[seconds up] [seconds idle]"
     // return info to user
     FileSystemPtr fsptr;
-    fsptr = mContext.Get<FileSystem>("FileSystem");
+    fsptr = mContext.Get<FileSystem>("forte.FileSystem");
 
     FString output;
     output = fsptr->FileGetContents("/proc/uptime").Trim();

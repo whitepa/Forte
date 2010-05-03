@@ -10,16 +10,16 @@
 
 // Macro to allow easy scoping of objects out of the context
 #define CGET(key, type, name)                                   \
-    shared_ptr<type> name_Ptr = mContext.Get<type>(#key);       \
+    shared_ptr<type> name_Ptr = mContext.Get<type>(key);        \
     type &name(*name_Ptr);
 
 
 namespace Forte
 {
     EXCEPTION_CLASS(EContext);
-    EXCEPTION_SUBCLASS(EContext, EInvalidKey);
-    EXCEPTION_SUBCLASS(EContext, EContextTypeMismatch);
-
+    EXCEPTION_SUBCLASS2(EContext, EInvalidKey, "Invalid Key");
+    EXCEPTION_SUBCLASS2(EContext, EContextTypeMismatch, "Context Type Mismatch");
+ 
     /**
      * This class implements a 'context' which may be passed into
      * various constructors.  The context contains references to other
