@@ -22,6 +22,7 @@ SRCS =	\
 	ClusterLock.cpp \
 	Collector.cpp \
 	CollectorPollThread.cpp \
+	ConditionPollThread.cpp \
 	ContextPredicate.cpp \
 	Curl.cpp \
 	CurlFactory.cpp \
