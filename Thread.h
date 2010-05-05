@@ -67,7 +67,7 @@ namespace Forte
          * elapses, or until the thread is requested to shut down,
          * which ever happens first.
          */
-        void interruptibleSleep(const struct timeval &interval,
+        void interruptibleSleep(const struct timespec &interval,
                                 bool throwRequested = true);
 
         pthread_t mThread;

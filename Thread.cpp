@@ -90,20 +90,53 @@ void Thread::waitForShutdown()
     mShutdownCompleteCondition.wait();
 }
 
-void Thread::interruptibleSleep(const struct timeval &interval, bool throwRequested)
+void Thread::interruptibleSleep(const struct timespec &interval, bool throwRequested)
 {
-    struct timeval now, abs;
-    gettimeofday(&now, 0);
-    abs = now + interval;
-    struct timespec abstime;
-    abstime.tv_sec = abs.tv_sec;
-    abstime.tv_nsec = abs.tv_usec * 1000;
+    // Sleep for the desired interval.  If the thread is shutdown
+    // during that interval, we will return early (or throw
+    // EThreadShutdown if so requested).
+
+    // Pthread condition timedwaits use real time clock values, so we
+    // have to dance around a bit to get this to work correctly in all
+    // cases.
+    RealtimeClock rtc;
+    MonotonicClock mc;
+    struct timespec start = mc.GetTime(); // monotonic start time
+    struct timespec now = rtc.GetTime();  // realtime now
+    struct timespec end = now + interval; // realtime end of sleep
 
     AutoUnlockMutex lock(mShutdownRequestedLock);
-    if (mThreadShutdown) return;
-    if (mShutdownRequested.timedwait(abstime) != ETIMEDOUT &&
-        throwRequested)
-        throw EThreadShutdown();
+    while (!mThreadShutdown)
+    {
+        int status = mShutdownRequested.timedwait(end);
+        if (status == 0)
+        {
+            // The condition was signalled.
+            if (throwRequested)
+                throw EThreadShutdown();
+            else
+                return;
+        }
+        else if (status == EINVAL || status == EPERM)
+            throw EThread(FStringFC(), "Software error: %s", strerror(errno));
+        else if (status == ETIMEDOUT)
+        {
+            // re-evaluate timeout, as spurious wakeups may occur
+            AutoLockMutex unlock(mShutdownRequestedLock);
+            // mutex is unlocked here
+            struct timespec mnow = mc.GetTime(); // monotonic now
+            if (interval < mnow - start)
+                // yes, we timed out
+                return;
+            else
+            {
+                // didn't time out, reset the end timespec and keep waiting
+                now = rtc.GetTime();
+                end = now + interval - (mnow - start);
+            }
+        }
+        // mutex is re-locked here
+    }
 }
 
 Thread::~Thread()
