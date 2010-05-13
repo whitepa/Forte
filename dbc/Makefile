@@ -1,7 +1,7 @@
 
-BUILDROOT:=$(shell echo 'while [ ! -d buildtools ]; do cd ..; done; pwd' | sh)
+BUILDROOT:=$(shell echo 'while [ ! -d re ]; do cd ..; done; pwd' | sh)
 
-include $(BUILDROOT)/buildtools/common/head.mk
+include $(BUILDROOT)/re/make/head.mk
 $(make-targetdir)
 
 LEX = flex
@@ -45,5 +45,5 @@ SQLScan.cpp: SQLScan.ll Makefile
 
 
 
-include $(BUILDROOT)/buildtools/common/tail.mk
+include $(BUILDROOT)/re/make/tail.mk
 
