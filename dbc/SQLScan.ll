@@ -13,12 +13,12 @@ using namespace DBC;
 
 #ifndef YYSTYPE_IS_DECLARED
 #define YYSTYPE_IS_DECLARED
-typedef boost::shared_ptr<any_ptr> YYSTYPE;
+typedef boost::shared_ptr<AnyPtr> YYSTYPE;
 #endif
 
 #include "SQLParse.hpp"
 
-#define LVAL(type) yylval = YYSTYPE(new any_ptr(new type(yytext)))
+#define LVAL(type) yylval = YYSTYPE(new AnyPtr(new type(yytext)))
 
 %}
 

@@ -16,7 +16,7 @@ ParseContext::ParseContext()
 
 ParseContext & ParseContext::get(void)
 {
-    if (!sSingletonPtr) throw CException("invalid parse context");
+    if (!sSingletonPtr) throw Exception("invalid parse context");
     return *sSingletonPtr;
 }
 
@@ -74,7 +74,7 @@ void ParseContext::generateMk(void)
     mFilename.Format("%s/dbc_generated_srcs.mk", 
                      ParseContext::get().getOutputPath().c_str());
     if ((m = fopen(mFilename, "w"))==NULL)
-        throw CException(FStringFC(), "unable to open file '%s'", mFilename.c_str());
+        throw Exception(FStringFC(), "unable to open file '%s'", mFilename.c_str());
 
     fprintf(m, "#\n");
     fprintf(m, "# THIS FILE WAS AUTOMATICALLY GENERATED; DO NOT EDIT!\n");
@@ -109,7 +109,7 @@ YYSTYPE Table::getColumn(const char *colname) const
             break;
         }
     }
-    if (!found) throw CException(FStringFC(), "Unknown column %s in Foreign Key for table '%s'",
+    if (!found) throw Exception(FStringFC(), "Unknown column %s in Foreign Key for table '%s'",
                                  colname, mName.c_str());
     return ret;
 }
@@ -129,7 +129,7 @@ void ColumnValue::linkToColumn(const Table &table)
             break;
         }
     }
-    if (!found) throw CException(FStringFC(), "Unknown column %s in Foreign Key for table '%s'",
+    if (!found) throw Exception(FStringFC(), "Unknown column %s in Foreign Key for table '%s'",
                                  mColumnName.c_str(), table.mName.c_str());
 }
 
@@ -146,7 +146,7 @@ FString ColumnValue::sqlValue(void) const
         return FString(FStringFC(), "'%s'",i.c_str());
     }
     else
-        throw CException("unsupported type in foreign key value");
+        throw Exception("unsupported type in foreign key value");
 }
 
 ForeignKey::ForeignKey(const char *name, YYSTYPE colvalues, YYSTYPE flags) :
@@ -166,7 +166,7 @@ ForeignKey::ForeignKey(const char *name, YYSTYPE colvalues, YYSTYPE flags) :
             if (mFlags & FK_OPT_PRIMARY) 
             {
                 if (cv.mValueSet)
-                    throw CException("Values must not be set in foreign key references"
+                    throw Exception("Values must not be set in foreign key references"
                                      " for primary tables");
                 
             }
@@ -186,7 +186,7 @@ ForeignKey::ForeignKey(const char *name, YYSTYPE colvalues, YYSTYPE flags) :
         {
             // names match, make sure the types of the non-valued fields match up in order
             if (compare(fk))
-                throw CException(FStringFC(),
+                throw Exception(FStringFC(),
                                  "Foreign Key '%s' on table '%s' does not match previous definitions.",
                                  name, LASTTABLE().mName.c_str());
         }
@@ -254,7 +254,7 @@ FString ForeignKey::paramStr(const ForeignKey &callee, bool orig) const
     // which match up with the callee table's foreign key columns
     std::vector<FString> params;
     if (!(mFlags & FK_OPT_PRIMARY))
-        throw CException("Only a primary foreign key instance can call others");
+        throw Exception("Only a primary foreign key instance can call others");
     std::vector<YYSTYPE>::const_iterator i2;
     i2 = callee.mColValues.begin();
     foreach(YYSTYPE a, mColValues)
@@ -268,7 +268,7 @@ FString ForeignKey::paramStr(const ForeignKey &callee, bool orig) const
             const TableColumn &otherColumn(TC(TableColumn,(TC(ColumnValue,*i2).mColumn)));
             if (otherColumn.cTypeName().compare(thisColumn.cTypeName()))
                 // types are different
-                throw CException("foreign key type mismatch");
+                throw Exception("foreign key type mismatch");
             if (orig)
                 params.push_back(thisColumn.cOriginalName()); // using original name
             else
@@ -276,20 +276,20 @@ FString ForeignKey::paramStr(const ForeignKey &callee, bool orig) const
             ++i2;
         }
         else // more columns in c1
-            throw CException(FStringFC(), "extra columns in foreign key(1) '%s' on table '%s'",
+            throw Exception(FStringFC(), "extra columns in foreign key(1) '%s' on table '%s'",
                              mName.c_str(),TC(Table,mTable).mName.c_str());
     }
     while (i2 != callee.mColValues.end())
     {
         if (!TC(ColumnValue,*i2).mValueSet)
             // more columns in c2
-            throw CException(FStringFC(), "extra columns in foreign key(2) '%s' on table '%s'",
+            throw Exception(FStringFC(), "extra columns in foreign key(2) '%s' on table '%s'",
                              callee.mName.c_str(),TC(Table,callee.mTable).mName.c_str());
         ++i2;
     }
     // looks good
     FString paramStr;
-    paramStr.implode(", ", params);
+    paramStr.Implode(", ", params);
     return paramStr;
 }
 FString ForeignKey::localParamStr(const char *prefix) const
@@ -305,7 +305,7 @@ FString ForeignKey::localParamStr(const char *prefix) const
                                  col.cPODType().c_str(), prefix, col.mName.c_str()));
     }
     FString paramStr;
-    paramStr.implode(", ", params);
+    paramStr.Implode(", ", params);
     return paramStr;
 }
 
@@ -327,7 +327,7 @@ TableColumnAccessor::TableColumnAccessor(const char *name, YYSTYPE colnames):
         }
         else
         {
-            throw CException("unknown type in new TableConstraint columns");
+            throw Exception("unknown type in new TableConstraint columns");
         }
     }
 }
@@ -349,7 +349,7 @@ void TableColumnAccessor::linkToColumns(const Table &table)
                 break;
             }
         }
-        if (!found) throw CException(FStringFC(), "Unknown column %s in table column accessor",
+        if (!found) throw Exception(FStringFC(), "Unknown column %s in table column accessor",
                                      colName.c_str());
     }
 }
@@ -374,7 +374,7 @@ void PrimaryKey::linkToColumns(const Table &table)
                 break;
             }
         }
-        if (!found) throw CException(FStringFC(), "Unknown column %s in primary key",
+        if (!found) throw Exception(FStringFC(), "Unknown column %s in primary key",
                                      colName.c_str());
     }
 }
@@ -391,8 +391,8 @@ void TableCount::generateCPP(const Table &t, FILE *h, FILE *c)
         formatStrV.push_back(tc.cFormatStr(t.aliasPrefix()));
         formatParamV.push_back(tc.cFormatParam(tc.mName));
     }
-    formatStr.implode(" AND ", formatStrV);
-    formatParams.implode(", ", formatParamV);
+    formatStr.Implode(" AND ", formatStrV);
+    formatParams.Implode(", ", formatParamV);
 
     // generate parameters to function call
     std::vector<FString> keyParamV;
@@ -403,7 +403,7 @@ void TableCount::generateCPP(const Table &t, FILE *h, FILE *c)
         keyParamV.push_back(FString(FStringFC(), 
                                     "%s %s", tc.cPODType().c_str(), tc.mName.c_str()));
     }
-    keyParamStr.implode(", ", keyParamV);
+    keyParamStr.Implode(", ", keyParamV);
 
     fprintf(h, "    static unsigned int %s(CDbConnection &db, %s);\n", mName.c_str(), keyParamStr.c_str());
     fprintf(c, "unsigned int %s::%s(CDbConnection &db, %s)\n", 
@@ -427,8 +427,8 @@ void TableSelector::generateCPP(const Table &t, FILE *h, FILE *c)
         formatStrV.push_back(tc.cFormatStr(t.aliasPrefix()));
         formatParamV.push_back(tc.cFormatParam(tc.mName));
     }
-    formatStr.implode(" AND ", formatStrV);
-    formatParams.implode(", ", formatParamV);
+    formatStr.Implode(" AND ", formatStrV);
+    formatParams.Implode(", ", formatParamV);
 
     // generate parameters to function call
     std::vector<FString> keyParamV;
@@ -446,7 +446,7 @@ void TableSelector::generateCPP(const Table &t, FILE *h, FILE *c)
         keyParamV.push_back(FString("unsigned int lockMode"));
         lockDefault = " = REV_DB_NO_LOCK";
     }
-    keyParamStr.implode(", ", keyParamV);
+    keyParamStr.Implode(", ", keyParamV);
 
     FString lockStr;
     if (mFlags & SELECTOR_LOCK_UPDATE)
@@ -483,8 +483,8 @@ void TableDeletor::generateCPP(const Table &t, FILE *h, FILE *c)
         formatStrV.push_back(tc.cFormatStr());
         formatParamV.push_back(tc.cFormatParam(tc.mName));
     }
-    formatStr.implode(" AND ", formatStrV);
-    formatParams.implode(", ", formatParamV);
+    formatStr.Implode(" AND ", formatStrV);
+    formatParams.Implode(", ", formatParamV);
 
     // generate parameters to function call
     std::vector<FString> keyParamV;
@@ -495,7 +495,7 @@ void TableDeletor::generateCPP(const Table &t, FILE *h, FILE *c)
         keyParamV.push_back(FString(FStringFC(), 
                                     "%s %s", tc.cPODType().c_str(), tc.mName.c_str()));
     }
-    keyParamStr.implode(", ", keyParamV);
+    keyParamStr.Implode(", ", keyParamV);
 
     fprintf(h, "    static void %s(CDbConnection &db, %s);\n", mName.c_str(), keyParamStr.c_str());
     fprintf(c, "void %s::%s(CDbConnection &db, %s)\n", 
@@ -518,8 +518,8 @@ void TableExistor::generateCPP(const Table &t, FILE *h, FILE *c)
         formatStrV.push_back(tc.cFormatStr());
         formatParamV.push_back(tc.cFormatParam(tc.mName));
     }
-    formatStr.implode(" AND ", formatStrV);
-    formatParams.implode(", ", formatParamV);
+    formatStr.Implode(" AND ", formatStrV);
+    formatParams.Implode(", ", formatParamV);
 
     // generate parameters to function call
     std::vector<FString> keyParamV;
@@ -530,7 +530,7 @@ void TableExistor::generateCPP(const Table &t, FILE *h, FILE *c)
         keyParamV.push_back(FString(FStringFC(), 
                                     "%s %s", tc.cPODType().c_str(), tc.mName.c_str()));
     }
-    keyParamStr.implode(", ", keyParamV);
+    keyParamStr.Implode(", ", keyParamV);
 
     fprintf(h, "    static bool %s(CDbConnection &db, %s);\n", mName.c_str(), keyParamStr.c_str());
     fprintf(c, "bool %s::%s(CDbConnection &db, %s)\n", 
@@ -554,8 +554,8 @@ void TableLookup::generateCPP(const Table &t, FILE *h, FILE *c)
         formatStrV.push_back(tc.cFormatStr());
         formatParamV.push_back(tc.cFormatParam(tc.mName));
     }
-    formatStr.implode(" AND ", formatStrV);
-    formatParams.implode(", ", formatParamV);
+    formatStr.Implode(" AND ", formatStrV);
+    formatParams.Implode(", ", formatParamV);
 
     // generate parameters to function call
     std::vector<FString> keyParamV;
@@ -566,7 +566,7 @@ void TableLookup::generateCPP(const Table &t, FILE *h, FILE *c)
         keyParamV.push_back(FString(FStringFC(), 
                                     "%s %s", tc.cPODType().c_str(), tc.mName.c_str()));
     }
-    keyParamStr.implode(", ", keyParamV);
+    keyParamStr.Implode(", ", keyParamV);
 
     // figure out return column
     const TableColumn &retcol(TC(TableColumn,t.getColumn(mRetColName)));
@@ -615,7 +615,7 @@ void TableCtor::generateCPP(const Table &t, FILE *h, FILE *c)
             // the column was not a parameter, and it needs initialization
             initStrV.push_back(FString(FStringFC(), "%s(0)", tc.cName().c_str()));
     }
-    initStr.implode(",\n        ", initStrV);
+    initStr.Implode(",\n        ", initStrV);
 
     // generate parameters to function call
     std::vector<FString> keyParamV;
@@ -626,7 +626,7 @@ void TableCtor::generateCPP(const Table &t, FILE *h, FILE *c)
         keyParamV.push_back(FString(FStringFC(), 
                                     "%s %s", tc.cPODType().c_str(), tc.mName.c_str()));
     }
-    keyParamStr.implode(", ", keyParamV);
+    keyParamStr.Implode(", ", keyParamV);
 
     fprintf(h, "    %s(%s) :\n", t.mClassname.c_str(), keyParamStr.c_str());
     fprintf(h, "        %s\n", initStr.c_str());
@@ -689,7 +689,7 @@ Table::Table(const Table &other)
 }
 void Table::addForeignKey(YYSTYPE name, YYSTYPE colvalues, YYSTYPE flags)
 {
-    YYSTYPE fk = YYSTYPE(new any_ptr(new ForeignKey(TC(FString,name), colvalues, flags)));
+    YYSTYPE fk = YYSTYPE(new AnyPtr(new ForeignKey(TC(FString,name), colvalues, flags)));
     // add to the table's list of foreign keys
     mForeignKeys.push_back(fk);
     // add to the global list of foreign keys
@@ -705,13 +705,13 @@ void Table::generateCode(void) const
                     filenameBase.c_str());
     cout << "Writing file " << filename << endl;
     if ((h = fopen(filename, "w"))==NULL)
-        throw CException(FStringFC(), "unable to open file '%s'", filename.c_str());
+        throw Exception(FStringFC(), "unable to open file '%s'", filename.c_str());
     filename.Format("%s/%s.cpp", 
                     ParseContext::get().getOutputPath().c_str(),
                     filenameBase.c_str());
     cout << "Writing file " << filename << endl;
     if ((c = fopen(filename, "w"))==NULL)
-        throw CException(FStringFC(), "unable to open file '%s'", filename.c_str());
+        throw Exception(FStringFC(), "unable to open file '%s'", filename.c_str());
     
     cAutogenComment(h);
     cAutogenComment(c);
@@ -825,7 +825,7 @@ void Table::includeCustom(FILE *h, FILE *c) const
 //         fprintf(h, "#line 1 \"%s\"\n", hFile.c_str());
 //         fwrite(hCode.c_str(), sizeof(char), hCode.size(), h);
 //         fprintf(h, "\n// End Custom\n\n");
-//     } catch (CException &e) {
+//     } catch (Exception &e) {
 //     }
 
 //     try {
@@ -834,7 +834,7 @@ void Table::includeCustom(FILE *h, FILE *c) const
 //         fprintf(c, "#line 1 \"%s\"\n", cFile.c_str());
 //         fwrite(cCode.c_str(), sizeof(char), cCode.size(), c);
 //         fprintf(c, "\n// End Custom\n\n");
-//     } catch (CException &e) {
+//     } catch (Exception &e) {
 //     }
     // instead, just make a #include; line numbers and dependencies should just work
     fprintf(h, "#include \"%s\"\n", hFile.c_str());
@@ -864,7 +864,7 @@ void Table::genCtor(FILE *h, FILE *c) const
         if (tc.cTypeNeedsZeroInit())
             initV.push_back(FString(FStringFC(), "%s(0)",tc.cName().c_str()));
     }
-    initStr.implode(", ",initV);
+    initStr.Implode(", ",initV);
 
     fprintf(h, "    %s();\n", mClassname.c_str());
     if (initStr.empty())
@@ -900,9 +900,9 @@ void Table::genPrimaryCtor(FILE *h, FILE *c) const
         }
     }
     if (empty) return;
-    formatStr.implode(" AND ", formatStrV);
-    formatParams.implode(", ", formatParamV);
-    paramStr.implode(", ", paramV);
+    formatStr.Implode(" AND ", formatStrV);
+    formatParams.Implode(", ", formatParamV);
+    paramStr.Implode(", ", paramV);
     // generate parameters to function call
     std::vector<FString> keyParamV;
     FString keyParamStr;
@@ -916,7 +916,7 @@ void Table::genPrimaryCtor(FILE *h, FILE *c) const
                                         "%s %s", tc.cPODType().c_str(), tc.mName.c_str()));
         }
     }
-    keyParamStr.implode(", ", keyParamV);
+    keyParamStr.Implode(", ", keyParamV);
 
     fprintf(h, "    %s(CDbConnection &db, %s);\n", mClassname.c_str(), keyParamStr.c_str());
     fprintf(c, "%s::%s(CDbConnection &db, %s)\n", 
@@ -973,7 +973,7 @@ void Table::genSelect(FILE *h, FILE *c) const
     FString colstr;
     foreach(YYSTYPE a, mColumns)
         cols.push_back(aliasPrefix() + TC(TableColumn,a).sqlName());
-    colstr.implode(", ", cols);
+    colstr.Implode(", ", cols);
 
     fprintf(h, "    static CDbResult select(CDbConnection &db, const char *appendSql = NULL);\n");
     fprintf(c, "CDbResult %s::select(CDbConnection &db, const char *appendSql)\n", mClassname.c_str());
@@ -1008,7 +1008,7 @@ void Table::genSelectAlias(FILE *h, FILE *c) const
     FString colstr;
     foreach(YYSTYPE a, mColumns)
         cols.push_back(aliasPrefix() + TC(TableColumn,a).sqlName());
-    colstr.implode(", ", cols);
+    colstr.Implode(", ", cols);
 
     fprintf(h, "    static CDbResult selectAlias(CDbConnection &db, const char *tableAlias = NULL, const char *appendSql = NULL);\n");
     fprintf(c, "CDbResult %s::selectAlias(CDbConnection &db, const char *tableAlias, const char *appendSql)\n", mClassname.c_str());
@@ -1051,8 +1051,8 @@ void Table::genSelectPrimaryKey(FILE *h, FILE *c) const
         }
     }
     if (empty) return;
-    formatStr.implode(" AND ", formatStrV);
-    formatParams.implode(", ", formatParamV);
+    formatStr.Implode(" AND ", formatStrV);
+    formatParams.Implode(", ", formatParamV);
 
     // generate parameters to function call
     std::vector<FString> keyParamV;
@@ -1066,7 +1066,7 @@ void Table::genSelectPrimaryKey(FILE *h, FILE *c) const
                                         "%s %s", tc.cPODType().c_str(), tc.mName.c_str()));
         }
     }
-    keyParamStr.implode(", ", keyParamV);
+    keyParamStr.Implode(", ", keyParamV);
 
     fprintf(h, "    static CDbResult selectPrimaryKey(CDbConnection &db, %s);\n", keyParamStr.c_str());
     fprintf(c, "CDbResult %s::selectPrimaryKey(CDbConnection &db, %s)\n", 
@@ -1169,7 +1169,7 @@ void Table::genReplace(FILE *h, FILE *c, bool key, bool set) const
         fprintf(c, "               setColumnSql(db).c_str(), setValueSql(db).c_str());\n");
     }
     else // no setSql() call and no settable key columns.
-        throw CException(FStringFC(), "%s::insert() cannot be generated (has no setSql())",
+        throw Exception(FStringFC(), "%s::insert() cannot be generated (has no setSql())",
                          mName.c_str());
 
 
@@ -1227,7 +1227,7 @@ void Table::genInsert(FILE *h, FILE *c, bool keynoauto, bool set) const
         fprintf(c, "               setColumnSql(db).c_str(), setValueSql(db).c_str());\n");
     }
     else // no setSql() call and no settable key columns.
-        throw CException(FStringFC(), "%s::insert() cannot be generated (has no setSql())",
+        throw Exception(FStringFC(), "%s::insert() cannot be generated (has no setSql())",
                          mName.c_str());
 
 /////////////////////////////
@@ -1247,7 +1247,7 @@ void Table::genInsert(FILE *h, FILE *c, bool keynoauto, bool set) const
 //         fprintf(c, "               setSql(db).c_str());\n");
 //     }
 //     else // no setSql() call and no settable key columns.
-//         throw CException(FStringFC(), "%s::insert() cannot be generated (has no setSql())",
+//         throw Exception(FStringFC(), "%s::insert() cannot be generated (has no setSql())",
 //                          mName.c_str());
 //////////////////////////////
 
@@ -1372,8 +1372,8 @@ void Table::genRefresh(FILE *h, FILE *c, bool where) const
         }
     }
     if (empty) return;
-    formatStr.implode(" AND ", formatStrV);
-    formatParams.implode(", ", formatParamV);
+    formatStr.Implode(" AND ", formatStrV);
+    formatParams.Implode(", ", formatParamV);
 
     fprintf(h, "    void refresh(CDbConnection &db);\n");
     fprintf(c, "void %s::refresh(CDbConnection &db)\n", mClassname.c_str());
@@ -1442,8 +1442,8 @@ void Table::genFKRestrict(FILE *h, FILE *c) const
                 formatParamV.push_back(tc.cFormatParam(tc.mName));
             }
         }
-        formatStr.implode(" AND ", formatStrV);
-        formatParams.implode(", ", formatParamV);
+        formatStr.Implode(" AND ", formatStrV);
+        formatParams.Implode(", ", formatParamV);
         fprintf(h, "    static void restrictFK%s%d(CDbConnection &db, %s);\n", 
                 fk.mName.c_str(), fk.mID, fk.localParamStr().c_str());
         fprintf(c, "void %s::restrictFK%s%d(CDbConnection &db, %s)\n", mClassname.c_str(),
@@ -1490,10 +1490,10 @@ void Table::genFKUpdate(FILE *h, FILE *c) const
                 setParamV.push_back(tc.cFormatParam(tc.mName));
             }
         }
-        formatStr.implode(" AND ", formatStrV);
-        formatParams.implode(", ", formatParamV);
-        setStr.implode(", ", setStrV);
-        setParams.implode(", ", setParamV);
+        formatStr.Implode(" AND ", formatStrV);
+        formatParams.Implode(", ", formatParamV);
+        setStr.Implode(", ", setStrV);
+        setParams.Implode(", ", setParamV);
         fprintf(h, "    static void updateFK%s%d(CDbConnection &db, %s, %s);\n", 
                 fk.mName.c_str(), fk.mID, fk.localParamStr().c_str(), fk.localParamStr("orig_").c_str());
         fprintf(c, "void %s::updateFK%s%d(CDbConnection &db, %s, %s)\n", mClassname.c_str(),
@@ -1542,8 +1542,8 @@ void Table::genFKUpdate(FILE *h, FILE *c) const
                         setParamV.push_back(tc.cFormatParam(tc.mName));
                     }
                 }
-                formatParams.implode(", ", formatParamV);
-                setParams.implode(", ", setParamV);
+                formatParams.Implode(", ", formatParamV);
+                setParams.Implode(", ", setParamV);
 
                 fprintf(c, "    updateFK%s%d(db, %s, %s);\n", keyName.c_str(), fk2.mID,
                         setParams.c_str(), formatParams.c_str());
@@ -1582,8 +1582,8 @@ void Table::genFKDelete(FILE *h, FILE *c) const
                 formatParamV.push_back(tc.cFormatParam(tc.mName));
             }
         }
-        formatStr.implode(" AND ", formatStrV);
-        formatParams.implode(", ", formatParamV);
+        formatStr.Implode(" AND ", formatStrV);
+        formatParams.Implode(", ", formatParamV);
         fprintf(h, "    static void deleteFK%s%d(CDbConnection &db, %s);\n", 
                 fk.mName.c_str(), fk.mID, fk.localParamStr().c_str());
         fprintf(c, "void %s::deleteFK%s%d(CDbConnection &db, %s)\n", mClassname.c_str(),
@@ -1632,7 +1632,7 @@ void Table::genFKDelete(FILE *h, FILE *c) const
                         formatParamV.push_back(tc.cFormatParam(tc.mName));
                     }
                 }
-                formatParams.implode(", ", formatParamV);
+                formatParams.Implode(", ", formatParamV);
 
                 fprintf(c, "    deleteFK%s%d(db, %s);\n", keyName.c_str(), fk2.mID,
                         formatParams.c_str());
@@ -1709,8 +1709,8 @@ bool Table::genSetSql(FILE *h, FILE *c) const
         }
     }
     if (empty || (mOptions & OPT_NOSETSQL)) return false;
-    formatStr.implode(", ", formatStrV);
-    formatParams.implode(", ", formatParamV);
+    formatStr.Implode(", ", formatStrV);
+    formatParams.Implode(", ", formatParamV);
     fprintf(h, "    FString setSql(CDbConnection &db);\n");
     fprintf(c, "FString %s::setSql(CDbConnection &db)\n", mClassname.c_str());
     fprintf(c, "{\n");
@@ -1738,8 +1738,8 @@ bool Table::genKeySql(FILE *h, FILE *c) const
         }
     }
 
-    formatStr.implode(", ", formatStrV);
-    formatParams.implode(", ", formatParamV);
+    formatStr.Implode(", ", formatStrV);
+    formatParams.Implode(", ", formatParamV);
 
     if (empty || (mOptions & OPT_NOKEYSQL)) return false;
     fprintf(h, "    FString keySql(CDbConnection &db);\n");
@@ -1773,8 +1773,8 @@ bool Table::genKeyNoAutoSql(FILE *h, FILE *c) const
 
     if (empty || (mOptions & OPT_NOKEYSQL)) return false;
 
-    formatStr.implode(", ", formatStrV);
-    formatParams.implode(", ", formatParamV);
+    formatStr.Implode(", ", formatStrV);
+    formatParams.Implode(", ", formatParamV);
 
     fprintf(h, "    FString keyNoAutoSql(CDbConnection &db);\n");
     fprintf(c, "FString %s::keyNoAutoSql(CDbConnection &db)\n", mClassname.c_str());
@@ -1803,7 +1803,7 @@ bool Table::genSetColumnSql(FILE *h, FILE *c) const
             columnStrV.push_back(tc.sqlName());
         }
     }
-    columnStr.implode(", ", columnStrV);
+    columnStr.Implode(", ", columnStrV);
     if (empty || (mOptions & OPT_NOSETSQL)) return false;
 
     fprintf(h, "    FString setColumnSql(CDbConnection &db);\n");
@@ -1833,8 +1833,8 @@ bool Table::genSetValueSql(FILE *h, FILE *c) const
             paramStrV.push_back(tc.cFormatParam(tc.cName()));
         }
     }
-    valueStr.implode(", ", valueStrV);
-    paramStr.implode(", ", paramStrV);
+    valueStr.Implode(", ", valueStrV);
+    paramStr.Implode(", ", paramStrV);
     if (empty || (mOptions & OPT_NOSETSQL)) return false;
 
     fprintf(h, "    FString setValueSql(CDbConnection &db);\n");
@@ -1863,7 +1863,7 @@ bool Table::genKeyColumnSql(FILE *h, FILE *c) const
             columnStrV.push_back(tc.sqlName());
         }
     }
-    columnStr.implode(", ", columnStrV);
+    columnStr.Implode(", ", columnStrV);
 
     if (empty || (mOptions & OPT_NOKEYSQL)) return false;
     fprintf(h, "    FString keyColumnSql(CDbConnection &db);\n");
@@ -1893,8 +1893,8 @@ bool Table::genKeyValueSql(FILE *h, FILE *c) const
             paramStrV.push_back(tc.cFormatParam(tc.cName()));
         }
     }
-    valueStr.implode(", ", valueStrV);
-    paramStr.implode(", ", paramStrV);
+    valueStr.Implode(", ", valueStrV);
+    paramStr.Implode(", ", paramStrV);
 
     if (empty || (mOptions & OPT_NOKEYSQL)) return false;
     fprintf(h, "    FString keyValueSql(CDbConnection &db);\n");
@@ -1926,7 +1926,7 @@ bool Table::genKeyNoAutoColumnSql(FILE *h, FILE *c) const
             columnStrV.push_back(tc.sqlName());
         }
     }
-    columnStr.implode(", ", columnStrV);
+    columnStr.Implode(", ", columnStrV);
 
     if (empty || (mOptions & OPT_NOKEYSQL)) return false;
     fprintf(h, "    FString keyNoAutoColumnSql(CDbConnection &db);\n");
@@ -1958,8 +1958,8 @@ bool Table::genKeyNoAutoValueSql(FILE *h, FILE *c) const
             paramStrV.push_back(tc.cFormatParam(tc.cName()));
         }
     }
-    valueStr.implode(", ", valueStrV);
-    paramStr.implode(", ", paramStrV);
+    valueStr.Implode(", ", valueStrV);
+    paramStr.Implode(", ", paramStrV);
 
     if (empty || (mOptions & OPT_NOKEYSQL)) return false;
     fprintf(h, "    FString keyNoAutoValueSql(CDbConnection &db);\n");
@@ -1994,9 +1994,9 @@ bool Table::genWhereSql(FILE *h, FILE *c) const
 
     if (empty || (mOptions & OPT_NOWHERESQL)) return false;
 
-    formatStr.implode(" AND ", formatStrV);
-    formatParams.implode(", ", formatParamV);
-    formatParamsOrig.implode(", ", formatParamOrigV);
+    formatStr.Implode(" AND ", formatStrV);
+    formatParams.Implode(", ", formatParamV);
+    formatParamsOrig.Implode(", ", formatParamOrigV);
 
     fprintf(h, "    FString whereSql(CDbConnection &db);\n");
     fprintf(c, "FString %s::whereSql(CDbConnection &db)\n", mClassname.c_str());
@@ -2101,7 +2101,7 @@ FString TableColumn::cGetter(void) const
         if (mOptions & OPT_UNSIGNED) return "GetUInt";
         else return "GetInt";
     }
-    throw CException("Unknown getter");
+    throw Exception("Unknown getter");
 }
 FString TableColumn::cOriginalName(void) const
 {
@@ -2113,7 +2113,7 @@ FString TableColumn::cName(void) const
     FString name;
     name = "m";
     std::vector<FString> words;
-    mName.explode("_", words);
+    mName.Explode("_", words);
     foreach(FString word, words)
     {
         // define some words which are always full upper case
@@ -2157,7 +2157,7 @@ FString TableColumn::cFormatElement(void) const
         if (mOptions & OPT_UNSIGNED) str += "%u";
         else str += "%d";
     }
-    else throw CException("Unknown type in cFormatStr()");
+    else throw Exception("Unknown type in cFormatStr()");
     return str;
 }
 FString TableColumn::cFormatParam(const FString &name) const
@@ -2175,7 +2175,7 @@ FString TableColumn::cFormatParam(const FString &name) const
                mType->GetType() == typeid(TinyIntType)) {
         param = name;
     }
-    else throw CException("Unknown type in cFormatStr()");
+    else throw Exception("Unknown type in cFormatStr()");
     return param;
 }
 FString TableColumn::sqlName(void) const

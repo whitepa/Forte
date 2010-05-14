@@ -1,10 +1,12 @@
 #ifndef __dbc_internal_rep_h__
 #define __dbc_internal_rep_h__
 
-#include "Forte.h"
+//#include "Forte.h"
 #include "boost/any.hpp"
 #include "boost/shared_ptr.hpp"
 #include "AnyPtr.h"
+
+using namespace Forte;
 
 // column options
 #define OPT_NONE      0x00
@@ -49,13 +51,13 @@
 #define TLASTOBJ(type) (*((*(ParseContext::get().getLastObject())).PtrCast<type>()))
 #define LASTTABLE() (*((*(ParseContext::get().getLastTable())).PtrCast<Table>()))
 
-#define NEWOBJ(obj) ParseContext::get().setLastObject(YYSTYPE(new any_ptr(new obj)))
+#define NEWOBJ(obj) ParseContext::get().setLastObject(YYSTYPE(new AnyPtr(new obj)))
 
 #define PC() ParseContext::get()
 
 #ifndef YYSTYPE_IS_DECLARED
 #define YYSTYPE_IS_DECLARED
-typedef boost::shared_ptr<any_ptr> YYSTYPE;
+typedef boost::shared_ptr<AnyPtr> YYSTYPE;
 #endif
 
 using namespace boost;
@@ -340,15 +342,15 @@ namespace DBC {
         void addDefine(const char *str) { mDefines.push_back(FString(str)); }
 
         void addSelector(YYSTYPE name, YYSTYPE colnames, YYSTYPE flags)
-            {mSelectors.push_back(YYSTYPE(new any_ptr(
+            {mSelectors.push_back(YYSTYPE(new AnyPtr(
                                               new TableSelector(TC(FString,name), colnames, flags))));}
-        void addDeletor(YYSTYPE name, YYSTYPE colnames) {mDeletors.push_back(YYSTYPE(new any_ptr(new TableDeletor(TC(FString,name), colnames))));}
-        void addExistor(YYSTYPE name, YYSTYPE colnames) {mExistors.push_back(YYSTYPE(new any_ptr(new TableExistor(TC(FString,name), colnames))));}
-        void addLookup(YYSTYPE name, YYSTYPE colnames, YYSTYPE retcol) {mLookups.push_back(YYSTYPE(new any_ptr(new TableLookup(TC(FString, name), colnames, retcol))));}
-        void addCtor(YYSTYPE colnames) {mCtors.push_back(YYSTYPE(new any_ptr(new TableCtor(colnames))));}
+        void addDeletor(YYSTYPE name, YYSTYPE colnames) {mDeletors.push_back(YYSTYPE(new AnyPtr(new TableDeletor(TC(FString,name), colnames))));}
+        void addExistor(YYSTYPE name, YYSTYPE colnames) {mExistors.push_back(YYSTYPE(new AnyPtr(new TableExistor(TC(FString,name), colnames))));}
+        void addLookup(YYSTYPE name, YYSTYPE colnames, YYSTYPE retcol) {mLookups.push_back(YYSTYPE(new AnyPtr(new TableLookup(TC(FString, name), colnames, retcol))));}
+        void addCtor(YYSTYPE colnames) {mCtors.push_back(YYSTYPE(new AnyPtr(new TableCtor(colnames))));}
         void addForeignKey(YYSTYPE name, YYSTYPE colvalues, YYSTYPE flags);
         void addCount(YYSTYPE name, YYSTYPE colvalues)
-        {mCounts.push_back(YYSTYPE(new any_ptr(new TableCount(TC(FString,name), colvalues))));}
+        {mCounts.push_back(YYSTYPE(new AnyPtr(new TableCount(TC(FString,name), colvalues))));}
         
         // code generation:
         void generateCode(void) const;

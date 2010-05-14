@@ -10,7 +10,7 @@ int yylex(void);
 void yyerror(char *s);
 
 #define YYSTYPE_IS_DECLARED
-typedef boost::shared_ptr<any_ptr> YYSTYPE;
+typedef boost::shared_ptr<AnyPtr> YYSTYPE;
 
 using namespace DBC;
 

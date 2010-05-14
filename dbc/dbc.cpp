@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
             exit(1);
         }
     }
-    catch (CException &e)
+    catch (Exception &e)
     {
         printf("Exception thrown: %s\n", e.what().c_str());
         exit(1);
