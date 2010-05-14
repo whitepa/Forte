@@ -744,7 +744,7 @@ void FileSystem::FileCopy(const FString& from, const FString& to, mode_t mode)
 {
     hlog(HLOG_DEBUG4, "FileSystem::file_copy(%s, %s, %4o)",
          from.c_str(), to.c_str(), mode);
-    ProcRunner *proc = ProcRunner::get();
+    ProcRunner *proc = ProcRunner::Get();
     FString command, to_dir, stmp;
 
     // make directory
@@ -753,10 +753,10 @@ void FileSystem::FileCopy(const FString& from, const FString& to, mode_t mode)
 
     // copy file
     command.Format("/bin/cp -f %s %s",
-                   proc->shell_escape(from).c_str(),
-                   proc->shell_escape(to).c_str());
+                   proc->ShellEscape(from).c_str(),
+                   proc->ShellEscape(to).c_str());
 
-    if (proc->run(command, "", 0, PROC_RUNNER_NO_TIMEOUT) != 0)
+    if (proc->Run(command, "", 0, PROC_RUNNER_NO_TIMEOUT) != 0)
     {
         stmp.Format("FORTE_COPY_FAIL|||%s|||%s", from.c_str(), to.c_str());
         throw EFileSystemCopy(stmp);
@@ -845,7 +845,7 @@ void FileSystem::deepCopyHelper(const FString& base_from,
     }
     catch (Exception &e)
     {
-        hlog(HLOG_ERR, "%s", e.getDescription().c_str());
+        hlog(HLOG_ERR, "%s", e.GetDescription().c_str());
         throw EFileSystemCopy(FStringFC(), "FORTE_DEEP_COPY_FAIL|||%s", rel.c_str());
     }
 
@@ -878,7 +878,7 @@ void FileSystem::deepCopyHelper(const FString& base_from,
             }
             catch (Exception &e)
             {
-                hlog(HLOG_ERR, "%s", e.getDescription().c_str());
+                hlog(HLOG_ERR, "%s", e.GetDescription().c_str());
                 throw EFileSystemCopy(FStringFC(), "FORTE_DEEP_COPY_FAIL|||%s", rel.c_str());
             }
         }

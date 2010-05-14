@@ -26,20 +26,20 @@ namespace Forte
         virtual bool Close();
 
         // queries
-        virtual bool execute(const FString& sql);
-        virtual DbResult store(const FString& sql);
-        virtual DbResult use(const FString& sql);
+        virtual bool Execute(const FString& sql);
+        virtual DbResult Store(const FString& sql);
+        virtual DbResult Use(const FString& sql);
 
         // error info
-        virtual bool isTemporaryError() const;
+        virtual bool IsTemporaryError() const;
     
         // misc.
         virtual uint64_t InsertID() { return mLastRes.InsertID(); }
         virtual uint64_t AffectedRows() { return strtoull(PQcmdTuples(mLastRes), NULL, 0); }
-        virtual FString escape(const char *str);
+        virtual FString Escape(const char *str);
 
     private:
-        DbResult query(const FString& sql);
+        DbResult Query(const FString& sql);
         DbPgResult mLastRes;
         PGconn *mDB;
     };

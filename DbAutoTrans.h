@@ -18,25 +18,25 @@ namespace Forte
         DbAutoTrans(DbConnection &db_in) :
             db(db_in)
             {
-                if (db.hasPendingQueries())
+                if (db.HasPendingQueries())
                 {
                     hlog(HLOG_ERR, "DbAutoTrans(): new transaction created while queries pending");
-                    db.commit();
+                    db.Commit();
                 }
-                db.autoCommit(false);
+                db.AutoCommit(false);
             };
         virtual ~DbAutoTrans() {
             try {
-                if (db.hasPendingQueries())
+                if (db.HasPendingQueries())
                 {
                     hlog(HLOG_DEBUG, "~DbAutoTrans(): Rolling back transaction started at %s:%u",
                          file, line);
-                    db.rollback();
+                    db.Rollback();
                 }
             } catch (...) {
                 hlog(HLOG_ERR, "DbAutoTrans(): exception during rollback");
             }
-            db.autoCommit(true);
+            db.AutoCommit(true);
         }
         
     protected:

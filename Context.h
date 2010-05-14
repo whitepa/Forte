@@ -126,7 +126,7 @@ namespace Forte
                 mObjectMap.clear();
             }
         }
-    protected:
+     protected:
         mutable Forte::Mutex mLock;
         ObjectMap mObjectMap;
     };

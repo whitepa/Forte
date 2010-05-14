@@ -32,9 +32,9 @@ static size_t curlInternalDataCB(void *buffer, size_t size,
     return 0;
 }
 
-void Curl::setInternalCB(void)
+void Curl::SetInternalCB(void)
 {
-    setRecvCB(curlInternalDataCB, this);
+    SetRecvCB(curlInternalDataCB, this);
 }
 
 void Curl::Init(long flags)
@@ -73,7 +73,7 @@ Curl::Curl() :
         throw CurlException(CURLE_FAILED_INIT, "CURL_FAIL_INIT");
     }
 
-    setRecvHeader(false); // no header in the body by default
+    SetRecvHeader(false); // no header in the body by default
 }
 
 
@@ -83,99 +83,99 @@ Curl::~Curl()
 }
 
 
-void Curl::setURL(const FString& url)
+void Curl::SetURL(const FString& url)
 {
     mURL = url;
     SET_CURL_OPT(CURLOPT_URL, mURL.c_str());
 }
 
-void Curl::setRecvHeaderCB(header_cb_t func, void *data)
+void Curl::SetRecvHeaderCB(header_cb_t func, void *data)
 {
     SET_CURL_OPT(CURLOPT_HEADERFUNCTION, func);
     SET_CURL_OPT(CURLOPT_HEADERDATA, data);
 }
 
 
-void Curl::setRecvCB(data_cb_t func, void *data)
+void Curl::SetRecvCB(data_cb_t func, void *data)
 {
     SET_CURL_OPT(CURLOPT_WRITEFUNCTION, func);
     SET_CURL_OPT(CURLOPT_WRITEDATA, data);
 }
 
-void Curl::setOutputFile(FILE* file)
+void Curl::SetOutputFile(FILE* file)
 {
     SET_CURL_OPT(CURLOPT_WRITEFUNCTION, NULL);
     SET_CURL_OPT(CURLOPT_WRITEDATA, file);
 }
 
-void Curl::setSendCB(data_cb_t func, void *data)
+void Curl::SetSendCB(data_cb_t func, void *data)
 {
     SET_CURL_OPT(CURLOPT_READFUNCTION, func);
     SET_CURL_OPT(CURLOPT_READDATA, data);
 }
 
 
-void Curl::setProgressCB(progress_cb_t func, void *data)
+void Curl::SetProgressCB(progress_cb_t func, void *data)
 {
     SET_CURL_OPT(CURLOPT_PROGRESSFUNCTION, func);
     SET_CURL_OPT(CURLOPT_PROGRESSDATA, data);
 }
 
 
-void Curl::setFollowRedirects(bool follow)
+void Curl::SetFollowRedirects(bool follow)
 {
     SET_CURL_OPT(CURLOPT_FOLLOWLOCATION, (follow ? 1 : 0));
 }
 
 
-void Curl::setRecvSpeedMax(curl_off_t limit)
+void Curl::SetRecvSpeedMax(curl_off_t limit)
 {
     SET_CURL_OPT(CURLOPT_MAX_RECV_SPEED_LARGE, limit);
 }
 
 
-void Curl::setSendSpeedMax(curl_off_t limit)
+void Curl::SetSendSpeedMax(curl_off_t limit)
 {
     SET_CURL_OPT(CURLOPT_MAX_SEND_SPEED_LARGE, limit);
 }
 
 
-void Curl::setRecvHeader(bool recvHeader)
+void Curl::SetRecvHeader(bool recvHeader)
 {
     SET_CURL_OPT(CURLOPT_HEADER, recvHeader ? 1 : 0);
 }
 
-void Curl::setNoSignal(bool nosignal)
+void Curl::SetNoSignal(bool nosignal)
 {
     SET_CURL_OPT(CURLOPT_NOSIGNAL, nosignal ? 1 : 0);
 }
 
 
-void Curl::setConnectTimeout(long timeout)
+void Curl::SetConnectTimeout(long timeout)
 {
     SET_CURL_OPT(CURLOPT_CONNECTTIMEOUT, timeout);
 }
 
 
-void Curl::setMaxTransferTime(long max_xfer_time)
+void Curl::SetMaxTransferTime(long max_xfer_time)
 {
     SET_CURL_OPT(CURLOPT_TIMEOUT, max_xfer_time);
 }
 
 
 /// Set a low speed threshold, under which the transfer will be aborted.
-void Curl::setLowSpeed(int bps, int time)
+void Curl::SetLowSpeed(int bps, int time)
 {
     SET_CURL_OPT(CURLOPT_LOW_SPEED_LIMIT, bps);
     SET_CURL_OPT(CURLOPT_LOW_SPEED_TIME, time);
 }
 
-void Curl::setThrowOnHTTPError(bool shouldThrow)
+void Curl::SetThrowOnHTTPError(bool shouldThrow)
 {
     mThrowOnHTTPError = shouldThrow;
 }
 
-void Curl::reset()
+void Curl::Reset()
 {
     mBuf.clear();
     curl_easy_reset(mHandle);
@@ -210,7 +210,7 @@ void Curl::checkResolvConf()
     }
 }
 
-void Curl::perform()
+void Curl::Perform()
 {
     mBuf.clear();
 

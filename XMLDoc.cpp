@@ -11,7 +11,7 @@ Mutex XMLDoc::sMutex;
 XMLDoc::XMLDoc()
 {
     hlog(HLOG_DEBUG4, "Locking XML mutex");
-    sMutex.lock();
+    sMutex.Lock();
     mDoc = NULL;
 }
 
@@ -19,13 +19,13 @@ XMLDoc::XMLDoc()
 XMLDoc::XMLDoc(const FString& xml)
 {
     hlog(HLOG_DEBUG4, "Locking XML mutex");
-    sMutex.lock();
+    sMutex.Lock();
     mDoc = xmlReadMemory(xml.c_str(), xml.length(), "noname.xml", NULL, 0);
 
     if (mDoc == NULL)
     {
         hlog(HLOG_DEBUG4, "Unlocking XML mutex");
-        sMutex.unlock();
+        sMutex.Unlock();
         throw ForteXMLDocException("FORTE_XML_PARSE_ERROR");
     }
 }
@@ -36,7 +36,7 @@ XMLDoc::~XMLDoc()
     if (mDoc != NULL) xmlFreeDoc(mDoc);
     xmlCleanupParser();
     hlog(HLOG_DEBUG4, "Unlocking XML mutex");
-    sMutex.unlock();
+    sMutex.Unlock();
 }
 
 
@@ -51,7 +51,7 @@ XMLNode XMLDoc::createDocument(const FString& root_name)
 }
 
 
-FString XMLDoc::toString() const
+FString XMLDoc::to_string() const
 {
     FString ret;
     xmlChar *buf;

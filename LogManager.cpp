@@ -31,7 +31,7 @@ void Logfile::Write(const LogMsg& msg)
     }
 }
 
-FString Logfile::getLevelStr(int level)
+FString Logfile::GetLevelStr(int level)
 {
     FString levelstr;
 
@@ -100,7 +100,7 @@ FString Logfile::FormatMsg(const LogMsg &msg)
 {
     FString levelstr, formattedMsg;
     struct tm lt;
-    levelstr = getLevelStr(msg.mLevel);
+    levelstr = GetLevelStr(msg.mLevel);
     localtime_r(&(msg.mTime.tv_sec), &lt);
 
     FString thread(FStringFC(), "[%s]",(msg.mThread) ? msg.mThread->mThreadName.c_str() : "unknown");
@@ -113,7 +113,7 @@ FString Logfile::FormatMsg(const LogMsg &msg)
     if (padFL<0) padFL=0;
     fileLine.append(padFL,' ');
 
-    unsigned int depth = FTrace::getDepth();
+    unsigned int depth = FTrace::GetDepth();
     FString offset;
     offset.append(depth * 3, ' ');
     formattedMsg.Format("%02d/%02d/%02d %02d:%02d:%02d.%03d %s%s%s|%s%s() %s%s\n",
@@ -165,7 +165,7 @@ void SysLogfile::Write(const LogMsg& msg)
 FString SysLogfile::FormatMsg(const LogMsg &msg)
 {
     FString levelstr, formattedMsg;
-    levelstr = getLevelStr(msg.mLevel);
+    levelstr = GetLevelStr(msg.mLevel);
     formattedMsg.Format("%s [%s] %s\n",
                         levelstr.c_str(),
                         (msg.mThread) ? msg.mThread->mThreadName.c_str() : "unknown",
@@ -184,10 +184,10 @@ LogMsg::LogMsg() :
 LogContext::LogContext()
 {
     LogManager &mgr(LogManager::getInstance());
-    if (mgr.mLogContextStackKey.get() == NULL)
-        mgr.mLogContextStackKey.set(new LogContextStack());
+    if (mgr.mLogContextStackKey.Get() == NULL)
+        mgr.mLogContextStackKey.Set(new LogContextStack());
     mLogMgrPtr = &mgr;
-    LogContextStack *stack = (LogContextStack *)(mgr.mLogContextStackKey.get());
+    LogContextStack *stack = (LogContextStack *)(mgr.mLogContextStackKey.Get());
     if (!(stack->mStack.empty()))
     {
         LogContext *previousContext(stack->mStack.back());
@@ -201,7 +201,7 @@ LogContext::~LogContext()
 {
     // remove pointer to this log context from the manager
     AutoUnlockMutex lock(mLogMgrPtr->mLogMutex);
-    LogContextStack *stack = (LogContextStack *)(mLogMgrPtr->mLogContextStackKey.get());
+    LogContextStack *stack = (LogContextStack *)(mLogMgrPtr->mLogContextStackKey.Get());
     if (stack) stack->mStack.pop_back();
 }
 
@@ -211,14 +211,14 @@ LogThreadInfo::LogThreadInfo(LogManager &mgr, Thread &thr) :
     mLogMgr(mgr),
     mThread(thr)
 {
-    mLogMgr.mThreadInfoKey.set(this);
+    mLogMgr.mThreadInfoKey.Set(this);
 }
 
 LogThreadInfo::~LogThreadInfo()
 {
     // remove pointer to this log context from the manager
     AutoUnlockMutex lock(mLogMgr.mLogMutex);
-    mLogMgr.mThreadInfoKey.set(NULL);
+    mLogMgr.mThreadInfoKey.Set(NULL);
 }
 
 
@@ -463,7 +463,7 @@ void LogManager::LogMsgVa(const char * func, const char * file, int line, int le
     else
         msg.mHost = "(hostname too long)";
     AutoUnlockMutex lock(mLogMutex);
-    LogThreadInfo *ti = (LogThreadInfo *)mThreadInfoKey.get();
+    LogThreadInfo *ti = (LogThreadInfo *)mThreadInfoKey.Get();
     if (ti != NULL)
         msg.mThread = &(ti->mThread);
     msg.mLevel = level;
@@ -473,7 +473,7 @@ void LogManager::LogMsgVa(const char * func, const char * file, int line, int le
     msg.mFunction = func;
     msg.mFile = file;
     msg.mLine = line;
-    LogContextStack *stack = (LogContextStack*)mLogContextStackKey.get();
+    LogContextStack *stack = (LogContextStack*)mLogContextStackKey.Get();
     if (stack && !(stack->mStack.empty()))
     {
         LogContext *c(stack->mStack.back());

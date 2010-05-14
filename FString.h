@@ -21,7 +21,7 @@ namespace Forte
     public:
         FString();
         void Format(const char *format, ...) __attribute__((format(printf,2,3)));
-        void vFormat(const char *format, int size, va_list ap);
+        void VFormat(const char *format, int size, va_list ap);
         FString(const FString& other) { static_cast<std::string&>(*this) = other; }
         FString(const std::string& other) { static_cast<std::string&>(*this) = other; }
         FString(const char *str) { if (str) static_cast<std::string&>(*this) = str; }
@@ -72,18 +72,18 @@ namespace Forte
         inline long AsInt32(void) const { return strtol(c_str(), NULL, 0); }
 
         inline bool IsNumeric(void) const
-            {
-                if (empty()) return false;
-                char *c; 
-                strtod(c_str(), &c); 
-                return (*c == '\0'); 
-            }
+        {
+            if (empty()) return false;
+            char *c; 
+            strtod(c_str(), &c); 
+            return (*c == '\0'); 
+        }
         inline bool IsUnsignedNumeric(void) const
-            {
-                if (empty()) return false;
-                char *c; 
-                return strtod(c_str(), &c) >= 0.0 && (*c == '\0');
-            }
+        {
+            if (empty()) return false;
+            char *c; 
+            return strtod(c_str(), &c) >= 0.0 && (*c == '\0');
+        }
 
         /// Split a multi-line string into single line components.  Line endings are
         /// automatically detected.  If trim is true, external whitespace will be trimmed

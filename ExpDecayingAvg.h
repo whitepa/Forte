@@ -21,19 +21,19 @@ namespace Forte
         virtual ~ExpDecayingAvg();
     
         // shutdown the update thread
-        static void shutdown(void);
+        static void Shutdown(void);
 
         // reset the average to zero
-        void reset(void);
+        void Reset(void);
     
-        // set the current input value (will remain set until reset() or increment())
-        float set(float input);
+        // set the current input value (will remain set until Reset() or increment())
+        float Set(float input);
         // increment the current input value (will be reset when avg is updated)
-        float increment(float amount);
+        float Increment(float amount);
         // get the current value of the average, do not update.  interval in ms
-        inline float get(int interval) { return mLastAvg * (interval / UPDATE_DELAY); }
+        inline float Get(int interval) { return mLastAvg * (interval / UPDATE_DELAY); }
 
-    protected:
+     protected:
         // update the average using the current input value
         void update(void);
 

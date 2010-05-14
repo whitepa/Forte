@@ -55,9 +55,9 @@ bool DbConnection::Init(const FString& db, const FString& user, const FString& p
 }
 
 
-bool DbConnection::execute2(const FString& sql)
+bool DbConnection::Execute2(const FString& sql)
 {
-    if (!execute(sql))
+    if (!Execute(sql))
     {
         hlog(HLOG_DEBUG, "DB Error: [%u] %s", mErrno, mError.c_str());
         hlog(HLOG_DEBUG, "SQL: %s", sql.c_str());
@@ -68,9 +68,9 @@ bool DbConnection::execute2(const FString& sql)
 }
 
 
-DbResult DbConnection::store2(const FString& sql)
+DbResult DbConnection::Store2(const FString& sql)
 {
-    DbResult ret = store(sql);
+    DbResult ret = Store(sql);
 
     if (!ret)
     {
@@ -83,9 +83,9 @@ DbResult DbConnection::store2(const FString& sql)
 }
 
 
-DbResult DbConnection::use2(const FString& sql)
+DbResult DbConnection::Use2(const FString& sql)
 {
-    DbResult ret = use(sql);
+    DbResult ret = Use(sql);
 
     if (!ret)
     {
@@ -98,7 +98,7 @@ DbResult DbConnection::use2(const FString& sql)
 }
 
 
-void DbConnection::debugFile(const char *filename)
+void DbConnection::DebugFile(const char *filename)
 {
     AutoUnlockMutex lock(sDebugOutputMutex);
 
@@ -124,7 +124,7 @@ void DbConnection::debugFile(const char *filename)
 }
 
 
-void DbConnection::logSql(const FString &sql, const struct timeval &executionTime)
+void DbConnection::LogSql(const FString &sql, const struct timeval &executionTime)
 {
 #if defined(FORTE_NO_BOOST) || !defined(FORTE_WITH_DATETIME)
     FString logMsg(FStringFC(), "%04u.%06u [%u]: %s", 
@@ -143,49 +143,49 @@ void DbConnection::logSql(const FString &sql, const struct timeval &executionTim
 }
 
 
-void DbConnection::autoCommit(bool enabled)
+void DbConnection::AutoCommit(bool enabled)
 {
     if (mAutoCommit == false && mQueriesPending)
     {
-        hlog(HLOG_ERR, "DbConnection::autoCommit() called with pending queries; committing pending queries");
-        commit();
+        hlog(HLOG_ERR, "DbConnection::AutoCommit() called with pending queries; committing pending queries");
+        Commit();
     }
 
-    if (!enabled) begin();
+    if (!enabled) Begin();
     mAutoCommit = enabled;
 }
 
 
-void DbConnection::begin()
+void DbConnection::Begin()
 {
     FString sql;
     hlog(HLOG_DEBUG, "DbConnection::begin()");
     sql.Format("begin");
-    execute(sql);
+    Execute(sql);
     mQueriesPending = true;
 }
 
 
-void DbConnection::commit()
+void DbConnection::Commit()
 {
     FString sql;
     hlog(HLOG_DEBUG, "DbConnection::commit()");
     if (mAutoCommit == true)
         hlog(HLOG_WARN, "commit() called while autocommit enabled");
     sql.Format("commit");
-    execute(sql);
+    Execute(sql);
     mQueriesPending = false;
 }
 
 
-void DbConnection::rollback()
+void DbConnection::Rollback()
 {
     FString sql;
     hlog(HLOG_DEBUG, "DbConnection::rollback()");
     if (mAutoCommit == true)
         hlog(HLOG_WARN, "rollback() called while autocommit enabled");
     sql.Format("rollback");
-    execute(sql);
+    Execute(sql);
     mQueriesPending = false;    
 }
 

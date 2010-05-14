@@ -27,13 +27,13 @@ namespace Forte
             int Load(sqlite3_stmt *stmt);
 
             // abstract interface
-            virtual bool isOkay() const;
-            virtual bool fetchRow(DbResultRow& row /*OUT*/);
-            virtual size_t getNumColumns();
-            virtual FString getColumnName(size_t i);
-            virtual size_t getFieldLength(size_t i);
-            virtual size_t getNumRows();
-            virtual bool seek(size_t offset);
+            virtual bool IsOkay() const;
+            virtual bool FetchRow(DbResultRow& row /*OUT*/);
+            virtual size_t GetNumColumns();
+            virtual FString GetColumnName(size_t i);
+            virtual size_t GetFieldLength(size_t i);
+            virtual size_t GetNumRows();
+            virtual bool Seek(size_t offset);
 
         protected:
             friend class DbLiteResult;
@@ -45,7 +45,7 @@ namespace Forte
             NameVector mColNames;
             RowList mRes;
             bool mOkay;
-        };
+         };
 
     public:
         DbLiteResult() : DbResult() { }

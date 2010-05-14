@@ -4,7 +4,7 @@
 
 FString UrlString::sUnsafe = "%=\"<>\\^[]`+$,@:;/!#?&'";
 
-FString & UrlString::encode(FString &encoded, const FString &decoded)
+FString & UrlString::Encode(FString &encoded, const FString &decoded)
 {
     int len = decoded.length();
     encoded.reserve(len * 2); // should be plenty for most cases
@@ -25,7 +25,7 @@ FString & UrlString::encode(FString &encoded, const FString &decoded)
 
 // following adapted from:
 // http://www.bjnet.edu.cn/tech/book/seucgi/ch22.htm
-FString & UrlString::decode(FString &decoded, const FString &encoded)
+FString & UrlString::Decode(FString &decoded, const FString &encoded)
 {
     decoded.reserve(encoded.size());
     // loop through looking for escapes
@@ -40,7 +40,7 @@ FString & UrlString::decode(FString &decoded, const FString &encoded)
             // We must decode it.
             if (i+2 < elen && isxdigit(encoded[i+1]) && isxdigit(encoded[i+2]))
             {
-                decoded += charFromHexPair(encoded[i+1],encoded[i+2]);
+                decoded += CharFromHexPair(encoded[i+1],encoded[i+2]);
                 i+=2;
             }
         } else {
@@ -51,7 +51,7 @@ FString & UrlString::decode(FString &decoded, const FString &encoded)
 }
 
 // a subroutine that unescapes escaped characters:
-char UrlString::charFromHexPair(char hi, char lo)
+char UrlString::CharFromHexPair(char hi, char lo)
 {
     // high nibble
     if ('0' <= hi && hi <= '9') {

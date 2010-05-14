@@ -10,11 +10,11 @@ namespace Forte
     {
     public:
         virtual ~TestRequestHandler() { }
-        virtual void handler(Event *e);
-        virtual void busy(void);
-        virtual void periodic(void);
-        virtual void init(void);
-        virtual void cleanup(void);
+        virtual void Handler(Event *e);
+        virtual void Busy(void);
+        virtual void Periodic(void);
+        virtual void Init(void);
+        virtual void Cleanup(void);
     };
 
     class TestEvent : public Event

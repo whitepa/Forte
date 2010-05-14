@@ -10,10 +10,10 @@ namespace Forte
         inline ~ThreadKey()
             { pthread_key_delete(mKey); }
 
-        void *get(void)  __attribute__ ((no_instrument_function));
-        void set(const void *value) __attribute__ ((no_instrument_function));
+        void *Get(void)  __attribute__ ((no_instrument_function));
+        void Set(const void *value) __attribute__ ((no_instrument_function));
 
-    protected:
+     protected:
         pthread_key_t mKey;
     };
 };

@@ -36,27 +36,29 @@ namespace Forte
         virtual ~Thread();
 
         // Tell a thread to shut itself down.
-        inline void shutdown(void) { 
+        inline void Shutdown(void) { 
             mThreadShutdown = true; 
             AutoUnlockMutex lock(mShutdownRequestedLock);
-            mShutdownRequested.signal();
-        };
+            mShutdownRequested.Signal();
+         };
 
         // Wait for a thread to shutdown.
-        void waitForShutdown(void);
+        void WaitForShutdown(void);
 
         // is a thread flagged to be shut down?
-        bool isShuttingDown(void) { return mThreadShutdown; }
+        bool IsShuttingDown(void) { return mThreadShutdown; }
 
     private:
         // static callback for pthread_once
         static void makeKey(void);
+
     public:
         // get pointer to your thread object
-        static Thread * myThread(void);
+        static Thread * MyThread(void);
 
         unsigned int mPid;
         FString mThreadName;
+
     protected:
         void initialized(void);
         virtual void *run(void) = 0;

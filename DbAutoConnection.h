@@ -17,14 +17,14 @@ namespace Forte
             : mPool(DbConnectionPool::GetInstance()), mDbConnection(mPool.GetDbConnection())
             {
                 // set autocommit appropriately
-                autoCommit(autocommit);
+                AutoCommit(autocommit);
             };
 
         DbAutoConnection(DbConnectionPool& pool, bool autocommit = true)
             : mPool(pool), mDbConnection(pool.GetDbConnection())
             {
                 // set autocommit appropriately
-                autoCommit(autocommit);
+                AutoCommit(autocommit);
             };
 
     private:
@@ -41,32 +41,32 @@ namespace Forte
     public:
         virtual ~DbAutoConnection() {
             // turn off temporary logging
-            logQueries(false);
+            LogQueries(false);
             try {
-                if (mDbConnection.hasPendingQueries())
+                if (mDbConnection.HasPendingQueries())
                 {
                     hlog(HLOG_WARN, "rolling back pending queries on connection");
-                    rollback();
+                    Rollback();
                 }
                 mPool.ReleaseDbConnection(mDbConnection);
             } catch (...) {
             }
         };
 
-        inline void autoCommit(bool autoCommit) {
-            mDbConnection.autoCommit(autoCommit);
+        inline void AutoCommit(bool autocommit) {
+            mDbConnection.AutoCommit(autocommit);
         };
-        inline void begin(void) {
-            mDbConnection.begin();
+        inline void Begin(void) {
+            mDbConnection.Begin();
         };
-        inline void commit(void) {
-            mDbConnection.commit();
+        inline void Commit(void) {
+            mDbConnection.Commit();
         };
-        inline void rollback(void) {
-            mDbConnection.rollback();
+        inline void Rollback(void) {
+            mDbConnection.Rollback();
         };
-        inline void logQueries(bool log) {
-            mDbConnection.logQueries(log);
+        inline void LogQueries(bool log) {
+            mDbConnection.LogQueries(log);
         }
     
         // Cast operator

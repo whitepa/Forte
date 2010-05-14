@@ -26,7 +26,7 @@ ClusterLock::ClusterLock(const FString& name, unsigned timeout, const FString& e
     : mTimer()
 {
     init();
-    lock(name, timeout);
+    Lock(name, timeout);
 }
 
 
@@ -39,7 +39,7 @@ ClusterLock::ClusterLock()
 
 ClusterLock::~ClusterLock()
 {
-    unlock();
+    Unlock();
     fini();
 }
 
@@ -92,7 +92,7 @@ void ClusterLock::init()
         // translate error to what we are expected to throw
         throw EClusterLockUnvailable(FStringFC(),
                                      "LOCK_TIMER_FAIL|||%s", 
-                                     e.what().c_str());
+                                     e.What().c_str());
     }
 
 }
@@ -104,7 +104,7 @@ void ClusterLock::fini()
 
 
 // lock/unlock
-void ClusterLock::lock(const FString& name, unsigned timeout, const FString& errorString)
+void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& errorString)
 {
     struct itimerspec ts;
     bool locked, timed_out;
@@ -129,7 +129,7 @@ void ClusterLock::lock(const FString& name, unsigned timeout, const FString& err
     if (filename != mName && (!mName.empty()))
     {
         hlog(HLOG_INFO, "CClusterLock - reusing lock with a different name");
-        unlock();
+        Unlock();
     }
 
     // assign mutex
@@ -167,13 +167,13 @@ void ClusterLock::lock(const FString& name, unsigned timeout, const FString& err
     timer_settime(mTimer.TimerID(), 0, &ts, NULL);
 
     // acquire mutex?
-    if ((err = mMutex->timedlock(ts.it_value)) == 0)
+    if ((err = mMutex->TimedLock(ts.it_value)) == 0)
     {
         // acquire lock?
-        if (!(locked = mLock->exclusiveLock(true)))
+        if (!(locked = mLock->ExclusiveLock(true)))
         {
             // release mutex
-            mMutex->unlock();
+            mMutex->Unlock();
             mMutex = NULL;
         }
 
@@ -215,7 +215,7 @@ void ClusterLock::lock(const FString& name, unsigned timeout, const FString& err
 }
 
 
-void ClusterLock::unlock()
+void ClusterLock::Unlock()
 {
     // clear name
     mName.clear();
@@ -224,15 +224,15 @@ void ClusterLock::unlock()
     if (mFD != -1)
     {
         // release lock
-        mLock->unlock();
+        mLock->Unlock();
         mLock.reset();
-        mFD.close();
+        mFD.Close();
     }
 
     // release mutex?
     if (mMutex != NULL)
     {
-        mMutex->unlock();
+        mMutex->Unlock();
         mMutex = NULL;
     }
 }
@@ -252,7 +252,7 @@ ClusterLock::AdvisoryLock::AdvisoryLock(int fd, off64_t start, off64_t len, shor
 
 /// getLock gets the first lock that blocks the lock description
 ///
-ClusterLock::AdvisoryLock ClusterLock::AdvisoryLock::getLock(bool exclusive)
+ClusterLock::AdvisoryLock ClusterLock::AdvisoryLock::GetLock(bool exclusive)
 {
     AdvisoryLock lock(*this);
     if (exclusive)
@@ -265,7 +265,7 @@ ClusterLock::AdvisoryLock ClusterLock::AdvisoryLock::getLock(bool exclusive)
 
 /// sharedLock will return true on success, false if the lock failed
 ///
-bool ClusterLock::AdvisoryLock::sharedLock(bool wait)
+bool ClusterLock::AdvisoryLock::SharedLock(bool wait)
 {
     mLock.l_type = F_RDLCK;
     if (fcntl(mFD, wait ? F_SETLKW : F_SETLK, &mLock) == -1)
@@ -275,7 +275,7 @@ bool ClusterLock::AdvisoryLock::sharedLock(bool wait)
 
 /// exclusiveLock will return true on success, false if the lock failed
 ///
-bool ClusterLock::AdvisoryLock::exclusiveLock(bool wait)
+bool ClusterLock::AdvisoryLock::ExclusiveLock(bool wait)
 {
     mLock.l_type = F_WRLCK;
     if (fcntl(mFD, wait ? F_SETLKW : F_SETLK, &mLock) == -1)
@@ -285,7 +285,7 @@ bool ClusterLock::AdvisoryLock::exclusiveLock(bool wait)
 
 /// unlock will remove the current lock
 ///
-void ClusterLock::AdvisoryLock::unlock(void)
+void ClusterLock::AdvisoryLock::Unlock(void)
 {
     mLock.l_type = F_UNLCK;
     fcntl(mFD, F_SETLK, &mLock);

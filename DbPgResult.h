@@ -21,21 +21,21 @@ namespace Forte
             virtual ~PgData();
 
             // abstract interface
-            virtual bool isOkay() const;
-            virtual bool fetchRow(DbResultRow& row /*OUT*/);
-            virtual size_t getNumColumns();
-            virtual FString getColumnName(size_t i);
-            virtual size_t getFieldLength(size_t i);
-            virtual size_t getNumRows() { 
+            virtual bool IsOkay() const;
+            virtual bool FetchRow(DbResultRow& row /*OUT*/);
+            virtual size_t GetNumColumns();
+            virtual FString GetColumnName(size_t i);
+            virtual size_t GetFieldLength(size_t i);
+            virtual size_t GetNumRows() { 
                 throw Exception("DbPgResult::getNumRows not implemented");
             }
-            virtual bool seek(size_t offset) {
+            virtual bool Seek(size_t offset) {
                 throw Exception("DbPgResult::seek not implemented");
             }
             // additions for PostgreSQL only
             virtual uint64_t InsertID();
 
-        protected:
+         protected:
             friend class DbPgResult;
             PGresult *mResult;
             size_t mNumRows;

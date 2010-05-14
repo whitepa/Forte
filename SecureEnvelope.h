@@ -27,7 +27,7 @@ public:
 
     // Encode an account number as described above.  numClear is the number of characters
     // to provide in cleartext in the obscured version of the account number.
-    FString & encode(const FString &accountNumber, unsigned int numClear, FString &out);
+    FString & Encode(const FString &accountNumber, unsigned int numClear, FString &out);
 protected:
     PublicKey mPublicKey;
 };
@@ -39,12 +39,11 @@ public:
     virtual ~SecureEnvelopeDecoder() {};
 
     // Decode an account number.
-    FString & decode(const FString &encoded, FString &out);
+    FString & Decode(const FString &encoded, FString &out);
 
     // Get the obscured version of the account number (for display)
-    static FString & obscured(const FString &encoded, FString &out);
-    static bool isEncoded(const std::string &data);
-
+    static FString & Obscured(const FString &encoded, FString &out);
+    static bool IsEncoded(const std::string &data);
 protected:
     PrivateKey mPrivateKey;
 };

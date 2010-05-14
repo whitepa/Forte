@@ -1,5 +1,6 @@
 #ifndef __VersionManager_h
 #define __VersionManager_h
+
 namespace Forte
 {
     class UtilVersion;
@@ -34,6 +35,6 @@ namespace Forte
     public:
         UtilVersion();
         virtual ~UtilVersion() {};
-    };
+    };;
 };
 #endif

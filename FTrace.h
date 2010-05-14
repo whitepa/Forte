@@ -14,7 +14,7 @@ namespace Forte
     public:
         FProfileData(void *fn, const struct timeval &spent, const struct timeval &totalSpent) 
             __attribute__ ((no_instrument_function));
-        void addCall(const struct timeval &spent, const struct timeval &totalSpent) 
+        void AddCall(const struct timeval &spent, const struct timeval &totalSpent) 
             __attribute__ ((no_instrument_function));
 
         const void *mFunction;
@@ -39,27 +39,27 @@ namespace Forte
         struct timeval reentry[FTRACE_MAXDEPTH];
         struct timeval spent[FTRACE_MAXDEPTH];
     
-        void storeProfile(void *fn, struct timeval &spent, struct timeval &totalSpent) 
+        void StoreProfile(void *fn, struct timeval &spent, struct timeval &totalSpent) 
             __attribute__ ((no_instrument_function));
         std::map<void*,FProfileData *> profileData;
     };
 
     class FTrace {
     public:
-        static void enable() __attribute__ ((no_instrument_function));
-        static void disable() __attribute__ ((no_instrument_function));
-        static void setProfiling(bool profile) __attribute__ ((no_instrument_function));
-        static void dumpProfiling(unsigned int num = 0) __attribute__ ((no_instrument_function));
-        static void enter(void *fn, void *caller) __attribute__ ((no_instrument_function));
-        static void exit(void *fn, void *caller) __attribute__ ((no_instrument_function));
-        static void cleanup(void *ptr) __attribute__ ((no_instrument_function));
+        static void Enable() __attribute__ ((no_instrument_function));
+        static void Disable() __attribute__ ((no_instrument_function));
+        static void SetProfiling(bool profile) __attribute__ ((no_instrument_function));
+        static void DumpProfiling(unsigned int num = 0) __attribute__ ((no_instrument_function));
+        static void Enter(void *fn, void *caller) __attribute__ ((no_instrument_function));
+        static void Exit(void *fn, void *caller) __attribute__ ((no_instrument_function));
+        static void Cleanup(void *ptr) __attribute__ ((no_instrument_function));
 
-        static unsigned int getDepth(void) __attribute__ ((no_instrument_function));
-        static void getStack(std::list<void *> &stack /* OUT */) __attribute__ ((no_instrument_function));
+        static unsigned int GetDepth(void) __attribute__ ((no_instrument_function));
+        static void GetStack(std::list<void *> &stack /* OUT */) __attribute__ ((no_instrument_function));
         static FString & formatStack(const std::list<void *> &stack, FString &out) __attribute__ ((no_instrument_function));
 
         static unsigned int sInitialized;
-    protected:
+     protected:
         static FTraceThreadInfo* getThreadInfo(void) __attribute__ ((no_instrument_function));
         static ThreadKey sTraceKey;
         static FTrace *sInstance;

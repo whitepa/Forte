@@ -38,30 +38,30 @@ namespace Forte
         ~Curl();
 
         // interface
-        virtual void setURL(const FString& url);
-        void setRecvHeaderCB(header_cb_t func, void *data = NULL);
-        void setRecvCB(data_cb_t func, void *data = NULL);
-        void setInternalCB(void);
-        void setOutputFile(FILE* file);
-        void setSendCB(data_cb_t func, void *data = NULL);
-        void setProgressCB(progress_cb_t func, void *data = NULL);
-        void setFollowRedirects(bool follow = true);
-        void setRecvSpeedMax(curl_off_t limit = -1);
-        void setSendSpeedMax(curl_off_t limit = -1);
-        void setRecvHeader(bool recvHeader = false);
-        void setNoSignal(bool nosignal = true);
-        void setConnectTimeout(long timeout);
-        void setMaxTransferTime(long max_xfer_time);
-        void setThrowOnHTTPError(bool shouldThrow = true);
+        virtual void SetURL(const FString& url);
+        void SetRecvHeaderCB(header_cb_t func, void *data = NULL);
+        void SetRecvCB(data_cb_t func, void *data = NULL);
+        void SetInternalCB(void);
+        void SetOutputFile(FILE* file);
+        void SetSendCB(data_cb_t func, void *data = NULL);
+        void SetProgressCB(progress_cb_t func, void *data = NULL);
+        void SetFollowRedirects(bool follow = true);
+        void SetRecvSpeedMax(curl_off_t limit = -1);
+        void SetSendSpeedMax(curl_off_t limit = -1);
+        void SetRecvHeader(bool recvHeader = false);
+        void SetNoSignal(bool nosignal = true);
+        void SetConnectTimeout(long timeout);
+        void SetMaxTransferTime(long max_xfer_time);
+        void SetThrowOnHTTPError(bool shouldThrow = true);
 
         /// Set a low speed threshold, under which the transfer will be aborted.
-        void setLowSpeed(int bps, int time);
+        void SetLowSpeed(int bps, int time);
 
-        void reset();
-        void perform();
+        void Reset();
+        void Perform();
 
         FString mBuf;
-    protected:
+     protected:
         //TODO: pull this from the application context
         FileSystem mFileSystem;
 

@@ -86,7 +86,7 @@ namespace Forte
         virtual void Write(const LogMsg& msg);
         virtual FString FormatMsg(const LogMsg &msg);
         virtual bool Reopen() { return false; }  // true is reopened, false is not
-        static FString getLevelStr(int level);
+        static FString GetLevelStr(int level);
     };
 
     class SysLogfile : public Logfile {
@@ -97,8 +97,8 @@ namespace Forte
         virtual void Write(const LogMsg& msg);
         virtual FString FormatMsg(const LogMsg &msg);
         virtual bool Reopen() { return true; }
-        FString getIdent() const { return mIdent; }
-    protected:
+        FString GetIdent() const { return mIdent; }
+     protected:
         const FString mIdent;
     };
 
@@ -108,12 +108,12 @@ namespace Forte
         LogContext(); // push onto the stack
         virtual ~LogContext();        // pop from the stack
     
-        inline void setClient(struct in_addr client) { mClient = client; }
-        inline void setPrefix(const FString &prefix) { mPrefix = prefix; }
-        void appendPrefix(const FString &prefix) { mPrefix.append(prefix); }
+        inline void SetClient(struct in_addr client) { mClient = client; }
+        inline void SetPrefix(const FString &prefix) { mPrefix = prefix; }
+        void AppendPrefix(const FString &prefix) { mPrefix.append(prefix); }
         struct in_addr mClient;
         FString mPrefix;
-    protected:
+     protected:
         LogManager *mLogMgrPtr;
     };
 

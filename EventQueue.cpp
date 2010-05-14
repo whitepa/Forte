@@ -34,10 +34,10 @@ EventQueue::~EventQueue()
     // cleanup the queue
     mQueue.clear();
     // kick out anyone waiting for the empty condition
-    mEmptyCondition.broadcast();
+    mEmptyCondition.Broadcast();
 }
 
-void EventQueue::add(shared_ptr<Event> e)
+void EventQueue::Add(shared_ptr<Event> e)
 {
     // check for NULL event
     if (!e)
@@ -45,10 +45,10 @@ void EventQueue::add(shared_ptr<Event> e)
     if (mShutdown)
         throw ForteEventQueueException("unable to add event: queue is shutting down");
     if (mBlockingMode)
-        mMaxDepth.wait();
+        mMaxDepth.Wait();
     // XXX race condition
     AutoUnlockMutex lock(mMutex);
-    if (!mBlockingMode && mMaxDepth.trywait() == -1 && errno == EAGAIN)
+    if (!mBlockingMode && mMaxDepth.TryWait() == -1 && errno == EAGAIN)
     {
         // non blocking mode and max depth, delete the oldest entry
         std::list<shared_ptr<Event> >::iterator i;
@@ -56,16 +56,16 @@ void EventQueue::add(shared_ptr<Event> e)
         if (i != mQueue.end())
         {
             mQueue.pop_front();
-            mMaxDepth.post();
+            mMaxDepth.Post();
         }
     }
     mQueue.push_back(e);
     // XXX check for a deep queue
     // signal appropriate threads
-    if (mNotify) mNotify->signal();
+    if (mNotify) mNotify->Signal();
 }
 
-shared_ptr<Event> EventQueue::get(void)
+shared_ptr<Event> EventQueue::Get(void)
 {
     AutoUnlockMutex lock(mMutex);
     shared_ptr<Event> e;
@@ -75,13 +75,13 @@ shared_ptr<Event> EventQueue::get(void)
         return e;
     e = *i;
     mQueue.pop_front();
-    mMaxDepth.post();
+    mMaxDepth.Post();
     if (mQueue.empty())
-        mEmptyCondition.broadcast();
+        mEmptyCondition.Broadcast();
     return e;
 }
 
-int EventQueue::getEvents(int maxEvents, std::list<shared_ptr<Event> > &result)
+int EventQueue::GetEvents(int maxEvents, std::list<shared_ptr<Event> > &result)
 {
     result.clear();
     AutoUnlockMutex lock(mMutex);

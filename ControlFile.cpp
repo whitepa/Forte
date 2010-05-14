@@ -100,7 +100,7 @@ void ControlFile<Header, Record>::getHeader(Header &userHeader)
 }
 
 template < typename Header, typename Record >
-uint64_t ControlFile<Header, Record>::enqueue(const Record &r)
+uint64_t ControlFile<Header, Record>::Enqueue(const Record &r)
 {
     hlog(HLOG_DEBUG2, "ControlFile::%s([record])", __FUNCTION__);
     off64_t orig_eof = 0;
@@ -122,7 +122,7 @@ uint64_t ControlFile<Header, Record>::enqueue(const Record &r)
         ++header.n_total;
         ++header.n_remaining;
         
-        // enqueue the record
+        // Enqueue the record
         FileSystem::AdvisoryAutoUnlock recordLock(mFD, 0, 0, true, SEEK_END); // lock after end of file
 
         record_t record;

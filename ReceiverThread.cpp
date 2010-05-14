@@ -91,7 +91,7 @@ void * Forte::ReceiverThread::run(void)
         // TODO: store client IP address in mClient
         
         // queue the event
-        mDisp.enqueue(e);
+        mDisp.Enqueue(e);
     }
     return NULL;
 }

@@ -28,17 +28,17 @@ namespace Forte
         virtual bool Close();
 
         // queries
-        virtual bool execute(const FString& sql);
-        virtual DbResult store(const FString& sql);
-        virtual DbResult use(const FString& sql);
+        virtual bool Execute(const FString& sql);
+        virtual DbResult Store(const FString& sql);
+        virtual DbResult Use(const FString& sql);
 
         // error info
-        virtual bool isTemporaryError() const;
+        virtual bool IsTemporaryError() const;
     
         // misc.
         virtual uint64_t InsertID() { return mysql_insert_id(mDB); }
         virtual uint64_t AffectedRows() { return mysql_affected_rows(mDB); }
-        virtual FString escape(const char *str);
+        virtual FString Escape(const char *str);
 
     private:
         MYSQL mMySQL, *mDB;

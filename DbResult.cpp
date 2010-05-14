@@ -32,10 +32,10 @@ DbResult& DbResult::operator =(DbResult::Data *data)
 }
 
 
-bool DbResult::Data::fetchRow(DbRow& row /*OUT*/)
+bool DbResult::Data::FetchRow(DbRow& row /*OUT*/)
 {
     DbResultRow db_row;
-    if (!fetchRow(db_row)) return false;
+    if (!FetchRow(db_row)) return false;
     row.Set(db_row);
     return true;
 }

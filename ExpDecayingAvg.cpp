@@ -7,7 +7,7 @@ std::set<ExpDecayingAvg*>      ExpDecayingAvg::sObjs;
 ExpDecayingAvg::ExpDecayingAvg(int dampingTime) :
     mDampingTime(dampingTime)
 {
-    reset();
+    Reset();
     // create update thread if needed
     // one thread handles updates of all decaying avg objects
     if (sThread == NULL)
@@ -18,7 +18,7 @@ ExpDecayingAvg::ExpDecayingAvg(int dampingTime) :
             sThread = new ExpDecayingAvgThread();
             // register a shutdown callback to delete the new thread
             ServerMain::GetServer().RegisterShutdownCallback(
-                new CStaticCallback(&(ExpDecayingAvg::shutdown)));
+                new CStaticCallback(&(ExpDecayingAvg::Shutdown)));
         }
     }
     AutoUnlockMutex lock(sThrMutex);
@@ -29,7 +29,7 @@ ExpDecayingAvg::~ExpDecayingAvg()
     AutoUnlockMutex lock(sThrMutex);
     sObjs.erase(this);
 }
-void ExpDecayingAvg::shutdown(void)
+void ExpDecayingAvg::Shutdown(void)
 {
     // static method to delete the update thread
     hlog(HLOG_DEBUG, "ExpDecayingAvg: update thread shutting down");
@@ -37,7 +37,7 @@ void ExpDecayingAvg::shutdown(void)
     if (sThread != NULL)
         delete sThread;
 }
-void ExpDecayingAvg::reset(void)
+void ExpDecayingAvg::Reset(void)
 {
     AutoUnlockMutex lock(mLock);
     gettimeofday(&mLastUpdate, NULL);
@@ -52,14 +52,14 @@ void ExpDecayingAvg::update(void)
     mLastAvg += (1.0 - expf((float)-UPDATE_DELAY / (float)mDampingTime))*(mInput - mLastAvg);
     if (mResetInputUponUpdate) mInput = 0.0;
 }
-float ExpDecayingAvg::set(float input)
+float ExpDecayingAvg::Set(float input)
 {
     AutoUnlockMutex lock(mLock);
     mInput = input;
     mResetInputUponUpdate = false;
     return mLastAvg;
 }
-float ExpDecayingAvg::increment(float amount)
+float ExpDecayingAvg::Increment(float amount)
 {
     AutoUnlockMutex lock(mLock);
     mInput += amount;

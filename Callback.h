@@ -20,7 +20,7 @@ namespace Forte
         Callback() {};
         virtual ~Callback() {};
         virtual void operator()(void *arg = NULL) const = 0;
-        virtual void execute(void *arg = NULL) const = 0;
+        virtual void Execute(void *arg = NULL) const = 0;
     };
 
     class CStaticCallback : public Callback
@@ -35,7 +35,7 @@ namespace Forte
             {
                 (*method)();
             }
-        void execute(void *arg) const
+        void Execute(void *arg) const
             {
                 (*method)();
             }
@@ -62,7 +62,7 @@ namespace Forte
                 if (!method) throw ForteCallbackException("Invalid Callback");
                 (*method)(arg);
             }
-        void execute(void *arg) const
+        void Execute(void *arg) const
             {
                 if (!method) throw ForteCallbackException("Invalid Callback");
                 (*method)(arg);
@@ -84,7 +84,7 @@ namespace Forte
             {
                 (class_instance->*method)();
             };
-        void execute(void *arg) const
+        void Execute(void *arg) const
             {
                 operator()();
             };
@@ -107,7 +107,7 @@ namespace Forte
             {
                 (class_instance->*method)(arg);
             };
-        void execute(void *arg) const
+        void Execute(void *arg) const
             {
                 operator()(arg);
             };
@@ -128,7 +128,7 @@ namespace Forte
             {
                 mFunc();
             };
-        void execute(void *arg) const
+        void Execute(void *arg) const
             {
                 mFunc();
             };

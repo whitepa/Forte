@@ -27,7 +27,7 @@ Mutex ProcRunner::sMutex;
 
 
 // class methods
-ProcRunner* ProcRunner::get()
+ProcRunner* ProcRunner::Get()
 {
     // double-checked locking pattern
     if (sSingleton == NULL)
@@ -43,9 +43,9 @@ ProcRunner* ProcRunner::get()
     return sSingleton;
 }
 
-ProcRunner& ProcRunner::getRef()
+ProcRunner& ProcRunner::GetRef()
 {
-    ProcRunner::get();
+    ProcRunner::Get();
 
     if (sSingleton == NULL)
     {
@@ -67,7 +67,7 @@ void ProcRunner::DeleteSingleton()
 
 
 // methods
-int ProcRunner::run(const FString& command, 
+int ProcRunner::Run(const FString& command, 
                     const FString& cwd, 
                     FString *output, 
                     unsigned int timeout,
@@ -400,7 +400,7 @@ int ProcRunner::run(const FString& command,
 }
 
 
-int ProcRunner::run_background(const FString& command, const FString& cwd, const StrStrMap *env)
+int ProcRunner::RunBackground(const FString& command, const FString& cwd, const StrStrMap *env)
 {
     if (cwd.empty()) hlog(HLOG_DEBUG3, "run_background(%s)", command.c_str());
     else hlog(HLOG_DEBUG3, "run_background(%s) [in %s]", command.c_str(), cwd.c_str());
@@ -517,7 +517,7 @@ int ProcRunner::run_background(const FString& command, const FString& cwd, const
 }
 
 
-FString ProcRunner::read_pipe(const FString& command, int *exitval)
+FString ProcRunner::ReadPipe(const FString& command, int *exitval)
 {
     FILE *fp;
     FString ret;
@@ -550,7 +550,7 @@ FString ProcRunner::read_pipe(const FString& command, int *exitval)
 }
 
 
-FString ProcRunner::shell_escape(const FString& arg)
+FString ProcRunner::ShellEscape(const FString& arg)
 {
     FString ret(arg);
     ret.Replace("'", "'\\''");
@@ -558,15 +558,15 @@ FString ProcRunner::shell_escape(const FString& arg)
 }
 
 
-int ProcRunner::rsh(const FString& ip, const FString& command, FString *output, int timeout)
+int ProcRunner::Rsh(const FString& ip, const FString& command, FString *output, int timeout)
 {
     FString cmd, esc, tmpout, stmp;
     size_t pos;
     int err;
 
-    esc = shell_escape(command + " ; echo $?");
+    esc = ShellEscape(command + " ; echo $?");
     cmd.Format("rsh %s %s", ip.c_str(), esc.c_str());
-    err = run(cmd, "", &tmpout, timeout);
+    err = Run(cmd, "", &tmpout, timeout);
     tmpout.Trim();
     pos = tmpout.find_last_of('\n');
     if (output != NULL) *output = tmpout.Left((pos == NOPOS) ? 0 : pos);
@@ -576,11 +576,11 @@ int ProcRunner::rsh(const FString& ip, const FString& command, FString *output, 
 }
 
 
-int ProcRunner::ssh(const FString& host, const FString& command, FString *output, int timeout)
+int ProcRunner::Ssh(const FString& host, const FString& command, FString *output, int timeout)
 {
     FString cmd, esc;
-    esc = shell_escape(command);
+    esc = ShellEscape(command);
     cmd.Format("ssh %s %s", host.c_str(), esc.c_str());
-    return run(cmd, "", output, timeout);
+    return Run(cmd, "", output, timeout);
 }
 

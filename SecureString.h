@@ -46,7 +46,7 @@ public:
     RSAString(const FString &ciphertext) : mCiphertext(ciphertext) {};
     virtual ~RSAString();
 
-    void getPlaintext(FString &plaintext/*OUT*/, PrivateKey &key);
+    void GetPlaintext(FString &plaintext/*OUT*/, PrivateKey &key);
 
 //    inline operator const FString &() const { return mCiphertext; }
     inline operator const char *() const { return mCiphertext.c_str(); }

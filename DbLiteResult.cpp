@@ -114,13 +114,13 @@ int DbLiteResult::LiteData::Load(sqlite3_stmt *stmt)
 }
 
 
-bool DbLiteResult::LiteData::isOkay() const
+bool DbLiteResult::LiteData::IsOkay() const
 {
     return mOkay;
 }
 
 
-bool DbLiteResult::LiteData::fetchRow(DbResultRow& row /*OUT*/)
+bool DbLiteResult::LiteData::FetchRow(DbResultRow& row /*OUT*/)
 {
     Row::iterator ri;
     if (mNextRow == mRes.end()) return false;
@@ -139,31 +139,31 @@ bool DbLiteResult::LiteData::fetchRow(DbResultRow& row /*OUT*/)
 }
 
 
-size_t DbLiteResult::LiteData::getNumColumns()
+size_t DbLiteResult::LiteData::GetNumColumns()
 {
     return mColNames.size();
 }
 
 
-FString DbLiteResult::LiteData::getColumnName(size_t i)
+FString DbLiteResult::LiteData::GetColumnName(size_t i)
 {
     return mColNames[i];
 }
 
 
-size_t DbLiteResult::LiteData::getFieldLength(size_t i)
+size_t DbLiteResult::LiteData::GetFieldLength(size_t i)
 {
     return (*mCurrentRow)[i].first.size();
 }
 
 
-size_t DbLiteResult::LiteData::getNumRows()
+size_t DbLiteResult::LiteData::GetNumRows()
 {
     return mRes.size();
 }
 
 
-bool DbLiteResult::LiteData::seek(size_t offset)
+bool DbLiteResult::LiteData::Seek(size_t offset)
 {
     size_t i;
 

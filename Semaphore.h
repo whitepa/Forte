@@ -13,26 +13,26 @@ namespace Forte
         inline Semaphore(int value) : mValue(value), mNotify(mLock) {};
         virtual ~Semaphore() {};
 
-        inline int post(void) {
+        inline int Post(void) {
             AutoUnlockMutex lock(mLock);
             if (++mValue > 0)
-                mNotify.signal();
+                mNotify.Signal();
             return 0;
         };
-        inline int wait(void) {
+        inline int Wait(void) {
             AutoUnlockMutex lock(mLock);
             while (mValue <= 0)
-                mNotify.wait();
+                mNotify.Wait();
             --mValue;
             return 0;
         };
-        inline int trywait(void) {
+        inline int TryWait(void) {
             AutoUnlockMutex lock(mLock);
             if (mValue <= 0) { errno = EAGAIN; return -1; }
             --mValue;
             return 0;
         };
-        inline int getvalue(void) {
+        inline int GetValue(void) {
             AutoUnlockMutex lock(mLock);
             return mValue;
         };
@@ -41,6 +41,6 @@ namespace Forte
         int mValue;
         Mutex mLock;
         ThreadCondition mNotify;
-    };
+    };;
 };
 #endif

@@ -14,21 +14,21 @@ namespace Forte
         static const int NONE = -1;
         AutoFD(int fd = NONE) : mDir(NULL), mFD(fd) { }
         AutoFD(DIR *dir) : mDir(dir) { if (mDir != NULL) mFD = dirfd(dir); }
-        ~AutoFD() { close(); }
-        inline void close() {
+        ~AutoFD() { Close(); }
+        inline void Close() {
             if (mDir != NULL) { closedir(mDir); mDir = NULL; mFD = NONE; }
             if (mFD != NONE) { ::close(mFD); mFD = NONE; }
         }
-        inline void release() { mDir = NULL; mFD = NONE; }
-        inline int fd() const { return mFD; }
+        inline void Release() { mDir = NULL; mFD = NONE; }
+        inline int Fd() const { return mFD; }
         inline DIR* dir() { return mDir; }
         inline const DIR* dir() const { return mDir; }
         inline operator int() const { return mFD; }
         inline operator DIR*() { return mDir; }
         inline operator const DIR*() const { return mDir; }
-        inline AutoFD& operator =(int fd) { close(); mFD = fd; return *this; }
+        inline AutoFD& operator =(int fd) { Close(); mFD = fd; return *this; }
         inline AutoFD& operator =(DIR *dir) {
-            close();
+            Close();
             if ((mDir = dir) != NULL) mFD = dirfd(mDir);
             return *this;
         }

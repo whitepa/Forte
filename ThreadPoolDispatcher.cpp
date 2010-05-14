@@ -20,7 +20,7 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
     // start initial worker threads
     for (unsigned int i = 0; i < disp.mMinThreads; ++i)
     {
-        disp.mThreadSem.wait();
+        disp.mThreadSem.Wait();
         try
         {
             new ThreadPoolDispatcherWorker(disp);
@@ -28,7 +28,7 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
         catch (...)
         {
             // XXX log
-            disp.mThreadSem.post();
+            disp.mThreadSem.Post();
             break;
         }
     }
@@ -38,9 +38,9 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
     {
         // see if new threads are needed
         sleep(1);
-        int currentThreads = disp.mMaxThreads - disp.mThreadSem.getvalue();
-        int spareThreads = disp.mSpareThreadSem.getvalue();
-        int newThreadsNeeded = disp.mEventQueue.depth() + disp.mMinSpareThreads - spareThreads;
+        int currentThreads = disp.mMaxThreads - disp.mThreadSem.GetValue();
+        int spareThreads = disp.mSpareThreadSem.GetValue();
+        int newThreadsNeeded = disp.mEventQueue.Depth() + disp.mMinSpareThreads - spareThreads;
         int numNew = 0;
         if (newThreadsNeeded < (int)disp.mMinThreads - currentThreads)
             newThreadsNeeded = (int)disp.mMinThreads - currentThreads;
@@ -52,7 +52,7 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
             // we must now create numNew threads
             for (int i = 0; i < numNew; ++i)
             {
-                if (disp.mThreadSem.trywait() == -1 && errno == EAGAIN)
+                if (disp.mThreadSem.TryWait() == -1 && errno == EAGAIN)
                 {
                     numNew = 0;
                     break;
@@ -64,7 +64,7 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
                         new ThreadPoolDispatcherWorker(disp);
                     } catch (...) {
                         // XXX log err
-                        disp.mThreadSem.post();
+                        disp.mThreadSem.Post();
                         numNew = 0;
                         break;
                     }
@@ -79,7 +79,7 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
             AutoUnlockMutex lock(disp.mThreadsLock);
             std::vector<shared_ptr<DispatcherThread> >::iterator i = disp.mThreads.begin();
             if (*i)
-                (*i)->shutdown();
+                (*i)->Shutdown();
         }
         lastNew = (numNew > 0) ? numNew : 0;
     }
@@ -89,7 +89,7 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
          disp.mDispatcherName.c_str());
 
     // wait until all requests are processed
-    disp.mEventQueue.waitUntilEmpty();
+    disp.mEventQueue.WaitUntilEmpty();
     
     hlog(HLOG_DEBUG, "'%s' dispatcher shutting down, waiting for threads to exit...",
          disp.mDispatcherName.c_str());
@@ -99,7 +99,7 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
         AutoUnlockMutex lock(disp.mThreadsLock);
         foreach (shared_ptr<DispatcherThread> &thr, disp.mThreads)
         {
-            thr->shutdown();
+            thr->Shutdown();
         }
         // delete all the threads
         disp.mThreads.clear();
@@ -118,9 +118,9 @@ Forte::ThreadPoolDispatcherWorker::ThreadPoolDispatcherWorker(ThreadPoolDispatch
 Forte::ThreadPoolDispatcherWorker::~ThreadPoolDispatcherWorker()
 {
     ThreadPoolDispatcher &disp(dynamic_cast<ThreadPoolDispatcher&>(mDispatcher));
-    disp.mRequestHandler.cleanup();
-    disp.unregisterThread(this);
-    disp.mThreadSem.post();
+    disp.mRequestHandler.Cleanup();
+    disp.UnregisterThread(this);
+    disp.mThreadSem.Post();
 }
 void * Forte::ThreadPoolDispatcherWorker::run(void)
 {
@@ -128,7 +128,7 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
     mThreadName.Format("%s-pool-%u", mDispatcher.mDispatcherName.c_str(), (unsigned)mThread);
     
     // call the request handler's initialization hook
-    disp.mRequestHandler.init();
+    disp.mRequestHandler.Init();
 
     // pull events from the request queue
     while (!mThreadShutdown)
@@ -137,7 +137,7 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
         while (disp.mPaused == false &&
                !mThreadShutdown)
         {
-            shared_ptr<Event> event(disp.mEventQueue.get());
+            shared_ptr<Event> event(disp.mEventQueue.Get());
             if (!event) break;
             // set event pointer here
             mEventPtr = event;
@@ -148,12 +148,12 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
                 // process the request
                 try
                 {
-                    disp.mRequestHandler.handler(event.get());
+                    disp.mRequestHandler.Handler(event.get());
                 }
                 catch (Exception &e)
                 {
                     hlog(HLOG_ERR, "exception thrown in event handler: %s",
-                         e.getDescription().c_str());
+                         e.GetDescription().c_str());
                 }
                 catch (std::exception &e)
                 {                
@@ -175,16 +175,16 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
         gettimeofday(&now, 0);
         timeout.tv_sec = now.tv_sec + 1; // wake up every second
         timeout.tv_nsec = now.tv_usec * 1000;
-        disp.mSpareThreadSem.post();
-        disp.mNotify.timedwait(timeout);
-        disp.mSpareThreadSem.trywait();
+        disp.mSpareThreadSem.Post();
+        disp.mNotify.TimedWait(timeout);
+        disp.mSpareThreadSem.TryWait();
         if (mThreadShutdown) break;
         // see if we need to run periodic
         gettimeofday(&now, 0);
         if (disp.mRequestHandler.mTimeout != 0 &&
             (unsigned int)(now.tv_sec - mLastPeriodicCall) > disp.mRequestHandler.mTimeout)
         {
-            disp.mRequestHandler.periodic();
+            disp.mRequestHandler.Periodic();
             mLastPeriodicCall = now.tv_sec;
         }
     }
@@ -208,26 +208,26 @@ Forte::ThreadPoolDispatcher::ThreadPoolDispatcher(RequestHandler &requestHandler
 Forte::ThreadPoolDispatcher::~ThreadPoolDispatcher()
 {
     // stop accepting new events
-    mEventQueue.shutdown();
+    mEventQueue.Shutdown();
     // set the shutdown flag
     mShutdown = true;
     // wait for the manager thread to exit!
     // (this allows all worker threads to safely exit and unregister themselves
     //  before this destructor exits; otherwise bad shit happens when this object
     //  is dealloced and worker threads are still around trying to access data)
-    mManagerThread.waitForShutdown();
+    mManagerThread.WaitForShutdown();
 }
-void Forte::ThreadPoolDispatcher::pause(void) { mPaused = 1; }
-void Forte::ThreadPoolDispatcher::resume(void) { mPaused = 0; mNotify.broadcast(); }
-void Forte::ThreadPoolDispatcher::enqueue(shared_ptr<Event> e)
+void Forte::ThreadPoolDispatcher::Pause(void) { mPaused = 1; }
+void Forte::ThreadPoolDispatcher::Resume(void) { mPaused = 0; mNotify.Broadcast(); }
+void Forte::ThreadPoolDispatcher::Enqueue(shared_ptr<Event> e)
 { 
     if (mShutdown)
         throw ForteThreadPoolDispatcherException("dispatcher is shutting down; no new events are being accepted");
-    mEventQueue.add(e); 
+    mEventQueue.Add(e); 
 }
-bool Forte::ThreadPoolDispatcher::accepting(void) { return mEventQueue.accepting(); }
+bool Forte::ThreadPoolDispatcher::Accepting(void) { return mEventQueue.Accepting(); }
 
-int Forte::ThreadPoolDispatcher::getRunningEvents(int maxEvents,
+int Forte::ThreadPoolDispatcher::GetRunningEvents(int maxEvents,
                                                   std::list<shared_ptr<Event> > &runningEvents)
 {
     // loop through the dispatcher threads

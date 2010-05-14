@@ -24,41 +24,41 @@ namespace Forte
         virtual bool Close() = 0;
 
         // queries
-        virtual bool execute(const FString& sql) = 0;
-        virtual DbResult store(const FString& sql) = 0;
-        virtual DbResult use(const FString& sql) = 0;
+        virtual bool Execute(const FString& sql) = 0;
+        virtual DbResult Store(const FString& sql) = 0;
+        virtual DbResult Use(const FString& sql) = 0;
 
-        virtual bool execute2(const FString& sql);
-        virtual DbResult store2(const FString& sql);
-        virtual DbResult use2(const FString& sql);
+        virtual bool Execute2(const FString& sql);
+        virtual DbResult Store2(const FString& sql);
+        virtual DbResult Use2(const FString& sql);
 
         // transactions
-        virtual void autoCommit(bool enabled);
-        virtual void begin();
-        virtual void commit();
-        virtual void rollback();
-        inline bool hasPendingQueries() { return mQueriesPending; }
+        virtual void AutoCommit(bool enabled);
+        virtual void Begin();
+        virtual void Commit();
+        virtual void Rollback();
+        inline bool HasPendingQueries() { return mQueriesPending; }
     
         // misc.
         virtual uint64_t InsertID() = 0;
         virtual uint64_t AffectedRows() = 0;
-        virtual FString escape(const char *str) = 0;
+        virtual FString Escape(const char *str) = 0;
 
         // logging
-        static void debugFile(const char *filename);
-        void logSql(const FString &sql, const struct timeval &executionTime);
+        static void DebugFile(const char *filename);
+        void LogSql(const FString &sql, const struct timeval &executionTime);
 
         bool mLogQueries;     // flag to turn (hlog) logging on/off on
         // the fly (should be used when temporary
         // logging is needed, auto connection will
         // turn this off when released)
-        inline void logQueries(bool log) { mLogQueries = log; }
+        inline void LogQueries(bool log) { mLogQueries = log; }
 
         // error information
         FString mError;        // last database error
         unsigned int mErrno;   // last database error code
         unsigned int mTries;   // number of tries it took to execute the last query
-        virtual bool isTemporaryError() const = 0;
+        virtual bool IsTemporaryError() const = 0;
     
         // retry configuration
         unsigned int mRetries;     // number of times to retry failed queries / connections
@@ -72,7 +72,7 @@ namespace Forte
         FString mHost;
         FString mSocket;
 
-    protected:
+     protected:
         bool mDidInit;
         bool mReconnect;
         bool mQueriesPending;

@@ -22,7 +22,7 @@ DbLiteConnection::~DbLiteConnection()
 }
 
 
-void DbLiteConnection::set_error()
+void DbLiteConnection::setError()
 {
     if (mDB != NULL)
     {
@@ -62,7 +62,7 @@ bool DbLiteConnection::Connect()
 
     if (mDB != NULL)
     {
-        set_error();
+        setError();
     }
     else
     {
@@ -82,12 +82,12 @@ bool DbLiteConnection::Close()
         return true;
     }
 
-    set_error();
+    setError();
     return false;
 }
 
 
-DbResult DbLiteConnection::query(const FString& sql)
+DbResult DbLiteConnection::Query(const FString& sql)
 {
     unsigned int tries_remaining = mRetries + 1;
     struct timeval tv_start, tv_end;
@@ -103,7 +103,7 @@ DbResult DbLiteConnection::query(const FString& sql)
 
     if (mDB == NULL)
     {
-        set_error();
+        setError();
         return res;
     }
 
@@ -123,7 +123,7 @@ DbResult DbLiteConnection::query(const FString& sql)
             gettimeofday(&tv_start, NULL);
             mErrno = res.Load(stmt);
             gettimeofday(&tv_end, NULL);
-            if (sDebugSql) logSql(remain, tv_end - tv_start);
+            if (sDebugSql) LogSql(remain, tv_end - tv_start);
 
             // check for errors
             if (mErrno != SQLITE_OK)
@@ -157,37 +157,37 @@ DbResult DbLiteConnection::query(const FString& sql)
         else remain = tail;
     }
 
-    if (!res) set_error();
+    if (!res) setError();
     return res;
 }
 
 
-bool DbLiteConnection::execute(const FString& sql)
+bool DbLiteConnection::Execute(const FString& sql)
 {
-    return query(sql);
+    return Query(sql);
 }
 
 
-DbResult DbLiteConnection::store(const FString& sql)
+DbResult DbLiteConnection::Store(const FString& sql)
 {
-    return query(sql);
+    return Query(sql);
 }
 
 
-DbResult DbLiteConnection::use(const FString& sql)
+DbResult DbLiteConnection::Use(const FString& sql)
 {
-    return query(sql);
+    return Query(sql);
 }
 
 
-bool DbLiteConnection::isTemporaryError() const
+bool DbLiteConnection::IsTemporaryError() const
 {
     return (mErrno == SQLITE_BUSY ||
             mErrno == SQLITE_LOCKED);
 }
 
 
-FString DbLiteConnection::escape(const char *str)
+FString DbLiteConnection::Escape(const char *str)
 {
     FString ret;
     char *tmp;

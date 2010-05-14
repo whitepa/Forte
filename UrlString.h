@@ -6,13 +6,13 @@ namespace Forte
 {
     class UrlString {
     public:
-        static FString & encode(FString &encoded, const FString &decoded);
-        static FString & decode(FString &decoded, const FString &encoded);
+        static FString & Encode(FString &encoded, const FString &decoded);
+        static FString & Decode(FString &decoded, const FString &encoded);
 
         // utilities:
-        static char charFromHexPair(char hi, char lo);
+        static char CharFromHexPair(char hi, char lo);
 
-    protected:
+     protected:
         static FString sUnsafe;
     };
 };

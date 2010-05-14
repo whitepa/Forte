@@ -18,20 +18,20 @@ namespace Forte
         Exception(const FStringFC &fc, const char *format, ...)  __attribute__((format(printf,3,4)));
         Exception(const Exception& other);
         virtual ~Exception() throw();
-        inline std::string &getDescription() { return mDescription; };
-        inline std::string &what() { return mDescription; };
-        std::string extendedDescription();
+        inline std::string &GetDescription() { return mDescription; };
+        inline std::string &What() { return mDescription; };
+        std::string ExtendedDescription();
         FString mDescription;
         std::list<void *> mStack;
-        void pretty_trace_log(int log_level);
+        void PrettyTraceLog(int log_level);
     private:
-        FString pretty_frame(const std::vector<FString>& mapping, void *address);
+        FString PrettyFrame(const std::vector<FString>& mapping, void *address);
     };
 
 #define EXCEPTION_CLASS(NAME)                                           \
     class NAME : public Exception                                       \
     {                                                                   \
-    public:                                                             \
+     public:                                                             \
         inline NAME() {}                                                \
         inline NAME(const char *description) :                          \
             Exception(description) {}                                   \
@@ -45,7 +45,7 @@ namespace Forte
                 va_end(ap);                                             \
                                                                         \
                 va_start(ap, format);                                   \
-                mDescription.vFormat(format, size, ap);                 \
+                mDescription.VFormat(format, size, ap);                 \
                 va_end(ap);                                             \
             }                                                           \
     };
@@ -66,7 +66,7 @@ namespace Forte
                 va_end(ap);                                             \
                                                                         \
                 va_start(ap, format);                                   \
-                mDescription.vFormat(format, size, ap);                 \
+                mDescription.VFormat(format, size, ap);                 \
                 va_end(ap);                                             \
             }                                                           \
     };
@@ -90,7 +90,7 @@ namespace Forte
                                                                         \
                 FString tmp;                                            \
                 va_start(ap, format);                                   \
-                tmp.vFormat(format, size, ap);                          \
+                tmp.VFormat(format, size, ap);                          \
                 va_end(ap);                                             \
                                                                         \
                 mDescription += ": " + tmp;                             \

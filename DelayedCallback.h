@@ -16,12 +16,12 @@ namespace Forte
         friend class DelayedCallbackThread;
     public:
 
-        static void registerCallback(Callback *callback, unsigned int delay);
-        static void unregisterCallback(Callback *callback);
+        static void RegisterCallback(Callback *callback, unsigned int delay);
+        static void UnregisterCallback(Callback *callback);
 
     protected:
-        static void startCallbackThread(void);
-        static void stopCallbackThread(void);
+        static void StartCallbackThread(void);
+        static void StopCallbackThread(void);
 
         static Mutex sLock;
         static Mutex sThreadLock;
@@ -32,7 +32,6 @@ namespace Forte
         static std::set<unsigned int> sTimes;
         static CallbackMap sCallbacks;
         static std::map<Callback *, unsigned int> sLookup;
-
     };
 
     class DelayedCallbackThread : public Thread {

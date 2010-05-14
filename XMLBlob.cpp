@@ -33,25 +33,25 @@ XMLBlob::XMLBlob(const FString &in) :
     throw EUnimplemented("XML parsing not implemented");
 }
 
-void XMLBlob::beginChild(const char *name)
+void XMLBlob::BeginChild(const char *name)
 {
     current = xmlNewChild(current, NULL, BAD_CAST name, NULL);
 }
 
-void XMLBlob::endChild(void)
+void XMLBlob::EndChild(void)
 {
     if (current != NULL)
         current = current->parent;
 }
 
-void XMLBlob::addAttribute(const char *name, const char *value)
+void XMLBlob::AddAttribute(const char *name, const char *value)
 {
     FString stripped;
     stripControls(stripped, value);
     xmlNewProp(current, BAD_CAST name, BAD_CAST stripped.c_str());
 }
 
-void XMLBlob::addDataAttribute(const char *name, const char *value)
+void XMLBlob::AddDataAttribute(const char *name, const char *value)
 {
     if (lastData)
     {
@@ -61,31 +61,31 @@ void XMLBlob::addDataAttribute(const char *name, const char *value)
     }
 }
 
-void XMLBlob::addData(const char *name, const char *value)
+void XMLBlob::AddData(const char *name, const char *value)
 {
     FString stripped;
-    addDataToNode(current, name, value);
+    AddDataToNode(current, name, value);
 }
-void XMLBlob::addDataRaw(const char *name, const char *value)
+void XMLBlob::AddDataRaw(const char *name, const char *value)
 {
     FString stripped;
-    addDataToNodeRaw(current, name, value);
+    AddDataToNodeRaw(current, name, value);
 }
 
-void XMLBlob::addDataToNode(xmlNodePtr node, const char *name, const char *value)
+void XMLBlob::AddDataToNode(xmlNodePtr node, const char *name, const char *value)
 {
     FString stripped;
     stripControls(stripped, value);
     lastData = xmlNewTextChild(current, NULL, BAD_CAST name, BAD_CAST stripped.c_str());
 }
-void XMLBlob::addDataToNodeRaw(xmlNodePtr node, const char *name, const char *value)
+void XMLBlob::AddDataToNodeRaw(xmlNodePtr node, const char *name, const char *value)
 {
     FString stripped;
     lastData = xmlNewTextChild(current, NULL, BAD_CAST name, BAD_CAST value);
 }
 
-void XMLBlob::toString(FString &out,
-                        bool pretty
+void XMLBlob::ToString(FString &out,
+                       bool pretty
     )
 {
     xmlChar *buf;
@@ -96,7 +96,7 @@ void XMLBlob::toString(FString &out,
 }
 
 void XMLBlob::stripControls(FString &dest,  
-                             const char *src 
+                            const char *src 
     )
 {
     if (src == NULL)

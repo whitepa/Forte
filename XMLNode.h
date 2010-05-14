@@ -8,8 +8,6 @@
 #include <libxml/tree.h>
 namespace Forte
 {
-    class XMLNode;
-
     class XMLNode
     {
     public:
@@ -22,20 +20,20 @@ namespace Forte
         virtual ~XMLNode();
 
     public:
-        FString getProp(const char *name) const;
-        void setProp(const char *name, const char *value = NULL);
-        void delProp(const char *name);
-        FString getText() const;
-        void nuke();   // detach and delete this node and all of its subchildren
+        FString GetProp(const char *name) const;
+        void SetProp(const char *name, const char *value = NULL);
+        void DelProp(const char *name);
+        FString GetText() const;
+        void Nuke();   // detach and delete this node and all of its subchildren
 
-        inline FString getName() const { return mNode == NULL ? "" : FString((const char*)mNode->name); }
-        inline xmlNodePtr getChildren() const { return mNode == NULL ? NULL : mNode->children; }
-        inline xmlNodePtr getNext() const { return mNode == NULL ? NULL : mNode->next; }
-        inline xmlNodePtr getParent() const { return mNode == NULL ? NULL : mNode->parent; }
+        inline FString GetName() const { return mNode == NULL ? "" : FString((const char*)mNode->name); }
+        inline xmlNodePtr GetChildren() const { return mNode == NULL ? NULL : mNode->children; }
+        inline xmlNodePtr GetNext() const { return mNode == NULL ? NULL : mNode->next; }
+        inline xmlNodePtr GetParent() const { return mNode == NULL ? NULL : mNode->parent; }
         inline operator xmlNodePtr() { return mNode; }
         inline operator const xmlNodePtr() const { return mNode; }
 
-    protected:
+     protected:
         friend class XMLDoc;
 
         ///

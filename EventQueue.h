@@ -21,33 +21,33 @@ namespace Forte
         EventQueue(int maxdepth, ThreadCondition *notifier);
         virtual ~EventQueue();
 
-        void add(shared_ptr<Event> e);
-        shared_ptr<Event> get(void);
-        inline bool accepting(void) { return (!mShutdown && ((mMaxDepth.getvalue() > 0) ? true : false));}
-        inline int depth(void) {AutoUnlockMutex lock(mMutex); return mQueue.size();};
+        void Add(shared_ptr<Event> e);
+        shared_ptr<Event> Get(void);
+        inline bool Accepting(void) { return (!mShutdown && ((mMaxDepth.GetValue() > 0) ? true : false));}
+        inline int Depth(void) {AutoUnlockMutex lock(mMutex); return mQueue.size();};
 
         /// set to true (default) to block on full queue.
         /// set to false to drop old events (and delete them) on full queue
-        inline void setBlockingMode(bool blocking) { mBlockingMode = blocking; };
+        inline void SetBlockingMode(bool blocking) { mBlockingMode = blocking; };
 
-        /// shutdown prevents the queue from accepting any more events via add().
+        /// shutdown prevents the queue from accepting any more events via Add().
         /// This operation is (currently) not reversible.
-        inline void shutdown(void) { mShutdown = true; };
+        inline void Shutdown(void) { mShutdown = true; };
 
         /// waitUntilEmpty will cause the caller to block until the event
         /// queue is emptied.  If the queue is already empty upon calling
         /// waitUntilEmpty(), it will return immediately.
-        inline void waitUntilEmpty(void) { 
+        inline void WaitUntilEmpty(void) { 
             AutoUnlockMutex lock(mMutex); 
             if (mQueue.empty())
                 return;
             else
-                mEmptyCondition.wait();
-        };
+                mEmptyCondition.Wait();
+         };
 
         /// getEventCopies retreives references of the next maxEvents in the queue
         ///
-        int getEvents(int maxEvents, std::list<shared_ptr<Event> > &result);
+        int GetEvents(int maxEvents, std::list<shared_ptr<Event> > &result);
 
         int mDeepThresh;
         int mLastDepth;

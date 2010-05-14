@@ -24,10 +24,10 @@ namespace Forte
     public:
         inline XMLNode getRootNode() const { return XMLNode(mDoc->children); }
         XMLNode createDocument(const FString& root_name);
-        FString toString() const;
+        FString to_string() const;
 
         inline operator XMLNode() const { return getRootNode(); }
-        inline operator FString() const { return toString(); }
+        inline operator FString() const { return to_string(); }
         inline operator xmlDocPtr() { return mDoc; }
         inline operator const xmlDocPtr() const { return mDoc; }
 

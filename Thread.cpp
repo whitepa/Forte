@@ -9,7 +9,7 @@ void Thread::makeKey(void)
 {
     pthread_key_create(&sThreadKey, NULL);
 }
-Thread * Thread::myThread(void)
+Thread * Thread::MyThread(void)
 {
     Thread *thr = reinterpret_cast<Thread*>(pthread_getspecific(sThreadKey));
     if (thr == NULL)
@@ -35,7 +35,7 @@ void * Thread::startThread(void *obj)
             gettimeofday(&now, 0);
             timeout.tv_sec = now.tv_sec + 1; // wake up every second to check for shutdown
             timeout.tv_nsec = now.tv_usec * 1000;
-            thr->mInitializedNotify.timedwait(timeout);
+            thr->mInitializedNotify.TimedWait(timeout);
         }
     }
     // inform the log manager of this thread
@@ -52,7 +52,7 @@ void * Thread::startThread(void *obj)
     catch (Exception &e)
     {
         hlog(HLOG_ERR, "exception in thread run(): %s",
-             e.getDescription().c_str());
+             e.GetDescription().c_str());
     }
     catch (std::exception &e)
     {
@@ -68,10 +68,10 @@ void * Thread::startThread(void *obj)
     thr->mThreadShutdown = true;
 
     // notify that shutdown is complete
-    hlog(HLOG_DEBUG, "broadcasting thread shutdown");
+    hlog(HLOG_DEBUG, "Broadcasting thread shutdown");
     AutoUnlockMutex lock(thr->mShutdownCompleteLock);
     thr->mShutdownComplete = true;
-    thr->mShutdownCompleteCondition.broadcast();
+    thr->mShutdownCompleteCondition.Broadcast();
 
     return retval;
 }
@@ -80,14 +80,14 @@ void Thread::initialized()
 {
     AutoUnlockMutex lock(mInitializedLock);
     mInitialized = true;
-    mInitializedNotify.broadcast();
+    mInitializedNotify.Broadcast();
 }
 
-void Thread::waitForShutdown()
+void Thread::WaitForShutdown()
 {
     AutoUnlockMutex lock(mShutdownCompleteLock);
     if (mShutdownComplete) return;
-    mShutdownCompleteCondition.wait();
+    mShutdownCompleteCondition.Wait();
 }
 
 void Thread::interruptibleSleep(const struct timespec &interval, bool throwRequested)
@@ -108,7 +108,7 @@ void Thread::interruptibleSleep(const struct timespec &interval, bool throwReque
     AutoUnlockMutex lock(mShutdownRequestedLock);
     while (!mThreadShutdown)
     {
-        int status = mShutdownRequested.timedwait(end);
+        int status = mShutdownRequested.TimedWait(end);
         if (status == 0)
         {
             // The condition was signalled.
@@ -142,7 +142,7 @@ void Thread::interruptibleSleep(const struct timespec &interval, bool throwReque
 Thread::~Thread()
 {
     // tell the thread to shut down
-    shutdown();
+    Shutdown();
 
     // Join the pthread
     // (this will block until the thread exits)

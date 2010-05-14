@@ -91,7 +91,7 @@ ServerMain::~ServerMain()
              i++)
         {
             // execute the callback
-            (*i)->execute();
+            (*i)->Execute();
             // free the callback
             delete (*i);
         }

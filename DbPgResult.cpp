@@ -48,7 +48,7 @@ DbPgResult::PgData::~PgData()
 }
 
 
-bool DbPgResult::PgData::isOkay() const
+bool DbPgResult::PgData::IsOkay() const
 {
     bool ret = false;
 
@@ -73,7 +73,7 @@ bool DbPgResult::PgData::isOkay() const
 }
 
 
-bool DbPgResult::PgData::fetchRow(DbResultRow& row /*OUT*/)
+bool DbPgResult::PgData::FetchRow(DbResultRow& row /*OUT*/)
 {
     size_t i;
     char *val;
@@ -94,19 +94,19 @@ bool DbPgResult::PgData::fetchRow(DbResultRow& row /*OUT*/)
 }
 
 
-size_t DbPgResult::PgData::getNumColumns()
+size_t DbPgResult::PgData::GetNumColumns()
 {
     return mNumCols;
 }
 
 
-FString DbPgResult::PgData::getColumnName(size_t i)
+FString DbPgResult::PgData::GetColumnName(size_t i)
 {
     return PQfname(mResult, (int)i);
 }
 
 
-size_t DbPgResult::PgData::getFieldLength(size_t i)
+size_t DbPgResult::PgData::GetFieldLength(size_t i)
 {
     return (size_t)PQgetlength(mResult, mCurrentRow, i);
 }

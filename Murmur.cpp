@@ -150,7 +150,7 @@ void Murmur64::Final()
 }
 
 
-FString Murmur64::toStr() const
+FString Murmur64::ToStr() const
 {
     FString ret;
     ret.Format("%016llx", (u64)mHash);

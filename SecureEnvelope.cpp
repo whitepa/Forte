@@ -1,8 +1,9 @@
 #ifndef FORTE_NO_OPENSSL
 #include "SecureEnvelope.h"
 
-FString & SecureEnvelopeEncoder::encode(const FString &accountNumber, 
-                                              unsigned int numClear, FString &out)
+FString & SecureEnvelopeEncoder::Encode(const FString &accountNumber, 
+                                        unsigned int numClear, 
+                                        FString &out)
 {
     if (accountNumber.length() < numClear || accountNumber.find_first_of('$') != std::string::npos)
         throw ForteSecureEnvelopeEncoderException("invalid account number");
@@ -23,7 +24,7 @@ FString & SecureEnvelopeEncoder::encode(const FString &accountNumber,
     return out;
 }
 
-FString & SecureEnvelopeDecoder::decode(const FString &encoded, FString &out)
+FString & SecureEnvelopeDecoder::Decode(const FString &encoded, FString &out)
 {
     out.clear();
     size_t obscuredChars = encoded.find_first_not_of('X');
@@ -38,7 +39,7 @@ FString & SecureEnvelopeDecoder::decode(const FString &encoded, FString &out)
 //    cout << "ENCRYPTED: " << encrypted << endl;
     FString decrypted;
     // decrypt it
-    encrypted.getPlaintext(decrypted, mPrivateKey);
+    encrypted.GetPlaintext(decrypted, mPrivateKey);
     // descramble it
     for (size_t i = 0; i < obscuredChars; ++i)
         out.append(1, decrypted[i] ^ decrypted[i + obscuredChars]);
@@ -47,7 +48,7 @@ FString & SecureEnvelopeDecoder::decode(const FString &encoded, FString &out)
     return out;
 }
 
-FString & SecureEnvelopeDecoder::obscured(const FString &encoded, FString &out)
+FString & SecureEnvelopeDecoder::Obscured(const FString &encoded, FString &out)
 {
     size_t dollarPos;
     if ((dollarPos = encoded.find_first_of('$')) == std::string::npos)
@@ -56,7 +57,7 @@ FString & SecureEnvelopeDecoder::obscured(const FString &encoded, FString &out)
     return out;
 }
 
-bool SecureEnvelopeDecoder::isEncoded(const std::string &data)
+bool SecureEnvelopeDecoder::IsEncoded(const std::string &data)
 {
     // XXX improve this!
     size_t obscuredChars = data.find_first_not_of('X');

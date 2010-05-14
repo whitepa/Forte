@@ -19,7 +19,7 @@ XMLNode::~XMLNode()
 }
 
 
-FString XMLNode::getProp(const char *name) const
+FString XMLNode::GetProp(const char *name) const
 {
     FString ret;
     xmlChar *str;
@@ -36,7 +36,7 @@ FString XMLNode::getProp(const char *name) const
 }
 
 
-void XMLNode::setProp(const char *name, const char *value)
+void XMLNode::SetProp(const char *name, const char *value)
 {
     FString stripped;
     stripControls(stripped, value);
@@ -44,13 +44,13 @@ void XMLNode::setProp(const char *name, const char *value)
 }
 
 
-void XMLNode::delProp(const char *name)
+void XMLNode::DelProp(const char *name)
 {
     xmlUnsetProp(mNode, BAD_CAST name);
 }
 
 
-FString XMLNode::getText() const
+FString XMLNode::GetText() const
 {
     FString ret;
     xmlChar *str;
@@ -67,7 +67,7 @@ FString XMLNode::getText() const
 }
 
 
-void XMLNode::nuke()
+void XMLNode::Nuke()
 {
     xmlUnlinkNode(mNode);
     xmlFreeNode(mNode);

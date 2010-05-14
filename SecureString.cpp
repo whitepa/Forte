@@ -104,7 +104,7 @@ RSAString::~RSAString()
 {
     
 }
-void RSAString::getPlaintext(FString &plaintext/*OUT*/, PrivateKey &key)
+void RSAString::GetPlaintext(FString &plaintext/*OUT*/, PrivateKey &key)
 {
     size_t size = RSA_size(key.mKey);
     unsigned char *plain = new unsigned char[size];

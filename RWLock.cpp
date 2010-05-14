@@ -14,143 +14,143 @@ RWLock::RWLock()
 
 
 // write lock functions
-void RWLock::_write_lock(const char *file, unsigned line)
+void RWLock::_WriteLock(const char *file, unsigned line)
 {
     // lock for writing
 #ifdef DEBUG_RWLOCK
-    hlog(HLOG_DEBUG, "write_lock() requested at %s:%d", file, line);
+    hlog(HLOG_DEBUG, "WriteLock() requested at %s:%d", file, line);
 #endif
 
     // this blocks until all locks have cleared
     // other locks will block until this lock clears
-    mMainLock.wait();
+    mMainLock.Wait();
 
     // wait for read locks to clear
-    mReadLockMutex.wait();
-    mReadLockAtomic.wait();
+    mReadLockMutex.Wait();
+    mReadLockAtomic.Wait();
 
     // set locked line and such
     mFile = file;
     mLine = line;
 #ifdef DEBUG_RWLOCK
-    hlog(HLOG_DEBUG, "write_lock() obtained at %s:%d", file, line);
+    hlog(HLOG_DEBUG, "WriteLock() obtained at %s:%d", file, line);
 #endif
 }
 
 
-void RWLock::_write_unlock(const char *file, unsigned line)
+void RWLock::_WriteUnlock(const char *file, unsigned line)
 {
 #ifdef DEBUG_RWLOCK
-    hlog(HLOG_DEBUG, "write_unlock() at %s:%d", file, line);
+    hlog(HLOG_DEBUG, "WriteUnlock() at %s:%d", file, line);
 #endif
 #ifdef XDEBUG
     FString err;
 
-    if (mReadLockMutex.getvalue() != 0)
+    if (mReadLockMutex.GetValue() != 0)
     {
-        err.Format("write_unlock: no write lock held: %s:%u", mFile.c_str(), mLine);
+        err.Format("WriteUnlock: no write lock held: %s:%u", mFile.c_str(), mLine);
         throw std::logic_error(err);
     }
 #endif
 
-    mReadLockMutex.post();
-    mReadLockAtomic.post();
-    mMainLock.post();
+    mReadLockMutex.Post();
+    mReadLockAtomic.Post();
+    mMainLock.Post();
 }
 
 
 // atomically convert a write lock to a read lock
-void RWLock::_write_unlock_read_lock(const char *file, unsigned line)
+void RWLock::_WriteUnlockReadLock(const char *file, unsigned line)
 {
 #ifdef DEBUG_RWLOCK
-    hlog(HLOG_DEBUG, "write_unlock_read_lock() at %s:%d", file, line);
+    hlog(HLOG_DEBUG, "WriteUnlockReadLock() at %s:%d", file, line);
 #endif
 #ifdef XDEBUG
     FString err;
 
     // check write lock
-    if (mMainLock.getvalue() != 0)
+    if (mMainLock.GetValue() != 0)
     {
-        err.Format("write_unlock_read_lock: no write lock held: %s:%u", mFile.c_str(), mLine);
+        err.Format("WriteUnlockReadLock: no write lock held: %s:%u", mFile.c_str(), mLine);
         throw std::logic_error(err);
     }
 
-    if (mReadLockCount.getvalue() != 0)
+    if (mReadLockCount.GetValue() != 0)
     {
-        err.Format("write_unlock_read_lock: read lock count already 0: %s:%u", mFile.c_str(), mLine);
+        err.Format("WriteUnlockReadLock: read lock count already 0: %s:%u", mFile.c_str(), mLine);
         throw std::logic_error(err);
     }
 #endif
 
-    mReadLockCount.post();
-    mReadLockAtomic.post();
-    mMainLock.post();
+    mReadLockCount.Post();
+    mReadLockAtomic.Post();
+    mMainLock.Post();
 }
 
 
-void RWLock::_read_lock(const char *file, unsigned line)
+void RWLock::_ReadLock(const char *file, unsigned line)
 {
 #ifdef DEBUG_RWLOCK
-    hlog(HLOG_DEBUG, "read_lock() requested at %s:%d", file, line);
+    hlog(HLOG_DEBUG, "ReadLock() requested at %s:%d", file, line);
 #endif
     // read lock
-    mMainLock.wait();
-    mReadLockAtomic.wait();
-    if (mReadLockCount.getvalue() == 0) mReadLockMutex.wait();
-    mReadLockCount.post();
-    mReadLockAtomic.post();
+    mMainLock.Wait();
+    mReadLockAtomic.Wait();
+    if (mReadLockCount.GetValue() == 0) mReadLockMutex.Wait();
+    mReadLockCount.Post();
+    mReadLockAtomic.Post();
     mFile = file;
     mLine = line;
-    mMainLock.post();
+    mMainLock.Post();
 #ifdef DEBUG_RWLOCK
-    hlog(HLOG_DEBUG, "read_lock() obtained at %s:%d", file, line);
+    hlog(HLOG_DEBUG, "ReadLock() obtained at %s:%d", file, line);
 #endif
 }
 
 
-bool RWLock::_read_trylock(const char *file, unsigned line)
+bool RWLock::_ReadTryLock(const char *file, unsigned line)
 {
 #ifdef DEBUG_RWLOCK
-    hlog(HLOG_DEBUG, "read_trylock() requested at %s:%d", file, line);
+    hlog(HLOG_DEBUG, "ReadTryLock() requested at %s:%d", file, line);
 #endif
     // if the lock is available, read lock it, return false
     // if not, do not block and return true
-    if (mMainLock.trywait()) return true;
-    mReadLockAtomic.wait();
-    if (mReadLockCount.getvalue() == 0) mReadLockMutex.wait();
-    mReadLockCount.post();
-    mReadLockAtomic.post();
+    if (mMainLock.TryWait()) return true;
+    mReadLockAtomic.Wait();
+    if (mReadLockCount.GetValue() == 0) mReadLockMutex.Wait();
+    mReadLockCount.Post();
+    mReadLockAtomic.Post();
     mFile = file;
     mLine = line;
-    mMainLock.post();
+    mMainLock.Post();
 #ifdef DEBUG_RWLOCK
-    hlog(HLOG_DEBUG, "read_trylock() obtained at %s:%d", file, line);
+    hlog(HLOG_DEBUG, "ReadTryLock() obtained at %s:%d", file, line);
 #endif
     return false;
 }
 
 
-void RWLock::_read_unlock(const char *file, unsigned line)
+void RWLock::_ReadUnlock(const char *file, unsigned line)
 {
 #ifdef DEBUG_RWLOCK
-    hlog(HLOG_DEBUG, "read_unlock() at %s:%d", file, line);
+    hlog(HLOG_DEBUG, "ReadUnlock() at %s:%d", file, line);
 #endif
 #ifdef XDEBUG
     FString err;
 #endif
 
-    mReadLockAtomic.wait();
+    mReadLockAtomic.Wait();
 
 #ifdef XDEBUG
-    if (mReadLockCount.getvalue() == 0)
+    if (mReadLockCount.GetValue() == 0)
     {
-        err.Format("read_unlock: no read lock held: %s:%u", mFile.c_str(), mLine);
-        mReadLockAtomic.post();
+        err.Format("ReadUnlock: no read lock held: %s:%u", mFile.c_str(), mLine);
+        mReadLockAtomic.Post();
         throw std::logic_error(err);
     }
 #endif
 
-    mReadLockCount.trywait();
-    if (mReadLockCount.getvalue() == 0) mReadLockMutex.post();
-    mReadLockAtomic.post();
+    mReadLockCount.TryWait();
+    if (mReadLockCount.GetValue() == 0) mReadLockMutex.Post();
+    mReadLockAtomic.Post();
 }

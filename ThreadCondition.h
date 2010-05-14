@@ -11,22 +11,22 @@ namespace Forte
         inline ThreadCondition(Mutex &lock) : mLock(lock) { pthread_cond_init(&mCond, NULL); };
         inline ~ThreadCondition() { pthread_cond_destroy(&mCond); };
     
-        inline int signal() { return pthread_cond_signal(&mCond); };
-        inline int broadcast() { return pthread_cond_broadcast(&mCond); };
-        inline int wait() { return pthread_cond_wait(&mCond, &(mLock.mPThreadMutex)); };
-        inline int timedwait(const struct timespec &abstime)
+        inline int Signal() { return pthread_cond_signal(&mCond); };
+        inline int Broadcast() { return pthread_cond_broadcast(&mCond); };
+        inline int Wait() { return pthread_cond_wait(&mCond, &(mLock.mPThreadMutex)); };
+        inline int TimedWait(const struct timespec &abstime)
             { return pthread_cond_timedwait(&mCond, &(mLock.mPThreadMutex), &abstime); };
-        inline int timedwait(const int seconds)
+        inline int TimedWait(const int seconds)
             {
                 struct timeval tv;
                 struct timespec ts;
                 gettimeofday(&tv, NULL);
                 ts.tv_sec = tv.tv_sec + seconds;
                 ts.tv_nsec = tv.tv_usec * 1000;
-                return timedwait(ts);
+                return TimedWait(ts);
             }
     
-    protected:
+     protected:
         Mutex &mLock;
         pthread_cond_t mCond;
     };

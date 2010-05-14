@@ -43,7 +43,7 @@ namespace Forte
             mAny = NULL;
         }
         AnyPtr Clone() const {
-            AnyPtr o(*this);
+            AnyPtr O(*this);
             o.mAny = mTable->Clone(mAny);
             return o;
         }
@@ -83,7 +83,7 @@ namespace Forte
             void (*Delete)(void*);
             const std::type_info& (*GetType)(void*);
             void* (*Clone)(void*);
-        };
+         };
 
         // For a given referenced type T, generates functions for the
         // function table and a static instance of the table.

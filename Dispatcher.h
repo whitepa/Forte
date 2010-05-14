@@ -20,16 +20,16 @@ namespace Forte
         Dispatcher(RequestHandler &reqHandler, int maxQueueDepth, const char *name);
         virtual ~Dispatcher();
 
-        virtual void pause(void) = 0;
-        virtual void resume(void) = 0;
+        virtual void Pause(void) = 0;
+        virtual void Resume(void) = 0;
 
-        virtual void enqueue(Event *e) = 0;
-        virtual bool accepting(void) = 0;
-        virtual int getQueuedEvents(int maxEvents, std::list<Event*> &queuedEvents) = 0;
-        virtual int getRunningEvents(int maxEvents, std::list<Event*> &runningEvents) = 0;
+        virtual void Enqueue(Event *e) = 0;
+        virtual bool Accepting(void) = 0;
+        virtual int GetQueuedEvents(int maxEvents, std::list<Event*> &queuedEvents) = 0;
+        virtual int GetRunningEvents(int maxEvents, std::list<Event*> &runningEvents) = 0;
     
-        void registerThread(DispatcherThread *thr);
-        void unregisterThread(DispatcherThread *thr);
+        void RegisterThread(DispatcherThread *thr);
+        void UnregisterThread(DispatcherThread *thr);
         FString mDispatcherName;
     protected:
         bool mPaused;

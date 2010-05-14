@@ -16,7 +16,7 @@ namespace Forte
      * event.  Each predicate can be a constraint or an operator with
      * multiple Predicate operands.
      *
-     * Supported Operators:
+     * Supported operators:
      * AND - requires 2 or more operands
      * OR  - requires 2 or more operands
      * NOT - requires 1 operand

@@ -35,22 +35,22 @@ namespace Forte
                             const int maxThreads,
                             const int deepQueue, const int maxDepth, const char *name);
         virtual ~OnDemandDispatcher();
-        virtual void pause(void);
-        virtual void resume(void);
-        virtual void enqueue(shared_ptr<Event> e);
-        virtual bool accepting(void);
+        virtual void Pause(void);
+        virtual void Resume(void);
+        virtual void Enqueue(shared_ptr<Event> e);
+        virtual bool Accepting(void);
 
-        inline int getQueuedEvents(int maxEvents, 
+        inline int GetQueuedEvents(int maxEvents, 
                                    std::list<shared_ptr<Event> > &queuedEvents)
-            { return mEventQueue.getEvents(maxEvents, queuedEvents); }
-        int getRunningEvents(int maxEvents, 
+            { return mEventQueue.GetEvents(maxEvents, queuedEvents); }
+        int GetRunningEvents(int maxEvents, 
                              std::list<shared_ptr<Event> > &runningEvents);
 
     protected:
         unsigned int mMaxThreads;
         Semaphore mThreadSem;
         OnDemandDispatcherManager mManagerThread;
-    };
+    };;
 };
 
 #endif

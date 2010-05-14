@@ -35,14 +35,14 @@ namespace Forte
                               const int minSpareThreads, const int maxSpareThreads,
                               const int deepQueue, const int maxDepth, const char *name);
         virtual ~ThreadPoolDispatcher();
-        virtual void pause(void);
-        virtual void resume(void);
-        virtual void enqueue(shared_ptr<Event> e);
-        virtual bool accepting(void);
+        virtual void Pause(void);
+        virtual void Resume(void);
+        virtual void Enqueue(shared_ptr<Event> e);
+        virtual bool Accepting(void);
 
-        inline int getQueuedEvents(int maxEvents, std::list<shared_ptr<Event> > &queuedEvents)
-            { return mEventQueue.getEvents(maxEvents, queuedEvents); }
-        int getRunningEvents(int maxEvents, std::list<shared_ptr<Event> > &runningEvents);
+        inline int GetQueuedEvents(int maxEvents, std::list<shared_ptr<Event> > &queuedEvents)
+            { return mEventQueue.GetEvents(maxEvents, queuedEvents); }
+        int GetRunningEvents(int maxEvents, std::list<shared_ptr<Event> > &runningEvents);
 
     protected:
         unsigned int mMinThreads;
@@ -52,6 +52,6 @@ namespace Forte
         Semaphore mThreadSem;
         Semaphore mSpareThreadSem;
         ThreadPoolDispatcherManager mManagerThread;
-    };
+    };;
 };
 #endif

@@ -32,21 +32,21 @@ namespace Forte
         
             /// getLock returns a lock description equivalent to the lock
             /// currently blocking us.
-            AdvisoryLock getLock(bool exclusive = false);
+            AdvisoryLock GetLock(bool exclusive = false);
 
             /// sharedLock will return true on success, false if the lock failed
             ///
-            bool sharedLock(bool wait = true);
+            bool SharedLock(bool wait = true);
         
             /// exclusiveLock will return true on success, false if the lock failed
             ///
-            bool exclusiveLock(bool wait = true);
+            bool ExclusiveLock(bool wait = true);
 
             /// unlock will remove the current lock
             ///
-            void unlock(void);
+            void Unlock(void);
 
-        protected:
+         protected:
             struct flock mLock;
             int mFD;
         };
@@ -59,11 +59,11 @@ namespace Forte
             mAdvisoryLock(fd, start, len, whence)
             {
                 if (exclusive)
-                    mAdvisoryLock.exclusiveLock();
-                    else
-                        mAdvisoryLock.sharedLock();
+                    mAdvisoryLock.ExclusiveLock();
+                else
+                    mAdvisoryLock.SharedLock();
                 }
-            virtual ~AdvisoryAutoUnlock() { mAdvisoryLock.unlock(); }
+            virtual ~AdvisoryAutoUnlock() { mAdvisoryLock.Unlock(); }
         protected:
             AdvisoryLock mAdvisoryLock;
         };
@@ -73,10 +73,10 @@ namespace Forte
         ClusterLock(const FString& name, unsigned timeout = 120, const FString& errorString = "");
         virtual ~ClusterLock();
 
-        void unlock();
-        void lock(const FString& name, unsigned timeout, const FString& errorString = "");
+        void Unlock();
+        void Lock(const FString& name, unsigned timeout, const FString& errorString = "");
 
-        inline FString getName() const { return mName; }
+        inline FString GetName() const { return mName; }
     
         // constants
         static const char *LOCK_PATH;
@@ -84,7 +84,7 @@ namespace Forte
         static const int TIMER_SIGNAL;
         static const char *VALID_LOCK_CHARS;
 
-    protected:
+     protected:
         //TODO: Pull this from the application context
         FileSystem mFileSystem;
 

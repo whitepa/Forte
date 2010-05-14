@@ -17,12 +17,12 @@ namespace Forte
         virtual ~RWLock() { }
 
     public:
-        void _write_lock(const char *file, unsigned line);
-        void _write_unlock(const char *file, unsigned line);
-        void _write_unlock_read_lock(const char *file, unsigned line);
-        void _read_lock(const char *file, unsigned line);
-        bool _read_trylock(const char *file, unsigned line);
-        void _read_unlock(const char *file, unsigned line);
+        void _WriteLock(const char *file, unsigned line);
+        void _WriteUnlock(const char *file, unsigned line);
+        void _WriteUnlockReadLock(const char *file, unsigned line);
+        void _ReadLock(const char *file, unsigned line);
+        bool _ReadTryLock(const char *file, unsigned line);
+        void _ReadUnlock(const char *file, unsigned line);
 
     private:
         Semaphore mMainLock;
@@ -33,18 +33,18 @@ namespace Forte
         unsigned mLine;
     };
 
-#define write_lock() _write_lock(__FILE__, __LINE__)
-#define write_unlock() _write_unlock(__FILE__, __LINE__)
-#define write_unlock_read_lock() _write_unlock_read_lock(__FILE__, __LINE__)
-#define read_lock() _read_lock(__FILE__, __LINE__)
-#define read_trylock() _read_trylock(__FILE__, __LINE__)
-#define read_unlock() _read_unlock(__FILE__, __LINE__)
+#define WriteLock() _WriteLock(__FILE__, __LINE__)
+#define WriteUnlock() _WriteUnlock(__FILE__, __LINE__)
+#define WriteUnlockReadLock() _WriteUnlockReadLock(__FILE__, __LINE__)
+#define ReadLock() _ReadLock(__FILE__, __LINE__)
+#define ReadTryLock() _ReadTryLock(__FILE__, __LINE__)
+#define ReadUnlock() _ReadUnlock(__FILE__, __LINE__)
     class AutoReadUnlock {
     public:
-        AutoReadUnlock(RWLock &lock) : mUnlockOnDestruct(true), mLock(lock) { mLock.read_lock(); }
-        virtual ~AutoReadUnlock() { if(mUnlockOnDestruct) unlock(); }
-        inline void unlock() { mLock.read_unlock(); release(); }
-        inline void release() { mUnlockOnDestruct = false; }
+        AutoReadUnlock(RWLock &lock) : mUnlockOnDestruct(true), mLock(lock) { mLock.ReadLock(); }
+        virtual ~AutoReadUnlock() { if(mUnlockOnDestruct) Unlock(); }
+        inline void Unlock() { mLock.ReadUnlock(); Release(); }
+        inline void Release() { mUnlockOnDestruct = false; }
     protected:
         bool mUnlockOnDestruct;
         RWLock &mLock;
@@ -52,20 +52,20 @@ namespace Forte
     template < class ExceptionClass >
     class CTryAutoReadUnlock {
     public:
-        CTryAutoReadUnlock(RWLock &lock, ExceptionClass &e) : mUnlockOnDestruct(true), mLock(lock) { if (mLock.read_trylock()) throw e; }
-        virtual ~CTryAutoReadUnlock() { if(mUnlockOnDestruct) unlock(); }
-        inline void unlock() { mLock.read_unlock(); release(); }
-        inline void release() { mUnlockOnDestruct = false; }
+        CTryAutoReadUnlock(RWLock &lock, ExceptionClass &e) : mUnlockOnDestruct(true), mLock(lock) { if (mLock.ReadTryLock()) throw e; }
+        virtual ~CTryAutoReadUnlock() { if(mUnlockOnDestruct) Unlock(); }
+        inline void Unlock() { mLock.ReadUnlock(); Release(); }
+        inline void Release() { mUnlockOnDestruct = false; }
     protected:
         bool mUnlockOnDestruct;
         RWLock &mLock;
     };
     class AutoWriteUnlock {
     public:
-        AutoWriteUnlock(RWLock &lock) : mUnlockOnDestruct(true), mLock(lock) { mLock.write_lock(); }
-        virtual ~AutoWriteUnlock() { if(mUnlockOnDestruct) unlock(); }
-        inline void unlock() { mLock.write_unlock(); mUnlockOnDestruct = false; }
-        inline void release() { mUnlockOnDestruct = false; }
+        AutoWriteUnlock(RWLock &lock) : mUnlockOnDestruct(true), mLock(lock) { mLock.WriteLock(); }
+        virtual ~AutoWriteUnlock() { if(mUnlockOnDestruct) Unlock(); }
+        inline void Unlock() { mLock.WriteUnlock(); mUnlockOnDestruct = false; }
+        inline void Release() { mUnlockOnDestruct = false; }
     protected:
         bool mUnlockOnDestruct;
         RWLock &mLock;

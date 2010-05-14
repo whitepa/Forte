@@ -18,11 +18,11 @@ void FTime::init(const char *timezoneDatafile)
     }
     catch(data_not_accessible &dna)
     {
-        hlog(HLOG_ERR, "Error with time zone data file: %s", dna.what());
+        hlog(HLOG_ERR, "Error with time zone data file: %s", dna.What());
     }
     catch(bad_field_count &bfc)
     {
-        hlog(HLOG_ERR, "Bad field count error with time zone data file: %s", bfc.what());
+        hlog(HLOG_ERR, "Bad field count error with time zone data file: %s", bfc.What());
     }
 }
 ptime FTime::from_time_t(time_t t, const char *tz)
@@ -69,7 +69,7 @@ time_t FTime::day(const ptime pt, const char *tz)
     }
     catch (std::exception &e)
     {
-        hlog(HLOG_ERR, "FTime::to_time_t(): %s", e.what());
+        hlog(HLOG_ERR, "FTime::to_time_t(): %s", e.What());
         throw e;
     }
 
@@ -97,9 +97,9 @@ time_t FTime::f_to_time_t(const char *filename, int line, const char * arg, cons
     catch (std::exception &e)
     {
         hlog(HLOG_ERR, "FTime::f_to_time_t(): called from %s:%d (argument %s): %s", 
-             filename, line, arg, e.what());
+             filename, line, arg, e.What());
         throw ForteFTimeException(FStringFC(), "Invalid time in argument '%s' (%s:%d): %s",
-                         arg, filename, line, e.what());
+                         arg, filename, line, e.What());
     }
     catch (...)
     {
@@ -124,9 +124,9 @@ time_t FTime::f_to_time_t(const char *filename, int line, const char * arg, cons
     catch (std::exception &e)
     {
         hlog(HLOG_ERR, "FTime::f_to_time_t(): called from %s:%d (argument %s): %s", 
-             filename, line, arg, e.what());
+             filename, line, arg, e.What());
         throw ForteFTimeException(FStringFC(), "Invalid time in argument '%s' (%s:%d): %s",
-                         arg, filename, line, e.what());
+                         arg, filename, line, e.What());
     }
     catch (...)
     {

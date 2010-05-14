@@ -11,9 +11,9 @@ struct CRYPTO_dynlock_value { Mutex mutex; };
 void OpenSSLInitializer_lockingCallback(int mode, int n, const char *file, int line) {
 
     if (mode & CRYPTO_LOCK) {
-        sOpenSSLMutexArray[n].lock();
+        sOpenSSLMutexArray[n].Lock();
     } else {
-        sOpenSSLMutexArray[n].unlock();
+        sOpenSSLMutexArray[n].Unlock();
     }
 }
 
@@ -30,9 +30,9 @@ void OpenSSLInitializer_dynlockLockingCallback(int mode,
                                                 struct CRYPTO_dynlock_value *l,
                                                 const char *file, int line) {
     if (mode & CRYPTO_LOCK) {
-        l->mutex.lock();
+        l->mutex.Lock();
     } else {
-        l->mutex.unlock();
+        l->mutex.Unlock();
     }
 }
 

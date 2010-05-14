@@ -16,7 +16,7 @@ FString::FString(const FStringFC &f, const char *format, ...)
     va_end(ap);
 
     va_start(ap, format);
-    vFormat(format, size, ap);
+    VFormat(format, size, ap);
     va_end(ap);
 }
 
@@ -110,7 +110,7 @@ void FString::Format(const char *format, ...)
     vsnprintf(const_cast<char*>(data()), size + 1, format, ap);
     va_end(ap);
 }
-void FString::vFormat(const char *format, int size, va_list ap)
+void FString::VFormat(const char *format, int size, va_list ap)
 {
     clear();
     reserve(size + 1);

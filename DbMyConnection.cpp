@@ -101,7 +101,7 @@ bool DbMyConnection::Close(void)
 }
 
 
-bool DbMyConnection::execute(const FString& sql)
+bool DbMyConnection::Execute(const FString& sql)
 {
     bool ret;
     unsigned int tries_remaining = mRetries + 1;
@@ -114,7 +114,7 @@ bool DbMyConnection::execute(const FString& sql)
 
     if (mDB == NULL && !Connect()) // try to repair the connection
     {
-        mError.assign("NULL database handle in DbMyConnection::execute()");
+        mError.assign("NULL database handle in DbMyConnection::Execute()");
         return false;
     }
 
@@ -132,7 +132,7 @@ bool DbMyConnection::execute(const FString& sql)
         }
         ret = mysql_real_query(mDB, sql, sql.length());
         gettimeofday(&tv_end, NULL);
-        if (sDebugSql) logSql(sql, tv_end - tv_start);
+        if (sDebugSql) LogSql(sql, tv_end - tv_start);
 
         // check for errors
         if (ret)
@@ -163,7 +163,7 @@ bool DbMyConnection::execute(const FString& sql)
 
     if (mDB == NULL)
     {
-        mError.assign("NULL database handle after query in DbMyConnection:execute()");
+        mError.assign("NULL database handle after query in DbMyConnection:Execute()");
         return false;
     }
 
@@ -172,21 +172,21 @@ bool DbMyConnection::execute(const FString& sql)
 }
 
 
-DbResult DbMyConnection::store(const FString& sql)
+DbResult DbMyConnection::Store(const FString& sql)
 {
     DbMyResult result;
     MYSQL_RES *result_ptr = NULL;
     int tries = 3;
     while (result_ptr == NULL && tries--)
     {
-        if (!execute(sql)) return result;
+        if (!Execute(sql)) return result;
         if ((result_ptr = mysql_store_result(mDB))!=NULL)
         {
             result = result_ptr;
         }
         else
         {
-            hlog(HLOG_ERR, "DbMyConnection::store(): NULL result after successful query; errno=%u error=%s",
+            hlog(HLOG_ERR, "DbMyConnection::Store(): NULL result after successful query; errno=%u error=%s",
                  mysql_errno(mDB), mysql_error(mDB));
             // throttle back a bit
             usleep(100000); // sleep 0.1 second
@@ -199,7 +199,7 @@ DbResult DbMyConnection::store(const FString& sql)
 DbResult DbMyConnection::use(const FString& sql)
 {
     DbMyResult result;
-    if (!execute(sql)) return result;
+    if (!Execute(sql)) return result;
     result = mysql_use_result(mDB);
     return result;
 }

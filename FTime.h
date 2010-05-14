@@ -17,13 +17,13 @@ EXCEPTION_SUBCLASS(Exception, ForteFTimeException);
 
 class FTime {
 public:
-    static void init(const char *timezoneDatafile);
+    static void Init(const char *timezoneDatafile);
 
     // time_t <==> string conversions
-    static time_t f_to_time_t(const char *filename, int line, const char *arg, const ptime &pt, const char *tz);
-    static time_t f_to_time_t(const char *filename, int line, const char *arg, const ptime &pt, const std::string &tz);
-    static time_t f_to_time_t(const char *filename, int line, const char *arg, const std::string &timeStr, const char *tz);
-    static time_t f_to_time_t(const char *filename, int line, const char *arg, const std::string &timeStr, const std::string &tz);
+    static time_t FToTimeT(const char *filename, int line, const char *arg, const ptime &pt, const char *tz);
+    static time_t FToTimeT(const char *filename, int line, const char *arg, const ptime &pt, const std::string &tz);
+    static time_t FToTimeT(const char *filename, int line, const char *arg, const std::string &timeStr, const char *tz);
+    static time_t FToTimeT(const char *filename, int line, const char *arg, const std::string &timeStr, const std::string &tz);
 
     /// Convert a time to a string representation.
     ///
@@ -32,13 +32,12 @@ public:
     static std::string to_str(const ptime &pt, const char *tz, const char *format = NULL);
     static std::string to_str(const time_t t, const char *tz, const char *format = NULL);
 
-    // replacement for boost's broken from_time_t()
-    static ptime from_time_t(time_t t, const char *tz);
+    // replacement for boost's broken FromTimeT()
+    static ptime FromTimeT(time_t t, const char *tz);
 
     // get the day
-    static time_t day(time_t t, const char *tz);
-    static time_t day(const ptime pt, const char *tz);
-
+    static time_t Day(time_t t, const char *tz);
+    static time_t Day(const ptime pt, const char *tz);
 protected:
     static Mutex sLock;
     static tz_database sTimezoneDb;

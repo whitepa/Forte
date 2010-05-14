@@ -121,7 +121,7 @@ void * DelayedCallbackThread::run(void)
         for (i = executeList.begin(); i!=executeList.end(); ++i)
         {
             hlog(HLOG_DEBUG, "executing a callback");
-            (*i)->execute(0);
+            (*i)->Execute(0);
         }
 //        hlog(HLOG_DEBUG, "done with execution, waiting 1 second");
         struct timeval now;

@@ -106,7 +106,7 @@ bool DbPgConnection::Close(void)
 }
 
 
-DbResult DbPgConnection::query(const FString& sql)
+DbResult DbPgConnection::Query(const FString& sql)
 {
     unsigned int tries_remaining = mRetries + 1;
     struct timeval tv_start, tv_end;
@@ -135,12 +135,12 @@ DbResult DbPgConnection::query(const FString& sql)
         gettimeofday(&tv_start, NULL);
         res = PQexec(mDB, sql);
         gettimeofday(&tv_end, NULL);
-        if (sDebugSql) logSql(sql, tv_end - tv_start);
+        if (sDebugSql) LogSql(sql, tv_end - tv_start);
         if ((PGresult*)res == NULL) code = CONNECTION_BAD + 1000;
         else code = PQresultStatus(res);
 
         // check for errors
-        if (!res.isOkay() ||
+        if (!res.IsOkay() ||
             ((code != PGRES_EMPTY_QUERY) &&
              (code != PGRES_COMMAND_OK) &&
              (code != PGRES_TUPLES_OK)))
@@ -182,21 +182,21 @@ DbResult DbPgConnection::query(const FString& sql)
 }
 
 
-bool DbPgConnection::execute(const FString& sql)
+bool DbPgConnection::Execute(const FString& sql)
 {
-    return query(sql);
+    return Query(sql);
 }
 
 
-DbResult DbPgConnection::store(const FString& sql)
+DbResult DbPgConnection::Store(const FString& sql)
 {
-    return query(sql);
+    return Query(sql);
 }
 
 
 DbResult DbPgConnection::use(const FString& sql)
 {
-    return query(sql);
+    return Query(sql);
 }
 
 

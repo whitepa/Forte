@@ -147,10 +147,10 @@ DbConnection& DbConnectionPool::GetDbConnection() {
 void DbConnectionPool::ReleaseDbConnection(DbConnection& db)
 {
     // make sure the connection has no pending queries
-    if (db.hasPendingQueries())
+    if (db.HasPendingQueries())
     {
         hlog(HLOG_ERR, "ReleaseDbConnection(): connection has uncommitted transaction!");
-        db.rollback();
+        db.Rollback();
     }
     AutoUnlockMutex lock(mPoolMutex);
     

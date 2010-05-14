@@ -34,10 +34,10 @@ void * Forte::OnDemandDispatcherManager::run(void)
             }
         }
         shared_ptr<Event> event;
-        while (!disp.mPaused && (event = disp.mEventQueue.get()))
+        while (!disp.mPaused && (event = disp.mEventQueue.Get()))
         {
             AutoLockMutex unlock(disp.mNotifyLock);
-            disp.mThreadSem.wait();
+            disp.mThreadSem.Wait();
             AutoUnlockMutex thrLock(disp.mThreadsLock);
             disp.mThreads.push_back(
                 shared_ptr<DispatcherThread>(
@@ -50,7 +50,7 @@ void * Forte::OnDemandDispatcherManager::run(void)
         gettimeofday(&now, 0);
         timeout.tv_sec = now.tv_sec + 1; // wake up every second
         timeout.tv_nsec = now.tv_usec * 1000;
-        disp.mNotify.timedwait(timeout);
+        disp.mNotify.TimedWait(timeout);
     }
 
     // signal any workers to shutdown
@@ -59,7 +59,7 @@ void * Forte::OnDemandDispatcherManager::run(void)
         foreach (shared_ptr<DispatcherThread> &thr, disp.mThreads)
         {
             if (thr)
-                thr->shutdown();
+                thr->Shutdown();
         }
 
         // delete all threads
@@ -78,16 +78,16 @@ Forte::OnDemandDispatcherWorker::OnDemandDispatcherWorker(OnDemandDispatcher &di
 Forte::OnDemandDispatcherWorker::~OnDemandDispatcherWorker()
 {
     OnDemandDispatcher &disp(dynamic_cast<OnDemandDispatcher&>(mDispatcher));
-    disp.mRequestHandler.cleanup();
-    disp.mThreadSem.post();
+    disp.mRequestHandler.Cleanup();
+    disp.mThreadSem.Post();
 }
 
 void * Forte::OnDemandDispatcherWorker::run()
 {
     OnDemandDispatcher &disp(dynamic_cast<OnDemandDispatcher&>(mDispatcher));
     mThreadName.Format("%s-od-%u", disp.mDispatcherName.c_str(), (unsigned)mThread);
-    disp.mRequestHandler.init();
-    disp.mRequestHandler.handler(mEventPtr.get());
+    disp.mRequestHandler.Init();
+    disp.mRequestHandler.Handler(mEventPtr.get());
     // thread is complete at this point, resetting our event pointer
     // will cause the manager to reap us
     mEventPtr.reset();
@@ -108,20 +108,20 @@ Forte::OnDemandDispatcher::OnDemandDispatcher(RequestHandler &requestHandler,
 Forte::OnDemandDispatcher::~OnDemandDispatcher()
 {
     // stop accepting new events
-    mEventQueue.shutdown();
+    mEventQueue.Shutdown();
     // set the shutdown flag
     mShutdown = true;
     // wait for the manager thread to exit!
     // (this allows all worker threads to safely exit and unregister themselves
     //  before this destructor exits; otherwise bad shit happens when this object
     //  is dealloced and worker threads are still around trying to access data)
-    mManagerThread.waitForShutdown();
+    mManagerThread.WaitForShutdown();
 }
-void Forte::OnDemandDispatcher::pause(void) { mPaused = 1; }
-void Forte::OnDemandDispatcher::resume(void) { mPaused = 0; mNotify.signal(); }
-void Forte::OnDemandDispatcher::enqueue(shared_ptr<Event> e) { mEventQueue.add(e); }
-bool Forte::OnDemandDispatcher::accepting(void) { return mEventQueue.accepting(); }
-int Forte::OnDemandDispatcher::getRunningEvents(int maxEvents,
+void Forte::OnDemandDispatcher::Pause(void) { mPaused = 1; }
+void Forte::OnDemandDispatcher::Resume(void) { mPaused = 0; mNotify.Signal(); }
+void Forte::OnDemandDispatcher::Enqueue(shared_ptr<Event> e) { mEventQueue.Add(e); }
+bool Forte::OnDemandDispatcher::Accepting(void) { return mEventQueue.Accepting(); }
+int Forte::OnDemandDispatcher::GetRunningEvents(int maxEvents,
                                                 std::list<shared_ptr<Event> > &runningEvents)
 {
     // lock the notify lock to prevent threads from freeing events while

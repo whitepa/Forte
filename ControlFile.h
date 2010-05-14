@@ -53,57 +53,56 @@ public:
     virtual ~ControlFile() { }
 
     // interface
-    bool exists() const;                        // checks for file existence
-    void createEmpty();                         // always creates a new file with just a header
-    void unlink();                              // removes any file which exists
+    bool Exists() const;                        // checks for file existence
+    void CreateEmpty();                         // always creates a new file with just a header
+    void Unlink();                              // removes any file which exists
 
-    void setHeader(const Header &header);
-    void getHeader(Header &header /* OUT */);
+    void SetHeader(const Header &header);
+    void GetHeader(Header &header /* OUT */);
 
     /// enqueue a new record, returns the record ID
     ///
-    uint64_t enqueue(const Record& r);
+    uint64_t Enqueue(const Record& r);
 
     /// claim the next available record.
     ///
-    bool claim(off64_t &offset/*OUT*/, Record &r /*OUT*/);
+    bool Claim(off64_t &offset/*OUT*/, Record &r /*OUT*/);
     
     /// unclaim a claimed record, does not update the record. This record
     /// will then be available for future 'claim' operations.
     ///
-    void unclaim(off64_t offset);
+    void Unclaim(off64_t offset);
 
     /// complete and update a record
     ///
-    void complete(off64_t offset, const Record &r);
+    void Complete(off64_t offset, const Record &r);
 
     /// read a record #
     ///
-    void read(uint64_t recnum, 
+    void Read(uint64_t recnum, 
               Record &r /*OUT*/,
               unsigned int &status /*OUT*/);
 
     /// update a record, will not be marked complete
     ///
-//    void update(off64_t offset, Record &r);
+//    void Update(off64_t offset, Record &r);
 
     /// get the current progress on the batch.  If last progress time is older than
     /// update_if_older_than, it will be updated.
-    void getProgress(uint64_t& complete /*OUT*/,
+    void GetProgress(uint64_t& complete /*OUT*/,
                      uint64_t& total    /*OUT*/,
                      uint64_t& claimed  /*OUT*/,
                      time_t& last_progress_time /*OUT*/,
                      time_t update_if_older_than /*IN*/);
     
     // accessors
-    inline FString getFilename() const { return mFilename; }
+    inline FString GetFilename() const { return mFilename; }
     
 private:
     // helpers
-    void checkOpen(void);
-    void readHeader(header_t &header);
-    void writeHeader(const header_t &header);
-
+    void CheckOpen(void);
+    void ReadHeader(header_t &header);
+    void WriteHeader(const header_t &header);
 protected:
     // data members
     FString mFilename;

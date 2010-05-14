@@ -45,13 +45,13 @@ DbMyResult::MyData::~MyData()
 }
 
 
-bool DbMyResult::MyData::isOkay() const
+bool DbMyResult::MyData::IsOkay() const
 {
     return (mResult != NULL);
 }
 
 
-bool DbMyResult::MyData::fetchRow(DbResultRow& row /*OUT*/)
+bool DbMyResult::MyData::FetchRow(DbResultRow& row /*OUT*/)
 {
     bool ret;
     size_t i;
@@ -74,13 +74,13 @@ bool DbMyResult::MyData::fetchRow(DbResultRow& row /*OUT*/)
 }
 
 
-size_t DbMyResult::MyData::getNumColumns()
+size_t DbMyResult::MyData::GetNumColumns()
 {
     return mNumCols;
 }
 
 
-FString DbMyResult::MyData::getColumnName(size_t i)
+FString DbMyResult::MyData::GetColumnName(size_t i)
 {
     if (mResult == NULL) return "";
     MYSQL_FIELD *fields = mysql_fetch_fields(mResult);
@@ -89,7 +89,7 @@ FString DbMyResult::MyData::getColumnName(size_t i)
 }
 
 
-size_t DbMyResult::MyData::getFieldLength(size_t i)
+size_t DbMyResult::MyData::GetFieldLength(size_t i)
 {
     if (mResult == NULL) return 0;
     unsigned long *lengths = mysql_fetch_lengths(mResult);
@@ -97,7 +97,7 @@ size_t DbMyResult::MyData::getFieldLength(size_t i)
     return (size_t)lengths[i];
 }
 
-size_t DbMyResult::MyData::getNumRows()
+size_t DbMyResult::MyData::GetNumRows()
 {
     if (mResult == NULL) return 0;
     return mysql_num_rows(mResult);

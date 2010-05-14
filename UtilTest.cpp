@@ -24,11 +24,11 @@ int main(int argc, char *argv[])
     }
     catch (exception& err)
     {
-        cerr << "ABORT: " << err.what() << endl;
+        cerr << "ABORT: " << err.What() << endl;
     }
     catch (Exception &e)
     {
-        cerr << "ABORT: " << e.getDescription() << endl;
+        cerr << "ABORT: " << e.GetDescription() << endl;
     }
     return ret;
 }
@@ -77,7 +77,7 @@ int main2(int argc, char *argv[])
     {
         TestEvent *e = new TestEvent();
         e->mStr.Format("event #%d", i);
-        disp.enqueue(e);
+        disp.Enqueue(e);
     }
 
     sleep(20);

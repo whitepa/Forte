@@ -17,8 +17,8 @@ namespace Forte
         void Final();
         inline uint64_t GetHash() const { return mHash; }
         inline operator uint64_t() const { return mHash; }
-        FString toStr() const;
-        inline operator FString() const { return toStr(); }
+        FString ToStr() const;
+        inline operator FString() const { return ToStr(); }
 
     private:
         uint64_t mK;

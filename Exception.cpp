@@ -5,13 +5,13 @@
 
 Exception::Exception()
 {
-    FTrace::getStack(mStack);
+    FTrace::GetStack(mStack);
 }
 
 Exception::Exception(const char *description) :
     mDescription(description)
 {
-    FTrace::getStack(mStack);
+    FTrace::GetStack(mStack);
 }
 Exception::Exception(const FStringFC &fc, const char *format, ...)
 {
@@ -23,10 +23,10 @@ Exception::Exception(const FStringFC &fc, const char *format, ...)
     va_end(ap);
 
     va_start(ap, format);
-    mDescription.vFormat(format, size, ap);
+    mDescription.VFormat(format, size, ap);
     va_end(ap);
 
-    FTrace::getStack(mStack);
+    FTrace::GetStack(mStack);
 }
 Exception::Exception(const Exception& other) :
     mDescription(other.mDescription),
@@ -37,7 +37,7 @@ Exception::~Exception() throw()
 {
 }
 
-std::string Exception::extendedDescription()
+std::string Exception::ExtendedDescription()
 {
     FString stack;
     FTrace::formatStack(mStack, stack);
@@ -45,7 +45,7 @@ std::string Exception::extendedDescription()
 }
 
 
-void Exception::pretty_trace_log(int log_level)
+void Exception::PrettyTraceLog(int log_level)
 {
     std::list<void*>::const_iterator si;
     std::vector<FString>::iterator li;
@@ -64,7 +64,7 @@ void Exception::pretty_trace_log(int log_level)
 
         // get /proc/<pid>/maps
         cmd.Format("cat /proc/%u/maps | awk '{print $1\" \"$6}'", getpid());
-        output = ProcRunner::get()->read_pipe(cmd, &rc);
+        output = ProcRunner::Get()->ReadPipe(cmd, &rc);
         output.LineSplit(mapping, true);
 
         if (rc != 0)
@@ -76,7 +76,7 @@ void Exception::pretty_trace_log(int log_level)
         // generate stack trace
         for (++si /*skip first frame*/; si != mStack.end(); ++si)
         {
-            trace.push_back(pretty_frame(mapping, *si));
+            trace.push_back(PrettyFrame(mapping, *si));
         }
 
         // log trace
@@ -90,9 +90,9 @@ void Exception::pretty_trace_log(int log_level)
 }
 
 
-FString Exception::pretty_frame(const std::vector<FString>& mapping, void *address)
+FString Exception::PrettyFrame(const std::vector<FString>& mapping, void *address)
 {
-    ProcRunner *proc = ProcRunner::get();
+    ProcRunner *proc = ProcRunner::Get();
     FString stmp, cmd, mod, name, func, file, output;
     std::vector<FString>::const_iterator li;
     std::vector<FString> lines, parts;
@@ -126,9 +126,9 @@ FString Exception::pretty_frame(const std::vector<FString>& mapping, void *addre
 
     // find file name and line number of given address
     name = mod.Mid(mod.find_last_of('/') + 1);
-    mod = proc->shell_escape(mod);
+    mod = proc->ShellEscape(mod);
     cmd.Format("/usr/bin/addr2line -C -f -e %s %#18llx", mod.c_str(), (u64)address);
-    output = proc->read_pipe(cmd, &err);
+    output = proc->ReadPipe(cmd, &err);
 
     if (err != 0)
     {
