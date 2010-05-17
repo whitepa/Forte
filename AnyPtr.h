@@ -43,7 +43,7 @@ namespace Forte
             mAny = NULL;
         }
         AnyPtr Clone() const {
-            AnyPtr O(*this);
+            AnyPtr o(*this);
             o.mAny = mTable->Clone(mAny);
             return o;
         }
