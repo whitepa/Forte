@@ -118,7 +118,7 @@ Forte::ThreadPoolDispatcherWorker::ThreadPoolDispatcherWorker(ThreadPoolDispatch
 Forte::ThreadPoolDispatcherWorker::~ThreadPoolDispatcherWorker()
 {
     ThreadPoolDispatcher &disp(dynamic_cast<ThreadPoolDispatcher&>(mDispatcher));
-    disp.mRequestHandler.Cleanup();
+    disp.mRequestHandler->Cleanup();
     disp.UnregisterThread(this);
     disp.mThreadSem.Post();
 }
@@ -128,7 +128,7 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
     mThreadName.Format("%s-pool-%u", mDispatcher.mDispatcherName.c_str(), (unsigned)mThread);
     
     // call the request handler's initialization hook
-    disp.mRequestHandler.Init();
+    disp.mRequestHandler->Init();
 
     // pull events from the request queue
     while (!mThreadShutdown)
@@ -148,7 +148,7 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
                 // process the request
                 try
                 {
-                    disp.mRequestHandler.Handler(event.get());
+                    disp.mRequestHandler->Handler(event.get());
                 }
                 catch (Exception &e)
                 {
@@ -181,17 +181,17 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
         if (mThreadShutdown) break;
         // see if we need to run periodic
         gettimeofday(&now, 0);
-        if (disp.mRequestHandler.mTimeout != 0 &&
-            (unsigned int)(now.tv_sec - mLastPeriodicCall) > disp.mRequestHandler.mTimeout)
+        if (disp.mRequestHandler->mTimeout != 0 &&
+            (unsigned int)(now.tv_sec - mLastPeriodicCall) > disp.mRequestHandler->mTimeout)
         {
-            disp.mRequestHandler.Periodic();
+            disp.mRequestHandler->Periodic();
             mLastPeriodicCall = now.tv_sec;
         }
     }
     return NULL;
 }
 
-Forte::ThreadPoolDispatcher::ThreadPoolDispatcher(RequestHandler &requestHandler,
+Forte::ThreadPoolDispatcher::ThreadPoolDispatcher(boost::shared_ptr<RequestHandler> requestHandler,
                                                   const int minThreads, const int maxThreads, 
                                                   const int minSpareThreads, const int maxSpareThreads,
                                                   const int deepQueue, const int maxDepth, const char *name):

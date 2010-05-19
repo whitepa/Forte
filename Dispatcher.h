@@ -11,13 +11,27 @@
 #include <vector>
 #include <memory>
 
+/**
+ *
+ * The dispatcher class keeps a shared pointer to its request handler.
+ *
+ * If the context contains shared pointers to both, that is
+ * acceptable, as it will not create a reference loop.
+ * 
+ * RECEIVER -->  *DISPATCHER*  -->  REQHANDLER
+ *
+ */
+
 namespace Forte
 {
+    EXCEPTION_CLASS(EDispatcher);
+    EXCEPTION_SUBCLASS2(EDispatcher, EDispatcherReqHandlerInvalid, "Request handler is invalid");
     class DispatcherThread;
     class Dispatcher : public Object
     {
     public:
-        Dispatcher(RequestHandler &reqHandler, int maxQueueDepth, const char *name);
+        Dispatcher(shared_ptr<RequestHandler> reqHandler, 
+                   int maxQueueDepth, const char *name);
         virtual ~Dispatcher();
 
         virtual void Pause(void) = 0;
@@ -35,7 +49,7 @@ namespace Forte
         bool mPaused;
         volatile bool mShutdown;
         std::vector<shared_ptr<DispatcherThread> > mThreads;
-        RequestHandler &mRequestHandler;
+        boost::shared_ptr<RequestHandler> mRequestHandler;
         Mutex mThreadsLock;
         Mutex mNotifyLock;
         ThreadCondition mNotify;

@@ -30,7 +30,7 @@ namespace Forte
         friend class ThreadPoolDispatcherManager;
         friend class ThreadPoolDispatcherWorker;
     public:
-        ThreadPoolDispatcher(RequestHandler &requestHandler,
+        ThreadPoolDispatcher(boost::shared_ptr<RequestHandler> requestHandler,
                               const int minThreads, const int maxThreads, 
                               const int minSpareThreads, const int maxSpareThreads,
                               const int deepQueue, const int maxDepth, const char *name);

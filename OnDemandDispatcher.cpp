@@ -78,7 +78,7 @@ Forte::OnDemandDispatcherWorker::OnDemandDispatcherWorker(OnDemandDispatcher &di
 Forte::OnDemandDispatcherWorker::~OnDemandDispatcherWorker()
 {
     OnDemandDispatcher &disp(dynamic_cast<OnDemandDispatcher&>(mDispatcher));
-    disp.mRequestHandler.Cleanup();
+    disp.mRequestHandler->Cleanup();
     disp.mThreadSem.Post();
 }
 
@@ -86,15 +86,15 @@ void * Forte::OnDemandDispatcherWorker::run()
 {
     OnDemandDispatcher &disp(dynamic_cast<OnDemandDispatcher&>(mDispatcher));
     mThreadName.Format("%s-od-%u", disp.mDispatcherName.c_str(), (unsigned)mThread);
-    disp.mRequestHandler.Init();
-    disp.mRequestHandler.Handler(mEventPtr.get());
+    disp.mRequestHandler->Init();
+    disp.mRequestHandler->Handler(mEventPtr.get());
     // thread is complete at this point, resetting our event pointer
     // will cause the manager to reap us
     mEventPtr.reset();
     return NULL;
 }
 
-Forte::OnDemandDispatcher::OnDemandDispatcher(RequestHandler &requestHandler,
+Forte::OnDemandDispatcher::OnDemandDispatcher(boost::shared_ptr<RequestHandler> requestHandler,
                                               const int maxThreads,
                                               const int deepQueue, const int maxDepth, 
                                               const char *name):

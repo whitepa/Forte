@@ -31,7 +31,7 @@ namespace Forte
         friend class OnDemandDispatcherManager;
         friend class OnDemandDispatcherWorker;
     public:
-        OnDemandDispatcher(RequestHandler &requestHandler,
+        OnDemandDispatcher(boost::shared_ptr<RequestHandler> requestHandler,
                             const int maxThreads,
                             const int deepQueue, const int maxDepth, const char *name);
         virtual ~OnDemandDispatcher();
