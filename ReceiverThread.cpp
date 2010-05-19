@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <boost/make_shared.hpp>
 //#include <netinet/ip.h>
 
 // this thread just loops and accepts connections
@@ -84,7 +85,7 @@ void * Forte::ReceiverThread::run(void)
         }
 
         // TODO: shared_ptr
-        RequestEvent *e = new RequestEvent();
+        boost::shared_ptr<RequestEvent> e = make_shared<RequestEvent>();
         e->mFd = s;
         // mark the time of accept
         gettimeofday(&(e->mTime), NULL);

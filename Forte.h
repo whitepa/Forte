@@ -77,6 +77,7 @@ using namespace Forte;
 #include "LogTimer.h"
 #include "FMD5.h"
 #include "Murmur.h"
+#include "OnDemandDispatcher.h"
 #ifndef FORTE_NO_OPENSSL
 #include "OpenSSLInitializer.h"
 #endif
@@ -94,6 +95,7 @@ using namespace Forte;
 #include "Thread.h"
 #include "ThreadCondition.h"
 #include "ThreadKey.h"
+#include "ThreadPoolDispatcher.h"
 #include "Types.h"
 #include "Util.h"
 #include "UrlString.h"

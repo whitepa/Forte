@@ -44,8 +44,8 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
         int numNew = 0;
         if (newThreadsNeeded < (int)disp.mMinThreads - currentThreads)
             newThreadsNeeded = (int)disp.mMinThreads - currentThreads;
-//        hlog(HLOG_DEBUG4, "ThreadPool Manager Loop: %d threads; %d spare; %d needed",
-//             currentThreads, spareThreads, newThreadsNeeded);
+        hlog(HLOG_DEBUG4, "ThreadPool Manager Loop: %d threads; %d spare; %d needed",
+             currentThreads, spareThreads, newThreadsNeeded);
         if (!disp.mShutdown && newThreadsNeeded > 0)
         {
             numNew = (lastNew == 0) ? 1 : lastNew * 2;
@@ -61,7 +61,9 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
                 {
                     // create a new worker thread
                     try {
-                        new ThreadPoolDispatcherWorker(disp);
+                        AutoUnlockMutex lock(disp.mThreadsLock);
+                        disp.mThreads.push_back(shared_ptr<ThreadPoolDispatcherWorker>(
+                                                    new ThreadPoolDispatcherWorker(disp)));
                     } catch (...) {
                         // XXX log err
                         disp.mThreadSem.Post();
@@ -75,11 +77,14 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
                  spareThreads > (int)disp.mMinSpareThreads)
         {
             // too many spare threads, shut one down
-//            hlog(HLOG_DEBUG, "shutting down a thread");
+            hlog(HLOG_DEBUG, "shutting down a thread");
             AutoUnlockMutex lock(disp.mThreadsLock);
             std::vector<shared_ptr<DispatcherThread> >::iterator i = disp.mThreads.begin();
             if (*i)
+            {
                 (*i)->Shutdown();
+            }
+            disp.mThreads.erase(i);
         }
         lastNew = (numNew > 0) ? numNew : 0;
     }
@@ -99,7 +104,8 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
         AutoUnlockMutex lock(disp.mThreadsLock);
         foreach (shared_ptr<DispatcherThread> &thr, disp.mThreads)
         {
-            thr->Shutdown();
+            if (thr)
+                thr->Shutdown();
         }
         // delete all the threads
         disp.mThreads.clear();
@@ -119,8 +125,7 @@ Forte::ThreadPoolDispatcherWorker::~ThreadPoolDispatcherWorker()
 {
     ThreadPoolDispatcher &disp(dynamic_cast<ThreadPoolDispatcher&>(mDispatcher));
     disp.mRequestHandler->Cleanup();
-    disp.UnregisterThread(this);
-    disp.mThreadSem.Post();
+    disp.mThreadSem.Post(); // TODO: move to manager?
 }
 void * Forte::ThreadPoolDispatcherWorker::run(void)
 {

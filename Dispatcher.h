@@ -37,13 +37,13 @@ namespace Forte
         virtual void Pause(void) = 0;
         virtual void Resume(void) = 0;
 
-        virtual void Enqueue(Event *e) = 0;
+        virtual void Enqueue(boost::shared_ptr<Event> e) = 0;
         virtual bool Accepting(void) = 0;
-        virtual int GetQueuedEvents(int maxEvents, std::list<Event*> &queuedEvents) = 0;
-        virtual int GetRunningEvents(int maxEvents, std::list<Event*> &runningEvents) = 0;
+        virtual int GetQueuedEvents(int maxEvents, 
+                                    std::list<boost::shared_ptr<Event> > &queuedEvents) = 0;
+        virtual int GetRunningEvents(int maxEvents, 
+                                     std::list<boost::shared_ptr<Event> > &runningEvents) = 0;
     
-        void RegisterThread(DispatcherThread *thr);
-        void UnregisterThread(DispatcherThread *thr);
         FString mDispatcherName;
     protected:
         bool mPaused;
