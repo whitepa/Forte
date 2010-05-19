@@ -51,6 +51,7 @@ namespace Forte
     typedef vector<FString> StrList;
     typedef map<FString, FString> StrStrMap;
     typedef map<FString, int> StrIntMap;
+    typedef map<FString, double> StrDoubleMap;
     typedef set<FString> FStringSet;
     typedef vector<FString> FStringVector;
 };
