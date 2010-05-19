@@ -3,6 +3,7 @@
 
 #include "Exception.h"
 #include "Context.h"
+#include "Types.h"
 #include <boost/shared_ptr.hpp>
 
 namespace Forte
@@ -41,8 +42,17 @@ namespace Forte
         virtual void UptimeRead(Uptime& uptime);
 
 
+        /**
+         * takes a map of string to double. fills in the details from
+         * /proc/meminfo as name => double pairs
+         **/
+        virtual void MemoryInfoRead(Forte::StrDoubleMap& meminfo);
+
     protected:
         const Context &mContext;
+        void getProcFileContents(const FString& pathInSlashProc, 
+                                 FString& contents);
+
     };
 
     typedef boost::shared_ptr<ProcFileSystem> ProcFileSystemPtr;
