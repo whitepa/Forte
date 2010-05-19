@@ -34,14 +34,14 @@ void testScaleReplDL()
     unsigned int timeout;
     cb_data_t data; // we only need a the target and errorCode params
 
-    curl.setURL(url);
-    curl.setRecvCB(&cbControlFile, reinterpret_cast<void*>(&data));
-    curl.setRecvHeaderCB(&cbHeader, reinterpret_cast<void*>(&data));
-    curl.setNoSignal(true);   // no signals on timeouts
+    curl.SetURL(url);
+    curl.SetRecvCB(&cbControlFile, reinterpret_cast<void*>(&data));
+    curl.SetRecvHeaderCB(&cbHeader, reinterpret_cast<void*>(&data));
+    curl.SetNoSignal(true);   // no signals on timeouts
     timeout = 10;
-    curl.setConnectTimeout(timeout);
-    curl.setLowSpeed(10, timeout);    // < 10 bps threshold to set timeout
-    curl.perform();
+    curl.SetConnectTimeout(timeout);
+    curl.SetLowSpeed(10, timeout);    // < 10 bps threshold to set timeout
+    curl.Perform();
 
 }
 
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 {
     bool all_pass = true;
     ProcRunner pr;
-    FileSystem& fs(FileSystem::getRef());
+    FileSystem fs;
     CurlInitializer ci;
 
     LogManager logManager;
@@ -58,9 +58,9 @@ int main(int argc, char *argv[])
 
     try
     {
-        Curl c;
-        c.setURL("notthere");
-        c.perform();
+        Curl curl;
+        curl.SetURL("notthere");
+        curl.Perform();
         hlog(HLOG_ERR, "no error on notthere");
         throw Exception("no error on notthere");
     }
@@ -72,9 +72,9 @@ int main(int argc, char *argv[])
 
     try
     {
-        Curl c;
-        c.setURL("http://localhost/notthere");
-        c.perform();
+        Curl curl;
+        curl.SetURL("http://localhost/notthere");
+        curl.Perform();
         hlog(HLOG_ERR, "no error on http://localhost/notthere");
         throw Exception("no error on http://localhost/notthere");
     }
@@ -87,19 +87,19 @@ int main(int argc, char *argv[])
     FString downloadURL = "http://localhost/~hardtnf/testfile1";
     {
         // not a unit test. i just need to find out if this will work
-        Curl c;
-        c.setURL(downloadURL);
-        c.setInternalCB();
-        c.perform();
-        dlInternalBuf = c.mBuf;
-        printf("%s", c.mBuf.Left(50).c_str());
+        Curl curl;
+        curl.SetURL(downloadURL);
+        curl.SetInternalCB();
+        curl.Perform();
+        dlInternalBuf = curl.mBuf;
+        printf("%s", curl.mBuf.Left(50).c_str());
         hlog(HLOG_INFO, "did basic download");
     }
 
     {
         hlog(HLOG_INFO, "attempting to dl to file");
         FILE* outputFilePointer;
-        pr.run("/bin/rm ./dlfile");
+        pr.Run("/bin/rm ./dlfile", "", NULL, 120);
         outputFilePointer = fopen("./dlfile", "wx");
         
         if (outputFilePointer == NULL)
@@ -108,15 +108,15 @@ int main(int argc, char *argv[])
             throw Exception("");
         }
 
-        Curl c;
-        c.setOutputFile(outputFilePointer);
-        c.setFollowRedirects(true);
-        c.setURL(downloadURL);
-        c.perform();
+        Curl curl;
+        curl.SetOutputFile(outputFilePointer);
+        curl.SetFollowRedirects(true);
+        curl.SetURL(downloadURL);
+        curl.Perform();
 
         fclose(outputFilePointer);
 
-        if (!fs.file_exists("./dlfile"))
+        if (!fs.FileExists("./dlfile"))
         {
             hlog(HLOG_ERR, "there is no dlfile");
             throw Exception("");

@@ -39,7 +39,7 @@ FString & SecureEnvelopeDecoder::Decode(const FString &encoded, FString &out)
 //    cout << "ENCRYPTED: " << encrypted << endl;
     FString decrypted;
     // decrypt it
-    encrypted.GetPlaintext(decrypted, mPrivateKey);
+    encrypted.GetPlainText(decrypted, mPrivateKey);
     // descramble it
     for (size_t i = 0; i < obscuredChars; ++i)
         out.append(1, decrypted[i] ^ decrypted[i + obscuredChars]);

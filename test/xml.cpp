@@ -10,28 +10,28 @@ int main(int argc, char *argv[])
 
 
     XMLDoc doc;
-    XMLNode root = doc.createDocument("root");
+    XMLNode root = doc.CreateDocument("root");
 
 
     /********************basic test*********************/
     printf("regularString: %s\n", regularString.c_str());
     XMLNode nodeRegular(regularString, root);
 
-    printf("xmlNode: %s\n", doc.toString().c_str());
+    printf("xmlNode: %s\n", doc.ToString().c_str());
 
-    nodeRegular.setProp(regularString, regularString);
+    nodeRegular.SetProp(regularString, regularString);
 
-    if (nodeRegular.getProp(regularString) != regularString)
+    if (nodeRegular.GetProp(regularString) != regularString)
     {
 	printf("FAIL: did not get value back we set\n");
 	printf("expected %s, got %s\n",
 	       regularString.c_str(),
-	       nodeRegular.getProp(regularString).c_str()
+	       nodeRegular.GetProp(regularString).c_str()
 	    );
 	all_pass = false;
     }
 
-    printf("xmlNode: %s\n", doc.toString().c_str());
+    printf("xmlNode: %s\n", doc.ToString().c_str());
 
     /********************control char test***************/
 
@@ -69,16 +69,16 @@ int main(int argc, char *argv[])
 
     XMLNode node(controlCharString, root);
 
-    node.setProp(regularString, controlCharString);
+    node.SetProp(regularString, controlCharString);
 
-    printf("xmlNode: %s\n", doc.toString().c_str());
+    printf("xmlNode: %s\n", doc.ToString().c_str());
 
-    if (node.getProp(regularString) != regularString)
+    if (node.GetProp(regularString) != regularString)
     {
 	printf("FAIL: did not get stripped value back\n");
 	printf("expected %s, got %s\n",
 	       regularString.c_str(),
-	       node.getProp(regularString).c_str()
+	       node.GetProp(regularString).c_str()
 	    );
 	all_pass = false;
     }

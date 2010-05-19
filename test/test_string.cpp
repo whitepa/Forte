@@ -22,7 +22,7 @@ int main(int argc, char * const argv[])
     }
     catch (Exception &e)
     {
-        cout << "Caught Exception: " << e.what() << endl;
+        cout << "Caught Exception: " << e.What() << endl;
     }
     catch (std::exception &e)
     {
@@ -109,7 +109,7 @@ int main2(int argc, char * const argv[])
     FString plain("This is the plaintext.");
     RSAString rsaStr(plain, publicKey);
     cout << "Ciphertext: " << rsaStr << endl;
-    rsaStr.getPlaintext(plaintext, privateKey);
+    rsaStr.GetPlainText(plaintext, privateKey);
     cout << "Plaintext: " << plaintext << endl;
     cout << "Plaintext length is " << plaintext.length() << endl;
     if (plaintext.compare(plain))
@@ -137,26 +137,26 @@ int main2(int argc, char * const argv[])
     for (int i = 0; i < total; i++)
     {
         cout << "."; flush(cout);
-        encoder.encode(accountNum, 4, out);
+        encoder.Encode(accountNum, 4, out);
 //        cout << "encoded as: " << out << endl;
-        decoder.decode(out, decoded);
+        decoder.Decode(out, decoded);
 //        cout << "decoded as: " << decoded << endl;
-        if (decoded.compare(accountNum))
+        if (decoded.Compare(accountNum))
         {
             mismatches++;
             cout << "reattempting decode 10 times" << endl;
             int secondfailures = 0;
             for (int j = 0; j < 10; ++j)
             {
-                decoder.decode(out, decoded);
-                if (decoded.compare(accountNum)) secondfailures++;
+                decoder.Decode(out, decoded);
+                if (decoded.Compare(accountNum)) secondfailures++;
                 cout << "decoded as: " << decoded << endl;
             }
             cout << "secondary failures: " << secondfailures << endl;
         }
-        SecureEnvelopeDecoder::obscured(out, obscured);
+        SecureEnvelopeDecoder::Obscured(out, obscured);
 //        cout << "obscured as: " << obscured << endl;
-        if (obscured.compare(obscuredNum))
+        if (obscured.Compare(obscuredNum))
         {
             FAIL("obscured account number does not match expected");
         }
@@ -171,10 +171,10 @@ int main2(int argc, char * const argv[])
     }
     ENDTEST();
 
-    TEST("explode");
+    TEST("Explode");
     std::vector<FString> components;
     FString t = "A,B,C,D,E,AB,AC,AD,AE,10.1.1.1,10.2.2.2 ,10.3.3.3, 10.4.4.4";
-    t.explode(",", components);
+    t.Explode(",", components);
     std::vector<FString>::iterator i;
     cout << t << endl;
     cout << "Components: " << endl;
@@ -185,7 +185,7 @@ int main2(int argc, char * const argv[])
     if (components.size() != 13) FAIL("should have found 13 components");
     
     t = "A,B,C,D,";
-    t.explode(",", components);
+    t.Explode(",", components);
     cout << t << endl;
     cout << endl << "Components: " << endl;
     for (i = components.begin(); i != components.end();++i)
@@ -195,7 +195,7 @@ int main2(int argc, char * const argv[])
     if (components.size() != 5) FAIL("should have found 5 components");
 
     t = "A, B,C, D";
-    t.explode(", ", components);
+    t.Explode(", ", components);
     cout << t << endl;
     cout << endl << "Components: " << endl;
     for (i = components.begin(); i != components.end();++i)
@@ -205,7 +205,7 @@ int main2(int argc, char * const argv[])
     if (components.size() != 3) FAIL("should have found 3 components");
 
     t = "A, B,C, D,";
-    t.explode(", ", components);
+    t.Explode(", ", components);
     cout << t << endl;
     cout << endl << "Components: " << endl;
     for (i = components.begin(); i != components.end();++i)
@@ -215,7 +215,7 @@ int main2(int argc, char * const argv[])
     if (components.size() != 3) FAIL("should have found 3 components");
 
     t = "ABCDECDBCGBCDFBCD BCDBCDABCDBC";
-    t.explode("BCD", components);
+    t.Explode("BCD", components);
     cout << t << endl;
     cout << endl << "Components: " << endl;
     for (i = components.begin(); i != components.end();++i)
@@ -227,43 +227,43 @@ int main2(int argc, char * const argv[])
 
     std::vector<FString> lines;
     FString t = "Line1of2\r";
-    TEST("lineSplit");
-    if (t.lineSplit(lines) != 2) FAIL("should have 2 lines");
+    TEST("LineSplit");
+    if (t.LineSplit(lines) != 2) FAIL("should have 2 lines");
     foreach(FString &line, lines) cout << "Line: " << line << endl;
     ENDTEST();
     t = "Line1of2\rLine2of2";
-    TEST("lineSplit");
-    if (t.lineSplit(lines) != 2) FAIL("should have 2 lines");
+    TEST("LineSplit");
+    if (t.LineSplit(lines) != 2) FAIL("should have 2 lines");
     foreach(FString &line, lines) cout << "Line: " << line << endl;
     ENDTEST();
     t = "Line1of2\r\n";
-    TEST("lineSplit");
-    if (t.lineSplit(lines) != 2) FAIL("should have 2 lines");
+    TEST("LineSplit");
+    if (t.LineSplit(lines) != 2) FAIL("should have 2 lines");
     foreach(FString &line, lines) cout << "Line: " << line << endl;
     ENDTEST();
     t = "Line1of1";
-    TEST("lineSplit");
-    if (t.lineSplit(lines) != 1) FAIL("should have 1 lines");
+    TEST("LineSplit");
+    if (t.LineSplit(lines) != 1) FAIL("should have 1 lines");
     foreach(FString &line, lines) cout << "Line: " << line << endl;
     ENDTEST();
     t = "\rLine2of2";
-    TEST("lineSplit");
-    if (t.lineSplit(lines) != 2) FAIL("should have 2 lines");
+    TEST("LineSplit");
+    if (t.LineSplit(lines) != 2) FAIL("should have 2 lines");
     foreach(FString &line, lines) cout << "Line: " << line << endl;
     ENDTEST();
     t = "\nLine2of2";
-    TEST("lineSplit");
-    if (t.lineSplit(lines) != 2) FAIL("should have 2 lines");
+    TEST("LineSplit");
+    if (t.LineSplit(lines) != 2) FAIL("should have 2 lines");
     foreach(FString &line, lines) cout << "Line: " << line << endl;
     ENDTEST();
     t = "\nLine2of4\nLine3of4\n";
-    TEST("lineSplit");
-    if (t.lineSplit(lines) != 4) FAIL("should have 4 lines");
+    TEST("LineSplit");
+    if (t.LineSplit(lines) != 4) FAIL("should have 4 lines");
     foreach(FString &line, lines) cout << "Line: " << line << endl;
     ENDTEST();
     t = "\r\n\r\nLine3of3";
-    TEST("lineSplit");
-    if (t.lineSplit(lines) != 3) FAIL("should have 3 lines");
+    TEST("LineSplit");
+    if (t.LineSplit(lines) != 3) FAIL("should have 3 lines");
     foreach(FString &line, lines) cout << "Line: " << line << endl;
     ENDTEST();
     
@@ -281,13 +281,13 @@ int main2(int argc, char * const argv[])
         FAIL("trim failed");
     ENDTEST();
     
-    TEST("explode/trim 1");
+    TEST("Explode/trim 1");
     FString t = "Header: value ";
     std::vector<FString> args;
-    t.explode(":", args, true);
+    t.Explode(":", args, true);
     if (args.size() != 2)
     {
-        FAIL("wrong number of exploded components");
+        FAIL("wrong number of Exploded components");
     }
     else if (args[0] != "Header")
     {
@@ -302,10 +302,10 @@ int main2(int argc, char * const argv[])
     TEST("explode/trim 2");
     FString t = "Header: value\r\n";
     std::vector<FString> args;
-    t.explode(":", args, true);
+    t.Explode(":", args, true);
     if (args.size() != 2)
     {
-        FAIL("wrong number of exploded components");
+        FAIL("wrong number of Exploded components");
     }
     else if (args[0] != "Header")
     {
@@ -331,51 +331,51 @@ int main2(int argc, char * const argv[])
     components.push_back("9");
     components.push_back("10");
     FString result;
-    cout << "imploded list of 1-10:" << endl << result.implode(", ", components) << endl;
-    if (result.implode(", ", components).compare("1, 2, 3, 4, 5, 6, 7, 8, 9, 10"))
+    cout << "imploded list of 1-10:" << endl << result.Implode(", ", components) << endl;
+    if (result.Implode(", ", components).compare("1, 2, 3, 4, 5, 6, 7, 8, 9, 10"))
         FAIL("output does not match expected");
     ENDTEST();
 
     TEST("numeric");
     FString a = "0";
-    if (!a.isNumeric())
+    if (!a.IsNumeric())
     {
         cout << "checking " << a << endl;
         FAIL("is numeric 1");
     }
     a = "-1";
-    if (!a.isNumeric())
+    if (!a.IsNumeric())
         FAIL("is numeric 2");
     a = "-0.02";
-    if (!a.isNumeric())
+    if (!a.IsNumeric())
         FAIL("is numeric 3");
     a = "1.45";
-    if (!a.isNumeric())
+    if (!a.IsNumeric())
         FAIL("is numeric 4");
     a = "1454234823908490238490234234234235234523";
-    if (!a.isNumeric())
+    if (!a.IsNumeric())
         FAIL("is numeric 5");
     a = "";
-    if (a.isNumeric())
+    if (a.IsNumeric())
         FAIL("is numeric 6");
 
     a = "0";
-    if (!a.isUnsignedNumeric())
+    if (!a.IsUnsignedNumeric())
         FAIL("is unsigned numeric 1");
     a = "-1";
-    if (a.isUnsignedNumeric())
+    if (a.IsUnsignedNumeric())
         FAIL("is unsigned numeric 2");
     a = "-0.02";
-    if (a.isUnsignedNumeric())
+    if (a.IsUnsignedNumeric())
         FAIL("is unsigned numeric 3");
     a = "1.45";
-    if (!a.isUnsignedNumeric())
+    if (!a.IsUnsignedNumeric())
         FAIL("is unsigned numeric 4");
     a = "1454234823908490238490234234234235234523";
-    if (!a.isUnsignedNumeric())
+    if (!a.IsUnsignedNumeric())
         FAIL("is unsigned numeric 5");
     a = "-1454234823908490238490234234234235234523";
-    if (a.isUnsignedNumeric())
+    if (a.IsUnsignedNumeric())
         FAIL("is unsigned numeric 5");
 
     

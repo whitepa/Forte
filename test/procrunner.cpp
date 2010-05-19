@@ -17,27 +17,28 @@ int main(int argc, char *argv[])
     logManager.BeginLogging();
     logManager.SetGlobalLogMask(HLOG_ALL);
 
-    ProcRunner& runner = ProcRunner::getRef();
+    ProcRunner runner;
+    FileSystem fs;
     FString output;
     
-    runner.run("./2minuteprocess", "", &output, 10);
+    runner.Run("./2minuteprocess", "", &output, 10);
     
-    if (FileSystem::get()->file_exists("./2minutetouchfile"))
+    if (fs.FileExists("./2minuteTouchfile"))
     {
-	all_pass = false;
-	hlog(HLOG_WARN, "timeout failed");
+        all_pass = false;
+        hlog(HLOG_WARN, "timeout failed");
     }
 
-    runner.run("./2secondprocess", "", &output, 4);
+    runner.Run("./2secondprocess", "", &output, 4);
     
-    if (!FileSystem::get()->file_exists("./2secondtouchfile"))
+    if (!fs.FileExists("./2secondTouchfile"))
     {
-	all_pass = false;
-	hlog(HLOG_WARN, "timeout did not wait long enough");
+        all_pass = false;
+        hlog(HLOG_WARN, "timeout did not wait long enough");
     }
     else
     {
-	FileSystem::get()->unlink("./2secondtouchfile");
+        fs.Unlink("./2secondTouchfile");
     }
     // done
     return (all_pass ? 0 : 1);

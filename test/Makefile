@@ -14,14 +14,14 @@ CCARGS += -Wall -ggdb
 
 INCLUDE = \
 	-I. \
-	$(FORTE2_INCLUDE) \
+	$(FORTE_INCLUDE) \
 	$(DB_INCLUDE) \
 	$(BOOST_INCLUDE) \
 	$(XML_INCLUDE)
 
 LIBS = \
 	-L$(TARGETDIR) \
-	$(FORTE2_LIBS) \
+	$(FORTE_LIBS) \
 	$(DB_LIBS) \
 	$(BOOST_LIBS) \
 	$(CURL_LIBS) \

@@ -26,8 +26,8 @@ using namespace std;
     {                                                           \
         all_pass = false;                                       \
         cout << ANSI_FAIL << endl;                              \
-        cout << "\tException: " << e.getDescription() << endl; \
-        e.pretty_trace_log(HLOG_ERR);                           \
+        cout << "\tException: " << e.GetDescription() << endl; \
+        e.PrettyTraceLog(HLOG_ERR);                           \
     }                                                           \
     catch (std::exception e)                                    \
     {                                                           \
@@ -53,8 +53,8 @@ using namespace std;
     {                                                           \
         all_pass = false;                                       \
         cout << ANSI_FAIL << endl;                              \
-        cout << "\tException: " << e.getDescription() << endl; \
-        e.pretty_trace_log(HLOG_ERR);                           \
+        cout << "\tException: " << e.GetDescription() << endl; \
+        e.PrettyTraceLog(HLOG_ERR);                           \
     }                                                           \
     catch (std::exception e)                                    \
     {                                                           \
@@ -80,7 +80,7 @@ using namespace std;
     }                                                               \
     catch (Exception& e)                                           \
     {                                                               \
-        if (e.getDescription() == (Y))                              \
+        if (e.GetDescription() == (Y))                              \
         {                                                           \
             cout << ANSI_PASS << endl;                              \
         }                                                           \
@@ -88,8 +88,8 @@ using namespace std;
         {                                                           \
             all_pass = false;                                       \
             cout << ANSI_FAIL << endl;                              \
-            cout << "\tException: " << e.getDescription() << endl; \
-            e.pretty_trace_log(HLOG_ERR);                           \
+            cout << "\tException: " << e.GetDescription() << endl; \
+            e.PrettyTraceLog(HLOG_ERR);                           \
         }                                                           \
     }                                                               \
     catch (std::exception e)                                        \

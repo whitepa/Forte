@@ -40,7 +40,7 @@ XMLDoc::~XMLDoc()
 }
 
 
-XMLNode XMLDoc::createDocument(const FString& root_name)
+XMLNode XMLDoc::CreateDocument(const FString& root_name)
 {
     xmlNodePtr root;
     if (mDoc != NULL) xmlFreeDoc(mDoc);
@@ -51,7 +51,7 @@ XMLNode XMLDoc::createDocument(const FString& root_name)
 }
 
 
-FString XMLDoc::to_string() const
+FString XMLDoc::ToString() const
 {
     FString ret;
     xmlChar *buf;

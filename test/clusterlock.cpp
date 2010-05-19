@@ -21,21 +21,21 @@ void* test(void* p)
             }
             catch (EClusterLockUnvailable &e)
             {
-                printf("Temp unavail(exiting): %s\n", e.what().c_str());
+                printf("Temp unavail(exiting): %s\n", e.What().c_str());
                 return NULL;
             }
             catch (EClusterLockFile &e)
             {
-                printf("file error: %s\n", e.what().c_str());
+                printf("file error: %s\n", e.What().c_str());
                 return NULL;
             }
             catch (EClusterLock &e)
             {
-                printf("lock error: %s\n", e.what().c_str());
+                printf("lock error: %s\n", e.What().c_str());
             }
             catch (Exception &e)
             {
-                printf("%s\n", e.what().c_str());
+                printf("%s\n", e.What().c_str());
             }
         }	
     }

@@ -22,12 +22,12 @@ namespace Forte
         virtual ~XMLDoc();
 
     public:
-        inline XMLNode getRootNode() const { return XMLNode(mDoc->children); }
-        XMLNode createDocument(const FString& root_name);
-        FString to_string() const;
+        inline XMLNode GetRootNode() const { return XMLNode(mDoc->children); }
+        XMLNode CreateDocument(const FString& root_name);
+        FString ToString() const;
 
-        inline operator XMLNode() const { return getRootNode(); }
-        inline operator FString() const { return to_string(); }
+        inline operator XMLNode() const { return GetRootNode(); }
+        inline operator FString() const { return ToString(); }
         inline operator xmlDocPtr() { return mDoc; }
         inline operator const xmlDocPtr() const { return mDoc; }
 
