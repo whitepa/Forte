@@ -31,15 +31,12 @@ namespace Forte
      * also be copied, at which time setting an object in the copy
      * will not affect the original context.
      **/
-    class Context
+    class Context : public Object
     {
     public:
-        Context() {};
-        Context(const Context &other) {
-            AutoUnlockMutex lock(other.mLock);
-            mObjectMap = other.mObjectMap;
-        }
-        virtual ~Context() {};
+        Context();
+        Context(const Context &other);
+        virtual ~Context();
 
         /**
          * Detach() will make a copy of an object within this Context
@@ -55,14 +52,7 @@ namespace Forte
          * from the Context.  If the object does not exists, one can
          * be automatically created using an appropriate factory.
          **/
-        ObjectPtr Get(const char *key) const {
-            ObjectMap::const_iterator i;
-            Forte::AutoUnlockMutex lock(mLock);
-            if ((i = mObjectMap.find(key)) == mObjectMap.end())
-                // TODO: use a factory to create one?
-                throw EInvalidKey();
-            return (*i).second;
-        }
+        ObjectPtr Get(const char *key) const;
 
         /**
          * Get() retrieves a reference counted pointer to a typed object
@@ -82,15 +72,13 @@ namespace Forte
                 throw EContextTypeMismatch(); // TODO: include types in error message
             return ptr;
         }
+
         
         /**
          * Set() stores a reference to an object in the Context.  Any
          * previous entry with the same key will be replaced.
          **/
-        void Set(const char *key, ObjectPtr obj) {
-            Forte::AutoUnlockMutex lock(mLock);
-            mObjectMap[key] = obj;
-        }
+        void Set(const char *key, ObjectPtr obj);
 
         /**
          * Create() allocates and sets a key to a specified object. TODO
@@ -99,34 +87,14 @@ namespace Forte
         /**
          * Remove() will remove a single object from the Context.
          **/
-        void Remove(const char *key) {
-            // we must not cause object deletions while holding the lock
-            ObjectPtr obj;
-            {
-                Forte::AutoUnlockMutex lock(mLock);
-                if (mObjectMap.find(key) != mObjectMap.end())
-                {
-                    obj = mObjectMap[key];
-                    mObjectMap.erase(key);
-                }
-            }
-            // object goes out of scope and is deleted here, after the
-            // lock has been released.
-        }
+        void Remove(const char *key);
 
         /**
          * Clear() will remove all references from the Context.
          **/
-        void Clear(void) {
-            // we must not cause object deletions while holding the lock
-            ObjectMap localCopy;
-            {
-                Forte::AutoUnlockMutex lock(mLock);
-                localCopy = mObjectMap;
-                mObjectMap.clear();
-            }
-        }
-     protected:
+        void Clear(void);
+
+    protected:
         mutable Forte::Mutex mLock;
         ObjectMap mObjectMap;
     };
