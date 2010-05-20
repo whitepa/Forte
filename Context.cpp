@@ -49,9 +49,17 @@ Forte::ObjectPtr Forte::Context::Get(const char *key) const
     return (*i).second;
 }
 
-void Forte::Context::Set(const char *key, ObjectPtr obj) {
-    Forte::AutoUnlockMutex lock(mLock);
-    mObjectMap[key] = obj;
+void Forte::Context::Set(const char *key, ObjectPtr obj)
+{
+    ObjectPtr replaced;
+    {
+        Forte::AutoUnlockMutex lock(mLock);
+        if (mObjectMap.find(key) != mObjectMap.end())
+        {
+            replaced = mObjectMap[key];
+        }        
+        mObjectMap[key] = obj;
+    }
 }
 
 void Forte::Context::Remove(const char *key)
