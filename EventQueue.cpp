@@ -41,9 +41,9 @@ void EventQueue::Add(shared_ptr<Event> e)
 {
     // check for NULL event
     if (!e)
-        throw ForteEventQueueException("attempt to add NULL event to queue");
+        throw EEventQueueEventInvalid();
     if (mShutdown)
-        throw ForteEventQueueException("unable to add event: queue is shutting down");
+        throw EEventQueueShutdown();
     if (mBlockingMode)
         mMaxDepth.Wait();
     // XXX race condition

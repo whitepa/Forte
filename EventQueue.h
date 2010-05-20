@@ -11,7 +11,9 @@ using namespace boost;
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(Exception, ForteEventQueueException);
+    EXCEPTION_CLASS(EEventQueue);
+    EXCEPTION_SUBCLASS2(EEventQueue, EEventQueueShutdown, "Event queue is shutting down");
+    EXCEPTION_SUBCLASS2(EEventQueue, EEventQueueEventInvalid, "Invalid Event");
 
     class EventQueue : public Object
     {
