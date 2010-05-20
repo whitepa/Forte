@@ -23,7 +23,9 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
         disp.mThreadSem.Wait();
         try
         {
-            new ThreadPoolDispatcherWorker(disp);
+            AutoUnlockMutex lock(disp.mThreadsLock);
+            disp.mThreads.push_back(shared_ptr<ThreadPoolDispatcherWorker>(
+                                        new ThreadPoolDispatcherWorker(disp)));
         }
         catch (...)
         {
@@ -105,7 +107,12 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
         foreach (shared_ptr<DispatcherThread> &thr, disp.mThreads)
         {
             if (thr)
+            {
+                hlog(HLOG_DEBUG3, "notifying thread %s of shutdown", thr->mThreadName.c_str());
                 thr->Shutdown();
+            }
+            else
+                hlog(HLOG_ERR, "invalid thread pointer in dispatcher thread vector");
         }
         // delete all the threads
         disp.mThreads.clear();
@@ -123,15 +130,23 @@ Forte::ThreadPoolDispatcherWorker::ThreadPoolDispatcherWorker(ThreadPoolDispatch
 }
 Forte::ThreadPoolDispatcherWorker::~ThreadPoolDispatcherWorker()
 {
+    // This method will be called in the thread which is destroying
+    // the worker, NOT by the worker thread itself.
+//    hlog(HLOG_DEBUG3, "worker cleanup");
     ThreadPoolDispatcher &disp(dynamic_cast<ThreadPoolDispatcher&>(mDispatcher));
-    disp.mRequestHandler->Cleanup();
-    disp.mThreadSem.Post(); // TODO: move to manager?
+    //disp.mRequestHandler->Cleanup(); // TODO: must be called by
+    //worker thread itself 
+
+    disp.mThreadSem.Post();
+    // TODO: move to manager?  or remove threadSem altogether, since
+    //the size of the thread vector should now be an accurate
+    //representation of the number of threads.
 }
 void * Forte::ThreadPoolDispatcherWorker::run(void)
 {
     ThreadPoolDispatcher &disp(dynamic_cast<ThreadPoolDispatcher&>(mDispatcher));
     mThreadName.Format("%s-pool-%u", mDispatcher.mDispatcherName.c_str(), (unsigned)mThread);
-    
+    hlog(HLOG_DEBUG3, "initializing...");
     // call the request handler's initialization hook
     disp.mRequestHandler->Init();
 
@@ -181,6 +196,7 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
         timeout.tv_sec = now.tv_sec + 1; // wake up every second
         timeout.tv_nsec = now.tv_usec * 1000;
         disp.mSpareThreadSem.Post();
+        hlog(HLOG_DEBUG4, "waiting for events...");
         disp.mNotify.TimedWait(timeout);
         disp.mSpareThreadSem.TryWait();
         if (mThreadShutdown) break;
