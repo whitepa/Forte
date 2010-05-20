@@ -9,9 +9,6 @@
 #include "Exception.h"
 #include <set>
 
-// TODO: remove this:
-volatile extern bool g_shutdown;
-
 namespace Forte
 {
     EXCEPTION_SUBCLASS(Exception, ForteServerMainException);

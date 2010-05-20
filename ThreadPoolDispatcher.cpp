@@ -1,6 +1,7 @@
 #include "ThreadPoolDispatcher.h"
 #include "LogManager.h"
 #include "Foreach.h"
+#include "Clock.h"
 #include <boost/scoped_ptr.hpp>
 using namespace boost;
 
@@ -38,8 +39,9 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
     int lastNew = 0;
     while (!disp.mShutdown)
     {
+        interruptibleSleep(Timespec::FromMillisec(1000), false);
+
         // see if new threads are needed
-        sleep(1);
         int currentThreads = disp.mMaxThreads - disp.mThreadSem.GetValue();
         int spareThreads = disp.mSpareThreadSem.GetValue();
         int newThreadsNeeded = disp.mEventQueue.Depth() + disp.mMinSpareThreads - spareThreads;
@@ -114,7 +116,17 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
             else
                 hlog(HLOG_ERR, "invalid thread pointer in dispatcher thread vector");
         }
-        // delete all the threads
+    }
+    // since the threads may now be waiting on the main dispatcher
+    // notification condition, broadcast it (and avoid holding both locks)
+    {
+        AutoUnlockMutex lock(disp.mNotifyLock);
+        disp.mNotify.Broadcast();
+    }
+
+    {
+        // now delete all the threads
+        AutoUnlockMutex lock(disp.mThreadsLock);
         disp.mThreads.clear();
         // TODO: timed deletion of all threads, give up after a while
     }
@@ -236,6 +248,7 @@ Forte::ThreadPoolDispatcher::~ThreadPoolDispatcher()
     // (this allows all worker threads to safely exit and unregister themselves
     //  before this destructor exits; otherwise bad shit happens when this object
     //  is dealloced and worker threads are still around trying to access data)
+    mManagerThread.Shutdown();
     mManagerThread.WaitForShutdown();
 }
 void Forte::ThreadPoolDispatcher::Pause(void) { mPaused = 1; }

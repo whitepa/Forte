@@ -297,14 +297,7 @@ int ProcRunner::Run(const FString& command,
         }
 
         // check for shutdown
-        if (g_shutdown)
-        {
-            stmp.Format("Server is shutting down... "
-                        "abandoning child process %u", pid);
-            hlog(HLOG_ERR, "%s", stmp.c_str());
-            ret = -1;
-            break;
-        }
+        // TODO:  g_shutdown has been removed!
 
         // determine how long to sleep before checking process for
         // termination again

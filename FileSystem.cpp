@@ -987,11 +987,12 @@ void FileSystem::copyHelper(const FString& from_path,
                     progress_callback(size_copied + in.tellg(), callback_data);
                 }
 
-                if (g_shutdown)
-                {
-                    throw EFileSystemCopy("FORTE_COPY_FAIL_SHUTDOWN|||" + 
-                                          from_path + "|||" + to_path);
-                }
+                // TODO: replace this as g_shutdown has been removed!
+                // if (g_shutdown)
+                // {
+                //     throw EFileSystemCopy("FORTE_COPY_FAIL_SHUTDOWN|||" + 
+                //                           from_path + "|||" + to_path);
+                // }
             }
 
             in.close();

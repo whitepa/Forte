@@ -2,8 +2,6 @@
 #include <csignal>
 #include <boost/make_shared.hpp>
 
-volatile bool g_shutdown = false;
-
 Mutex       ServerMain::sSingletonMutex;
 ServerMain* ServerMain::sSingletonPtr;
 
@@ -79,8 +77,6 @@ ServerMain::ServerMain(int argc, char * const argv[],
 
 ServerMain::~ServerMain()
 {
-    g_shutdown = true;
-
     // call the shutdown callbacks
     hlog(HLOG_DEBUG, "ServerMain shutdown: calling shutdown callbacks...");
     {
@@ -227,6 +223,4 @@ void ServerMain::MainLoop()
             hlog(HLOG_ERR,"Unhandled signal %d received.", sig);
         }
     }
-
-    g_shutdown = true;
 }
