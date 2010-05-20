@@ -13,6 +13,7 @@ namespace Forte
         virtual ~Object() {};
     };
     typedef boost::shared_ptr<Object> ObjectPtr;
+    typedef std::pair<FString, ObjectPtr> ObjectPair;
     typedef std::map<FString, ObjectPtr> ObjectMap;
 };
 

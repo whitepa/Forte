@@ -1,5 +1,6 @@
 #include "Context.h"
 #include "FTrace.h"
+#include "Foreach.h"
 
 Forte::Context::Context()
 {
@@ -16,6 +17,26 @@ Forte::Context::Context(const Context &other)
 Forte::Context::~Context()
 {
     FTRACE;
+    if (!mObjectMap.empty())
+    {
+        hlog(HLOG_DEBUG, "Objects Remain in Context at deletion:");
+        foreach (const ObjectPair &p, mObjectMap)
+        {
+            const FString &name(p.first);
+            const ObjectPtr &ptr(p.second);
+            int count = (int) ptr.use_count();
+            // count > 0 will always be at least 2 due to the foreach
+            // subtract one to account for that.
+            if (count > 0) --count; 
+            hlog(HLOG_DEBUG, "[%d] %s", count, name.c_str());
+        }
+    }
+    ObjectMap tmp;
+    {
+        Forte::AutoUnlockMutex lock(mLock);
+        tmp = mObjectMap;
+        mObjectMap.clear();
+    }
 }
 
 Forte::ObjectPtr Forte::Context::Get(const char *key) const
