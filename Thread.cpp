@@ -49,6 +49,10 @@ void * Thread::startThread(void *obj)
     {
         if (!thr->mThreadShutdown) retval = thr->run();
     }
+    catch (EThreadShutdown &e)
+    {
+        // normal condition from here on out
+    }
     catch (Exception &e)
     {
         hlog(HLOG_ERR, "exception in thread run(): %s",
