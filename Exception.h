@@ -20,6 +20,7 @@ namespace Forte
         virtual ~Exception() throw();
         inline std::string &GetDescription() { return mDescription; };
         inline std::string &What() { return mDescription; };
+        inline std::string &what() { return mDescription; };
         std::string ExtendedDescription();
         FString mDescription;
         std::list<void *> mStack;

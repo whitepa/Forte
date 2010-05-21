@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
     }
     catch (exception& err)
     {
-        cerr << "ABORT: " << err.What() << endl;
+        cerr << "ABORT: " << err.what() << endl;
     }
     catch (Exception &e)
     {
