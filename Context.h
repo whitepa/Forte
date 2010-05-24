@@ -13,7 +13,7 @@
     shared_ptr<type> name_Ptr = mContext.Get<type>(key);        \
     type &name(*name_Ptr)
 
-#define CGET2(key, type) mContext.Get<type>(key)
+//#define CGET_TMP(key, type) mContext.Get<type>(key)
 
 #define CSET(key, type, args...)                                \
     mContext.Set(key, shared_ptr<type>(new type( args )))
