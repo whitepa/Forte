@@ -68,19 +68,47 @@ namespace Forte
     class FunctionEntry
     {
     public:
-        FunctionEntry(const char *functionName) : mFN(functionName) {
-            hlog(HLOG_DEBUG, "ENTER %s", mFN.c_str());
+        FunctionEntry(const char *functionName, const char *file, int line) : mFN(functionName), mFile(file), mLine(line) {
+            _hlog(mFN.c_str(), mFile, mLine, HLOG_DEBUG, "ENTER %s", mFN.c_str());
+        }        
+    
+        FunctionEntry(const char *functionName, const char *file, int line, const char*fmt, ...) __attribute__((format(printf, 5, 6))): mFN(functionName), mFile(file), mLine(line)
+	{
+	    char buffer[512];
+	    va_list args;
+	    va_start(args, fmt);
+	    vsprintf(buffer, fmt, args);
+	    _hlog(mFN.c_str(), mFile, mLine, HLOG_DEBUG, "ENTER %s(%s)", mFN.c_str(), buffer);
+	    va_end(args);
         }
+
         virtual ~FunctionEntry() {
-            hlog(HLOG_DEBUG, "EXIT %s", mFN.c_str());
+	    _hlog(mFN.c_str(), mFile, mLine, HLOG_DEBUG, "EXIT %s", mFN.c_str());
         }
     protected:
         FString mFN;
+	FString mFile;
+	int mLine;
     };
 };
 
 //#ifdef FORTE_FUNCTION_TRACING
-#define FTRACE Forte::FunctionEntry _forte_trace_object(__FUNCTION__)
+/**
+ * Prints entrance and exit log lines at the begin/end of the
+ * scope.
+ * This macro passes function name, file, and line.
+ */
+#define FTRACE Forte::FunctionEntry _forte_trace_object(__FUNCTION__, __FILE__, __LINE__)
+/**
+ * Same as FTRACE except allows a format string to be passed in
+ * as well.
+ * Example:
+ *    FTRACE2("%s, %i", arg1, arg2)
+ * 
+ *   Output (on enter):
+ *     ENTER function(arg1, arg2)
+ */
+#define FTRACE2(FMT...) Forte::FunctionEntry _forte_trace_object(__FUNCTION__, __FILE__, __LINE__, FMT)
 //#else
 //#define FTRACE
 //#endif
