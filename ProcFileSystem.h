@@ -49,6 +49,7 @@ namespace Forte
         virtual void MemoryInfoRead(Forte::StrDoubleMap& meminfo);
 
     protected:
+        // TODO: need a context pointer
         const Context &mContext;
         void getProcFileContents(const FString& pathInSlashProc, 
                                  FString& contents);
