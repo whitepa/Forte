@@ -75,6 +75,7 @@ inline struct timespec operator + (const struct timespec &a,
 }
 inline struct timespec operator * (const struct timespec &a, const int &b)
 {
+    // TODO:  this is buggy, potential int overflow in the nsec field
     struct timespec result;
     result.tv_sec = a.tv_sec * b;
     result.tv_nsec = a.tv_nsec * b;

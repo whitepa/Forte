@@ -86,6 +86,7 @@ HEADERS = \
 	AutoMutex.h \
 	Base64.h \
 	Callback.h \
+	Clock.h \
 	Condition.h \
 	ControlFile.h \
 	Curl.h \
