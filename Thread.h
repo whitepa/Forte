@@ -72,6 +72,7 @@ namespace Forte
         void interruptibleSleep(const struct timespec &interval,
                                 bool throwRequested = true);
 
+
         pthread_t mThread;
 
         Mutex mInitializedLock;
