@@ -4,58 +4,18 @@
 #include "DbConnectionPool.h"
 #include "DbConnection.h"
 
-auto_ptr<DbConnectionPool> DbConnectionPool::spInstance;
-Mutex DbConnectionPool::sSingletonMutex;
-
-DbConnectionPool& DbConnectionPool::GetInstance() {
-    if (spInstance.get() == NULL) {
-        AutoUnlockMutex lock(sSingletonMutex);
-        if (spInstance.get() == NULL) {
-            spInstance.reset(new DbConnectionPool());
-        }
-    }
-    return *spInstance;
-}
-
-DbConnectionPool& DbConnectionPool::GetInstance(ServiceConfig &configObj) {
-    if (spInstance.get() == NULL) {
-        AutoUnlockMutex lock(sSingletonMutex);
-        if (spInstance.get() == NULL) {
-            spInstance.reset(new DbConnectionPool(configObj));
-        }
-    }
-    return *spInstance;
-}
-
-
-DbConnectionPool::DbConnectionPool() : 
-    mDbType(ServerMain::GetServer().mServiceConfig.Get("db_type")),
-    mDbName(ServerMain::GetServer().mServiceConfig.Get("db_name")),
-    mDbUser(ServerMain::GetServer().mServiceConfig.Get("db_user")),
-    mDbPassword(ServerMain::GetServer().mServiceConfig.Get("db_pass")),
-    mDbHost(ServerMain::GetServer().mServiceConfig.Get("db_host")),
-    mDbSock(ServerMain::GetServer().mServiceConfig.Get("db_socket")),
-    mPoolSize(ServerMain::GetServer().mServiceConfig.GetInteger("db_poolsize"))
+DbConnectionPool::DbConnectionPool(const char *dbType,
+                                   const char *dbName,
+                                   const char *dbUser,
+                                   const char *dbPassword,
+                                   const char *dbHost,
+                                   const char *dbSocket,
+                                   int poolSize) :
+    mDbType(dbType), mDbName(dbName), mDbUser(dbUser), mDbPassword(dbPassword),
+    mDbHost(dbHost), mDbSock(dbSocket), mPoolSize(poolSize)
 {
     if (mDbType.empty())
         throw EDbConnectionPool("'db_type' must be specified in the database configuration");
-    if (ServerMain::GetServer().mServiceConfig.Get("db_poolsize").empty())
-        throw EDbConnectionPool("'db_poolsize' must be specified in the database configuration");
-}
-
-DbConnectionPool::DbConnectionPool(ServiceConfig &configObj) :
-    mDbType(configObj.Get("db_type")),
-    mDbName(configObj.Get("db_name")),
-    mDbUser(configObj.Get("db_user")),
-    mDbPassword(configObj.Get("db_pass")),
-    mDbHost(configObj.Get("db_host")),
-    mDbSock(configObj.Get("db_socket")),
-    mPoolSize(configObj.GetInteger("db_poolsize"))
-{
-    if (mDbType.empty())
-        throw EDbConnectionPool("'db_type' must be specified in the database configuration");
-    if (configObj.Get("db_poolsize").empty())
-        throw EDbConnectionPool("'db_poolsize' must be specified in the database configuration");
 }
 
 DbConnectionPool::~DbConnectionPool() {

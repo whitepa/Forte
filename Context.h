@@ -22,6 +22,7 @@ namespace Forte
 {
     EXCEPTION_CLASS(EContext);
     EXCEPTION_SUBCLASS2(EContext, EInvalidKey, "Invalid Key");
+    EXCEPTION_SUBCLASS2(EContext, EEmptyPointer, "Empty Pointer");
     EXCEPTION_SUBCLASS2(EContext, EContextTypeMismatch, "Context Type Mismatch");
  
     /**

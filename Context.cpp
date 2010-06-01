@@ -54,6 +54,11 @@ Forte::ObjectPtr Forte::Context::Get(const char *key) const
 
 void Forte::Context::Set(const char *key, ObjectPtr obj)
 {
+    if (!obj)
+    {
+        // disallow setting to an empty pointer
+        throw EEmptyPointer();
+    }
     ObjectPtr replaced;
     {
         Forte::AutoUnlockMutex lock(mLock);

@@ -10,22 +10,22 @@
 
 namespace Forte
 {
-// Auto helper to get and release a database connection.
     class DbAutoConnection : public Object {
     public:
-        DbAutoConnection(bool autocommit = true)
-            : mPool(DbConnectionPool::GetInstance()), mDbConnection(mPool.GetDbConnection())
+        DbAutoConnection(Forte::Context &ctxt, const char *poolname, bool autocommit = true)
+            : mPoolPtr(ctxt.Get<DbConnectionPool>(poolname)), 
+              mDbConnection(mPoolPtr->GetDbConnection())
             {
                 // set autocommit appropriately
                 AutoCommit(autocommit);
-            };
-
-        DbAutoConnection(DbConnectionPool& pool, bool autocommit = true)
-            : mPool(pool), mDbConnection(pool.GetDbConnection())
+            }
+        DbAutoConnection(shared_ptr<DbConnectionPool> poolPtr, bool autocommit = true)
+            : mPoolPtr(poolPtr), 
+              mDbConnection(mPoolPtr->GetDbConnection())
             {
                 // set autocommit appropriately
                 AutoCommit(autocommit);
-            };
+            }
 
     private:
         // disallow the copy constructor, we don't refcount so the
@@ -33,10 +33,10 @@ namespace Forte
         // the original may be finished.  Plus, this would potentially
         // allow sharing of a db connection.
         DbAutoConnection(const DbAutoConnection &other) : 
-            mPool(other.mPool), mDbConnection(other.mDbConnection) { 
+            mPoolPtr(other.mPoolPtr), mDbConnection(other.mDbConnection) { 
             // should never execute
             throw Exception();
-        };
+        }
 
     public:
         virtual ~DbAutoConnection() {
@@ -48,10 +48,10 @@ namespace Forte
                     hlog(HLOG_WARN, "rolling back pending queries on connection");
                     Rollback();
                 }
-                mPool.ReleaseDbConnection(mDbConnection);
+                mPoolPtr->ReleaseDbConnection(mDbConnection);
             } catch (...) {
             }
-        };
+        }
 
         inline void AutoCommit(bool autocommit) {
             mDbConnection.AutoCommit(autocommit);
@@ -88,7 +88,7 @@ namespace Forte
         };
     
     private:
-        DbConnectionPool& mPool;
+        shared_ptr<DbConnectionPool> mPoolPtr;
         DbConnection & mDbConnection;
     };
 };

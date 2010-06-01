@@ -13,14 +13,20 @@ namespace Forte
     EXCEPTION_SUBCLASS(Exception, EDbConnectionPoolOpenConnections);
 
 // A pool of database connections.
-    class DbConnectionPool {
+    class DbConnectionPool : public Object {
 
     public:
-        static DbConnectionPool& GetInstance();
-        static DbConnectionPool& GetInstance(ServiceConfig &configObj);
 
         DbConnectionPool();
         DbConnectionPool(ServiceConfig &configObj);
+        DbConnectionPool(const char *dbType,
+                         const char *dbName,
+                         const char *dbUser = "",
+                         const char *dbPassword = "",
+                         const char *dbHost = "",
+                         const char *dbSocket = "",
+                         int poolSize = 0);
+
         virtual ~DbConnectionPool();
 
         DbConnection& GetDbConnection();
