@@ -44,7 +44,10 @@ Forte::ObjectPtr Forte::Context::Get(const char *key) const
     ObjectMap::const_iterator i;
     Forte::AutoUnlockMutex lock(mLock);
     if ((i = mObjectMap.find(key)) == mObjectMap.end())
-        // TODO: use a factory to create one?
+        // use a factory to create one?  NO.  Objects must be
+        // explicitly created.  This avoids potential problems if
+        // destructors decide to try to access context objects after
+        // they have been removed.
         throw EInvalidKey();
     return (*i).second;
 }
