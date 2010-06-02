@@ -48,8 +48,8 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
         int numNew = 0;
         if (newThreadsNeeded < (int)disp.mMinThreads - currentThreads)
             newThreadsNeeded = (int)disp.mMinThreads - currentThreads;
-        hlog(HLOG_DEBUG4, "ThreadPool Manager Loop: %d threads; %d spare; %d needed",
-             currentThreads, spareThreads, newThreadsNeeded);
+//        hlog(HLOG_DEBUG4, "ThreadPool Manager Loop: %d threads; %d spare; %d needed",
+//             currentThreads, spareThreads, newThreadsNeeded);
         if (!disp.mShutdown && newThreadsNeeded > 0)
         {
             numNew = (lastNew == 0) ? 1 : lastNew * 2;
@@ -208,7 +208,7 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
         timeout.tv_sec = now.tv_sec + 1; // wake up every second
         timeout.tv_nsec = now.tv_usec * 1000;
         disp.mSpareThreadSem.Post();
-        hlog(HLOG_DEBUG4, "waiting for events...");
+//        hlog(HLOG_DEBUG4, "waiting for events...");
         disp.mNotify.TimedWait(timeout);
         disp.mSpareThreadSem.TryWait();
         if (mThreadShutdown) break;
