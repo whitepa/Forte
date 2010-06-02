@@ -21,6 +21,22 @@ namespace Forte
             mTimespec.tv_nsec = ts.tv_nsec;
         };
         virtual ~Timespec() {};
+        Timespec operator=(const struct timespec &ts) {
+            mTimespec.tv_sec = ts.tv_sec;
+            mTimespec.tv_nsec = ts.tv_nsec;
+            return *this;
+        }
+        Timespec operator+(const Timespec &other) const {
+            Timespec result;
+            result.mTimespec.tv_sec = mTimespec.tv_sec + other.mTimespec.tv_sec;
+            result.mTimespec.tv_nsec = mTimespec.tv_nsec + other.mTimespec.tv_nsec;
+            if (result.mTimespec.tv_nsec >= 1000000000)
+            {
+                result.mTimespec.tv_nsec -= 1000000000;
+                result.mTimespec.tv_sec += 1;
+            }
+            return result;
+        }
         operator const struct timespec () const { return mTimespec; }
         unsigned long long AsMillisec(void) const {
             return (mTimespec.tv_sec * 1000) + (mTimespec.tv_nsec / 1000);
@@ -45,7 +61,7 @@ namespace Forte
         virtual ~Clock() {};
         
         virtual void GetTime(struct timespec &ts) const = 0;
-        struct timespec GetTime(void) const { 
+        Timespec GetTime(void) const { 
             struct timespec ts;
             GetTime(ts);
             return ts;
@@ -60,7 +76,7 @@ namespace Forte
         virtual ~MonotonicClock() {};
 
         virtual void GetTime(struct timespec &ts) const;
-        struct timespec GetTime(void) const { 
+        Timespec GetTime(void) const { 
             return Clock::GetTime();
         };
     };
@@ -71,7 +87,7 @@ namespace Forte
         virtual ~RealtimeClock() {};
 
         virtual void GetTime(struct timespec &ts) const;
-        struct timespec GetTime(void) const { 
+        Timespec GetTime(void) const { 
             return Clock::GetTime();
         };
     };
