@@ -13,8 +13,7 @@ namespace Forte
     {
     public:
         Timespec() { 
-            mTimespec.tv_sec = 0; 
-            mTimespec.tv_nsec = 0;
+            Clear();
         };
         Timespec(const struct timespec &ts) {
             mTimespec.tv_sec = ts.tv_sec;
@@ -49,6 +48,10 @@ namespace Forte
         }
         bool IsZero(void) const {
             return (mTimespec.tv_sec == 0 && mTimespec.tv_nsec == 0);
+        }
+        void Clear(void) {
+            mTimespec.tv_sec = 0;
+            mTimespec.tv_nsec = 0;
         }
     protected:
         struct timespec mTimespec;

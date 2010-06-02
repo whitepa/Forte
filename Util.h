@@ -89,6 +89,9 @@ inline bool operator < (const struct timespec &a, const struct timespec &b)
     else if (a.tv_sec == b.tv_sec && a.tv_nsec < b.tv_nsec) return true;
     else return false;
 }
-
+inline bool operator <= (const struct timespec &a, const struct timespec &b)
+{
+    return !(b < a);
+}
 
 #endif
