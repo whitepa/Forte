@@ -13,6 +13,8 @@ PREFIX ?= $(INSTALL_ROOT)/usr/local
 HEADER_INSTALL_PATH = $(PREFIX)/include
 LIB_INSTALL_PATH = $(PREFIX)/lib
 
+SUBDIRS = dbc
+
 INCLUDE = $(DB_INCLUDE) $(XML_INCLUDE) $(BOOST_INCLUDE) -I.
 CCARGS += -Wall -DFORTE_FUNCTION_TRACING
 SRCS =	\
@@ -161,6 +163,7 @@ TLIBS = -L$(TARGETDIR) -lforte -lpthread
 INSTALL = $(if $(RPM), @install $(1) $< $@, @install $(1) $(2) $< $@)
 
 all: $(LIB)
+	$(MAKE_SUBDIRS)
 
 utiltest: $(TPROG)
 

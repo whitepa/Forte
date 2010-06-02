@@ -33,7 +33,7 @@ all: $(PROG)
 
 parser: SQLParse.cpp SQLScan.cpp
 
-$(PROG): ccargs_echo parser $(FORTE) $(OBJS) Makefile $(OBJDEPS)
+$(PROG): ccargs_echo parser $(OBJS) Makefile $(OBJDEPS)
 	$(CCC) -o $@ $(OBJS) $(LIBS) $(OS_LIBS)
 	$(export-bin)
 
