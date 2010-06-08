@@ -46,6 +46,15 @@ namespace Forte
             ts.mTimespec.tv_nsec = (ms % 1000) * 1000000;
             return ts;
         }
+        static Timespec FromSeconds(unsigned int sec) {
+            Timespec ts;
+            ts.mTimespec.tv_sec = sec;
+            ts.mTimespec.tv_nsec = 0;
+            return ts;
+        }
+        long AsSeconds(void) {
+            return mTimespec.tv_sec;
+        }
         bool IsZero(void) const {
             return (mTimespec.tv_sec == 0 && mTimespec.tv_nsec == 0);
         }
