@@ -409,7 +409,7 @@ void TableCount::generateCPP(const Table &t, FILE *h, FILE *c)
     fprintf(c, "unsigned int %s::%s(Forte::DbConnection &db, %s)\n", 
             t.mClassname.c_str(), mName.c_str(), keyParamStr.c_str());
     fprintf(c, "{\n");
-    fprintf(c, "    FString sql;\n");
+    fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\" WHERE %s \",\n",formatStr.c_str());
     fprintf(c, "               %s);\n", formatParams.c_str());
     fprintf(c, "    return Count(db, sql);\n");
@@ -457,7 +457,7 @@ void TableSelector::generateCPP(const Table &t, FILE *h, FILE *c)
     fprintf(c, "Forte::DbResult %s::%s(Forte::DbConnection &db, %s)\n", 
             t.mClassname.c_str(), mName.c_str(), keyParamStr.c_str());
     fprintf(c, "{\n");
-    fprintf(c, "    FString sql;\n");
+    fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\" WHERE %s %s \",\n",formatStr.c_str(),
             (mFlags & SELECTOR_LOCK_OPTIONAL) ? "" : lockStr.c_str());
     fprintf(c, "               %s);\n", formatParams.c_str());
@@ -501,10 +501,10 @@ void TableDeletor::generateCPP(const Table &t, FILE *h, FILE *c)
     fprintf(c, "void %s::%s(Forte::DbConnection &db, %s)\n", 
             t.mClassname.c_str(), mName.c_str(), keyParamStr.c_str());
     fprintf(c, "{\n");
-    fprintf(c, "    FString sql;\n");
+    fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\"DELETE FROM %s WHERE %s \",\n",t.mName.c_str(), formatStr.c_str());
     fprintf(c, "               %s);\n", formatParams.c_str());
-    fprintf(c, "    DbExecute(db, sql);\n");
+    fprintf(c, "    Forte::DbUtil::DbExecute(db, sql);\n");
     fprintf(c, "}\n");
 }
 
@@ -536,10 +536,10 @@ void TableExistor::generateCPP(const Table &t, FILE *h, FILE *c)
     fprintf(c, "bool %s::%s(Forte::DbConnection &db, %s)\n", 
             t.mClassname.c_str(), mName.c_str(), keyParamStr.c_str());
     fprintf(c, "{\n");
-    fprintf(c, "    FString sql;\n");
+    fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\"SELECT 1 FROM %s WHERE %s \",\n",t.mName.c_str(), formatStr.c_str());
     fprintf(c, "               %s);\n", formatParams.c_str());
-    fprintf(c, "    Forte::DbResult res = DbStore(db, sql);\n");
+    fprintf(c, "    Forte::DbResult res = Forte::DbUtil::DbStore(db, sql);\n");
     fprintf(c, "    return (res.GetNumRows() != 0);\n");
     fprintf(c, "}\n");
 }
@@ -576,11 +576,11 @@ void TableLookup::generateCPP(const Table &t, FILE *h, FILE *c)
     fprintf(c, "%s %s::%s(Forte::DbConnection &db, %s)\n", 
             retcol.cTypeName().c_str(), t.mClassname.c_str(), mName.c_str(), keyParamStr.c_str());
     fprintf(c, "{\n");
-    fprintf(c, "    FString sql;\n");
+    fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\"SELECT %s FROM %s WHERE %s \",\n",
             retcol.sqlName().c_str(), t.mName.c_str(), formatStr.c_str());
     fprintf(c, "               %s);\n", formatParams.c_str());
-    fprintf(c, "    Forte::DbResult res = DbStore(db, sql);\n");
+    fprintf(c, "    Forte::DbResult res = Forte::DbUtil::DbStore(db, sql);\n");
     fprintf(c, "    Forte::DbResultRow row;\n");
     fprintf(c, "    if (!res.FetchRow(row))\n");
     fprintf(c, "        throw Forte::DbException(\"Unable to lookup '%s'\");\n", mName.c_str());
@@ -978,11 +978,11 @@ void Table::genSelect(FILE *h, FILE *c) const
     fprintf(h, "    static Forte::DbResult Select(Forte::DbConnection &db, const char *appendSql = NULL);\n");
     fprintf(c, "Forte::DbResult %s::Select(Forte::DbConnection &db, const char *appendSql)\n", mClassname.c_str());
     fprintf(c, "{\n");
-    fprintf(c, "    FString sql;\n");
+    fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\"SELECT %s FROM %s %s \");\n", 
             colstr.c_str(), mName.c_str(), (mAlias.empty())?"":mAlias.c_str());
     fprintf(c, "    if (appendSql) sql.append(appendSql);\n");
-    fprintf(c, "    return DbStore(db, sql);\n");
+    fprintf(c, "    return Forte::DbUtil::DbStore(db, sql);\n");
     fprintf(c, "}\n");
 }
 void Table::genCount(FILE *h, FILE *c) const
@@ -990,11 +990,11 @@ void Table::genCount(FILE *h, FILE *c) const
     fprintf(h, "    static unsigned int Count(Forte::DbConnection &db, const char *appendSql = NULL);\n");
     fprintf(c, "unsigned int %s::Count(Forte::DbConnection &db, const char *appendSql)\n", mClassname.c_str());
     fprintf(c, "{\n");
-    fprintf(c, "    FString sql;\n");
+    fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\"SELECT COUNT(*) FROM %s %s \");\n", 
             mName.c_str(), (mAlias.empty())?"":mAlias.c_str());
     fprintf(c, "    if (appendSql) sql.append(appendSql);\n");
-    fprintf(c, "    Forte::DbResult res = DbStore(db, sql);\n");
+    fprintf(c, "    Forte::DbResult res = Forte::DbUtil::DbStore(db, sql);\n");
     fprintf(c, "    Forte::DbResultRow row;\n");
     fprintf(c, "    if (res.FetchRow(row))\n");
     fprintf(c, "        return GetUInt(row, 0);\n");
@@ -1013,7 +1013,7 @@ void Table::genSelectAlias(FILE *h, FILE *c) const
     fprintf(h, "    static Forte::DbResult SelectAlias(Forte::DbConnection &db, const char *tableAlias = NULL, const char *appendSql = NULL);\n");
     fprintf(c, "Forte::DbResult %s::SelectAlias(Forte::DbConnection &db, const char *tableAlias, const char *appendSql)\n", mClassname.c_str());
     fprintf(c, "{\n");
-    fprintf(c, "    FString colstr;\n");
+    fprintf(c, "    Forte::FString colstr;\n");
     fprintf(c, "    if (!tableAlias)\n");
     fprintf(c, "        colstr = \"%s\";\n", colstr.c_str());
     fprintf(c, "    else\n");
@@ -1021,17 +1021,17 @@ void Table::genSelectAlias(FILE *h, FILE *c) const
     bool first = true;
     foreach(YYSTYPE a, mColumns)
     {
-        fprintf(c, "        colstr.append(FString(FStringFC(),\"%s%%s.%s\",tableAlias));\n",
+        fprintf(c, "        colstr.append(Forte::FString(Forte::FStringFC(),\"%s%%s.%s\",tableAlias));\n",
                 first?"":", ", TC(TableColumn,a).sqlName().c_str());
         first = false;
     }
     fprintf(c, "    }\n");
-    fprintf(c, "    FString sql;\n");
+    fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\"SELECT %%s FROM %s %%s \", colstr.c_str(), "
             "tableAlias?tableAlias:\"\");\n",
             mName.c_str());
     fprintf(c, "    if (appendSql) sql.append(appendSql);\n");
-    fprintf(c, "    return DbStore(db, sql);\n");
+    fprintf(c, "    return Forte::DbUtil::DbStore(db, sql);\n");
     fprintf(c, "}\n");
 }
 void Table::genSelectPrimaryKey(FILE *h, FILE *c) const
@@ -1072,7 +1072,7 @@ void Table::genSelectPrimaryKey(FILE *h, FILE *c) const
     fprintf(c, "Forte::DbResult %s::SelectPrimaryKey(Forte::DbConnection &db, %s)\n", 
             mClassname.c_str(), keyParamStr.c_str());
     fprintf(c, "{\n");
-    fprintf(c, "    FString sql;\n");
+    fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\" WHERE %s \",\n",formatStr.c_str());
     fprintf(c, "               %s);\n", formatParams.c_str());
     fprintf(c, "    return Select(db, sql);\n");
@@ -1149,7 +1149,7 @@ void Table::genReplace(FILE *h, FILE *c, bool key, bool set) const
     else if (mModifiedColumn)
         fprintf(c, "    %s = time(0);\n",
                 TC(TableColumn,mModifiedColumn).cName().c_str());
-    fprintf(c, "    FString sql;\n");
+    fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\"REPLACE INTO %s \"\n", mName.c_str());
 
     if (key && set)
@@ -1188,7 +1188,7 @@ void Table::genReplace(FILE *h, FILE *c, bool key, bool set) const
 //         fprintf(c, "               \"SET %%s\",\n");
 //         fprintf(c, "               setSql(db).c_str());\n");
 //     }
-    fprintf(c, "    DbExecute(db, sql);\n");
+    fprintf(c, "    Forte::DbUtil::DbExecute(db, sql);\n");
     fprintf(c, "    SetOrig();\n");
     fprintf(c, "}\n");
     fprintf(c, "\n");
@@ -1208,7 +1208,7 @@ void Table::genInsert(FILE *h, FILE *c, bool keynoauto, bool set) const
     else if (mModifiedColumn)
         fprintf(c, "    %s = time(0);\n",
                 TC(TableColumn,mModifiedColumn).cName().c_str());
-    fprintf(c, "    FString sql;\n");
+    fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\"INSERT INTO %s \"\n", mName.c_str());
     if (keynoauto && set)
     {
@@ -1251,7 +1251,7 @@ void Table::genInsert(FILE *h, FILE *c, bool keynoauto, bool set) const
 //                          mName.c_str());
 //////////////////////////////
 
-    fprintf(c, "    DbExecute(db, sql);\n");
+    fprintf(c, "    Forte::DbUtil::DbExecute(db, sql);\n");
     if (mAutoIncrementColumn)
         fprintf(c, "    %s = db.InsertID();\n", 
                 TC(TableColumn,mAutoIncrementColumn).cName().c_str());
@@ -1269,12 +1269,12 @@ void Table::genUpdate(FILE *h, FILE *c, bool set, bool where) const
     if (mModifiedColumn)
         fprintf(c, "    %s = time(0);\n",
                 TC(TableColumn,mModifiedColumn).cName().c_str());
-    fprintf(c, "    FString sql;\n");
+    fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\"UPDATE %s \"\n", mName.c_str());
     fprintf(c, "               \"SET %%s \"\n");
     fprintf(c, "               \"WHERE %%s \",\n");
     fprintf(c, "               setSql(db).c_str(), whereSql(db).c_str());\n");
-    fprintf(c, "    DbExecute(db, sql);\n");
+    fprintf(c, "    Forte::DbUtil::DbExecute(db, sql);\n");
     fprintf(c, "    SetOrig();\n");
     fprintf(c, "}\n");
     fprintf(c, "\n");
@@ -1315,12 +1315,12 @@ void Table::genUpdateKey(FILE *h, FILE *c, bool key, bool set, bool where) const
     if (mModifiedColumn)
         fprintf(c, "    %s = time(0);\n",
                 TC(TableColumn,mModifiedColumn).cName().c_str());
-    fprintf(c, "    FString sql;\n");
+    fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\"UPDATE %s \"\n", mName.c_str());
     fprintf(c, "               \"SET %%s, %%s \"\n");
     fprintf(c, "               \"WHERE %%s \",\n");
     fprintf(c, "               keySql(db).c_str(), setSql(db).c_str(), origWhereSql(db).c_str());\n");
-    fprintf(c, "    DbExecute(db, sql);\n");
+    fprintf(c, "    Forte::DbUtil::DbExecute(db, sql);\n");
 
     // update foreign keys
     foreach (YYSTYPE k, mForeignKeys)
@@ -1378,7 +1378,7 @@ void Table::genRefresh(FILE *h, FILE *c, bool where) const
     fprintf(h, "    void Refresh(Forte::DbConnection &db);\n");
     fprintf(c, "void %s::Refresh(Forte::DbConnection &db)\n", mClassname.c_str());
     fprintf(c, "{\n");
-    fprintf(c, "    FString sql;\n");
+    fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\" WHERE %s \",\n",formatStr.c_str());
     fprintf(c, "               %s);\n", formatParams.c_str());
     fprintf(c, "    Forte::DbResult res = Select(db, sql);\n");
@@ -1449,11 +1449,11 @@ void Table::genFKRestrict(FILE *h, FILE *c) const
         fprintf(c, "void %s::restrictFK%s%d(Forte::DbConnection &db, %s)\n", mClassname.c_str(),
                 fk.mName.c_str(), fk.mID, fk.localParamStr().c_str());
         fprintf(c, "{\n");
-        fprintf(c, "    FString sql;\n");
+        fprintf(c, "    Forte::FString sql;\n");
         fprintf(c, "    sql.Format(\"SELECT 1 FROM %s WHERE %s LIMIT 1 \",\n", 
                 mName.c_str(), formatStr.c_str());
         fprintf(c, "               %s);\n", formatParams.c_str());
-        fprintf(c, "    Forte::DbResult res = DbStore(db, sql);\n");
+        fprintf(c, "    Forte::DbResult res = Forte::DbUtil::DbStore(db, sql);\n");
         fprintf(c, "    if (res.GetNumRows() != 0)\n");
         fprintf(c, "        throw Forte::DbException(\"Foreign key restriction\");\n");
         fprintf(c, "}\n");
@@ -1499,11 +1499,11 @@ void Table::genFKUpdate(FILE *h, FILE *c) const
         fprintf(c, "void %s::updateFK%s%d(Forte::DbConnection &db, %s, %s)\n", mClassname.c_str(),
                 fk.mName.c_str(), fk.mID, fk.localParamStr().c_str(),fk.localParamStr("orig_").c_str());
         fprintf(c, "{\n");
-        fprintf(c, "    FString sql;\n");
+        fprintf(c, "    Forte::FString sql;\n");
         fprintf(c, "    sql.Format(\"UPDATE %s SET %s WHERE %s \",\n", 
                 mName.c_str(), setStr.c_str(), formatStr.c_str());
         fprintf(c, "               %s, %s);\n", setParams.c_str(), formatParams.c_str());
-        fprintf(c, "    DbExecute(db, sql);\n");
+        fprintf(c, "    Forte::DbUtil::DbExecute(db, sql);\n");
         fprintf(c, "}\n");
     }
 
@@ -1589,11 +1589,11 @@ void Table::genFKDelete(FILE *h, FILE *c) const
         fprintf(c, "void %s::deleteFK%s%d(Forte::DbConnection &db, %s)\n", mClassname.c_str(),
                 fk.mName.c_str(), fk.mID, fk.localParamStr().c_str());
         fprintf(c, "{\n");
-        fprintf(c, "    FString sql;\n");
+        fprintf(c, "    Forte::FString sql;\n");
         fprintf(c, "    sql.Format(\"DELETE FROM %s WHERE %s \",\n", 
                 mName.c_str(), formatStr.c_str());
         fprintf(c, "               %s);\n", formatParams.c_str());
-        fprintf(c, "    DbExecute(db, sql);\n");
+        fprintf(c, "    Forte::DbUtil::DbExecute(db, sql);\n");
         fprintf(c, "}\n");
     }
 
@@ -1658,11 +1658,11 @@ void Table::genDeleteMe(FILE *h, FILE *c, bool where) const
     callFKRestrict(c, false);
     fprintf(c, "    }\n");
     
-    fprintf(c, "    FString sql;\n");
+    fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\"DELETE FROM %s \"\n", mName.c_str());
     fprintf(c, "               \"WHERE %%s \",\n");
     fprintf(c, "               whereSql(db).c_str());\n");
-    fprintf(c, "    DbExecute(db, sql);\n");
+    fprintf(c, "    Forte::DbUtil::DbExecute(db, sql);\n");
 
     // do foreign key deletes
     fprintf(c, "    if (cascade)\n    {\n");
@@ -1711,10 +1711,10 @@ bool Table::genSetSql(FILE *h, FILE *c) const
     if (empty || (mOptions & OPT_NOSETSQL)) return false;
     formatStr.Implode(", ", formatStrV);
     formatParams.Implode(", ", formatParamV);
-    fprintf(h, "    FString setSql(Forte::DbConnection &db);\n");
-    fprintf(c, "FString %s::setSql(Forte::DbConnection &db)\n", mClassname.c_str());
+    fprintf(h, "    Forte::FString setSql(Forte::DbConnection &db);\n");
+    fprintf(c, "Forte::FString %s::setSql(Forte::DbConnection &db)\n", mClassname.c_str());
     fprintf(c, "{\n");
-    fprintf(c, "    FString sql;\n");
+    fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\" %s \",\n", formatStr.c_str());
     fprintf(c, "               %s);\n", formatParams.c_str());
     fprintf(c, "    return sql;\n");
@@ -1742,10 +1742,10 @@ bool Table::genKeySql(FILE *h, FILE *c) const
     formatParams.Implode(", ", formatParamV);
 
     if (empty || (mOptions & OPT_NOKEYSQL)) return false;
-    fprintf(h, "    FString keySql(Forte::DbConnection &db);\n");
-    fprintf(c, "FString %s::keySql(Forte::DbConnection &db)\n", mClassname.c_str());
+    fprintf(h, "    Forte::FString keySql(Forte::DbConnection &db);\n");
+    fprintf(c, "Forte::FString %s::keySql(Forte::DbConnection &db)\n", mClassname.c_str());
     fprintf(c, "{\n");
-    fprintf(c, "    FString sql;\n");
+    fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\" %s \",\n", formatStr.c_str());
     fprintf(c, "               %s);\n", formatParams.c_str());
     fprintf(c, "    return sql;\n");
@@ -1776,10 +1776,10 @@ bool Table::genKeyNoAutoSql(FILE *h, FILE *c) const
     formatStr.Implode(", ", formatStrV);
     formatParams.Implode(", ", formatParamV);
 
-    fprintf(h, "    FString keyNoAutoSql(Forte::DbConnection &db);\n");
-    fprintf(c, "FString %s::keyNoAutoSql(Forte::DbConnection &db)\n", mClassname.c_str());
+    fprintf(h, "    Forte::FString keyNoAutoSql(Forte::DbConnection &db);\n");
+    fprintf(c, "Forte::FString %s::keyNoAutoSql(Forte::DbConnection &db)\n", mClassname.c_str());
     fprintf(c, "{\n");
-    fprintf(c, "    FString sql;\n");
+    fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\" %s \",\n", formatStr.c_str());
     fprintf(c, "               %s);\n", formatParams.c_str());
     fprintf(c, "    return sql;\n");
@@ -1806,8 +1806,8 @@ bool Table::genSetColumnSql(FILE *h, FILE *c) const
     columnStr.Implode(", ", columnStrV);
     if (empty || (mOptions & OPT_NOSETSQL)) return false;
 
-    fprintf(h, "    FString setColumnSql(Forte::DbConnection &db);\n");
-    fprintf(c, "FString %s::setColumnSql(Forte::DbConnection &db)\n", mClassname.c_str());
+    fprintf(h, "    Forte::FString setColumnSql(Forte::DbConnection &db);\n");
+    fprintf(c, "Forte::FString %s::setColumnSql(Forte::DbConnection &db)\n", mClassname.c_str());
     fprintf(c, "{\n");
     fprintf(c, "    return \"%s\";\n", columnStr.c_str());
     fprintf(c, "}\n\n");
@@ -1837,10 +1837,10 @@ bool Table::genSetValueSql(FILE *h, FILE *c) const
     paramStr.Implode(", ", paramStrV);
     if (empty || (mOptions & OPT_NOSETSQL)) return false;
 
-    fprintf(h, "    FString setValueSql(Forte::DbConnection &db);\n");
-    fprintf(c, "FString %s::setValueSql(Forte::DbConnection &db)\n", mClassname.c_str());
+    fprintf(h, "    Forte::FString setValueSql(Forte::DbConnection &db);\n");
+    fprintf(c, "Forte::FString %s::setValueSql(Forte::DbConnection &db)\n", mClassname.c_str());
     fprintf(c, "{\n");
-    fprintf(c, "    FString sql;\n");
+    fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\" %s \",\n", valueStr.c_str());
     fprintf(c, "               %s);\n", paramStr.c_str());
     fprintf(c, "    return sql;\n");
@@ -1866,8 +1866,8 @@ bool Table::genKeyColumnSql(FILE *h, FILE *c) const
     columnStr.Implode(", ", columnStrV);
 
     if (empty || (mOptions & OPT_NOKEYSQL)) return false;
-    fprintf(h, "    FString keyColumnSql(Forte::DbConnection &db);\n");
-    fprintf(c, "FString %s::keyColumnSql(Forte::DbConnection &db)\n", mClassname.c_str());
+    fprintf(h, "    Forte::FString keyColumnSql(Forte::DbConnection &db);\n");
+    fprintf(c, "Forte::FString %s::keyColumnSql(Forte::DbConnection &db)\n", mClassname.c_str());
     fprintf(c, "{\n");
     fprintf(c, "    return \"%s\";\n", columnStr.c_str());
     fprintf(c, "}\n\n");
@@ -1897,10 +1897,10 @@ bool Table::genKeyValueSql(FILE *h, FILE *c) const
     paramStr.Implode(", ", paramStrV);
 
     if (empty || (mOptions & OPT_NOKEYSQL)) return false;
-    fprintf(h, "    FString keyValueSql(Forte::DbConnection &db);\n");
-    fprintf(c, "FString %s::keyValueSql(Forte::DbConnection &db)\n", mClassname.c_str());
+    fprintf(h, "    Forte::FString keyValueSql(Forte::DbConnection &db);\n");
+    fprintf(c, "Forte::FString %s::keyValueSql(Forte::DbConnection &db)\n", mClassname.c_str());
     fprintf(c, "{\n");
-    fprintf(c, "    FString sql;\n");
+    fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\" %s \",\n", valueStr.c_str());
     fprintf(c, "               %s);\n", paramStr.c_str());
     fprintf(c, "    return sql;\n");
@@ -1929,8 +1929,8 @@ bool Table::genKeyNoAutoColumnSql(FILE *h, FILE *c) const
     columnStr.Implode(", ", columnStrV);
 
     if (empty || (mOptions & OPT_NOKEYSQL)) return false;
-    fprintf(h, "    FString keyNoAutoColumnSql(Forte::DbConnection &db);\n");
-    fprintf(c, "FString %s::keyNoAutoColumnSql(Forte::DbConnection &db)\n", mClassname.c_str());
+    fprintf(h, "    Forte::FString keyNoAutoColumnSql(Forte::DbConnection &db);\n");
+    fprintf(c, "Forte::FString %s::keyNoAutoColumnSql(Forte::DbConnection &db)\n", mClassname.c_str());
     fprintf(c, "{\n");
     fprintf(c, "    return \"%s\";\n", columnStr.c_str());
     fprintf(c, "}\n\n");
@@ -1962,10 +1962,10 @@ bool Table::genKeyNoAutoValueSql(FILE *h, FILE *c) const
     paramStr.Implode(", ", paramStrV);
 
     if (empty || (mOptions & OPT_NOKEYSQL)) return false;
-    fprintf(h, "    FString keyNoAutoValueSql(Forte::DbConnection &db);\n");
-    fprintf(c, "FString %s::keyNoAutoValueSql(Forte::DbConnection &db)\n", mClassname.c_str());
+    fprintf(h, "    Forte::FString keyNoAutoValueSql(Forte::DbConnection &db);\n");
+    fprintf(c, "Forte::FString %s::keyNoAutoValueSql(Forte::DbConnection &db)\n", mClassname.c_str());
     fprintf(c, "{\n");
-    fprintf(c, "    FString sql;\n");
+    fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\" %s \",\n", valueStr.c_str());
     fprintf(c, "               %s);\n", paramStr.c_str());
     fprintf(c, "    return sql;\n");
@@ -1998,19 +1998,19 @@ bool Table::genWhereSql(FILE *h, FILE *c) const
     formatParams.Implode(", ", formatParamV);
     formatParamsOrig.Implode(", ", formatParamOrigV);
 
-    fprintf(h, "    FString whereSql(Forte::DbConnection &db);\n");
-    fprintf(c, "FString %s::whereSql(Forte::DbConnection &db)\n", mClassname.c_str());
+    fprintf(h, "    Forte::FString whereSql(Forte::DbConnection &db);\n");
+    fprintf(c, "Forte::FString %s::whereSql(Forte::DbConnection &db)\n", mClassname.c_str());
     fprintf(c, "{\n");
-    fprintf(c, "    FString sql;\n");
+    fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\" %s \",\n", formatStr.c_str());
     fprintf(c, "               %s);\n", formatParams.c_str());
     fprintf(c, "    return sql;\n");
     fprintf(c, "}\n\n");
 
-    fprintf(h, "    FString origWhereSql(Forte::DbConnection &db);\n");
-    fprintf(c, "FString %s::origWhereSql(Forte::DbConnection &db)\n", mClassname.c_str());
+    fprintf(h, "    Forte::FString origWhereSql(Forte::DbConnection &db);\n");
+    fprintf(c, "Forte::FString %s::origWhereSql(Forte::DbConnection &db)\n", mClassname.c_str());
     fprintf(c, "{\n");
-    fprintf(c, "    FString sql;\n");
+    fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\" %s \",\n", formatStr.c_str());
     fprintf(c, "               %s);\n", formatParamsOrig.c_str());
     fprintf(c, "    return sql;\n");
@@ -2039,7 +2039,7 @@ FString TableColumn::cTypeName(void) const
                mType->GetType() == typeid(VarCharType) ||
                mType->GetType() == typeid(LongTextType) ||
                mType->GetType() == typeid(TextType)) {
-        var += "FString";
+        var += "Forte::FString";
     } else if (mType->GetType() == typeid(BooleanType)) {
         var += "bool";
     } else if (mType->GetType() == typeid(IntType) ||
@@ -2168,7 +2168,7 @@ FString TableColumn::cFormatParam(const FString &name) const
         mType->GetType() == typeid(VarCharType) ||
         mType->GetType() == typeid(LongTextType) ||
         mType->GetType() == typeid(TextType)) {
-        param.Format("DbEscape(db, %s).c_str()", name.c_str());
+        param.Format("Forte::DbUtil::DbEscape(db, %s).c_str()", name.c_str());
     } else if (mType->GetType() == typeid(BooleanType) ||
                mType->GetType() == typeid(BigIntType) ||
                mType->GetType() == typeid(IntType) ||

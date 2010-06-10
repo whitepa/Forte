@@ -2,6 +2,8 @@
 #include <stdarg.h>
 #include <sys/time.h>
 
+using namespace Forte;
+
 // XXX auto_ptr was deleting itself too early, segfault on shutdown
 
 LogManager *LogManager::sLogManager = NULL;

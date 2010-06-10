@@ -5,6 +5,8 @@
 #include <sys/stat.h>
 #include "Forte.h"
 
+using namespace Forte;
+
 void DaemonUtil::Daemonize(void)
 {
     if (!ForkDaemon())

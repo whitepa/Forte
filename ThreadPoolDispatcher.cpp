@@ -4,6 +4,7 @@
 #include "Clock.h"
 #include <boost/scoped_ptr.hpp>
 using namespace boost;
+using namespace Forte;
 
 ////////////////////////////// Thread pool dispatcher
 

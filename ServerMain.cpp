@@ -2,6 +2,8 @@
 #include <csignal>
 #include <boost/make_shared.hpp>
 
+using namespace Forte;
+
 Mutex       ServerMain::sSingletonMutex;
 ServerMain* ServerMain::sSingletonPtr;
 

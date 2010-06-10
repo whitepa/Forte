@@ -4,6 +4,8 @@
 #include "openssl/crypto.h"
 #include "openssl/evp.h"
 
+using namespace Forte;
+
 static Mutex * sOpenSSLMutexArray;
 struct CRYPTO_dynlock_value { Mutex mutex; };
 

@@ -3,6 +3,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+using namespace Forte;
+
 Exception::Exception()
 {
     FTrace::GetStack(mStack);

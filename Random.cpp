@@ -1,6 +1,8 @@
 #include "Forte.h"
 #include "Random.h"
 
+using namespace Forte;
+
 FString Random::GetSecureRandomData(unsigned int length)
 {
     ifstream device;

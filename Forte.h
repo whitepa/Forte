@@ -15,10 +15,10 @@
 #include <ext/hash_map>
 #include <stdexcept>
 
-using namespace std;
-using namespace __gnu_cxx;
+//using namespace std;
+//using namespace __gnu_cxx;
 namespace Forte {};
-using namespace Forte;
+//using namespace Forte;
 
 #include "Object.h"
 

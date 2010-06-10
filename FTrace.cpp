@@ -8,6 +8,8 @@
 
 #include <dlfcn.h>
 
+using namespace Forte;
+
 ThreadKey FTrace::sTraceKey(FTrace::Cleanup);
 unsigned int FTrace::sInitialized = 0;
 

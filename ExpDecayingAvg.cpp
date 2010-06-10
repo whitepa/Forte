@@ -1,5 +1,7 @@
 #include "Forte.h"
 
+using namespace Forte;
+
 Mutex                          ExpDecayingAvg::sThrMutex;
 ExpDecayingAvgThread*          ExpDecayingAvg::sThread = NULL;
 std::set<ExpDecayingAvg*>      ExpDecayingAvg::sObjs;

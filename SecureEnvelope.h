@@ -18,35 +18,37 @@
 // and would facilitate a brute force attack on the encrypted version if they were also contained in
 // the ciphertext.
 
-EXCEPTION_SUBCLASS(Exception, ForteSecureEnvelopeEncoderException);
+namespace Forte
+{
+    EXCEPTION_CLASS(ForteSecureEnvelopeEncoderException);
 
-class SecureEnvelopeEncoder {
-public:
-    SecureEnvelopeEncoder(const KeyBuffer &publicKey) : mPublicKey(publicKey, NULL) {};
-    virtual ~SecureEnvelopeEncoder() {};
+    class SecureEnvelopeEncoder {
+    public:
+        SecureEnvelopeEncoder(const KeyBuffer &publicKey) : mPublicKey(publicKey, NULL) {};
+        virtual ~SecureEnvelopeEncoder() {};
 
-    // Encode an account number as described above.  numClear is the number of characters
-    // to provide in cleartext in the obscured version of the account number.
-    FString & Encode(const FString &accountNumber, unsigned int numClear, FString &out);
-protected:
-    PublicKey mPublicKey;
+        // Encode an account number as described above.  numClear is the number of characters
+        // to provide in cleartext in the obscured version of the account number.
+        FString & Encode(const FString &accountNumber, unsigned int numClear, FString &out);
+    protected:
+        PublicKey mPublicKey;
+    };
+
+    class SecureEnvelopeDecoder {
+    public:
+        SecureEnvelopeDecoder(const KeyBuffer &privateKey, const char *passphrase) :
+            mPrivateKey(privateKey, passphrase) {};
+        virtual ~SecureEnvelopeDecoder() {};
+
+        // Decode an account number.
+        FString & Decode(const FString &encoded, FString &out);
+
+        // Get the obscured version of the account number (for display)
+        static FString & Obscured(const FString &encoded, FString &out);
+        static bool IsEncoded(const std::string &data);
+    protected:
+        PrivateKey mPrivateKey;
+    };
 };
-
-class SecureEnvelopeDecoder {
-public:
-    SecureEnvelopeDecoder(const KeyBuffer &privateKey, const char *passphrase) :
-        mPrivateKey(privateKey, passphrase) {};
-    virtual ~SecureEnvelopeDecoder() {};
-
-    // Decode an account number.
-    FString & Decode(const FString &encoded, FString &out);
-
-    // Get the obscured version of the account number (for display)
-    static FString & Obscured(const FString &encoded, FString &out);
-    static bool IsEncoded(const std::string &data);
-protected:
-    PrivateKey mPrivateKey;
-};
-
 #endif
 #endif

@@ -6,6 +6,8 @@
 #include "DbConnection.h"
 #include "DbException.h"
 
+using namespace Forte;
+
 ofstream DbConnection::sDebugOutputFile;
 Mutex DbConnection::sDebugOutputMutex;
 bool DbConnection::sDebugSql = false;

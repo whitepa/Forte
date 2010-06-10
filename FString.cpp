@@ -2,6 +2,8 @@
 #include <cstdio>
 #include <cstdarg>
 
+using namespace Forte;
+
 FString::FString()
 {
 }

@@ -4,6 +4,8 @@
 #include "Foreach.h"
 #include "FTrace.h"
 
+using namespace Forte;
+
 const int Forte::EventPredicate::AND   = 0;
 const int Forte::EventPredicate::OR    = 1;
 const int Forte::EventPredicate::NOT   = 2;

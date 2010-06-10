@@ -1,5 +1,7 @@
 #include "Forte.h"
 
+using namespace Forte;
+
 ServiceConfig::ServiceConfig() {
     mConfig.clear();
 }

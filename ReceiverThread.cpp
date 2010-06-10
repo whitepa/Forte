@@ -6,6 +6,8 @@
 #include <boost/make_shared.hpp>
 //#include <netinet/ip.h>
 
+using namespace Forte;
+
 // this thread just loops and accepts connections
 
 void * Forte::ReceiverThread::run(void)

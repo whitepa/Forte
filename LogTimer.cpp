@@ -1,6 +1,7 @@
 // LogTimer.cpp
 #include "Forte.h"
 
+using namespace Forte;
 
 LogTimer::LogTimer(int level, const FString& log_str) :
     mLevel(level), mLogStr(log_str)

@@ -6,6 +6,8 @@
 #include <cstring>
 #include <sys/time.h>
 
+using namespace Forte;
+
 // constants
 const unsigned MAX_RESOLVE = 1000;
 

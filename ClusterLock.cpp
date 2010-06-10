@@ -5,6 +5,8 @@
 #include <time.h>
 #include <unistd.h>
 
+using namespace Forte;
+
 // constants
 const char *ClusterLock::LOCK_PATH = "/var/lock";
 const unsigned ClusterLock::DEFAULT_TIMEOUT = 120;

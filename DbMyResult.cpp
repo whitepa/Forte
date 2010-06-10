@@ -4,6 +4,8 @@
 // DbMyResult.cpp
 #include "DbMyResult.h"
 
+using namespace Forte;
+
 // DbMyResult class
 DbMyResult::DbMyResult(MYSQL_RES *result)
 :

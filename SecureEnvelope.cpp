@@ -1,6 +1,8 @@
 #ifndef FORTE_NO_OPENSSL
 #include "SecureEnvelope.h"
 
+using namespace Forte;
+
 FString & SecureEnvelopeEncoder::Encode(const FString &accountNumber, 
                                         unsigned int numClear, 
                                         FString &out)

@@ -1,4 +1,7 @@
 #include "Forte.h"
+
+using namespace Forte;
+
 #define EVQ_MAX_DEPTH 65536
 
 EventQueue::EventQueue() :

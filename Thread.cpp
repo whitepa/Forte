@@ -1,5 +1,7 @@
 #include "Forte.h"
 
+using namespace Forte;
+
 // a static pthread_key to store pointers to thread objects
 // (for use by static methods)
 pthread_key_t Thread::sThreadKey;

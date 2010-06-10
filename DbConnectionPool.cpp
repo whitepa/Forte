@@ -4,6 +4,8 @@
 #include "DbConnectionPool.h"
 #include "DbConnection.h"
 
+using namespace Forte;
+
 DbConnectionPool::DbConnectionPool(const char *dbType,
                                    const char *dbName,
                                    const char *dbUser,

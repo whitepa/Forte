@@ -5,6 +5,8 @@
 #include "Forte.h"
 #include "DbRow.h"
 
+using namespace Forte;
+
 void DbRow::CheckRange(const DbResultRow& row, int index)
 {
     if (index < 0 || index >= (int)row.size())

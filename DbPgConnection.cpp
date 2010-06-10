@@ -8,6 +8,8 @@
 #include "DbException.h"
 #include "AutoMutex.h"
 
+using namespace Forte;
+
 DbPgConnection::DbPgConnection()
 :
     DbConnection()

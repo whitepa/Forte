@@ -2,6 +2,8 @@
 #ifndef FORTE_NO_CURL
 #include "Forte.h"
 
+using namespace Forte;
+
 #include <resolv.h>
 
 // macros

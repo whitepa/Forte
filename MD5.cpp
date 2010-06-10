@@ -25,6 +25,8 @@
 
 #include "FMD5.h"
 
+using namespace Forte;
+
 /* Constants for MD5Transform routine.
  */
 

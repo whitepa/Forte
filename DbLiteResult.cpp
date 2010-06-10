@@ -6,6 +6,8 @@
 #include "DbLiteResult.h"
 #include "DbLiteConnection.h"
 
+using namespace Forte;
+
 // DbLiteResult class
 int DbLiteResult::Load(sqlite3_stmt *stmt)
 {

@@ -1,6 +1,8 @@
 #include "Forte.h"
 #include "GUID.h"
 
+using namespace Forte;
+
 FString Forte::GUID::GenerateGUID(bool pathSafe)
 {
     // generate a GUID

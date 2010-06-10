@@ -1,5 +1,7 @@
 #include "Forte.h"
 
+using namespace Forte;
+
 // this system uses a 1 second granularity, and waked up every second to look for callbacks to make
 // (this was done out of ease of implementation)
 // therefore: minimum delay is 1 second (might be anywhere from 0 - 1 second)

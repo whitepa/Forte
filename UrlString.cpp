@@ -1,6 +1,7 @@
 #include "UrlString.h"
 #include "Forte.h"
 
+using namespace Forte;
 
 FString UrlString::sUnsafe = "%=\"<>\\^[]`+$,@:;/!#?&'";
 

@@ -3,6 +3,8 @@
 #ifdef FORTE_WITH_DATETIME
 #include "FTime.h"
 
+using namespace Forte;
+
 
 Mutex FTime::sLock;
 tz_database FTime::sTimezoneDb;

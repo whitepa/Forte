@@ -1,6 +1,8 @@
 #include "Forte.h"
 #include "Base64.h"
 
+using namespace Forte;
+
 static char chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 static inline int pos(char c)

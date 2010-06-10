@@ -3,6 +3,8 @@
 // DbResult.cpp
 #include "Forte.h"
 
+using namespace Forte;
+
 DbResult::DbResult()
 {
     mData = NULL;

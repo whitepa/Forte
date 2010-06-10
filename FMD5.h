@@ -32,7 +32,7 @@
 
 #include <cstdlib>
 #include "FString.h"
-using namespace Forte;
+
 /* POINTER defines a generic pointer type */
 typedef unsigned char *POINTER;
 

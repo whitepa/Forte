@@ -1,4 +1,5 @@
 #include "Forte.h"
+using namespace Forte;
 
 Mutex VersionManager::sLock;
 std::vector<std::string> VersionManager::sVersionStrings;

@@ -6,6 +6,8 @@
 #include "DbMyResult.h"
 #include "DbException.h"
 
+using namespace Forte;
+
 DbMyConnection::DbMyConnection()
 :
     DbConnection()

@@ -4,6 +4,8 @@
 // DbPgResult.cpp
 #include "DbPgResult.h"
 
+using namespace Forte;
+
 // DbPgResult class
 DbPgResult::DbPgResult(PGresult *result)
 :

@@ -1,5 +1,7 @@
 #include "Forte.h"
 
+using namespace Forte;
+
 Forte::Dispatcher::Dispatcher(boost::shared_ptr<RequestHandler> reqHandler, 
                               int maxQueueDepth, const char *name) :
     mDispatcherName(name),

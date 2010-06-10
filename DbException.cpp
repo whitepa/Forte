@@ -1,6 +1,7 @@
 #ifndef FORTE_NO_DB
 
 #include "Forte.h"
+using namespace Forte;
 
 DbException::DbException(const char* description, unsigned int dbErrno, const char *sql) :
     Exception((description != NULL) ? description : "Database Exception"),

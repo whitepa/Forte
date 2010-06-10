@@ -6,6 +6,8 @@
 #include "DbLiteResult.h"
 #include "DbException.h"
 
+using namespace Forte;
+
 DbLiteConnection::DbLiteConnection()
 :
     DbConnection()

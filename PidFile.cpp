@@ -1,5 +1,7 @@
 #include "Forte.h"
 
+using namespace Forte;
+
 PidFile::PidFile(const char *path) :
     mPath(path)
 {

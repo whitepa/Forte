@@ -8,6 +8,77 @@
 #include <vector>
 
 
+#define EXCEPTION_CLASS(NAME)                                           \
+    class NAME : public Forte::Exception                                \
+    {                                                                   \
+    public:                                                             \
+        inline NAME() {}                                                \
+        inline NAME(const char *description) :                          \
+            Exception(description) {}                                   \
+        inline NAME(const Forte::FStringFC &fc, const char *format, ...) \
+            __attribute__((format(printf,3,4)))                         \
+        {                                                               \
+            va_list ap;                                                 \
+            int size;                                                   \
+            va_start(ap, format);                                       \
+            size = vsnprintf(NULL, 0, format, ap);                      \
+            va_end(ap);                                                 \
+                                                                        \
+            va_start(ap, format);                                       \
+            mDescription.VFormat(format, size, ap);                     \
+            va_end(ap);                                                 \
+        }                                                               \
+    };
+
+#define EXCEPTION_SUBCLASS(PARENT, NAME)                                \
+    class NAME : public PARENT                                          \
+    {                                                                   \
+    public:                                                             \
+        inline NAME() {}                                                \
+        inline NAME(const char *description) : PARENT(description) {}   \
+        inline NAME(const Forte::FStringFC &fc, const char *format, ...) \
+            __attribute__((format(printf,3,4)))                         \
+        {                                                               \
+            va_list ap;                                                 \
+            int size;                                                   \
+            va_start(ap, format);                                       \
+            size = vsnprintf(NULL, 0, format, ap);                      \
+            va_end(ap);                                                 \
+                                                                        \
+            va_start(ap, format);                                       \
+            mDescription.VFormat(format, size, ap);                     \
+            va_end(ap);                                                 \
+        }                                                               \
+    };
+
+#define EXCEPTION_SUBCLASS2(PARENT, NAME, DESC)                         \
+    class NAME : public PARENT                                          \
+    {                                                                   \
+    public:                                                             \
+        inline NAME() : PARENT(DESC) {}                                 \
+        inline NAME(const char *description) :                          \
+            PARENT(Forte::FStringFC(), "%s: %s", DESC, description) {}  \
+        inline NAME(const Forte::FStringFC &fc,                         \
+                    const char *format, ...)                            \
+            __attribute__((format(printf,3,4))) :                       \
+            PARENT(DESC)                                                \
+        {                                                               \
+            va_list ap;                                                 \
+            int size;                                                   \
+            va_start(ap, format);                                       \
+            size = vsnprintf(NULL, 0, format, ap);                      \
+            va_end(ap);                                                 \
+                                                                        \
+            Forte::FString tmp;                                         \
+            va_start(ap, format);                                       \
+            tmp.VFormat(format, size, ap);                              \
+            va_end(ap);                                                 \
+                                                                        \
+            mDescription += ": " + tmp;                                 \
+        }                                                               \
+    };
+
+
 namespace Forte
 {
     class Exception : public Object
@@ -27,75 +98,6 @@ namespace Forte
         void PrettyTraceLog(int log_level);
     private:
         FString PrettyFrame(const std::vector<FString>& mapping, void *address);
-    };
-
-#define EXCEPTION_CLASS(NAME)                                           \
-    class NAME : public Exception                                       \
-    {                                                                   \
-     public:                                                             \
-        inline NAME() {}                                                \
-        inline NAME(const char *description) :                          \
-            Exception(description) {}                                   \
-        inline NAME(const FStringFC &fc, const char *format, ...)       \
-            __attribute__((format(printf,3,4)))                         \
-            {                                                           \
-                va_list ap;                                             \
-                int size;                                               \
-                va_start(ap, format);                                   \
-                size = vsnprintf(NULL, 0, format, ap);                  \
-                va_end(ap);                                             \
-                                                                        \
-                va_start(ap, format);                                   \
-                mDescription.VFormat(format, size, ap);                 \
-                va_end(ap);                                             \
-            }                                                           \
-    };
-
-#define EXCEPTION_SUBCLASS(PARENT, NAME)                                \
-    class NAME : public PARENT                                          \
-    {                                                                   \
-    public:                                                             \
-        inline NAME() {}                                                \
-        inline NAME(const char *description) : PARENT(description) {}   \
-        inline NAME(const FStringFC &fc, const char *format, ...)       \
-            __attribute__((format(printf,3,4)))                         \
-            {                                                           \
-                va_list ap;                                             \
-                int size;                                               \
-                va_start(ap, format);                                   \
-                size = vsnprintf(NULL, 0, format, ap);                  \
-                va_end(ap);                                             \
-                                                                        \
-                va_start(ap, format);                                   \
-                mDescription.VFormat(format, size, ap);                 \
-                va_end(ap);                                             \
-            }                                                           \
-    };
-
-#define EXCEPTION_SUBCLASS2(PARENT, NAME, DESC)                         \
-    class NAME : public PARENT                                          \
-    {                                                                   \
-    public:                                                             \
-        inline NAME() : PARENT(DESC) {}                                 \
-        inline NAME(const char *description) :                          \
-            PARENT(FStringFC(), "%s: %s", DESC, description) {}         \
-        inline NAME(const FStringFC &fc, const char *format, ...)       \
-            __attribute__((format(printf,3,4))) :                       \
-                PARENT(DESC)                                            \
-            {                                                           \
-                va_list ap;                                             \
-                int size;                                               \
-                va_start(ap, format);                                   \
-                size = vsnprintf(NULL, 0, format, ap);                  \
-                va_end(ap);                                             \
-                                                                        \
-                FString tmp;                                            \
-                va_start(ap, format);                                   \
-                tmp.VFormat(format, size, ap);                          \
-                va_end(ap);                                             \
-                                                                        \
-                mDescription += ": " + tmp;                             \
-            }                                                           \
     };
 
 

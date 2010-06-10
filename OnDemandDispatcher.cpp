@@ -2,6 +2,8 @@
 #include "LogManager.h"
 #include "Foreach.h"
 
+using namespace Forte;
+
 /////////////////////////// On demand dispatcher
 
 Forte::OnDemandDispatcherManager::OnDemandDispatcherManager(OnDemandDispatcher &disp) :

@@ -1,6 +1,8 @@
 // RWLock.cpp
 #include "Forte.h"
 
+using namespace Forte;
+
 // ctor
 RWLock::RWLock()
 :

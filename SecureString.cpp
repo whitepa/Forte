@@ -5,6 +5,8 @@
 #include <openssl/pem.h>
 #include <openssl/err.h>
 
+using namespace Forte;
+
 KeyBuffer::KeyBuffer()
 {
     if ((mBuf = BIO_new(BIO_s_mem()))==NULL)
