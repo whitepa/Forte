@@ -25,6 +25,7 @@ namespace Forte
         FString(const FString& other) { static_cast<std::string&>(*this) = other; }
         FString(const std::string& other) { static_cast<std::string&>(*this) = other; }
         FString(const char *str) { if (str) static_cast<std::string&>(*this) = str; }
+        FString(const char *str, int len) : std::string(str, len) {};
         FString(const char chr) { static_cast<std::string&>(*this) = chr; }
         FString(unsigned int i) { Format("%u", i); }
         FString(int i) { Format("%d", i); }
