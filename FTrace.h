@@ -77,7 +77,7 @@ namespace Forte
 	    char buffer[512];
 	    va_list args;
 	    va_start(args, fmt);
-	    vsprintf(buffer, fmt, args);
+	    vsprintf(buffer, fmt, args); // \TODO fix this buffer overflow
 	    _hlog(mFN.c_str(), mFile, mLine, HLOG_DEBUG, "ENTER %s(%s)", mFN.c_str(), buffer);
 	    va_end(args);
         }
