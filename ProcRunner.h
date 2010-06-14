@@ -33,7 +33,8 @@ namespace Forte
                         const FString& cwd, 
                         FString *output,
                         unsigned int timeout, 
-                        const StrStrMap *env = NULL);
+                        const StrStrMap *env = NULL,
+                        const FString &infile = "/dev/null");
 
         virtual int RunBackground(const FString& command, 
                                    const FString& cwd = "",

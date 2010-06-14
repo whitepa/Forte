@@ -71,7 +71,8 @@ int ProcRunner::Run(const FString& command,
                     const FString& cwd, 
                     FString *output, 
                     unsigned int timeout,
-                    const StrStrMap *env)
+                    const StrStrMap *env,
+                    const FString &infile)
 {
     if (cwd.empty()) hlog(HLOG_DEBUG3, "run(%s)", command.c_str());
     else hlog(HLOG_DEBUG3, "run(%s) [in %s]", command.c_str(), cwd.c_str());
@@ -139,9 +140,9 @@ int ProcRunner::Run(const FString& command,
             if (fd_out != -1) dup2(fd_out, 2);
         }
 
-        // redirect in from /dev/null
+        // redirect input from given file (/dev/null by default)
         int nullfd;
-        while ((nullfd = open("/dev/null", O_RDWR)) < 0 && errno == EINTR);
+        while ((nullfd = open(infile, O_RDWR)) < 0 && errno == EINTR);
         if (nullfd != -1)
             while (dup2(nullfd, 0) == -1 && errno == EINTR);
 
