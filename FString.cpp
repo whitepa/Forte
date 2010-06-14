@@ -405,11 +405,12 @@ void FString::SaveFile(const char *filename, const FString &in)
         throw EFString(FStringFC(),
                                      "unable to open file '%s'", filename);
     size_t status = fwrite(in.c_str(), in.size(), 1, file);
-
+    int err = errno;
     fclose(file);
     if (status < 1)
     {
         throw EFString(FStringFC(), 
-                                     "failed to write to file '%s'", filename);
+                       "failed to write to file '%s': %s", 
+                       filename, strerror(err));
     }
 }
