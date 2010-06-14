@@ -10,8 +10,8 @@
 
 // Macro to allow easy scoping of objects out of the context
 #define CGET(key, type, name)                                   \
-    shared_ptr<type> name_Ptr = mContext.Get<type>(key);        \
-    type &name(*name_Ptr)
+    shared_ptr<type> name ## _Ptr = mContext.Get<type>(key);        \
+    type &name(* name ## _Ptr)
 
 //#define CGET_TMP(key, type) mContext.Get<type>(key)
 
