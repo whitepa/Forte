@@ -3,6 +3,9 @@
 
 #include "Types.h"
 #include "AutoMutex.h"
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/info_parser.hpp>
+
 namespace Forte
 {
     class ServiceConfig : public Object {
@@ -21,7 +24,7 @@ namespace Forte
     protected:
 
         Mutex mMutex;
-        StringHashMap mConfig;
+        boost::property_tree::ptree mPTree;
     };
 };
 #endif
