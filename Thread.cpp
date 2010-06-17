@@ -105,7 +105,7 @@ void Thread::interruptibleSleep(const struct timespec &interval, bool throwOnShu
     struct timespec end = now + interval; // realtime end of sleep
 
     AutoUnlockMutex lock(mNotifyLock);
-    while (!mThreadShutdown)
+    while (!mThreadShutdown && !mNotified)
     {
         int status = mNotifyCond.TimedWait(end);
         if (status == 0)
@@ -136,6 +136,7 @@ void Thread::interruptibleSleep(const struct timespec &interval, bool throwOnShu
         }
         // mutex is re-locked here
     }
+    mNotified = false;
 }
 
 Thread::~Thread()

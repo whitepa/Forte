@@ -40,10 +40,15 @@ namespace Forte
 
         // Tell a thread to shut itself down.
         inline void Shutdown(void) { 
-            mThreadShutdown = true; 
-            AutoUnlockMutex lock(mNotifyLock);
-            mNotifyCond.Signal();
+            mThreadShutdown = true;
+            Notify();
          };
+
+        inline void Notify(void) {
+            AutoUnlockMutex lock(mNotifyLock);
+            mNotified = true;
+            mNotifyCond.Signal();
+        }
 
         // Wait for a thread to shutdown.
         void WaitForShutdown(void);

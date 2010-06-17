@@ -25,8 +25,7 @@ namespace Forte
         virtual ~RunLoop();
 
         /** 
-         * AddTimer() is to be called by Timer objects when adding
-         * themselves to the run loop.
+         * AddTimer() allows the addition of Timer objects to the RunLoop.
          * 
          * @param timer
          */
@@ -47,11 +46,12 @@ namespace Forte
             bool operator < (const RunLoopScheduleItem &other) const { 
                 return mAbsolute < other.mAbsolute;
             }
-
+            shared_ptr<Timer>GetTimer(void) const { return mTimer.lock(); }
+            const Timespec & GetAbsolute(void) const { return mAbsolute; }
             weak_ptr<Timer> mTimer;
             Timespec mAbsolute;
         };
-        std::set<RunLoopScheduleItem> mSchedule;
+        std::multiset<RunLoopScheduleItem> mSchedule;
     };
 };
 

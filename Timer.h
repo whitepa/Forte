@@ -17,6 +17,7 @@ namespace Forte
     EXCEPTION_CLASS(ETimer);
     EXCEPTION_SUBCLASS2(ETimer, ETimerRunLoopInvalid, "Invalid RunLoop");
     EXCEPTION_SUBCLASS2(ETimer, ETimerTargetInvalid, "Invalid Target Object");
+    EXCEPTION_SUBCLASS2(ETimer, ETimerIntervalInvalid, "Invalid Timer Interval");
 
     class RunLoop;
 
@@ -46,6 +47,8 @@ namespace Forte
         virtual ~Timer();
 
         Timespec GetInterval(void) { return mInterval; }
+
+        bool Repeats(void) { return mRepeats; }
         
         void Fire(void);
 
