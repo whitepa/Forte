@@ -8,6 +8,7 @@ ServerMain::ServerMain(int argc, char * const argv[],
                        const char *getoptstr, const char *defaultConfig,
                        bool daemonize) :
     mConfigFile(defaultConfig),
+    mDaemonName(argv[0]),
     mDaemon(daemonize)
 {
     // check command line
@@ -32,24 +33,25 @@ ServerMain::ServerMain(int argc, char * const argv[],
         case 'v':
             logMask = HLOG_ALL;
             break;
-        default:
+            /*default:
             if (!strchr(getoptstr, c))
             {
                 Usage();
                 exit(1);
                 break;
-            }
+            }*/
         }
     }
 
     init(defaultConfig, logMask);
 }
 
-
 ServerMain::ServerMain(const FString& defaultConfig,
                        int logMask,
+                       const FString& daemonName,
                        bool daemonize)
      : mConfigFile(defaultConfig),
+       mDaemonName(daemonName),
        mDaemon(daemonize)
 {
     init(defaultConfig, logMask);
@@ -58,17 +60,33 @@ ServerMain::ServerMain(const FString& defaultConfig,
 void ServerMain::init(const FString& defaultConfig,
                       int logMask)
 {
-    // set the singleton pointer
-    // TODO: get rid of this singleton stuff.
-    {
-        AutoUnlockMutex lock(sSingletonMutex);
-        if (sSingletonPtr != NULL)
-            throw EForteServerMain("only one ServerMain object may exist");
-        else
-            sSingletonPtr = this;
+    mLogManager.SetGlobalLogMask(logMask);
+
+    initHostname();
+
+    // daemonize
+    if (mDaemon && daemon(1,0)) {
+        fprintf(stderr, "can't start as daemon: %s\n", strerror(errno));
+        exit(1);
     }
 
-    mLogManager.SetGlobalLogMask(logMask);
+    // read config file
+    if (!mConfigFile.empty())
+        mServiceConfig.ReadConfigFile(mConfigFile);        
+
+    // pid file
+    mPidFile = mServiceConfig.Get("pidfile");
+    if (!mPidFile.empty()) WritePidFile();
+
+    initLogging();
+    hlog(HLOG_INFO, "%s is starting up", mDaemonName.c_str());
+
+    // setup sigmask
+    PrepareSigmask();
+}
+
+void ServerMain::initHostname()
+{
     // get the hostname
     {
         char hn[128];    
@@ -81,54 +99,44 @@ void ServerMain::init(const FString& defaultConfig,
         mHostname = mHostname.Left(mHostname.find_first_of("."));
         hlog(HLOG_INFO, "determined hostname to be '%s'", mHostname.c_str());
     }
+}
 
-    // daemonize
-    if (mDaemon && daemon(1,0)) {
-        fprintf(stderr, "can't start as daemon: %s\n", strerror(errno));
-        exit(1);
-    }
-    // read config file
-    if (!mConfigFile.empty())
-<<<<<<< HEAD
-        mServiceConfig.ReadConfigFile(mConfigFile);        
-=======
-        mServiceConfig.ReadConfigFile(mConfigFile);
-
-    // pid file
-    mPidFile = mServiceConfig.Get("pidfile");
-    if (!mPidFile.empty()) WritePidFile();
-
+void ServerMain::initLogging()
+{
     // setup logging
     // set logfile path
     mLogFile = mServiceConfig.Get("logfile.path");
 
     // if we are not running as a daemon, use the log level
     // the conf file
-    FString stmp;
+    FString stmp, logMask;
     if ((stmp = mServiceConfig.Get("logfile.level")) != "")
     {
         //TODO: move this logic into the log manager
         if (stmp.MakeUpper() == "ALL")
         {
             mLogManager.SetGlobalLogMask(HLOG_ALL);
-            hlog(HLOG_INFO, "Log mask set to ALL");
         }
         else if (stmp.MakeUpper() == "NODEBUG")
         {
             mLogManager.SetGlobalLogMask(HLOG_NODEBUG);
-            hlog(HLOG_INFO, "Log mask set to NODEBUG");
         }
         else
         {
             mLogManager.SetGlobalLogMask(strtoul(stmp, NULL, 0));
-            hlog(HLOG_INFO, "Log mask set to 0x%08lx", strtoul(stmp, NULL, 0));
         }
     }
->>>>>>> overhaul_phase_2
+
+    if (!mDaemon)
+    {
+        // log to stderr if running interactively, use logmask as set
+        // by CServerMain
+        mLogManager.BeginLogging("//stderr");
+    }
+    if (!mLogFile.empty()) mLogManager.BeginLogging(mLogFile);
+
+    VersionManager::LogVersions();
 }
-
-
-
 
 ServerMain::~ServerMain()
 {

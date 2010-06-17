@@ -19,11 +19,13 @@ namespace Forte
         ServerMain(int argc, char * const argv[], 
                    const char *getoptstr, const char *defaultConfig, 
                    bool daemonize = true);
+
         /**
          * Constructor to server main that takes neede parameters directly
          **/
         ServerMain(const FString& configPath,
                    int logMask = HLOG_NODEBUG,
+                   const FString& daemonName = "",
                    bool daemonize = true);
 
 
@@ -32,12 +34,13 @@ namespace Forte
         virtual void MainLoop();
         virtual void Usage();
         void WritePidFile();
-        void PrepareSigmask();
+        virtual void PrepareSigmask();
     
         void RegisterShutdownCallback(Callback *callback);
-
+        
         FString mHostname;
         FString mConfigFile;
+        FString mDaemonName;
         FString mLogFile;
         FString mPidFile;
         bool mDaemon;
@@ -47,6 +50,10 @@ namespace Forte
         Mutex mCallbackMutex;
         std::set<Callback*> mShutdownCallbacks;
         sigset_t mSigmask;
+
+    protected:
+        void initHostname();
+        void initLogging();
 
     private:
         /**
