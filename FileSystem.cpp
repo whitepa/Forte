@@ -742,11 +742,10 @@ FString FileSystem::ResolveRelativePath(const FString& base,
 }
 
 
-void FileSystem::FileCopy(const FString& from, const FString& to, mode_t mode)
+void FileSystem::FileCopy(ProcRunner &pr, const FString& from, const FString& to, mode_t mode)
 {
     hlog(HLOG_DEBUG4, "FileSystem::file_copy(%s, %s, %4o)",
          from.c_str(), to.c_str(), mode);
-    ProcRunner *proc = ProcRunner::Get();
     FString command, to_dir, stmp;
 
     // make directory
@@ -755,10 +754,10 @@ void FileSystem::FileCopy(const FString& from, const FString& to, mode_t mode)
 
     // copy file
     command.Format("/bin/cp -f %s %s",
-                   proc->ShellEscape(from).c_str(),
-                   proc->ShellEscape(to).c_str());
+                   pr.ShellEscape(from).c_str(),
+                   pr.ShellEscape(to).c_str());
 
-    if (proc->Run(command, "", 0, PROC_RUNNER_NO_TIMEOUT) != 0)
+    if (pr.Run(command, "", 0, PROC_RUNNER_NO_TIMEOUT) != 0)
     {
         stmp.Format("FORTE_COPY_FAIL|||%s|||%s", from.c_str(), to.c_str());
         throw EFileSystemCopy(stmp);

@@ -17,16 +17,9 @@ namespace Forte
     {
     public:
         // ctor/dtor
+        ProcRunner() {}
         virtual ~ProcRunner() { }
-        void DeleteSingleton();
 
-        // singleton
-        static ProcRunner* Get();
-        static ProcRunner& GetRef();
-        static ProcRunner* sSingleton;
-        static Mutex sMutex;
-
-    public:
         // API
         // timeout: -1 = default, 0 = none
         virtual int Run(const FString& command, 
@@ -53,17 +46,9 @@ namespace Forte
                         int timeout = -1);
 
         virtual FString ShellEscape(const FString& arg);
+        
+    protected:
+
     };
-
-    inline FString ShellEscape(const FString& arg)
-    {
-        return ProcRunner::Get()->ShellEscape(arg);
-    }
-
-    inline FString ReadPipe(const FString& command, int *exitval = NULL)
-    {
-        return ProcRunner::Get()->ReadPipe(command, exitval);
-    }
-
 };
 #endif

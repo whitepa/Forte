@@ -1,6 +1,13 @@
-// An exponentially decaying average... 
-// useful for keeping statistics in the form of events per second
-// where the rates are highly variable.
+/**
+ * An exponentially decaying average...  useful for keeping statistics
+ * in the form of events per second where the rates are highly
+ * variable.
+ *
+ * Usage of an ExpDecayingAvg object requires an event loop thread
+ * present in the context.  The event loop thread is required for the
+ * periodic computations required to maintain the decaying average.
+ *
+ */
 
 #ifndef __ExpDecayingAvg_h
 #define __ExpDecayingAvg_h
@@ -11,18 +18,14 @@
 
 namespace Forte
 {
-    class ExpDecayingAvgThread;
-
     class ExpDecayingAvg : public Object {
         friend class ExpDecayingAvgThread;
     public:
         // damping time in ms
-        ExpDecayingAvg(int dampingTime = 10000); // default 10 second damping
+        ExpDecayingAvg(Forte::Context &context,
+                       int dampingTime = 10000); // default 10 second damping
         virtual ~ExpDecayingAvg();
     
-        // shutdown the update thread
-        static void Shutdown(void);
-
         // reset the average to zero
         void Reset(void);
     
@@ -33,27 +36,18 @@ namespace Forte
         // get the current value of the average, do not update.  interval in ms
         inline float Get(int interval) { return mLastAvg * (interval / UPDATE_DELAY); }
 
-     protected:
+    protected:
         // update the average using the current input value
         void update(void);
 
-        static Mutex sThrMutex;
-        static ExpDecayingAvgThread *sThread;
-        static std::set<ExpDecayingAvg*> sObjs;
-    
+        Forte::Context &mContext;
+
         int mDampingTime;
         struct timeval mLastUpdate;
         float mLastAvg;
         float mInput;
         bool mResetInputUponUpdate;
         Mutex mLock;
-    };
-
-    class ExpDecayingAvgThread : public Thread {
-    public:
-        inline ExpDecayingAvgThread() { initialized(); }
-    protected:
-        virtual void * run(void);
     };
 };
 #endif

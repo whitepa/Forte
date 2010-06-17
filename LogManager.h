@@ -144,7 +144,7 @@ namespace Forte
         virtual ~LogManager();
     
         inline static LogManager* GetInstancePtr() { return sLogManager; }
-        inline static LogManager & getInstance() { 
+        inline static LogManager & GetInstance() { 
             if (sLogManager) return *sLogManager; else throw EEmptyReference("no log manager instance");
         }
 

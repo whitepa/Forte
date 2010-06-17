@@ -34,7 +34,7 @@ namespace Forte
 
     public:
         // ctor/dtor
-        Curl();
+        Curl(Context &context);
         ~Curl();
 
         // interface
@@ -62,9 +62,7 @@ namespace Forte
 
         FString mBuf;
      protected:
-        //TODO: pull this from the application context
-        FileSystem mFileSystem;
-
+        Context &mContext;
         CURL *mHandle;
         static bool sDidInit;
         char mErrorBuffer[CURL_ERROR_SIZE + 1];

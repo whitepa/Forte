@@ -15,21 +15,6 @@ void * Forte::ReceiverThread::run(void)
     // init thread name
     mThreadName.Format("%s-recv-%u", mName.c_str(), (unsigned)mThread);
 
-    // load config
-    int port, backlog;
-    port = ServerMain::GetServer().mServiceConfig.GetInteger(mName + "_port");
-    backlog = ServerMain::GetServer().mServiceConfig.GetInteger(mName + "_backlog");
-
-    if (port == 0)
-        throw EReceiverThread(FStringFC(),
-                         "Unable to start receiver thread: no such key '%s_port' in config",
-                         mName.c_str());
-    if (backlog <= 0)
-    {
-        backlog = 32;
-        hlog(HLOG_WARN, "Unable to find key '%s_backlog' in config: default is %u",
-             mName.c_str(), backlog);
-    }
     // create socket
     AutoFD m;
     if ((m = socket(PF_INET, SOCK_STREAM, 0)) < 0)
@@ -40,20 +25,20 @@ void * Forte::ReceiverThread::run(void)
     setsockopt(m, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
 
     // bind socket and listen
-    hlog(HLOG_INFO, "Binding to port %u on %s", port,
+    hlog(HLOG_INFO, "Binding to port %u on %s", mPort,
          (mBindIP.empty() ? "all addresses" : mBindIP.c_str()));
 
     struct sockaddr_in bind_addr;
     memset(&bind_addr, 0, sizeof(struct sockaddr_in));
     bind_addr.sin_family = AF_INET;
-    bind_addr.sin_port = htons(port);
+    bind_addr.sin_port = htons(mPort);
     if (!inet_aton(mBindIP, &(bind_addr.sin_addr)))
         throw EReceiverThread(FStringFC(), "invalid bind IP: %s", mBindIP.c_str());
 
     if (::bind(m, (struct sockaddr *)&bind_addr, sizeof(struct sockaddr_in))==-1)
         throw EReceiverThread(FStringFC(), "failed to bind: %s", strerror(errno));
 
-    if (listen(m, backlog)==-1)
+    if (listen(m, mBacklog)==-1)
         throw EReceiverThread(FStringFC(), "failed to listen: %s", strerror(errno));
 
     // set socket to close-on-exec, which prevents a bug wherein a

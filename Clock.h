@@ -103,6 +103,6 @@ namespace Forte
             return Clock::GetTime();
         };
     };
-
 };
+
 #endif

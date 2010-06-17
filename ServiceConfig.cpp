@@ -23,7 +23,14 @@ void ServiceConfig::Clear()
 void ServiceConfig::Set(const char *key, const char *value)
 {
     AutoUnlockMutex lock(mMutex);
-    mPTree.put(key, value);
+    try
+    {
+        mPTree.put(key, value);
+    }
+    catch (boost::property_tree::ptree_error &e)
+    {
+        throw EServiceConfig("unknown error");
+    }
 }
 
 FString ServiceConfig::Get(const char *key)
@@ -34,6 +41,6 @@ FString ServiceConfig::Get(const char *key)
 
 int ServiceConfig::GetInteger(const char *key)
 {
-    return mPTree.get<int>(key);
+    return mPTree.get<int>(key, 0);
 }
 

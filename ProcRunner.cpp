@@ -21,51 +21,6 @@
 
 using namespace Forte;
 
-// class data
-ProcRunner* ProcRunner::sSingleton = NULL;
-Mutex ProcRunner::sMutex;
-
-
-// class methods
-ProcRunner* ProcRunner::Get()
-{
-    // double-checked locking pattern
-    if (sSingleton == NULL)
-    {
-        AutoUnlockMutex lock(sMutex);
-
-        if (sSingleton == NULL)
-        {
-            sSingleton = new ProcRunner();
-        }
-    }
-
-    return sSingleton;
-}
-
-ProcRunner& ProcRunner::GetRef()
-{
-    ProcRunner::Get();
-
-    if (sSingleton == NULL)
-    {
-        throw EEmptyReference("ProcRunner pointer is invalid");
-    }
-
-    return *sSingleton;
-}
-
-void ProcRunner::DeleteSingleton()
-{
-    // double-checked locking
-    if (sSingleton != NULL)
-    {
-        AutoUnlockMutex lock(sMutex);
-        if (sSingleton != NULL) delete sSingleton;
-    }
-}
-
-
 // methods
 int ProcRunner::Run(const FString& command, 
                     const FString& cwd, 
@@ -84,16 +39,17 @@ int ProcRunner::Run(const FString& command,
     sigset_t set;
     pid_t pid;
 
-    // get default settings
-    try
-    {
-        ServerMain& main = ServerMain::GetServer();
-        log_child = (main.mServiceConfig.GetInteger("log_child") != 0);
-    }
-    catch (Exception &e)
-    {
-        // there won't always be a ServerMain defined
-    }
+    // \TODO re-enable this; or just re-write this whole class.
+    // // get default settings
+    // try
+    // {
+    //     ServerMain& main = ServerMain::GetServer();
+    //     log_child = (main.mServiceConfig.GetInteger("log_child") != 0);
+    // }
+    // catch (Exception &e)
+    // {
+    //     // there won't always be a ServerMain defined
+    // }
 
     // open temp log file
     if (log_child || (output != NULL))
