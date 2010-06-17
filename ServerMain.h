@@ -11,12 +11,22 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(Exception, ForteServerMainException);
+    EXCEPTION_SUBCLASS(Exception, EForteServerMain);
 
     class ServerMain : public Object
     {
     public:
-        ServerMain(int argc, char * const argv[], const char *getoptstr, const char *defaultConfig, bool daemonize = true);
+        ServerMain(int argc, char * const argv[], 
+                   const char *getoptstr, const char *defaultConfig, 
+                   bool daemonize = true);
+
+        /**
+         * Constructor to server main that takes neede parameters directly
+         **/
+        ServerMain(const FString& configPath,
+                   int logMask = HLOG_NODEBUG,
+                   bool daemonize = true);
+
         virtual ~ServerMain();
 
         virtual void MainLoop();
@@ -43,6 +53,13 @@ namespace Forte
     protected:
         static Mutex sSingletonMutex;
         static ServerMain* sSingletonPtr;
+
+
+    private:
+        /**
+         * Private init called from constructor to init the object. called by both construct
+         **/
+        void init(const FString& configPath, int logMask);
     };
 };
 #endif

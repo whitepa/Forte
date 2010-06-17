@@ -13,32 +13,10 @@ ServerMain::ServerMain(int argc, char * const argv[],
     mConfigFile(defaultConfig),
     mDaemon(daemonize)
 {
-    // set the singleton pointer
-    // TODO: get rid of this singleton stuff.
-    {
-        AutoUnlockMutex lock(sSingletonMutex);
-        if (sSingletonPtr != NULL)
-            throw ForteServerMainException("only one ServerMain object may exist");
-        else
-            sSingletonPtr = this;
-    }
-
-    mLogManager.SetGlobalLogMask(HLOG_NODEBUG); // suppress debug logging
-    // get the hostname
-    {
-        char hn[128];    
-        if (gethostname(hn, sizeof(hn)) < 0)
-        {
-            fprintf(stderr, "Unable to get hostname: %s\n", strerror(errno));
-            exit(1);
-        }
-        mHostname.assign(hn);
-        mHostname = mHostname.Left(mHostname.find_first_of("."));
-        hlog(HLOG_INFO, "determined hostname to be '%s'", mHostname.c_str());
-    }
     // check command line
     int i = 0;
     optind = 0;
+    int logMask = HLOG_NODEBUG;
     while (!i)
     {
         int c;
@@ -55,7 +33,7 @@ ServerMain::ServerMain(int argc, char * const argv[],
             mDaemon = false;
             break;
         case 'v':
-            mLogManager.SetGlobalLogMask(HLOG_ALL); // verbose logging
+            logMask = HLOG_ALL;
             break;
         default:
             if (!strchr(getoptstr, c))
@@ -66,6 +44,47 @@ ServerMain::ServerMain(int argc, char * const argv[],
             }
         }
     }
+
+    init(defaultConfig, logMask);
+}
+
+
+ServerMain::ServerMain(const FString& defaultConfig,
+                       int logMask,
+                       bool daemonize)
+     : mConfigFile(defaultConfig),
+       mDaemon(daemonize)
+{
+    init(defaultConfig, logMask);
+}
+
+void ServerMain::init(const FString& defaultConfig,
+                      int logMask)
+{
+    // set the singleton pointer
+    // TODO: get rid of this singleton stuff.
+    {
+        AutoUnlockMutex lock(sSingletonMutex);
+        if (sSingletonPtr != NULL)
+            throw EForteServerMain("only one ServerMain object may exist");
+        else
+            sSingletonPtr = this;
+    }
+
+    mLogManager.SetGlobalLogMask(logMask);
+    // get the hostname
+    {
+        char hn[128];    
+        if (gethostname(hn, sizeof(hn)) < 0)
+        {
+            fprintf(stderr, "Unable to get hostname: %s\n", strerror(errno));
+            exit(1);
+        }
+        mHostname.assign(hn);
+        mHostname = mHostname.Left(mHostname.find_first_of("."));
+        hlog(HLOG_INFO, "determined hostname to be '%s'", mHostname.c_str());
+    }
+
     // daemonize
     if (mDaemon && daemon(1,0)) {
         fprintf(stderr, "can't start as daemon: %s\n", strerror(errno));
@@ -73,9 +92,11 @@ ServerMain::ServerMain(int argc, char * const argv[],
     }
     // read config file
     if (!mConfigFile.empty())
-        mServiceConfig.ReadConfigFile(mConfigFile);
-    
+        mServiceConfig.ReadConfigFile(mConfigFile);        
 }
+
+
+
 
 ServerMain::~ServerMain()
 {
@@ -164,7 +185,7 @@ void ServerMain::WritePidFile()
                         FString err;
                         err.Format("forte process already running on pid %u\n",
                                    old_pid);
-                        throw ForteServerMainException(err);
+                        throw EForteServerMain(err);
                     }
                 }
             }
@@ -177,7 +198,7 @@ void ServerMain::WritePidFile()
     {
         FString err;
         err.Format("Unable to write to pid file %s\n", mPidFile.c_str());
-        throw ForteServerMainException(err);
+        throw EForteServerMain(err);
     }
     else
     {
