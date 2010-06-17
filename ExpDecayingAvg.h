@@ -13,17 +13,36 @@
 #define __ExpDecayingAvg_h
 
 #include <set>
+#include "Timer.h"
 
 #define UPDATE_DELAY 250 // each object will be updated every 250ms 
 
 namespace Forte
 {
+    class ExpDecayingAvgData : public Object
+    {
+    public:
+        ExpDecayingAvgData(int dampingTime);
+
+        void Reset(void);
+        inline float Get(int interval) { return mLastAvg * (interval / UPDATE_DELAY); }
+        float Set(float input);
+        float Increment(float amount);
+        void update(void);
+
+        int mDampingTime;
+        Timespec mLastUpdate;
+        float mLastAvg;
+        float mInput;
+        bool mResetInputUponUpdate;
+        Mutex mLock;
+    };
+
     class ExpDecayingAvg : public Object {
-        friend class ExpDecayingAvgThread;
     public:
         // damping time in ms
         ExpDecayingAvg(Forte::Context &context,
-                       int dampingTime = 10000); // default 10 second damping
+                       int dampingTime = 10000);
         virtual ~ExpDecayingAvg();
     
         // reset the average to zero
@@ -34,20 +53,16 @@ namespace Forte
         // increment the current input value (will be reset when avg is updated)
         float Increment(float amount);
         // get the current value of the average, do not update.  interval in ms
-        inline float Get(int interval) { return mLastAvg * (interval / UPDATE_DELAY); }
+        inline float Get(int interval) { return mDataPtr->Get(interval); }
 
     protected:
         // update the average using the current input value
         void update(void);
 
         Forte::Context &mContext;
-
-        int mDampingTime;
-        struct timeval mLastUpdate;
-        float mLastAvg;
-        float mInput;
-        bool mResetInputUponUpdate;
-        Mutex mLock;
+        shared_ptr<ExpDecayingAvgData> mDataPtr;
+        shared_ptr<Timer> mTimerPtr;
     };
+
 };
 #endif

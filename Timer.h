@@ -24,7 +24,7 @@ namespace Forte
     class Timer : public Object
     {
     public:
-        typedef boost::function<void(const Context &)> Callback;
+        typedef boost::function<void(void)> Callback;
 
         /** 
          * Create a Timer object, which will call the callback method
@@ -50,7 +50,7 @@ namespace Forte
 
         bool Repeats(void) { return mRepeats; }
         
-        void Fire(void);
+        void Fire(void) { mCallback(); }
 
     private:
 
