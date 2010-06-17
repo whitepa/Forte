@@ -20,12 +20,20 @@ BOOST_AUTO_TEST_CASE(Test1)
     Context c;
     c.Set("forte.RunLoop", make_shared<RunLoop>());
     
-    ExpDecayingAvg a(c, 1000);
-    a.Set(5.0);
-
-    while (1)
     {
-        hlog(HLOG_INFO, "value is %f", a.Get(1000));
-        usleep(250000);
+        ExpDecayingAvg a(c, EDA_VALUE, 10000);
+
+        for (int x = 0; x < 30; x++)
+        {
+            a.Set(x * 5.0);
+        
+            for (int i = 0; i < 4; i++)
+            {
+                hlog(HLOG_INFO, "value is %f  rate is %f", a.Get(), a.GetRate(1000));
+                usleep(250000);
+            }
+        }
     }
+    sleep(1);
 }
+

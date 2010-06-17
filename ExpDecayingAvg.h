@@ -17,49 +17,74 @@
 
 #define UPDATE_DELAY 250 // each object will be updated every 250ms 
 
+#define EDA_VALUE 0
+#define EDA_RATE  1
+
 namespace Forte
 {
     class ExpDecayingAvgData : public Object
     {
     public:
-        ExpDecayingAvgData(int dampingTime);
+        ExpDecayingAvgData(int mode, int dampingTime);
+        virtual ~ExpDecayingAvgData();
 
         void Reset(void);
-        inline float Get(int interval) { return mLastAvg * (interval / UPDATE_DELAY); }
+        inline float Get(void) { return mLastAvg; }
+        inline float GetRate(int interval) { return mLastRate * (interval / UPDATE_DELAY); }
         float Set(float input);
         float Increment(float amount);
         void update(void);
 
+        int mMode;
         int mDampingTime;
         Timespec mLastUpdate;
         float mLastAvg;
+        float mLastRate;
         float mInput;
+        float mLastInput;
         bool mResetInputUponUpdate;
         Mutex mLock;
     };
 
     class ExpDecayingAvg : public Object {
     public:
-        // damping time in ms
+        /** 
+         * ExpDecayingAvg computes a decaying average of a particular
+         * value, or the decaying average of a rate at which a value
+         * is changing.
+         *
+         * MODES:
+         *  EDA_VALUE - Decaying Average of the value should be computed.
+         *  EDA_RATE  - Average rate of change of the value should be computed.
+         * 
+         * @param context 
+         * @param mode which mode to operate in
+         * @param dampingTime 
+         * 
+         * @return 
+         */
         ExpDecayingAvg(Forte::Context &context,
-                       int dampingTime = 10000);
+                       int mode, int dampingTime);
         virtual ~ExpDecayingAvg();
     
         // reset the average to zero
-        void Reset(void);
+        void Reset(void) { mDataPtr->Reset(); }
     
         // set the current input value (will remain set until Reset() or increment())
-        float Set(float input);
+        float Set(float input) { return mDataPtr->Set(input); }
         // increment the current input value (will be reset when avg is updated)
-        float Increment(float amount);
-        // get the current value of the average, do not update.  interval in ms
-        inline float Get(int interval) { return mDataPtr->Get(interval); }
+        float Increment(float amount) { return mDataPtr->Increment(amount); }
+        // get the current value of the average, do not update
+        inline float Get(void) { return mDataPtr->Get(); }
+        inline float GetRate(int interval) { return mDataPtr->GetRate(interval); }
 
     protected:
         // update the average using the current input value
         void update(void);
-
+        
         Forte::Context &mContext;
+        int mMode;
+        int mDampingTime;
         shared_ptr<ExpDecayingAvgData> mDataPtr;
         shared_ptr<Timer> mTimerPtr;
     };

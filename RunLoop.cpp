@@ -93,7 +93,10 @@ void * Forte::RunLoop::run(void)
             }
         }
         if (warned)
+        {
             hlog(HLOG_WARN, "run loop has caught up");
+            warned = false;
+        }
     }
     return NULL;
 }
