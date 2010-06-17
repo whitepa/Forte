@@ -38,7 +38,7 @@ namespace Forte
         }
         operator const struct timespec () const { return mTimespec; }
         long long AsMillisec(void) const {
-            return (mTimespec.tv_sec * 1000) + (mTimespec.tv_nsec / 1000);
+            return (mTimespec.tv_sec * 1000) + (mTimespec.tv_nsec / 1000000);
         }
         static Timespec FromMillisec(unsigned int ms) {
             Timespec ts;
@@ -52,7 +52,7 @@ namespace Forte
             ts.mTimespec.tv_nsec = 0;
             return ts;
         }
-        long AsSeconds(void) {
+        long AsSeconds(void) const {
             return mTimespec.tv_sec;
         }
         bool IsZero(void) const {
