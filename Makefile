@@ -87,7 +87,6 @@ HEADERS = \
 	AnyPtr.h \
 	AutoMutex.h \
 	Base64.h \
-	Callback.h \
 	Clock.h \
 	Condition.h \
 	ControlFile.h \
@@ -107,7 +106,6 @@ HEADERS = \
 	DbPgResult.h \
 	DbLiteResult.h \
 	DbUtil.h \
-	DelayedCallback.h \
 	Dispatcher.h \
 	Event.h \
 	EventQueue.h \

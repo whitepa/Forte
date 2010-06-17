@@ -64,7 +64,7 @@ ServerMain::ServerMain(int argc, char * const argv[],
     // pid file
     mPidFile = mServiceConfig.Get("pidfile");
     if (!mPidFile.empty()) WritePidFile();
-
+    
     // setup logging
     // set logfile path
     mLogFile = mServiceConfig.Get("logfile.path");
@@ -95,31 +95,8 @@ ServerMain::ServerMain(int argc, char * const argv[],
 
 ServerMain::~ServerMain()
 {
-    // call the shutdown callbacks
-    hlog(HLOG_DEBUG, "ServerMain shutdown: calling shutdown callbacks...");
-    {
-        AutoUnlockMutex lock(mCallbackMutex);
-        std::set<Callback*>::iterator i;
-        for (i = mShutdownCallbacks.begin();
-             i != mShutdownCallbacks.end();
-             i++)
-        {
-            // execute the callback
-            (*i)->Execute();
-            // free the callback
-            delete (*i);
-        }
-    }
-
     // delete the pidfile
     unlink(mPidFile.c_str());
-}
-
-void ServerMain::RegisterShutdownCallback(Callback *callback)
-{
-    hlog(HLOG_DEBUG, "registering shutdown callback");
-    AutoUnlockMutex lock(mCallbackMutex);
-    mShutdownCallbacks.insert(callback);
 }
 
 void ServerMain::Usage()

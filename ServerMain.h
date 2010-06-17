@@ -5,7 +5,6 @@
 #include "LogManager.h"
 #include "ServiceConfig.h"
 #include "AutoMutex.h"
-#include "Callback.h"
 #include "Exception.h"
 #include <set>
 
@@ -26,8 +25,6 @@ namespace Forte
         void WritePidFile();
         void PrepareSigmask();
     
-        void RegisterShutdownCallback(Callback *callback);
-
         FString mHostname;
         FString mConfigFile;
         FString mLogFile;
@@ -37,7 +34,6 @@ namespace Forte
         Context mContext;
         ServiceConfig mServiceConfig;
         Mutex mCallbackMutex;
-        std::set<Callback*> mShutdownCallbacks;
         sigset_t mSigmask;
     };
 };
