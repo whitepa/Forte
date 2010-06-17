@@ -15,33 +15,6 @@ static inline int pos(char c)
     return -1;
 }
 
-// int Base64::Encode(const char *data, int size, FString &out)
-// {
-//     out.clear();
-//     out.reserve(size*4/3+4);
-//     for (int i = 0; i < size;)
-//     {
-//         unsigned long n;
-//         n = (data[i++] << 16);
-//         if (i < size)
-//             n+=(data[i] << 8);
-//         i++;
-//         if (i < size)
-//             n+=data[i];
-//         i++;
-//         out.append(1, chars[(n >> 18) & 63]);
-//         out.append(1, chars[(n >> 12) & 63]);
-//         if (i > size + 1)
-//             out.append("=");
-//         else
-//             out.append(1, chars[(n >> 6) & 63]);
-//         if (i > size)
-//             out.append("=");
-//         else
-//             out.append(1, chars[n & 63]);
-//     }
-//     return out.length();
-// }
 int Base64::Encode(const char *data, int size, FString &out)
 {
     char *s, *p;
@@ -99,14 +72,14 @@ int Base64::Decode(const char *in, FString &out)
         }
         c*=64;
         
-        if ((x = pos(p[1]))==-1) throw ForteBase64Exception("invalid base64 data");
+        if ((x = pos(p[1]))==-1) throw EBase64("invalid base64 data");
         c+=x;
         c*=64;
 
         if (p[2] == '=') done++;
         else
         {
-            if ((x = pos(p[2]))==-1) throw ForteBase64Exception("invalid base64 data");
+            if ((x = pos(p[2]))==-1) throw EBase64("invalid base64 data");
             c+=x;
         }
         c*=64;
@@ -114,8 +87,8 @@ int Base64::Decode(const char *in, FString &out)
         if (p[3] == '=') done++;
         else
         {
-            if (done) throw ForteBase64Exception("invalid base64 data");
-            if ((x=pos(p[3]))==-1) throw ForteBase64Exception("invalid base64 data");
+            if (done) throw EBase64("invalid base64 data");
+            if ((x=pos(p[3]))==-1) throw EBase64("invalid base64 data");
             c+=x;
         }
         if (done < 3)

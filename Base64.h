@@ -6,7 +6,7 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(Exception, ForteBase64Exception);
+    EXCEPTION_SUBCLASS(Exception, EBase64);
 
     class Base64 : public Object {
     public:
