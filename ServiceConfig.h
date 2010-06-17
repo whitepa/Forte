@@ -8,6 +8,9 @@
 
 namespace Forte
 {
+    EXCEPTION_CLASS(EServiceConfig);
+    EXCEPTION_SUBCLASS2(EServiceConfig, EServiceConfigNoKey, "config key does not exist");
+
     class ServiceConfig : public Object {
     public:
         ServiceConfig();

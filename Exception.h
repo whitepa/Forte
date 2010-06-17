@@ -95,9 +95,6 @@ namespace Forte
         std::string ExtendedDescription();
         FString mDescription;
         std::list<void *> mStack;
-        void PrettyTraceLog(int log_level);
-    private:
-        FString PrettyFrame(const std::vector<FString>& mapping, void *address);
     };
 
 

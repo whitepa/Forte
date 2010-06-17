@@ -16,7 +16,9 @@ namespace Forte
     class ServerMain : public Object
     {
     public:
-        ServerMain(int argc, char * const argv[], const char *getoptstr, const char *defaultConfig, bool daemonize = true);
+        ServerMain(int argc, char * const argv[], 
+                   const char *getoptstr, const char *defaultConfig, 
+                   bool daemonize = true);
         virtual ~ServerMain();
 
         virtual void MainLoop();
@@ -25,9 +27,6 @@ namespace Forte
         void PrepareSigmask();
     
         void RegisterShutdownCallback(Callback *callback);
-
-        static ServerMain &GetServer();
-        static ServerMain *GetServerPtr();
 
         FString mHostname;
         FString mConfigFile;
@@ -40,9 +39,6 @@ namespace Forte
         Mutex mCallbackMutex;
         std::set<Callback*> mShutdownCallbacks;
         sigset_t mSigmask;
-    protected:
-        static Mutex sSingletonMutex;
-        static ServerMain* sSingletonPtr;
     };
 };
 #endif
