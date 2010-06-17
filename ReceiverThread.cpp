@@ -13,7 +13,7 @@ using namespace Forte;
 void * Forte::ReceiverThread::run(void)
 {
     // init thread name
-    mThreadName.Format("%s-recv-%u", mName.c_str(), (unsigned)mThread);
+    mThreadName.Format("%s-recv-%u", mName.c_str(), GetThreadID());
 
     // create socket
     AutoFD m;

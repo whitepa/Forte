@@ -15,6 +15,8 @@ using namespace boost;
 namespace Forte
 {
     EXCEPTION_CLASS(ETimer);
+    EXCEPTION_SUBCLASS2(ETimer, ETimerRunLoopInvalid, "Invalid RunLoop");
+    EXCEPTION_SUBCLASS2(ETimer, ETimerTargetInvalid, "Invalid Target Object");
 
     class RunLoop;
 
@@ -39,9 +41,11 @@ namespace Forte
               shared_ptr<Object> target,
               Callback callback,
               Timespec interval,
-              bool repeat = false);
+              bool repeats = false);
 
         virtual ~Timer();
+
+        Timespec GetInterval(void) { return mInterval; }
         
         void Fire(void);
 
@@ -53,6 +57,10 @@ namespace Forte
          * fires.
          */
         shared_ptr<RunLoop> mRunLoop;
+        shared_ptr<Object> mTarget;
+        Callback mCallback;
+        Timespec mInterval;
+        bool mRepeats;
     };
 }
 

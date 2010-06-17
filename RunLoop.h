@@ -14,6 +14,9 @@ using namespace boost;
 
 namespace Forte
 {
+    EXCEPTION_CLASS(ERunLoop);
+    EXCEPTION_SUBCLASS2(ERunLoop, ERunLoopTimerInvalid, "Invalid Timer");
+    
     class RunLoop : public Thread
     {
     public:
@@ -38,20 +41,18 @@ namespace Forte
         class RunLoopScheduleItem
         {
         public:
+            RunLoopScheduleItem(shared_ptr<Timer> &timer,
+                                Timespec absolute) :
+                mTimer(timer), mAbsolute(absolute) {}
             bool operator < (const RunLoopScheduleItem &other) const { 
-                return absolute < other.absolute;
+                return mAbsolute < other.mAbsolute;
             }
 
-            weak_ptr<Timer> timer;
-            Timespec absolute;
+            weak_ptr<Timer> mTimer;
+            Timespec mAbsolute;
         };
-
-        std::set<RunLoopScheduleItem> mUpcomingSet;
-
-
-
+        std::set<RunLoopScheduleItem> mSchedule;
     };
-
 };
 
 #endif
