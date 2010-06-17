@@ -27,12 +27,17 @@ BOOST_AUTO_TEST_CASE(Test1)
         {
             a.Set(x * 5.0);
         
-            for (int i = 0; i < 4; i++)
-            {
-                hlog(HLOG_INFO, "value is %f  rate is %f", a.Get(), a.GetRate(1000));
-                usleep(250000);
-            }
+            hlog(HLOG_INFO, "value is %f  rate is %f", a.Get(), a.GetRate(1000));
+            sleep(1);
         }
+        for (int x = 30; x > 0; x--)
+        {
+            a.Set(x * 5.0);
+        
+            hlog(HLOG_INFO, "value is %f  rate is %f", a.Get(), a.GetRate(1000));
+            sleep(1);
+        }
+
     }
     sleep(1);
 }

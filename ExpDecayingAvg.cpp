@@ -66,8 +66,8 @@ void ExpDecayingAvgData::update(void)
     // \TODO replace UPDATE_DELAY here with monotonic now - mLastUpdate.
     // then update mLastUpdate.
     // compute the difference between now and the input at last update
-    hlog(HLOG_DEBUG, "input=%f lastinput=%f lastavg=%f lastrate=%f",
-         mInput, mLastInput, mLastAvg, mLastRate);
+//    hlog(HLOG_DEBUG, "input=%f lastinput=%f lastavg=%f lastrate=%f",
+//         mInput, mLastInput, mLastAvg, mLastRate);
     float diff = mInput - mLastInput;
     mLastInput = mInput;
     mLastRate += (1.0 - expf((float)-UPDATE_DELAY / (float)mDampingTime))*(diff - mLastRate);
