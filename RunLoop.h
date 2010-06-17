@@ -35,7 +35,6 @@ namespace Forte
         virtual void * run(void);
 
         Mutex mLock;
-        Timespec mNext;
 
         class RunLoopScheduleItem
         {
