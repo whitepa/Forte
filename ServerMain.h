@@ -32,7 +32,6 @@ namespace Forte
         bool mDaemon;
         LogManager mLogManager;
         Context mContext;
-        ServiceConfig mServiceConfig;
         Mutex mCallbackMutex;
         sigset_t mSigmask;
     };

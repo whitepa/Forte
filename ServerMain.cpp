@@ -57,22 +57,25 @@ ServerMain::ServerMain(int argc, char * const argv[],
         fprintf(stderr, "can't start as daemon: %s\n", strerror(errno));
         exit(1);
     }
+    // create a configuration object
+    CSET("forte.ServiceConfig", ServiceConfig);
     // read config file
+    CGET("forte.ServiceConfig", ServiceConfig, sc);
     if (!mConfigFile.empty())
-        mServiceConfig.ReadConfigFile(mConfigFile);
+        sc.ReadConfigFile(mConfigFile);
 
     // pid file
-    mPidFile = mServiceConfig.Get("pidfile");
+    mPidFile = sc.Get("pidfile");
     if (!mPidFile.empty()) WritePidFile();
     
     // setup logging
     // set logfile path
-    mLogFile = mServiceConfig.Get("logfile.path");
+    mLogFile = sc.Get("logfile.path");
 
     // if we are not running as a daemon, use the log level
     // the conf file
     FString stmp;
-    if ((stmp = mServiceConfig.Get("logfile.level")) != "")
+    if ((stmp = sc.Get("logfile.level")) != "")
     {
         //TODO: move this logic into the log manager
         if (stmp.MakeUpper() == "ALL")
