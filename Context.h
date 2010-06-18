@@ -69,7 +69,6 @@ namespace Forte
             ObjectMap::const_iterator i;
             Forte::AutoUnlockMutex lock(mLock);
             if ((i = mObjectMap.find(key)) == mObjectMap.end())
-                // TODO: use a factory to create one?
                 throw EInvalidKey(key);
             boost::shared_ptr<ValueType> ptr(
                 boost::dynamic_pointer_cast<ValueType>((*i).second));
