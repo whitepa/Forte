@@ -101,6 +101,7 @@ ServerMain::~ServerMain()
 {
     // delete the pidfile
     unlink(mPidFile.c_str());
+    mContext.Remove("forte.ServiceConfig");
 }
 
 void ServerMain::Usage()
