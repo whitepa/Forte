@@ -39,6 +39,27 @@ FString ServiceConfig::Get(const char *key)
     return mPTree.get<FString>(key, "");
 }
 
+void ServiceConfig::GetVectorSubKey(const char *key,     // nodes
+                                    const char *subkey,  // backplane
+                                    FStringVector &vec)
+{
+    FTRACE;
+    vec.clear();
+    boost::property_tree::ptree subtree = mPTree.get_child(key);
+    foreach(const boost::property_tree::ptree::value_type &v, subtree)
+    {
+//        FString s1(v.first);
+//        hlog(HLOG_DEBUG, "found tree %s", s1.c_str());
+        // iterate keys in v.second
+//        foreach(const boost::property_tree::ptree::value_type &v2, v.second)
+//        {
+//            FString s(v2.first);
+//            hlog(HLOG_DEBUG, "   found subkey %s", s.c_str());
+//        }
+        vec.push_back(v.second.get<FString>(subkey));
+    }
+}
+
 int ServiceConfig::GetInteger(const char *key)
 {
     return mPTree.get<int>(key, 0);

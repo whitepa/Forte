@@ -57,6 +57,7 @@ ServerMain::ServerMain(int argc, char * const argv[],
         fprintf(stderr, "can't start as daemon: %s\n", strerror(errno));
         exit(1);
     }
+
     // create a configuration object
     CSET("forte.ServiceConfig", ServiceConfig);
     // read config file
