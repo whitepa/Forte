@@ -122,6 +122,7 @@ HEADERS = \
 	Murmur.h \
 	OpenSSLInitializer.h \
 	ProcRunner.h \
+	PropertyObject.h \
 	PidFile.h \
 	Random.h \
 	RequestHandler.h \
