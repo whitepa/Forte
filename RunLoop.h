@@ -14,6 +14,9 @@ using namespace boost;
 
 namespace Forte
 {
+    EXCEPTION_CLASS(ERunLoop);
+    EXCEPTION_SUBCLASS2(ERunLoop, ERunLoopTimerInvalid, "Invalid Timer");
+    
     class RunLoop : public Thread
     {
     public:
@@ -22,8 +25,7 @@ namespace Forte
         virtual ~RunLoop();
 
         /** 
-         * AddTimer() is to be called by Timer objects when adding
-         * themselves to the run loop.
+         * AddTimer() allows the addition of Timer objects to the RunLoop.
          * 
          * @param timer
          */
@@ -33,25 +35,23 @@ namespace Forte
         virtual void * run(void);
 
         Mutex mLock;
-        Timespec mNext;
 
         class RunLoopScheduleItem
         {
         public:
+            RunLoopScheduleItem(shared_ptr<Timer> &timer,
+                                Timespec absolute) :
+                mTimer(timer), mAbsolute(absolute) {}
             bool operator < (const RunLoopScheduleItem &other) const { 
-                return absolute < other.absolute;
+                return mAbsolute < other.mAbsolute;
             }
-
-            weak_ptr<Timer> timer;
-            Timespec absolute;
+            shared_ptr<Timer>GetTimer(void) const { return mTimer.lock(); }
+            const Timespec & GetAbsolute(void) const { return mAbsolute; }
+            weak_ptr<Timer> mTimer;
+            Timespec mAbsolute;
         };
-
-        std::set<RunLoopScheduleItem> mUpcomingSet;
-
-
-
+        std::multiset<RunLoopScheduleItem> mSchedule;
     };
-
 };
 
 #endif

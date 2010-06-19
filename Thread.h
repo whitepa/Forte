@@ -26,21 +26,29 @@ namespace Forte
     {
     public:
         inline Thread(void) : 
-            mInitializedNotify(mInitializedLock), 
             mInitialized(false),
-            mThreadShutdown(false), 
-            mShutdownRequested(mShutdownRequestedLock),
+            mThreadShutdown(false),
+            mNotified(false),
+            mNotifyCond(mNotifyLock),
             mShutdownComplete(false),
             mShutdownCompleteCondition(mShutdownCompleteLock)
-            { pthread_create(&mThread, NULL, Thread::startThread, this); };
+            { 
+                pthread_create(&mThread, NULL, Thread::startThread, this);
+                mThreadID = (unsigned int) mThread;
+            }
         virtual ~Thread();
 
         // Tell a thread to shut itself down.
         inline void Shutdown(void) { 
-            mThreadShutdown = true; 
-            AutoUnlockMutex lock(mShutdownRequestedLock);
-            mShutdownRequested.Signal();
+            mThreadShutdown = true;
+            Notify();
          };
+
+        inline void Notify(void) {
+            AutoUnlockMutex lock(mNotifyLock);
+            mNotified = true;
+            mNotifyCond.Signal();
+        }
 
         // Wait for a thread to shutdown.
         void WaitForShutdown(void);
@@ -56,13 +64,13 @@ namespace Forte
         // get pointer to your thread object
         static Thread * MyThread(void);
 
-        unsigned int mPid;
+        unsigned int GetThreadID(void) { return mThreadID; }
+
         FString mThreadName;
 
     protected:
         void initialized(void);
         virtual void *run(void) = 0;
-        static void *startThread(void *obj);
 
         /**
          * interruptibleSleep will sleep until the given interval
@@ -72,15 +80,23 @@ namespace Forte
         void interruptibleSleep(const struct timespec &interval,
                                 bool throwRequested = true);
 
+    private:
+        static void *startThread(void *obj);
 
         pthread_t mThread;
+        unsigned int mThreadID;
 
-        Mutex mInitializedLock;
-        ThreadCondition mInitializedNotify;
         bool mInitialized;
+
+    protected:
         bool mThreadShutdown;
-        Mutex mShutdownRequestedLock;
-        ThreadCondition mShutdownRequested;
+
+    private:
+        bool mNotified;
+
+        Mutex mNotifyLock;
+        ThreadCondition mNotifyCond;
+
         bool mShutdownComplete;
         Mutex mShutdownCompleteLock;
         ThreadCondition mShutdownCompleteCondition;

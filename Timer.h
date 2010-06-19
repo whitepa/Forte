@@ -15,13 +15,16 @@ using namespace boost;
 namespace Forte
 {
     EXCEPTION_CLASS(ETimer);
+    EXCEPTION_SUBCLASS2(ETimer, ETimerRunLoopInvalid, "Invalid RunLoop");
+    EXCEPTION_SUBCLASS2(ETimer, ETimerTargetInvalid, "Invalid Target Object");
+    EXCEPTION_SUBCLASS2(ETimer, ETimerIntervalInvalid, "Invalid Timer Interval");
 
     class RunLoop;
 
     class Timer : public Object
     {
     public:
-        typedef boost::function<void(const Context &)> Callback;
+        typedef boost::function<void(void)> Callback;
 
         /** 
          * Create a Timer object, which will call the callback method
@@ -39,11 +42,15 @@ namespace Forte
               shared_ptr<Object> target,
               Callback callback,
               Timespec interval,
-              bool repeat = false);
+              bool repeats = false);
 
         virtual ~Timer();
+
+        Timespec GetInterval(void) { return mInterval; }
+
+        bool Repeats(void) { return mRepeats; }
         
-        void Fire(void);
+        void Fire(void) { mCallback(); }
 
     private:
 
@@ -53,6 +60,10 @@ namespace Forte
          * fires.
          */
         shared_ptr<RunLoop> mRunLoop;
+        shared_ptr<Object> mTarget;
+        Callback mCallback;
+        Timespec mInterval;
+        bool mRepeats;
     };
 }
 
