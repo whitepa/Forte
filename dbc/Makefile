@@ -20,9 +20,9 @@ CLEAN += SQLParse.[ch]pp SQLScan.cpp SQLParse.output
 
 OBJDEPS=SQLScan.ll SQLParse.yy
 
+PARSER_SRC=SQLParse.cpp SQLScan.cpp
 SRCS=   dbc.cpp \
-	SQLScan.cpp \
-	SQLParse.cpp \
+	$(PARSER_SRC) \
 	InternalRep.cpp
 
 OBJS=$(SRCS:%.cpp=$(TARGETDIR)/%.o)
@@ -31,9 +31,10 @@ PROG=$(TARGETDIR)/dbc
 
 all: $(PROG)
 
-parser: SQLParse.cpp SQLScan.cpp
+parser: $(PARSER_SRC)
 
-$(PROG): ccargs_echo parser $(OBJS) Makefile $(OBJDEPS)
+$(PROG): $(PARSER_SRC) $(OBJS) Makefile $(OBJDEPS)
+	@echo Linking $@
 	$(CCC) -o $@ $(OBJS) $(LIBS) $(OS_LIBS)
 	$(export-bin)
 
@@ -47,3 +48,4 @@ SQLScan.cpp: SQLScan.ll Makefile
 
 include $(BUILDROOT)/re/make/tail.mk
 
+.PHONY: parser
