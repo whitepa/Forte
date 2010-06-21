@@ -13,7 +13,7 @@ PREFIX ?= $(INSTALL_ROOT)/usr/local
 HEADER_INSTALL_PATH = $(PREFIX)/include
 LIB_INSTALL_PATH = $(PREFIX)/lib
 
-SUBDIRS = dbc
+#SUBDIRS = dbc
 
 INCLUDE = $(DB_INCLUDE) $(XML_INCLUDE) $(BOOST_INCLUDE) -I.
 CCARGS += -Wall -DFORTE_FUNCTION_TRACING
@@ -21,7 +21,6 @@ SRCS =	\
 	Base64.cpp \
 	CheckedValue.cpp \
 	Clock.cpp \
-	ClusterLock.cpp \
 	Collector.cpp \
 	CollectorPollThread.cpp \
 	Condition.cpp \
@@ -29,7 +28,6 @@ SRCS =	\
 	Context.cpp \
 	ContextPredicate.cpp \
 	Curl.cpp \
-	CurlFactory.cpp \
 	DaemonUtil.cpp \
 	DbConnection.cpp \
 	DbMyConnection.cpp \
@@ -59,10 +57,12 @@ SRCS =	\
 	OnDemandDispatcher.cpp \
 	OpenSSLInitializer.cpp \
 	PidFile.cpp \
+	PosixTimer.cpp \
 	ProcFileSystem.cpp \
 	ProcRunner.cpp \
 	Random.cpp \
 	ReceiverThread.cpp \
+	RunLoop.cpp \
 	RWLock.cpp \
 	SecureEnvelope.cpp \
 	SecureString.cpp \

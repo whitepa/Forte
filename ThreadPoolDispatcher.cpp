@@ -17,7 +17,7 @@ Forte::ThreadPoolDispatcherManager::ThreadPoolDispatcherManager(ThreadPoolDispat
 void * Forte::ThreadPoolDispatcherManager::run(void)
 {
     ThreadPoolDispatcher &disp(dynamic_cast<ThreadPoolDispatcher&>(mDispatcher));
-    mThreadName.Format("%s-disp-%u", disp.mDispatcherName.c_str(), (unsigned)mThread);
+    mThreadName.Format("%s-disp-%u", disp.mDispatcherName.c_str(), GetThreadID());
     
     // start initial worker threads
     for (unsigned int i = 0; i < disp.mMinThreads; ++i)
@@ -158,7 +158,7 @@ Forte::ThreadPoolDispatcherWorker::~ThreadPoolDispatcherWorker()
 void * Forte::ThreadPoolDispatcherWorker::run(void)
 {
     ThreadPoolDispatcher &disp(dynamic_cast<ThreadPoolDispatcher&>(mDispatcher));
-    mThreadName.Format("%s-pool-%u", mDispatcher.mDispatcherName.c_str(), (unsigned)mThread);
+    mThreadName.Format("%s-pool-%u", mDispatcher.mDispatcherName.c_str(), GetThreadID());
     hlog(HLOG_DEBUG3, "initializing...");
     // call the request handler's initialization hook
     disp.mRequestHandler->Init();

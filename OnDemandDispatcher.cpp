@@ -15,7 +15,7 @@ Forte::OnDemandDispatcherManager::OnDemandDispatcherManager(OnDemandDispatcher &
 void * Forte::OnDemandDispatcherManager::run(void)
 {
     OnDemandDispatcher &disp(dynamic_cast<OnDemandDispatcher&>(mDispatcher));
-    mThreadName.Format("dsp-od-%u", (unsigned)mThread);
+    mThreadName.Format("dsp-od-%u", GetThreadID());
     
     AutoUnlockMutex lock(disp.mNotifyLock);
     while (1) // always check for queued events before shutting down
@@ -87,7 +87,7 @@ Forte::OnDemandDispatcherWorker::~OnDemandDispatcherWorker()
 void * Forte::OnDemandDispatcherWorker::run()
 {
     OnDemandDispatcher &disp(dynamic_cast<OnDemandDispatcher&>(mDispatcher));
-    mThreadName.Format("%s-od-%u", disp.mDispatcherName.c_str(), (unsigned)mThread);
+    mThreadName.Format("%s-od-%u", disp.mDispatcherName.c_str(), GetThreadID());
     disp.mRequestHandler->Init();
     disp.mRequestHandler->Handler(mEventPtr.get());
     // thread is complete at this point, resetting our event pointer

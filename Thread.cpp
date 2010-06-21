@@ -29,19 +29,12 @@ void * Thread::startThread(void *obj)
     Thread *thr = (Thread *)obj;
     // wait until the thread has been fully initialized
     {
-        AutoUnlockMutex lock(thr->mInitializedLock);
+        AutoUnlockMutex lock(thr->mNotifyLock);
         while(!thr->mInitialized && !thr->mThreadShutdown)
-        {
-            struct timeval now;
-            struct timespec timeout;
-            gettimeofday(&now, 0);
-            timeout.tv_sec = now.tv_sec + 1; // wake up every second to check for shutdown
-            timeout.tv_nsec = now.tv_usec * 1000;
-            thr->mInitializedNotify.TimedWait(timeout);
-        }
+            thr->mNotifyCond.Wait();
     }
     // inform the log manager of this thread
-    LogThreadInfo logThread(ServerMain::GetServer().mLogManager, *thr);
+    LogThreadInfo logThread(LogManager::GetInstance(), *thr);
     thr->mThreadName.Format("unknown-%u", (unsigned)thr->mThread);
     if (!thr->mThreadShutdown)
         hlog(HLOG_DEBUG, "thread initialized");
@@ -84,9 +77,9 @@ void * Thread::startThread(void *obj)
 
 void Thread::initialized()
 {
-    AutoUnlockMutex lock(mInitializedLock);
+    AutoUnlockMutex lock(mNotifyLock);
     mInitialized = true;
-    mInitializedNotify.Broadcast();
+    mNotifyCond.Broadcast();
 }
 
 void Thread::WaitForShutdown()
@@ -96,9 +89,9 @@ void Thread::WaitForShutdown()
     mShutdownCompleteCondition.Wait();
 }
 
-void Thread::interruptibleSleep(const struct timespec &interval, bool throwRequested)
+void Thread::interruptibleSleep(const struct timespec &interval, bool throwOnShutdown)
 {
-    // Sleep for the desired interval.  If the thread is shutdown
+    // Sleep for the desired interval.  If the thread is shutdown or notified
     // during that interval, we will return early (or throw
     // EThreadShutdown if so requested).
 
@@ -111,14 +104,14 @@ void Thread::interruptibleSleep(const struct timespec &interval, bool throwReque
     struct timespec now = rtc.GetTime();  // realtime now
     struct timespec end = now + interval; // realtime end of sleep
 
-    AutoUnlockMutex lock(mShutdownRequestedLock);
-    while (!mThreadShutdown)
+    AutoUnlockMutex lock(mNotifyLock);
+    while (!mThreadShutdown && !mNotified)
     {
-        int status = mShutdownRequested.TimedWait(end);
+        int status = mNotifyCond.TimedWait(end);
         if (status == 0)
         {
             // The condition was signalled.
-            if (throwRequested)
+            if (mThreadShutdown && throwOnShutdown)
                 throw EThreadShutdown();
             else
                 return;
@@ -128,7 +121,7 @@ void Thread::interruptibleSleep(const struct timespec &interval, bool throwReque
         else if (status == ETIMEDOUT)
         {
             // re-evaluate timeout, as spurious wakeups may occur
-            AutoLockMutex unlock(mShutdownRequestedLock);
+            AutoLockMutex unlock(mNotifyLock);
             // mutex is unlocked here
             struct timespec mnow = mc.GetTime(); // monotonic now
             if (interval < mnow - start)
@@ -143,6 +136,7 @@ void Thread::interruptibleSleep(const struct timespec &interval, bool throwReque
         }
         // mutex is re-locked here
     }
+    mNotified = false;
 }
 
 Thread::~Thread()

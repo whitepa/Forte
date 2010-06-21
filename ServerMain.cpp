@@ -4,41 +4,17 @@
 
 using namespace Forte;
 
-Mutex       ServerMain::sSingletonMutex;
-ServerMain* ServerMain::sSingletonPtr;
-
 ServerMain::ServerMain(int argc, char * const argv[], 
-                         const char *getoptstr, const char *defaultConfig,
-                         bool daemonize) :
+                       const char *getoptstr, const char *defaultConfig,
+                       bool daemonize) :
     mConfigFile(defaultConfig),
+    mDaemonName(argv[0]),
     mDaemon(daemonize)
 {
-    // set the singleton pointer
-    // TODO: get rid of this singleton stuff.
-    {
-        AutoUnlockMutex lock(sSingletonMutex);
-        if (sSingletonPtr != NULL)
-            throw ForteServerMainException("only one ServerMain object may exist");
-        else
-            sSingletonPtr = this;
-    }
-
-    mLogManager.SetGlobalLogMask(HLOG_NODEBUG); // suppress debug logging
-    // get the hostname
-    {
-        char hn[128];    
-        if (gethostname(hn, sizeof(hn)) < 0)
-        {
-            fprintf(stderr, "Unable to get hostname: %s\n", strerror(errno));
-            exit(1);
-        }
-        mHostname.assign(hn);
-        mHostname = mHostname.Left(mHostname.find_first_of("."));
-        hlog(HLOG_INFO, "determined hostname to be '%s'", mHostname.c_str());
-    }
     // check command line
     int i = 0;
     optind = 0;
+    int logMask = HLOG_NODEBUG;
     while (!i)
     {
         int c;
@@ -55,26 +31,111 @@ ServerMain::ServerMain(int argc, char * const argv[],
             mDaemon = false;
             break;
         case 'v':
-            mLogManager.SetGlobalLogMask(HLOG_ALL); // verbose logging
+            logMask = HLOG_ALL;
             break;
-        default:
+            /*default:
             if (!strchr(getoptstr, c))
             {
                 Usage();
                 exit(1);
                 break;
-            }
+            }*/
         }
     }
+
+    init(defaultConfig, logMask);
+}
+
+ServerMain::ServerMain(const FString& defaultConfig,
+                       int logMask,
+                       const FString& daemonName,
+                       bool daemonize)
+     : mConfigFile(defaultConfig),
+       mDaemonName(daemonName),
+       mDaemon(daemonize)
+{
+    init(defaultConfig, logMask);
+}
+
+void ServerMain::init(const FString& defaultConfig,
+                      int logMask)
+{
+    mLogManager.SetGlobalLogMask(logMask);
+
+    initHostname();
+
     // daemonize
     if (mDaemon && daemon(1,0)) {
         fprintf(stderr, "can't start as daemon: %s\n", strerror(errno));
         exit(1);
     }
+
     // read config file
     if (!mConfigFile.empty())
-        mServiceConfig.ReadConfigFile(mConfigFile);
-    
+        mServiceConfig.ReadConfigFile(mConfigFile);        
+
+    // pid file
+    mPidFile = mServiceConfig.Get("pidfile");
+    if (!mPidFile.empty()) WritePidFile();
+
+    initLogging();
+    hlog(HLOG_INFO, "%s is starting up", mDaemonName.c_str());
+
+    // setup sigmask
+    PrepareSigmask();
+}
+
+void ServerMain::initHostname()
+{
+    // get the hostname
+    {
+        char hn[128];    
+        if (gethostname(hn, sizeof(hn)) < 0)
+        {
+            fprintf(stderr, "Unable to get hostname: %s\n", strerror(errno));
+            exit(1);
+        }
+        mHostname.assign(hn);
+        mHostname = mHostname.Left(mHostname.find_first_of("."));
+        hlog(HLOG_INFO, "determined hostname to be '%s'", mHostname.c_str());
+    }
+}
+
+void ServerMain::initLogging()
+{
+    // setup logging
+    // set logfile path
+    mLogFile = mServiceConfig.Get("logfile.path");
+
+    // if we are not running as a daemon, use the log level
+    // the conf file
+    FString stmp, logMask;
+    if ((stmp = mServiceConfig.Get("logfile.level")) != "")
+    {
+        //TODO: move this logic into the log manager
+        if (stmp.MakeUpper() == "ALL")
+        {
+            mLogManager.SetGlobalLogMask(HLOG_ALL);
+        }
+        else if (stmp.MakeUpper() == "NODEBUG")
+        {
+            mLogManager.SetGlobalLogMask(HLOG_NODEBUG);
+        }
+        else
+        {
+            mLogManager.SetGlobalLogMask(strtoul(stmp, NULL, 0));
+        }
+    }
+
+    if (!mDaemon)
+    {
+        // log to stderr if running interactively, use logmask as set
+        // by CServerMain
+        mLogManager.BeginLogging("//stderr");
+    }
+    if (!mLogFile.empty()) mLogManager.BeginLogging(mLogFile);
+
+    VersionManager::LogVersions();
 }
 
 ServerMain::~ServerMain()
@@ -97,10 +158,6 @@ ServerMain::~ServerMain()
 
     // delete the pidfile
     unlink(mPidFile.c_str());
-
-    // unset the singleton pointer
-    AutoUnlockMutex lock(sSingletonMutex);
-    sSingletonPtr = NULL;
 }
 
 void ServerMain::RegisterShutdownCallback(Callback *callback)
@@ -110,32 +167,13 @@ void ServerMain::RegisterShutdownCallback(Callback *callback)
     mShutdownCallbacks.insert(callback);
 }
 
-ServerMain& ServerMain::GetServer()
-{
-    // return a reference to the ServerMain object
-    AutoUnlockMutex lock(sSingletonMutex);
-    if (sSingletonPtr == NULL)
-        throw EEmptyReference("ServerMain object does not exist");
-    else
-        return *sSingletonPtr;
-}
-
-ServerMain* ServerMain::GetServerPtr()
-{
-    // return a pointer to the ServerMain object
-    AutoUnlockMutex lock(sSingletonMutex);
-    if (sSingletonPtr == NULL)
-        throw EEmptyReference("ServerMain object does not exist");
-    else
-        return sSingletonPtr;
-}
-
 void ServerMain::Usage()
 {
     cout << "Incorrect usage." << endl;
 }
 void ServerMain::WritePidFile()
 {
+    // \TODO:  get rid of this method.  See Forte::PidFile
     FILE *file;
     if ((file = fopen(mPidFile.c_str(), "r")) != NULL)
     {
@@ -164,7 +202,7 @@ void ServerMain::WritePidFile()
                         FString err;
                         err.Format("forte process already running on pid %u\n",
                                    old_pid);
-                        throw ForteServerMainException(err);
+                        throw EForteServerMain(err);
                     }
                 }
             }
@@ -177,7 +215,7 @@ void ServerMain::WritePidFile()
     {
         FString err;
         err.Format("Unable to write to pid file %s\n", mPidFile.c_str());
-        throw ForteServerMainException(err);
+        throw EForteServerMain(err);
     }
     else
     {

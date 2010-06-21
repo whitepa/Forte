@@ -22,7 +22,6 @@ LIB=$(TARGETDIR)/libfortemock.a
 
 SRCS = \
 	MockCurl.cpp \
-	MockCurlFactory.cpp \
 	MockProcRunner.cpp \
 	MockFileSystem.cpp \
 

@@ -11,7 +11,7 @@ namespace Forte
     {
     public:
         // ctor/dtor
-        MockCurl() {}
+        MockCurl(Context &context) : Curl(context) {}
         ~MockCurl() {}
 
         void setURL(const FString& url);

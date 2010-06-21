@@ -1,10 +1,12 @@
 #ifndef __forte_FileSystem_h
 #define __forte_FileSystem_h
 
+#include "Context.h"
 #include "Types.h"
 #include "LogManager.h"
 #include "AutoMutex.h"
 #include "AutoFD.h"
+#include "ProcRunner.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/statfs.h>
@@ -98,9 +100,10 @@ namespace Forte
         virtual FString ResolveRelativePath(const FString& base, 
                                             const FString& path);
 
-        virtual void FileCopy(const FString& from, 
-                               const FString& to, 
-                               mode_t mode = 0777);
+        virtual void FileCopy(ProcRunner &pr,
+                              const FString& from, 
+                              const FString& to, 
+                              mode_t mode = 0777);
 
         virtual FString FileGetContents(const FString& filename);
         virtual void FilePutContents(const FString& filename, 

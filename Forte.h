@@ -29,8 +29,6 @@ namespace Forte {};
 #include "CheckedInt32.h"
 #include "CheckedStringEnum.h"
 #include "Clock.h"
-#include "ClusterLock.h"
-//#include "Config.h"
 #include "Collector.h"
 #include "Context.h"
 #include "ContextPredicate.h"

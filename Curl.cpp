@@ -52,8 +52,8 @@ void Curl::Cleanup()
 
 
 // class methods
-Curl::Curl() :
-    mHandle(NULL), mThrowOnHTTPError(false)
+Curl::Curl(Context &context) :
+    mContext(context), mHandle(NULL), mThrowOnHTTPError(false)
 {
     if (!sDidInit)
     {
@@ -187,7 +187,8 @@ void Curl::Reset()
 void Curl::checkResolvConf()
 {
     struct stat st;
-    if (mFileSystem.Stat("/etc/resolv.conf", &st) == 0)
+    CGET("forte.FileSystem", FileSystem, fs);
+    if (fs.Stat("/etc/resolv.conf", &st) == 0)
     {
         if (st.st_mtime != mLastMtime)
         {

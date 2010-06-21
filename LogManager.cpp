@@ -185,7 +185,7 @@ LogMsg::LogMsg() :
 // LogContext
 LogContext::LogContext()
 {
-    LogManager &mgr(LogManager::getInstance());
+    LogManager &mgr(LogManager::GetInstance());
     if (mgr.mLogContextStackKey.Get() == NULL)
         mgr.mLogContextStackKey.Set(new LogContextStack());
     mLogMgrPtr = &mgr;
