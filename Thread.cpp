@@ -141,10 +141,19 @@ void Thread::interruptibleSleep(const struct timespec &interval, bool throwOnShu
 
 Thread::~Thread()
 {
+    FTRACE;
+
     // tell the thread to shut down
     Shutdown();
 
     // Join the pthread
     // (this will block until the thread exits)
     pthread_join(mThread, NULL);
+}
+
+void Thread::Shutdown(void)
+{
+    FTRACE;
+    mThreadShutdown = true;
+    Notify();
 }
