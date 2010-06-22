@@ -2,7 +2,6 @@
 #ifndef FORTE_NO_SQLITE
 
 // DbLiteResult.cpp
-#include "Forte.h"
 #include "DbLiteResult.h"
 #include "DbLiteConnection.h"
 

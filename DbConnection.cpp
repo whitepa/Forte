@@ -1,10 +1,10 @@
 #ifndef FORTE_NO_DB
 
 // DbConnection.cpp
-#include "Forte.h"
 #include "FTime.h"
 #include "DbConnection.h"
 #include "DbException.h"
+#include "LogManager.h"
 
 using namespace Forte;
 

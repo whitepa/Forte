@@ -1,4 +1,3 @@
-#include "Forte.h"
 #include "Base64.h"
 
 using namespace Forte;

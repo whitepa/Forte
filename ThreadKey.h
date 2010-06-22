@@ -1,6 +1,8 @@
 #ifndef __ThreadKey_h_
 #define __ThreadKey_h_
 
+#include <pthread.h>
+
 namespace Forte
 {
     class ThreadKey {

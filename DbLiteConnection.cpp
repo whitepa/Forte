@@ -1,10 +1,11 @@
 #ifndef FORTE_NO_DB
 #ifndef FORTE_NO_SQLITE
 
-#include "Forte.h"
 #include "DbLiteConnection.h"
 #include "DbLiteResult.h"
 #include "DbException.h"
+#include "LogManager.h"
+#include "Util.h"
 
 using namespace Forte;
 

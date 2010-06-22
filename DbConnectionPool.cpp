@@ -1,8 +1,11 @@
 #ifndef FORTE_NO_DB
 
-#include "Forte.h"
 #include "DbConnectionPool.h"
 #include "DbConnection.h"
+#include "DbLiteConnection.h"
+#include "DbMyConnection.h"
+#include "DbPgConnection.h"
+#include "LogManager.h"
 
 using namespace Forte;
 

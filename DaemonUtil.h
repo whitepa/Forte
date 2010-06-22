@@ -2,10 +2,12 @@
 #define __forte_daemon_util_h_
 
 #include "Object.h"
+#include "Exception.h"
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS2(Exception, ForkFailedException, "fork() failed");
+    EXCEPTION_CLASS(EDaemonUtil);
+    EXCEPTION_SUBCLASS2(EDaemonUtil, EDaemonForkFailedException, "fork() failed");
 
     class DaemonUtil : public Object
     {
