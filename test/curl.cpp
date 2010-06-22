@@ -2,6 +2,8 @@
 #include "Curl.h"
 #include "ansi_test.h"
 
+using namespace Forte;
+
 // not a unit test. i just need to find out if this will work
 
 typedef struct {
