@@ -38,6 +38,12 @@ namespace Forte
     
         void RegisterShutdownCallback(Callback *callback);
         
+	/**
+	 * Tell this server to shutdown
+	 */
+	void Shutdown();
+	bool mShutdown;
+
         FString mHostname;
         FString mConfigFile;
         FString mDaemonName;
@@ -50,6 +56,7 @@ namespace Forte
         Mutex mCallbackMutex;
         std::set<Callback*> mShutdownCallbacks;
         sigset_t mSigmask;
+	
 
     protected:
         void initHostname();

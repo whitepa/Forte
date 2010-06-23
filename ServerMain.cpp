@@ -7,6 +7,7 @@ using namespace Forte;
 ServerMain::ServerMain(int argc, char * const argv[], 
                        const char *getoptstr, const char *defaultConfig,
                        bool daemonize) :
+    mShutdown(false),
     mConfigFile(defaultConfig),
     mDaemonName(argv[0]),
     mDaemon(daemonize)
@@ -235,32 +236,55 @@ void ServerMain::PrepareSigmask()
     pthread_sigmask(SIG_BLOCK, &mSigmask, NULL);
 }
 
+void ServerMain::Shutdown()
+{
+    FTRACE;
+    
+    mShutdown = true;
+}
+
 void ServerMain::MainLoop()
 {
     // loop to receive signals
     int quit = 0;
     int sig;
+    siginfo_t siginfo;
+    struct timespec timeout;
 
-    while (!quit)
+    timeout.tv_sec=0;
+    timeout.tv_nsec=100000000; // 100 ms
+    
+    while (!quit && !mShutdown)
     {
-        sigwait(&mSigmask, &sig);
-
-        switch(sig)
-        {
-        case SIGINT:
-        case SIGTERM:
-        case SIGQUIT:
-            hlog(HLOG_INFO,"Quitting due to signal %d.", sig);
-            quit = 1;
-            break;
-        case SIGHUP:
-            // log rotation has occurred XXX need to lock logging system
-            hlog(HLOG_INFO, "reopening log files");
-            mLogManager.Reopen();
-            hlog(HLOG_INFO, "log file reopened");
-            break;
-        default:
-            hlog(HLOG_ERR,"Unhandled signal %d received.", sig);
-        }
-    }
-}
+//        sigwait(&mSigmask, &sig);
+	if (sigtimedwait(&mSigmask, &siginfo, &timeout) >= 0)
+	{
+	    sig = siginfo.si_signo;
+	    switch(sig)
+	    {
+	    case SIGINT:
+	    case SIGTERM:
+	    case SIGQUIT:
+		hlog(HLOG_INFO,"Quitting due to signal %d.", sig);
+		quit = 1;
+		break;
+	    case SIGHUP:
+		// log rotation has occurred XXX need to lock logging system
+		hlog(HLOG_INFO, "reopening log files");
+		mLogManager.Reopen();
+		hlog(HLOG_INFO, "log file reopened");
+		break;
+	    default:
+		hlog(HLOG_ERR,"Unhandled signal %d received.", sig);
+	    }
+	}
+	else if (errno != EAGAIN) // EAGAIN when timeout occurs
+	{
+	    // should only be EINTR (interrupted with a signal not in sig mask)
+	    //                EINVAL (invalid timeout)
+	    hlog(HLOG_ERR, "Error while calling sigtimedwait (%s)", 
+		 strerror(errno));
+	    
+	}
+    } 
+ }
