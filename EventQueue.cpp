@@ -94,6 +94,18 @@ shared_ptr<Event> EventQueue::Get(void)
     return e;
 }
 
+shared_ptr<Event> EventQueue::Peek(void)
+{
+    AutoUnlockMutex lock(mMutex);
+    shared_ptr<Event> e;
+    std::list<shared_ptr<Event> >::iterator i;
+    i = mQueue.begin();
+    if (i == mQueue.end())
+        return e;
+    e = *i;
+    return e;
+}
+
 int EventQueue::GetEvents(int maxEvents, std::list<shared_ptr<Event> > &result)
 {
     result.clear();

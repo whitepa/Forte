@@ -26,6 +26,7 @@ namespace Forte
 
         void Add(shared_ptr<Event> e);
         shared_ptr<Event> Get(void);
+        shared_ptr<Event> Peek(void);
         inline bool Accepting(void) { return (!mShutdown && ((mMaxDepth.GetValue() > 0) ? true : false));}
         inline int Depth(void) {AutoUnlockMutex lock(mMutex); return mQueue.size();};
 
