@@ -72,11 +72,12 @@ void ServerMain::init(const FString& defaultConfig,
     }
 
     // read config file
+    CGET("forte.ServiceConfig", ServiceConfig, sc);
     if (!mConfigFile.empty())
-        mServiceConfig.ReadConfigFile(mConfigFile);        
+        sc.ReadConfigFile(mConfigFile);
 
     // pid file
-    mPidFile = mServiceConfig.Get("pidfile");
+    mPidFile = sc.Get("pidfile");
     if (!mPidFile.empty()) WritePidFile();
 
     initLogging();
@@ -104,14 +105,16 @@ void ServerMain::initHostname()
 
 void ServerMain::initLogging()
 {
+    CGET("forte.ServiceConfig", ServiceConfig, sc);
+
     // setup logging
     // set logfile path
-    mLogFile = mServiceConfig.Get("logfile.path");
+    mLogFile = sc.Get("logfile.path");
 
     // if we are not running as a daemon, use the log level
     // the conf file
     FString stmp, logMask;
-    if ((stmp = mServiceConfig.Get("logfile.level")) != "")
+    if ((stmp = sc.Get("logfile.level")) != "")
     {
         //TODO: move this logic into the log manager
         if (stmp.MakeUpper() == "ALL")
@@ -121,6 +124,11 @@ void ServerMain::initLogging()
         else if (stmp.MakeUpper() == "NODEBUG")
         {
             mLogManager.SetGlobalLogMask(HLOG_NODEBUG);
+        }
+        else if (stmp.MakeUpper() == "MOST")
+        {
+            mLogManager.SetGlobalLogMask(HLOG_ALL ^ HLOG_DEBUG4);
+            hlog(HLOG_INFO, "most (all xor DEBUG4)");
         }
         else
         {
@@ -141,31 +149,9 @@ void ServerMain::initLogging()
 
 ServerMain::~ServerMain()
 {
-    // call the shutdown callbacks
-    hlog(HLOG_DEBUG, "ServerMain shutdown: calling shutdown callbacks...");
-    {
-        AutoUnlockMutex lock(mCallbackMutex);
-        std::set<Callback*>::iterator i;
-        for (i = mShutdownCallbacks.begin();
-             i != mShutdownCallbacks.end();
-             i++)
-        {
-            // execute the callback
-            (*i)->Execute();
-            // free the callback
-            delete (*i);
-        }
-    }
-
     // delete the pidfile
     unlink(mPidFile.c_str());
-}
-
-void ServerMain::RegisterShutdownCallback(Callback *callback)
-{
-    hlog(HLOG_DEBUG, "registering shutdown callback");
-    AutoUnlockMutex lock(mCallbackMutex);
-    mShutdownCallbacks.insert(callback);
+    mContext.Remove("forte.ServiceConfig");
 }
 
 void ServerMain::Usage()
