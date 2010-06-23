@@ -89,6 +89,16 @@ void Thread::WaitForShutdown()
     mShutdownCompleteCondition.Wait();
 }
 
+void Thread::WaitForInitialize()
+{
+    FTRACE;
+    AutoUnlockMutex lock(mNotifyLock);
+    while (!mInitialized)
+    {
+	mNotifyCond.Wait();
+    }
+}
+
 void Thread::interruptibleSleep(const struct timespec &interval, bool throwOnShutdown)
 {
     // Sleep for the desired interval.  If the thread is shutdown or notified
