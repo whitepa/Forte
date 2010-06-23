@@ -92,7 +92,7 @@ ServerMain::ServerMain(int argc, char * const argv[],
         else if (stmp.MakeUpper() == "MOST")
         {
             mLogManager.SetGlobalLogMask(HLOG_ALL ^ HLOG_DEBUG4);
-            logMask = "most (all xor DEBUG4)";
+            hlog(HLOG_INFO, "most (all xor DEBUG4)");
         }
         else
         {
