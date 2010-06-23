@@ -89,6 +89,11 @@ ServerMain::ServerMain(int argc, char * const argv[],
             mLogManager.SetGlobalLogMask(HLOG_NODEBUG);
             hlog(HLOG_INFO, "Log mask set to NODEBUG");
         }
+        else if (stmp.MakeUpper() == "MOST")
+        {
+            mLogManager.SetGlobalLogMask(HLOG_ALL ^ HLOG_DEBUG4);
+            logMask = "most (all xor DEBUG4)";
+        }
         else
         {
             mLogManager.SetGlobalLogMask(strtoul(stmp, NULL, 0));
