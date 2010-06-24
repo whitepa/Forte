@@ -16,7 +16,7 @@ CCCARGS = $(CCARGS)
 
 LIBS = $(FORTE_LIBS) -lfl -lpthread
 
-CLEAN += SQLParse.[ch]pp SQLScan.cpp SQLParse.output
+CLEAN += SQLParse.[ch]pp SQLScan.cpp SQLParse.output $(EXPORT_BIN)/dbc
 
 OBJDEPS=SQLScan.ll SQLParse.yy
 
