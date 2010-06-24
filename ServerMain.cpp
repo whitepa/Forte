@@ -61,6 +61,9 @@ ServerMain::ServerMain(const FString& defaultConfig,
 void ServerMain::init(const FString& defaultConfig,
                       int logMask)
 {
+    // setup the config
+    CSET("forte.ServiceConfig", ServiceConfig);
+
     mLogManager.SetGlobalLogMask(logMask);
 
     initHostname();
