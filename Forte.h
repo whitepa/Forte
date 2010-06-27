@@ -89,6 +89,7 @@ namespace Forte {};
 #include "Semaphore.h"
 #include "ServiceConfig.h"
 #include "ServerMain.h"
+#include "StateAction.h"
 #include "StateMachine.h"
 #include "Thread.h"
 #include "ThreadCondition.h"
