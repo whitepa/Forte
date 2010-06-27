@@ -1,7 +1,7 @@
 #ifndef __secure_envelope_h
 #define __secure_envelope_h
 
-#include "Forte.h"
+#include "SecureEnvelope.h"
 #ifndef FORTE_NO_OPENSSL
 #include "SecureString.h"
 

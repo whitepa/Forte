@@ -1,4 +1,5 @@
-#include "Forte.h"
+#include "VersionManager.h"
+
 using namespace Forte;
 
 Mutex VersionManager::sLock;

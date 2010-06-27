@@ -1,5 +1,6 @@
 // Exception.cpp
-#include "Forte.h"
+#include "Exception.h"
+#include "FTrace.h"
 #include <sys/types.h>
 #include <unistd.h>
 

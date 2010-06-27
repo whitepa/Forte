@@ -2,12 +2,13 @@
 #define __Secure_String_h_
 #ifndef FORTE_NO_OPENSSL
 #include "FString.h"
+#include "Exception.h"
 #include <openssl/bio.h>
 #include <openssl/rsa.h>
 
 namespace Forte
 {
-    EXCEPTION_CLASS(ForteSecureStringException);
+    EXCEPTION_CLASS(ESecureString);
 
     class PublicKey;
     class PrivateKey;

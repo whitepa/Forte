@@ -1,8 +1,11 @@
-#include "Forte.h"
 #include <csignal>
+#include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-
+#include "ServerMain.h"
+#include "FTrace.h"
+#include "VersionManager.h"
 using namespace Forte;
+using namespace boost;
 
 ServerMain::ServerMain(int argc, char * const argv[], 
                        const char *getoptstr, const char *defaultConfig,

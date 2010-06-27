@@ -2,7 +2,6 @@
 
 // DbRow.cpp
 
-#include "Forte.h"
 #include "DbRow.h"
 
 using namespace Forte;

@@ -1,5 +1,5 @@
-#include "Forte.h"
 #ifndef FORTE_NO_OPENSSL
+#include "AutoMutex.h"
 #include "OpenSSLInitializer.h"
 #include "openssl/crypto.h"
 #include "openssl/evp.h"

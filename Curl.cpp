@@ -1,8 +1,10 @@
 // Curl.cpp
 #ifndef FORTE_NO_CURL
-#include "Forte.h"
+#include "Curl.h"
+#include <boost/shared_ptr.hpp>
 
 using namespace Forte;
+using namespace boost;
 
 #include <resolv.h>
 

@@ -1,7 +1,7 @@
 #ifndef FORTE_NO_DB
 
 // DbResult.cpp
-#include "Forte.h"
+#include "DbResult.h"
 
 using namespace Forte;
 

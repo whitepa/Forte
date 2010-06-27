@@ -2,7 +2,6 @@
 #ifndef FORTE_NO_POSTGRESQL
 
 // DbPgConnection.cpp
-#include "Forte.h"
 #include "DbPgConnection.h"
 #include "DbPgResult.h"
 #include "DbException.h"

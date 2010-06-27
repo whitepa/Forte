@@ -4,11 +4,15 @@
 ///        within the profiling code as well.  'spent' does not.  This should
 ///        be fixed eventually...
 
-#include "Forte.h"
-
+#include "Foreach.h"
+#include "FTrace.h"
+#include "Types.h"
+#include "Util.h"
 #include <dlfcn.h>
+#include <map>
 
 using namespace Forte;
+using namespace std;
 
 ThreadKey FTrace::sTraceKey(FTrace::Cleanup);
 unsigned int FTrace::sInitialized = 0;

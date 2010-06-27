@@ -1,6 +1,6 @@
-#include "Forte.h"
 #ifndef FORTE_NO_OPENSSL
 #include "SecureString.h"
+#include "Base64.h"
 #include "Exception.h"
 #include <openssl/pem.h>
 #include <openssl/err.h>
@@ -10,17 +10,17 @@ using namespace Forte;
 KeyBuffer::KeyBuffer()
 {
     if ((mBuf = BIO_new(BIO_s_mem()))==NULL)
-        throw ForteSecureStringException("KeyBuffer(): failed to allocate buffer");
+        throw ESecureString("KeyBuffer(): failed to allocate buffer");
 }
 
 KeyBuffer::KeyBuffer(const FString &in)
 {
     if ((mBuf = BIO_new(BIO_s_mem()))==NULL)
-        throw ForteSecureStringException("KeyBuffer(): failed to allocate buffer");
+        throw ESecureString("KeyBuffer(): failed to allocate buffer");
 //    BIO_write(mBuf,(void *)in.c_str(), in.length());
     BIO_puts(mBuf, in.c_str());
 //    if ((mBuf = BIO_new_mem_buf(const_cast<void *>((const void *)in.c_str()), in.length()))==NULL)
-//        throw ForteSecureStringException("KeyBuffer(): failed to allocate buffer");
+//        throw ESecureString("KeyBuffer(): failed to allocate buffer");
 }
 
 KeyBuffer::~KeyBuffer()
@@ -43,7 +43,7 @@ PublicKey::PublicKey(const KeyBuffer &keybuf, const char *passphrase)
     {
         ERR_load_crypto_strings();
 //        ERR_print_errors_fp(stderr);
-        throw ForteSecureStringException(FStringFC(),
+        throw ESecureString(FStringFC(),
                          "failed to load public key: %s",
                          ERR_error_string(ERR_get_error(), NULL));
     }
@@ -67,7 +67,7 @@ PrivateKey::PrivateKey(const KeyBuffer &keybuf, const char *passphrase)
     {
         ERR_load_crypto_strings();
 //        ERR_print_errors_fp(stderr);
-        throw ForteSecureStringException(FStringFC(),
+        throw ESecureString(FStringFC(),
                          "failed to load private key: %s",
                          ERR_error_string(ERR_get_error(), NULL));
     }
@@ -85,7 +85,7 @@ RSAString::RSAString(const FString &plaintext, PublicKey &key)
     size_t size = RSA_size(key.mKey);
     // length must be less than RSA_size() - 11 (per RSA_public_encrypt(3))
     if (plaintext.length() + 1 > size - 11)
-        throw ForteSecureStringException(FStringFC(), "plaintext is too long for key; max is %u bytes",
+        throw ESecureString(FStringFC(), "plaintext is too long for key; max is %u bytes",
                          (unsigned)(size - 11));
     unsigned char *ciphertext = new unsigned char[size];
     memset(ciphertext, 0, size);
@@ -94,7 +94,7 @@ RSAString::RSAString(const FString &plaintext, PublicKey &key)
     {
         delete [] ciphertext;
         ERR_load_crypto_strings();
-        throw ForteSecureStringException(FStringFC(), "RSAString: Encryption failed: %s", 
+        throw ESecureString(FStringFC(), "RSAString: Encryption failed: %s", 
                          ERR_error_string(ERR_get_error(), NULL));
     }
     // convert to text
@@ -122,13 +122,13 @@ void RSAString::GetPlainText(FString &plaintext/*OUT*/, PrivateKey &key)
         delete [] plain;
         ERR_load_crypto_strings();
         ERR_print_errors_fp(stderr);
-        throw ForteSecureStringException(FStringFC(), "RSAString: Decryption failed: %s",
+        throw ESecureString(FStringFC(), "RSAString: Decryption failed: %s",
                          ERR_error_string(ERR_get_error(), NULL));
     }
     else if (plainsize > (int)size)
     {
         delete [] plain;
-        throw ForteSecureStringException("plainsize > RSA_size()");
+        throw ESecureString("plainsize > RSA_size()");
     }
     // don't count the last char if it's null when assigning to the FString
     if (plainsize > 0 && plain[plainsize - 1] == 0)

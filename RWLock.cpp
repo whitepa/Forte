@@ -1,5 +1,6 @@
 // RWLock.cpp
-#include "Forte.h"
+#include "LogManager.h"
+#include "RWLock.h"
 
 using namespace Forte;
 
@@ -51,7 +52,7 @@ void RWLock::_WriteUnlock(const char *file, unsigned line)
     if (mReadLockMutex.GetValue() != 0)
     {
         err.Format("WriteUnlock: no write lock held: %s:%u", mFile.c_str(), mLine);
-        throw std::logic_error(err);
+        throw ERWLock(err);
     }
 #endif
 
@@ -74,13 +75,13 @@ void RWLock::_WriteUnlockReadLock(const char *file, unsigned line)
     if (mMainLock.GetValue() != 0)
     {
         err.Format("WriteUnlockReadLock: no write lock held: %s:%u", mFile.c_str(), mLine);
-        throw std::logic_error(err);
+        throw ERWLock(err);
     }
 
     if (mReadLockCount.GetValue() != 0)
     {
         err.Format("WriteUnlockReadLock: read lock count already 0: %s:%u", mFile.c_str(), mLine);
-        throw std::logic_error(err);
+        throw ERWLock(err);
     }
 #endif
 
@@ -148,7 +149,7 @@ void RWLock::_ReadUnlock(const char *file, unsigned line)
     {
         err.Format("ReadUnlock: no read lock held: %s:%u", mFile.c_str(), mLine);
         mReadLockAtomic.Post();
-        throw std::logic_error(err);
+        throw ERWLock(err);
     }
 #endif
 
