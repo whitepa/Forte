@@ -69,7 +69,7 @@ namespace Forte
     {
     public:
         FunctionEntry(const char *functionName, const char *file, int line) : mFN(functionName), mFile(file), mLine(line) {
-            _hlog(mFN.c_str(), mFile, mLine, HLOG_DEBUG, "ENTER %s", mFN.c_str());
+            _hlog(mFN.c_str(), mFile, mLine, HLOG_DEBUG, "ENTER");
         }        
     
         FunctionEntry(const char *functionName, const char *file, int line, const char*fmt, ...) __attribute__((format(printf, 5, 6))): mFN(functionName), mFile(file), mLine(line)
@@ -78,12 +78,12 @@ namespace Forte
 	    va_list args;
 	    va_start(args, fmt);
 	    vsprintf(buffer, fmt, args); // \TODO fix this buffer overflow
-	    _hlog(mFN.c_str(), mFile, mLine, HLOG_DEBUG, "ENTER %s(%s)", mFN.c_str(), buffer);
+	    _hlog(mFN.c_str(), mFile, mLine, HLOG_DEBUG, "ENTER (%s)", buffer);
 	    va_end(args);
         }
 
         virtual ~FunctionEntry() {
-	    _hlog(mFN.c_str(), mFile, mLine, HLOG_DEBUG, "EXIT %s", mFN.c_str());
+	    _hlog(mFN.c_str(), mFile, mLine, HLOG_DEBUG, "EXIT");
         }
     protected:
         FString mFN;
@@ -98,7 +98,7 @@ namespace Forte
  * scope.
  * This macro passes function name, file, and line.
  */
-#define FTRACE Forte::FunctionEntry _forte_trace_object(__FUNCTION__, __FILE__, __LINE__)
+#define FTRACE Forte::FunctionEntry _forte_trace_object(__PRETTY_FUNCTION__, __FILE__, __LINE__)
 /**
  * Same as FTRACE except allows a format string to be passed in
  * as well.
@@ -108,7 +108,7 @@ namespace Forte
  *   Output (on enter):
  *     ENTER function(arg1, arg2)
  */
-#define FTRACE2(FMT...) Forte::FunctionEntry _forte_trace_object(__FUNCTION__, __FILE__, __LINE__, FMT)
+#define FTRACE2(FMT...) Forte::FunctionEntry _forte_trace_object(__PRETTY_FUNCTION__, __FILE__, __LINE__, FMT)
 //#else
 //#define FTRACE
 //#endif
