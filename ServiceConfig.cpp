@@ -1,4 +1,6 @@
-#include "Forte.h"
+#include "Foreach.h"
+#include "FTrace.h"
+#include "ServiceConfig.h"
 
 using namespace Forte;
 
