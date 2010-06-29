@@ -39,10 +39,7 @@ namespace Forte
         virtual ~Thread();
 
         // Tell a thread to shut itself down.
-        inline void Shutdown(void) { 
-            mThreadShutdown = true;
-            Notify();
-         };
+        virtual void Shutdown(void);
 
         inline void Notify(void) {
             AutoUnlockMutex lock(mNotifyLock);
@@ -52,6 +49,9 @@ namespace Forte
 
         // Wait for a thread to shutdown.
         void WaitForShutdown(void);
+
+	// Wait for this tread to be initialized
+	void WaitForInitialize(void);
 
         // is a thread flagged to be shut down?
         bool IsShuttingDown(void) { return mThreadShutdown; }

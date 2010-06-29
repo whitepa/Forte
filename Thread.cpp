@@ -20,6 +20,8 @@ Thread * Thread::MyThread(void)
 }
 void * Thread::startThread(void *obj)
 { 
+    FTRACE;
+
     // initialize the thread key once
     pthread_once(&sThreadKeyOnce, makeKey);
     // store pointer to this object in the key
@@ -67,9 +69,9 @@ void * Thread::startThread(void *obj)
     thr->mThreadShutdown = true;
 
     // notify that shutdown is complete
-    hlog(HLOG_DEBUG, "Broadcasting thread shutdown");
     AutoUnlockMutex lock(thr->mShutdownCompleteLock);
     thr->mShutdownComplete = true;
+    hlog(HLOG_DEBUG, "Broadcasting thread shutdown");
     thr->mShutdownCompleteCondition.Broadcast();
 
     return retval;
@@ -87,6 +89,16 @@ void Thread::WaitForShutdown()
     AutoUnlockMutex lock(mShutdownCompleteLock);
     if (mShutdownComplete) return;
     mShutdownCompleteCondition.Wait();
+}
+
+void Thread::WaitForInitialize()
+{
+    FTRACE;
+    AutoUnlockMutex lock(mNotifyLock);
+    while (!mInitialized)
+    {
+	mNotifyCond.Wait();
+    }
 }
 
 void Thread::interruptibleSleep(const struct timespec &interval, bool throwOnShutdown)
@@ -141,10 +153,19 @@ void Thread::interruptibleSleep(const struct timespec &interval, bool throwOnShu
 
 Thread::~Thread()
 {
+    FTRACE;
+
     // tell the thread to shut down
     Shutdown();
 
     // Join the pthread
     // (this will block until the thread exits)
     pthread_join(mThread, NULL);
+}
+
+void Thread::Shutdown(void)
+{
+    FTRACE;
+    mThreadShutdown = true;
+    Notify();
 }

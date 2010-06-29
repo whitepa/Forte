@@ -7,24 +7,15 @@ using namespace Forte;
 ServerMain::ServerMain(int argc, char * const argv[], 
                        const char *getoptstr, const char *defaultConfig,
                        bool daemonize) :
+    mShutdown(false),
     mConfigFile(defaultConfig),
+    mDaemonName(argv[0]),
     mDaemon(daemonize)
 {
-    // get the hostname
-    {
-        char hn[128];    
-        if (gethostname(hn, sizeof(hn)) < 0)
-        {
-            fprintf(stderr, "Unable to get hostname: %s\n", strerror(errno));
-            exit(1);
-        }
-        mHostname.assign(hn);
-        mHostname = mHostname.Left(mHostname.find_first_of("."));
-        hlog(HLOG_INFO, "determined hostname to be '%s'", mHostname.c_str());
-    }
     // check command line
     int i = 0;
     optind = 0;
+    int logMask = HLOG_NODEBUG;
     while (!i)
     {
         int c;
@@ -41,25 +32,48 @@ ServerMain::ServerMain(int argc, char * const argv[],
             mDaemon = false;
             break;
         case 'v':
-            mLogManager.SetGlobalLogMask(HLOG_ALL); // verbose logging
+            logMask = HLOG_ALL;
             break;
-        default:
+            /*default:
             if (!strchr(getoptstr, c))
             {
                 Usage();
                 exit(1);
                 break;
-            }
+            }*/
         }
     }
+
+    init(defaultConfig, logMask);
+}
+
+ServerMain::ServerMain(const FString& defaultConfig,
+                       int logMask,
+                       const FString& daemonName,
+                       bool daemonize)
+     : mConfigFile(defaultConfig),
+       mDaemonName(daemonName),
+       mDaemon(daemonize)
+{
+    init(defaultConfig, logMask);
+}
+
+void ServerMain::init(const FString& defaultConfig,
+                      int logMask)
+{
+    // setup the config
+    CSET("forte.ServiceConfig", ServiceConfig);
+
+    mLogManager.SetGlobalLogMask(logMask);
+
+    initHostname();
+
     // daemonize
     if (mDaemon && daemon(1,0)) {
         fprintf(stderr, "can't start as daemon: %s\n", strerror(errno));
         exit(1);
     }
 
-    // create a configuration object
-    CSET("forte.ServiceConfig", ServiceConfig);
     // read config file
     CGET("forte.ServiceConfig", ServiceConfig, sc);
     if (!mConfigFile.empty())
@@ -68,33 +82,72 @@ ServerMain::ServerMain(int argc, char * const argv[],
     // pid file
     mPidFile = sc.Get("pidfile");
     if (!mPidFile.empty()) WritePidFile();
-    
+
+    initLogging();
+    hlog(HLOG_INFO, "%s is starting up", mDaemonName.c_str());
+
+    // setup sigmask
+    PrepareSigmask();
+}
+
+void ServerMain::initHostname()
+{
+    // get the hostname
+    {
+        char hn[128];    
+        if (gethostname(hn, sizeof(hn)) < 0)
+        {
+            fprintf(stderr, "Unable to get hostname: %s\n", strerror(errno));
+            exit(1);
+        }
+        mHostname.assign(hn);
+        mHostname = mHostname.Left(mHostname.find_first_of("."));
+        hlog(HLOG_INFO, "determined hostname to be '%s'", mHostname.c_str());
+    }
+}
+
+void ServerMain::initLogging()
+{
+    CGET("forte.ServiceConfig", ServiceConfig, sc);
+
     // setup logging
     // set logfile path
     mLogFile = sc.Get("logfile.path");
 
     // if we are not running as a daemon, use the log level
     // the conf file
-    FString stmp;
+    FString stmp, logMask;
     if ((stmp = sc.Get("logfile.level")) != "")
     {
         //TODO: move this logic into the log manager
         if (stmp.MakeUpper() == "ALL")
         {
             mLogManager.SetGlobalLogMask(HLOG_ALL);
-            hlog(HLOG_INFO, "Log mask set to ALL");
         }
         else if (stmp.MakeUpper() == "NODEBUG")
         {
             mLogManager.SetGlobalLogMask(HLOG_NODEBUG);
-            hlog(HLOG_INFO, "Log mask set to NODEBUG");
+        }
+        else if (stmp.MakeUpper() == "MOST")
+        {
+            mLogManager.SetGlobalLogMask(HLOG_ALL ^ HLOG_DEBUG4);
+            hlog(HLOG_INFO, "most (all xor DEBUG4)");
         }
         else
         {
             mLogManager.SetGlobalLogMask(strtoul(stmp, NULL, 0));
-            hlog(HLOG_INFO, "Log mask set to 0x%08lx", strtoul(stmp, NULL, 0));
         }
     }
+
+    if (!mDaemon)
+    {
+        // log to stderr if running interactively, use logmask as set
+        // by CServerMain
+        mLogManager.BeginLogging("//stderr");
+    }
+    if (!mLogFile.empty()) mLogManager.BeginLogging(mLogFile);
+
+    VersionManager::LogVersions();
 }
 
 ServerMain::~ServerMain()
@@ -139,7 +192,7 @@ void ServerMain::WritePidFile()
                         FString err;
                         err.Format("forte process already running on pid %u\n",
                                    old_pid);
-                        throw ForteServerMainException(err);
+                        throw EForteServerMain(err);
                     }
                 }
             }
@@ -152,7 +205,7 @@ void ServerMain::WritePidFile()
     {
         FString err;
         err.Format("Unable to write to pid file %s\n", mPidFile.c_str());
-        throw ForteServerMainException(err);
+        throw EForteServerMain(err);
     }
     else
     {
@@ -172,32 +225,55 @@ void ServerMain::PrepareSigmask()
     pthread_sigmask(SIG_BLOCK, &mSigmask, NULL);
 }
 
+void ServerMain::Shutdown()
+{
+    FTRACE;
+    
+    mShutdown = true;
+}
+
 void ServerMain::MainLoop()
 {
     // loop to receive signals
     int quit = 0;
     int sig;
+    siginfo_t siginfo;
+    struct timespec timeout;
 
-    while (!quit)
+    timeout.tv_sec=0;
+    timeout.tv_nsec=100000000; // 100 ms
+    
+    while (!quit && !mShutdown)
     {
-        sigwait(&mSigmask, &sig);
-
-        switch(sig)
-        {
-        case SIGINT:
-        case SIGTERM:
-        case SIGQUIT:
-            hlog(HLOG_INFO,"Quitting due to signal %d.", sig);
-            quit = 1;
-            break;
-        case SIGHUP:
-            // log rotation has occurred XXX need to lock logging system
-            hlog(HLOG_INFO, "reopening log files");
-            mLogManager.Reopen();
-            hlog(HLOG_INFO, "log file reopened");
-            break;
-        default:
-            hlog(HLOG_ERR,"Unhandled signal %d received.", sig);
-        }
-    }
-}
+//        sigwait(&mSigmask, &sig);
+	if (sigtimedwait(&mSigmask, &siginfo, &timeout) >= 0)
+	{
+	    sig = siginfo.si_signo;
+	    switch(sig)
+	    {
+	    case SIGINT:
+	    case SIGTERM:
+	    case SIGQUIT:
+		hlog(HLOG_INFO,"Quitting due to signal %d.", sig);
+		quit = 1;
+		break;
+	    case SIGHUP:
+		// log rotation has occurred XXX need to lock logging system
+		hlog(HLOG_INFO, "reopening log files");
+		mLogManager.Reopen();
+		hlog(HLOG_INFO, "log file reopened");
+		break;
+	    default:
+		hlog(HLOG_ERR,"Unhandled signal %d received.", sig);
+	    }
+	}
+	else if (errno != EAGAIN) // EAGAIN when timeout occurs
+	{
+	    // should only be EINTR (interrupted with a signal not in sig mask)
+	    //                EINVAL (invalid timeout)
+	    hlog(HLOG_ERR, "Error while calling sigtimedwait (%s)", 
+		 strerror(errno));
+	    
+	}
+    } 
+ }

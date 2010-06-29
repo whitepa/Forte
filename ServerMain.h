@@ -10,7 +10,7 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(Exception, ForteServerMainException);
+    EXCEPTION_SUBCLASS(Exception, EForteServerMain);
 
     class ServerMain : public Object
     {
@@ -18,15 +18,32 @@ namespace Forte
         ServerMain(int argc, char * const argv[], 
                    const char *getoptstr, const char *defaultConfig, 
                    bool daemonize = true);
+
+        /**
+         * Constructor to server main that takes neede parameters directly
+         **/
+        ServerMain(const FString& configPath,
+                   int logMask = HLOG_NODEBUG,
+                   const FString& daemonName = "",
+                   bool daemonize = true);
+
+
         virtual ~ServerMain();
 
         virtual void MainLoop();
         virtual void Usage();
         void WritePidFile();
-        void PrepareSigmask();
-    
+        virtual void PrepareSigmask();
+ 
+	/**
+	 * Tell this server to shutdown
+	 */
+	void Shutdown();
+	bool mShutdown;
+
         FString mHostname;
         FString mConfigFile;
+        FString mDaemonName;
         FString mLogFile;
         FString mPidFile;
         bool mDaemon;
@@ -34,6 +51,17 @@ namespace Forte
         Context mContext;
         Mutex mCallbackMutex;
         sigset_t mSigmask;
+	
+
+    protected:
+        void initHostname();
+        void initLogging();
+
+    private:
+        /**
+         * Private init called from constructor to init the object. called by both construct
+         **/
+        void init(const FString& configPath, int logMask);
     };
 };
 #endif
