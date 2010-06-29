@@ -12,7 +12,7 @@ namespace Forte
     class MockProcRunner : public ProcRunner
     {
     public:
-        int run(const FString& command, 
+        int Run(const FString& command, 
                 const FString& cwd, 
                 FString *output,
                 unsigned int timeout, 
@@ -20,20 +20,20 @@ namespace Forte
                 const FString &infile = "/dev/null");
 
         // mock specific
-        void clearCommandList();
-        StrList* getCommandList();
+        void ClearCommandList();
+        StrList* GetCommandList();
 
-        void clearCommandResponseMap();
+        void ClearCommandResponseMap();
 
-        void setCommandResponse(
+        void SetCommandResponse(
             const FString& command, 
             const FString& response, 
             int response_code=0
             );
 
-        void queueCommandResponse(const FString& response, int response_code=0);
+        void QueueCommandResponse(const FString& response, int response_code=0);
 
-        bool commandWasRun(const FString& command);
+        bool CommandWasRun(const FString& command);
 
     protected:
         StrList m_command_list;
@@ -42,8 +42,6 @@ namespace Forte
         StrStrMap m_command_response_map;
         StrIntMap m_command_response_code_map;
 
-        static ProcRunner *s_real_pr;
-        static MockProcRunner *s_mock_pr;
     };
 }
 #endif

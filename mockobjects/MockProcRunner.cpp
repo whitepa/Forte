@@ -2,7 +2,7 @@
 
 using namespace Forte;
 
-int MockProcRunner::run(const FString& command, 
+int MockProcRunner::Run(const FString& command, 
                         const FString& cwd,
                         FString *output, 
                         unsigned int timeout,
@@ -38,7 +38,10 @@ int MockProcRunner::run(const FString& command,
     }
     else if ((i = m_response_queue.begin()) != m_response_queue.end())
     {
-        *output = *i;
+        if (output != NULL)
+        {
+            *output = *i;            
+        }
         int response_code = *(m_response_code_queue.begin());
         m_response_queue.pop_front();
         m_response_code_queue.pop_front();
@@ -46,7 +49,6 @@ int MockProcRunner::run(const FString& command,
     }
     else
     {
-
         stmp.Format("MockProcRunner received unexpected command: %s",
                     command.c_str());
 
@@ -55,32 +57,32 @@ int MockProcRunner::run(const FString& command,
     }
 }
 
-void MockProcRunner::clearCommandList()
+void MockProcRunner::ClearCommandList()
 {
     m_command_list.clear();
 }
-StrList* MockProcRunner::getCommandList()
+StrList* MockProcRunner::GetCommandList()
 {
     return &m_command_list;
 }
 
-void MockProcRunner::clearCommandResponseMap()
+void MockProcRunner::ClearCommandResponseMap()
 {
     m_command_response_map.clear();
     m_command_response_code_map.clear();
 }
-void MockProcRunner::setCommandResponse(const FString& command, const FString& response, int response_code)
+void MockProcRunner::SetCommandResponse(const FString& command, const FString& response, int response_code)
 {
     m_command_response_map[command] = response;
     m_command_response_code_map[command] = response_code;
 }
-void MockProcRunner::queueCommandResponse(const FString& response, int response_code)
+void MockProcRunner::QueueCommandResponse(const FString& response, int response_code)
 {
     m_response_queue.push_back(response);
     m_response_code_queue.push_back(response_code);
 }
 
-bool MockProcRunner::commandWasRun(const FString& command)
+bool MockProcRunner::CommandWasRun(const FString& command)
 {
     StrStrMap::iterator it;
 
