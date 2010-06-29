@@ -6,7 +6,8 @@ int MockProcRunner::run(const FString& command,
                         const FString& cwd,
                         FString *output, 
                         unsigned int timeout,
-                        const StrStrMap *env)
+                        const StrStrMap *env,
+                        const FString &infile)
 {
     StrStrMap::iterator it;
     std::list<FString>::iterator i;
