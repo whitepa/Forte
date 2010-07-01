@@ -60,6 +60,8 @@ SRCS =	\
 	PosixTimer.cpp \
 	ProcFileSystem.cpp \
 	ProcRunner.cpp \
+	ProcessHandler.cpp \
+	ProcessManager.cpp \
 	Random.cpp \
 	ReceiverThread.cpp \
 	RunLoop.cpp \
@@ -122,6 +124,8 @@ HEADERS = \
 	Murmur.h \
 	OpenSSLInitializer.h \
 	ProcRunner.h \
+	ProcessHandler.h \
+	ProcessManager.h \
 	PropertyObject.h \
 	PidFile.h \
 	Random.h \
