@@ -1,6 +1,7 @@
 #ifndef __forte_auto_fd_h
 #define __forte_auto_fd_h
 
+#include "Object.h"
 #include <sys/types.h>
 #include <unistd.h>
 #include <dirent.h>

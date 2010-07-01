@@ -1,6 +1,11 @@
 #ifndef __VersionManager_h
 #define __VersionManager_h
 
+#include "AutoMutex.h"
+#include "LogManager.h"
+#include "Foreach.h"
+#include <vector>
+
 namespace Forte
 {
     class UtilVersion;

@@ -9,8 +9,8 @@ Forte::Context::Context()
 
 Forte::Context::Context(const Context &other)
 {
-    throw EUnimplemented(); // TODO remove me
-    AutoUnlockMutex lock(other.mLock);
+    AutoUnlockMutex lock(mLock);
+    AutoUnlockMutex otherLock(other.mLock);
     mObjectMap = other.mObjectMap;
 }
 

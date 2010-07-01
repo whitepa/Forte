@@ -1,8 +1,9 @@
 #include "InternalRep.h"
-#include <boost/foreach.hpp>
-#define foreach BOOST_FOREACH
+#include "Foreach.h"
+#include <iostream>
 
 using namespace DBC;
+using namespace std;
 
 ParseContext * DBC::ParseContext::sSingletonPtr = NULL;
 
@@ -46,11 +47,11 @@ void ParseContext::getForeignKeysNamed(const char *name, std::vector<YYSTYPE> &k
 void ParseContext::validate(void)
 {
 //    cout << "Foreign Keys Defined:" << endl;
-    foreach (YYSTYPE a, mForeignKeys)
-    {
-        const ForeignKey &fk(TC(ForeignKey,a));
+//    foreach (YYSTYPE a, mForeignKeys)
+//    {
+//        const ForeignKey &fk(TC(ForeignKey,a));
 //        cout << TC(Table,fk.mTable).mName << " :: " << fk.mName << endl;
-    }
+//    }
     // XXX make sure all foreign keys have one and only one primary
     
     

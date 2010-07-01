@@ -1,4 +1,3 @@
-#include "Forte.h"
 #ifndef FORTE_NO_BOOST
 #ifdef FORTE_WITH_DATETIME
 #include "FTime.h"

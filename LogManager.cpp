@@ -1,8 +1,11 @@
-#include "Forte.h"
+#include "Foreach.h"
+#include "FTrace.h"
+#include "LogManager.h"
 #include <stdarg.h>
 #include <sys/time.h>
 
 using namespace Forte;
+using namespace std;
 
 LogManager *LogManager::sLogManager = NULL;
 

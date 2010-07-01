@@ -2,6 +2,8 @@
 #define BOOST_TEST_MODULE "Checked Value Unit Tests"
 #include <boost/test/unit_test.hpp>
 
+using namespace Forte;
+
 struct Int32Fixture {
     Int32Fixture()  { BOOST_TEST_MESSAGE( "setup fixture" );    }
     ~Int32Fixture() { BOOST_TEST_MESSAGE( "teardown fixture" ); }

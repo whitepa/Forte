@@ -4,6 +4,7 @@
 #ifndef FORTE_NO_DB
 
 #include <vector>
+#include "FString.h"
 #include "Exception.h"
 
 namespace Forte

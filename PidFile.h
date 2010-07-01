@@ -1,6 +1,8 @@
 #ifndef _Pidfile_h
 #define _Pidfile_h
 
+#include "Exception.h"
+#include "FString.h"
 
 namespace Forte
 {

@@ -1,6 +1,8 @@
-#include "Forte.h"
+#include "FString.h"
+#include "LogManager.h"
 #include <cstdio>
 #include <cstdarg>
+#include <errno.h>
 
 using namespace Forte;
 

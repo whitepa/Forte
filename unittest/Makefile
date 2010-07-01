@@ -16,6 +16,7 @@ INCLUDE = \
 	-I. \
 	-I.. \
 	-I../mockobjects \
+	$(XML_INCLUDE) \
 	$(BOOST_INCLUDE) 
 
 LIBS = \
@@ -28,6 +29,7 @@ LIBS = \
 	$(BOOST_REGEX_LIB) \
 	$(CURL_LIBS) \
 	$(OS_LIBS) \
+	$(XML_LIBS) \
 	$(BOOST_UNIT_TEST_LIB_STATIC)
 
 SRCS = $(wildcard *.cpp)

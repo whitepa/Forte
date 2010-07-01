@@ -1,4 +1,7 @@
+#include "AutoFD.h"
+#include "LogManager.h"
 #include "ReceiverThread.h"
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>

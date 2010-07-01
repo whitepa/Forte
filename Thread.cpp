@@ -1,4 +1,8 @@
-#include "Forte.h"
+#include "Thread.h"
+#include "FTrace.h"
+#include "LogManager.h"
+#include "Clock.h"
+#include "Util.h"
 
 using namespace Forte;
 

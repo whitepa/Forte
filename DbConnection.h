@@ -6,6 +6,11 @@
 #include "FString.h"
 #include "DbResult.h"
 #include "DbException.h"
+#include "AutoMutex.h"
+#include <iostream>
+#include <fstream>
+using namespace std;
+
 namespace Forte
 {
     class DbConnection : public Object

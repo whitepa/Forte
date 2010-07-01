@@ -1,8 +1,10 @@
 #ifndef __ReceiverThread_h
 #define __ReceiverThread_h
 
-#include "Forte.h"
+#include "Dispatcher.h"
+#include "Exception.h"
 #include "Event.h"
+#include "FString.h"
 
 namespace Forte
 {

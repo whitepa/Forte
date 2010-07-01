@@ -1,7 +1,6 @@
 #ifndef FORTE_NO_DB
 #ifndef FORTE_NO_MYSQL
 
-#include "Forte.h"
 #include "DbMyConnection.h"
 #include "DbMyResult.h"
 #include "DbException.h"

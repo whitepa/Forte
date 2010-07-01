@@ -2,6 +2,8 @@
 #define BOOST_TEST_MODULE "ContextPredicate Unit Tests"
 #include <boost/test/unit_test.hpp>
 
+using namespace Forte;
+
 static const char *validStrArray[] = {
     "One",
     "Two",

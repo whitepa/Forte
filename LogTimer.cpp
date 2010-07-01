@@ -1,5 +1,5 @@
 // LogTimer.cpp
-#include "Forte.h"
+#include "LogTimer.h"
 
 using namespace Forte;
 

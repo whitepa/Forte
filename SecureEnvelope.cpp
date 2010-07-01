@@ -1,5 +1,6 @@
 #ifndef FORTE_NO_OPENSSL
 #include "SecureEnvelope.h"
+#include "Random.h"
 
 using namespace Forte;
 

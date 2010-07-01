@@ -1,6 +1,7 @@
 // FileSystem.cpp
 
-#include "Forte.h"
+#include "FileSystem.h"
+#include "LogManager.h"
 #include <fstream>
 #include <vector>
 #include <cstring>

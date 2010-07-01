@@ -50,5 +50,7 @@ namespace Forte
     protected:
 
     };
+
+    typedef boost::shared_ptr<ProcRunner> ProcRunnerPtr;
 };
 #endif

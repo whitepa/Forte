@@ -1,6 +1,6 @@
 #ifndef __any_ptr_h_
 #define __any_ptr_h_
-#include "Forte.h"
+#include "Exception.h"
 
 namespace Forte
 {

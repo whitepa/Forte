@@ -10,6 +10,7 @@
 
 namespace Forte
 {
+    EXCEPTION_CLASS(ERWLock);
     class RWLock : public Object
     {
     public:

@@ -14,6 +14,7 @@ namespace Forte
     EXCEPTION_CLASS(EEventQueue);
     EXCEPTION_SUBCLASS2(EEventQueue, EEventQueueShutdown, "Event queue is shutting down");
     EXCEPTION_SUBCLASS2(EEventQueue, EEventQueueEventInvalid, "Invalid Event");
+    EXCEPTION_SUBCLASS2(EEventQueue, EEventQueueFull, "Event queue is full");
 
     class EventQueue : public Object
     {
@@ -25,12 +26,11 @@ namespace Forte
 
         void Add(shared_ptr<Event> e);
         shared_ptr<Event> Get(void);
+        shared_ptr<Event> Peek(void);
         inline bool Accepting(void) { return (!mShutdown && ((mMaxDepth.GetValue() > 0) ? true : false));}
         inline int Depth(void) {AutoUnlockMutex lock(mMutex); return mQueue.size();};
 
-        /// set to true (default) to block on full queue.
-        /// set to false to drop old events (and delete them) on full queue
-        inline void SetBlockingMode(bool blocking) { mBlockingMode = blocking; };
+        inline void SetMode(int mode) { mMode = mode; };
 
         /// shutdown prevents the queue from accepting any more events via Add().
         /// This operation is (currently) not reversible.
@@ -53,8 +53,15 @@ namespace Forte
 
         int mDeepThresh;
         int mLastDepth;
+
+        enum {
+            QUEUE_MODE_BLOCKING = 0,
+            QUEUE_MODE_DROP_OLDEST,
+            QUEUE_MODE_THROW
+        };
+
     protected:
-        bool mBlockingMode;
+        int mMode;
         bool mShutdown;
         std::list<shared_ptr<Event> > mQueue;
         Semaphore mMaxDepth;

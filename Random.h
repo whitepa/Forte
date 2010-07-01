@@ -3,10 +3,11 @@
 #define __forte_random_h__
 
 #include "FString.h"
+#include "Exception.h"
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(Exception, ForteRandomException);
+    EXCEPTION_CLASS(ERandom);
 
     class Random : public Object
     {

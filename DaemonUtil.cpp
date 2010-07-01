@@ -3,7 +3,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "Forte.h"
+#include "DaemonUtil.h"
+#include "LogManager.h"
 
 using namespace Forte;
 
@@ -23,7 +24,7 @@ bool DaemonUtil::ForkDaemon(void)
     // Fork off the parent process
     pid = fork();
     if (pid < 0) {
-        throw ForkFailedException();
+        throw EDaemonForkFailedException();
     }
     // If we got a good PID, then we are the parent.
     else if (pid > 0) {

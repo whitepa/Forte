@@ -14,6 +14,8 @@
 
 namespace bll = boost::lambda;
 
+using namespace Forte;
+
 struct ContextFixture {
     Forte::Context c;
 };
