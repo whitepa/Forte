@@ -51,9 +51,10 @@ ServerMain::ServerMain(const FString& defaultConfig,
                        int logMask,
                        const FString& daemonName,
                        bool daemonize)
-     : mConfigFile(defaultConfig),
-       mDaemonName(daemonName),
-       mDaemon(daemonize)
+    : mShutdown(false), 
+      mConfigFile(defaultConfig),
+      mDaemonName(daemonName),
+      mDaemon(daemonize)
 {
     init(defaultConfig, logMask);
 }
@@ -234,6 +235,8 @@ void ServerMain::Shutdown()
 
 void ServerMain::MainLoop()
 {
+    FTRACE;
+
     // loop to receive signals
     int quit = 0;
     int sig;
@@ -242,7 +245,10 @@ void ServerMain::MainLoop()
 
     timeout.tv_sec=0;
     timeout.tv_nsec=100000000; // 100 ms
-    
+
+    hlog(HLOG_DEBUG, "quit=%i, mShutdown=%s", quit, 
+         (mShutdown) ? "true" : "false");
+
     while (!quit && !mShutdown)
     {
 //        sigwait(&mSigmask, &sig);
