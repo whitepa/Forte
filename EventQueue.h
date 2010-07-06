@@ -47,6 +47,8 @@ namespace Forte
                 mEmptyCondition.Wait();
          };
 
+        void Clear(void);
+
         /// getEventCopies retreives references of the next maxEvents in the queue
         ///
         int GetEvents(int maxEvents, std::list<shared_ptr<Event> > &result);
