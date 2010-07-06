@@ -30,6 +30,7 @@ namespace Forte {};
 #include "CheckedStringEnum.h"
 #include "Clock.h"
 #include "Collector.h"
+#include "Condition.h"
 #include "Context.h"
 #include "ContextPredicate.h"
 
