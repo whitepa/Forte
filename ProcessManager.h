@@ -29,7 +29,6 @@ namespace Forte
                                                                 const FString &currentWorkingDirectory = "/",
                                                                 const FString &inputFilename = "/dev/null",
 																const FString &outputFilename = "/dev/null",
-																const FString &errorFilename = "/dev/null",
                                                                 const StrStrMap *environment = NULL);
 		virtual void RunProcess(const FString &guid);
 		virtual void AbandonProcess(const FString &guid);

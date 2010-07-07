@@ -40,14 +40,12 @@ boost::shared_ptr<ProcessHandler> Forte::ProcessManager::CreateProcess(const FSt
                                                                        const FString &currentWorkingDirectory,
 																	   const FString &inputFilename,
 																	   const FString &outputFilename,
-                                                                       const FString &errorFilename,
 																	   const StrStrMap *environment)
 {
     boost::shared_ptr<ProcessHandler> ph(new ProcessHandler(command, 
                                                             currentWorkingDirectory, 
                                                             inputFilename,
 															outputFilename,
-															errorFilename,
 															environment));
 	ph->SetProcessManager(this);
 	processHandlers[ph->GetGUID()] = ph;

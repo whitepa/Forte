@@ -52,8 +52,7 @@ namespace Forte
         ProcessHandler(const FString &command,
                        const FString &currentWorkingDirectory = "/",
                        const FString &inputFilename = "/dev/null",
-					   const FString &outputFilename = "/dev/null",
-                       const FString &errorFilename = "/dev/null", 
+					   const FString &outputFilename = "/dev/null", 
 					   const StrStrMap *environment = NULL);
         virtual ~ProcessHandler();
         
@@ -93,7 +92,6 @@ namespace Forte
         StrStrMap mEnvironment;
         FString mInputFilename;
         FString mOutputFilename;
-        FString mErrorFilename;
 		
 		FString mGUID;
 		pid_t mChildPid;
