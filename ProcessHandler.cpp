@@ -133,6 +133,12 @@ pid_t Forte::ProcessHandler::Run()
         if (errorfd != -1)
             while (dup2(errorfd, 2) == -1 && errno == EINTR);
 		
+		// close all other FDs
+		int fdstart = 3;
+		int fdlimit = sysconf(_SC_OPEN_MAX);
+		while (fdstart < fdlimit)
+			close(fdstart++);
+		
 		// set up environment?
         if (!mEnvironment.empty()) {
             StrStrMap::const_iterator mi;
