@@ -39,6 +39,7 @@ Forte::ProcessHandler::ProcessHandler(const FString &command,
 	mOutputFilename(outputFilename),
 	mGUID(GUID::GenerateGUID()),
 	mChildPid(-1),
+	mOutputString(""),
 	mIsRunning(false),
 	mFinishedCond(mFinishedLock)
 {
@@ -202,83 +203,42 @@ bool Forte::ProcessHandler::IsRunning()
 void Forte::ProcessHandler::SetIsRunning(bool running)
 {
 	AutoUnlockMutex lock(mFinishedLock);
-	mIsRunning = running;
-	if(!mIsRunning) {
+	if(mIsRunning && !running) {
+		// we have gone from a running state to a non-running state
+		// we must be finished! grab the output
+		if (mOutputFilename != "/dev/null") {
+			// read log file
+			FString stmp;
+			ifstream in(mOutputFilename, ios::in | ios::binary);
+			char buf[4096];
+			
+			mOutputString.clear();
+			
+			while (in.good())
+			{
+				in.read(buf, sizeof(buf));
+				stmp.assign(buf, in.gcount());
+				mOutputString += stmp;
+			}
+			
+			// cleanup
+			in.close();
+		}
+		
+		
 		mFinishedCond.Broadcast();
+		
 	}
+	mIsRunning = running;
 	
 }
 
 FString Forte::ProcessHandler::GetOutputString()
 {
-    return "[unknown]";
+    return mOutputString;
 }
 
 FString Forte::ProcessHandler::shellEscape(const FString& arg) 
 {
     return arg;
 }
-
-
-/*
-    // open temp log file
-    if (log_child || (output != NULL))
-    {
-        stmp.Format("%u.%u.%u", (unsigned)getpid(), (unsigned)time(NULL), (unsigned)rand());
-        filename.Format("/tmp/child-%s.log", stmp.c_str());
-        unlink(filename);
-    }
-
-
-    if (output != NULL)
-    {
-        // read log file
-        ifstream in(filename, ios::in | ios::binary);
-        char buf[4096];
-
-        output->clear();
-
-        while (in.good())
-        {
-            in.read(buf, sizeof(buf));
-            stmp.assign(buf, in.gcount());
-            (*output) += stmp;
-        }
-
-        // cleanup
-        in.close();
-    }
-
-    // log child output
-    if (log_child)
-    {
-        // read log file
-        ifstream in(filename);
-        char buf[4096];
-        size_t len, i = 0, n = 1000;
-
-        while (in.good() && (i++ < n))
-        {
-            in.getline(buf, sizeof(buf));
-            len = in.gcount();
-            buf[sizeof(buf) - 1] = 0;
-            if (len < sizeof(buf)) buf[len] = 0;
-            if (log_child) hlog(HLOG_DEBUG, "CHILD: %s", buf);
-        }
-
-        if (i >= n) 
-            hlog(HLOG_DEBUG, 
-                 "Child output logging truncated at %llu lines", (u64) n);
-
-        // cleanup
-        in.close();
-    }
-
-    // delete that file
-    if (log_child || output != NULL) unlink(filename);
-
-    // done
-    return ret;
-}
-*/
-

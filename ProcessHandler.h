@@ -97,6 +97,7 @@ namespace Forte
 		pid_t mChildPid;
 		unsigned int mStatusCode;
 		ProcessTerminationType mProcessTerminationType;
+		FString mOutputString;
 
         bool mIsRunning;
 		Mutex mFinishedLock;
