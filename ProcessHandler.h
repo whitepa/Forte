@@ -3,6 +3,7 @@
 
 #include "Types.h"
 #include "Object.h"
+#include "ThreadCondition.h"
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 #include <unistd.h>
@@ -90,6 +91,8 @@ namespace Forte
 		ProcessTerminationType mProcessTerminationType;
 
         bool mIsRunning;
+		Mutex mFinishedLock;
+		ThreadCondition mFinishedCond;
 
         ProcessManager *mProcessManager;
         

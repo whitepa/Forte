@@ -37,8 +37,10 @@ Forte::ProcessHandler::ProcessHandler(const FString &command,
   mInputFilename(inputFilename),
   mGUID(GUID::GenerateGUID()),
   mChildPid(-1),
-  mIsRunning(false)
+  mIsRunning(false),
+  mFinishedCond(mFinishedLock)
 {
+	FTRACE;
     // copy the environment entries
     if(environment) {
         mEnvironment.insert(environment->begin(), environment->end());
@@ -81,6 +83,8 @@ void Forte::ProcessHandler::SetProcessManager(ProcessManager* pm)
 	
 pid_t Forte::ProcessHandler::Run() 
 {
+	FTRACE;
+	AutoUnlockMutex lock(mFinishedLock);
     // need to set everything up, fork/exec, and then hook up the 
 	sigset_t set;
 	
@@ -147,10 +151,13 @@ pid_t Forte::ProcessHandler::Run()
 
 unsigned int Forte::ProcessHandler::Wait()
 {
-	while(mIsRunning) {
-		sleep(1);
+	FTRACE;
+	AutoUnlockMutex lock(mFinishedLock);
+	if(!mIsRunning) {
+		return mStatusCode;
 	}
-    return mStatusCode;
+	mFinishedCond.Wait();
+	return mStatusCode;
 }
 
 void Forte::ProcessHandler::Cancel()
@@ -175,7 +182,12 @@ bool Forte::ProcessHandler::IsRunning()
 
 void Forte::ProcessHandler::SetIsRunning(bool running)
 {
+	AutoUnlockMutex lock(mFinishedLock);
 	mIsRunning = running;
+	if(!mIsRunning) {
+		mFinishedCond.Broadcast();
+	}
+	
 }
 
 FString Forte::ProcessHandler::GetOutputString()
