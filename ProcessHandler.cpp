@@ -1,6 +1,7 @@
 // ProcessHandler.cpp
 
 #include "ProcessHandler.h"
+#include "ProcessManager.h"
 #include "AutoMutex.h"
 #include "Exception.h"
 #include "LogManager.h"
@@ -20,62 +21,122 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <boost/algorithm/string.hpp>
+
 
 using namespace Forte;
 
 Forte::ProcessHandler::ProcessHandler(const FString &command,
-				    ProcessCompleteCallback processCompleteCallback,
 				    const FString &currentWorkingDirectory ,
 				    const StrStrMap *environment,
 				    const FString &inputFilename) :
   mCommand(command), 
-  mProcessCompleteCallback(processCompleteCallback), 
   mCurrentWorkingDirectory(currentWorkingDirectory),
   mInputFilename(inputFilename),
-  mTimeout(-1),
-  mShouldLoiter(true),
+  mChildPid(-1),
   mIsRunning(false)
 {
-  // copy the environment entries
-  mEnvironment.insert(environment->begin(), environment->end());
+    // copy the environment entries
+    if(environment) {
+        mEnvironment.insert(environment->begin(), environment->end());
+    }
 
 }
 
 Forte::ProcessHandler::~ProcessHandler() 
 {
+
+}
+	
+void Forte::ProcessHandler::SetProcessCompleteCallback(ProcessCompleteCallback processCompleteCallback)
+{
+    mProcessCompleteCallback = processCompleteCallback;
 }
 
-	
 void Forte::ProcessHandler::SetCurrentWorkingDirectory(const FString &cwd) 
 {
-  mCurrentWorkingDirectory = cwd;
-}
-
-void Forte::ProcessHandler::SetTimeout(unsigned int timeout) 
-{
-  mTimeout = timeout;
-
+    mCurrentWorkingDirectory = cwd;
 }
 
 void Forte::ProcessHandler::SetEnvironment(const StrStrMap *env)
 {
-  mEnvironment.clear();
-  mEnvironment.insert(env->begin(), env->end());
+    if(env) {
+        mEnvironment.clear();
+        mEnvironment.insert(env->begin(), env->end());
+    }
 }
 
 void Forte::ProcessHandler::SetInputFilename(const FString &infile)
 {
-  mInputFilename = infile;
+    mInputFilename = infile;
 }
 
-void Forte::ProcessHandler::SetLoiter(bool loiter) 
+void Forte::ProcessHandler::SetProcessManager(ProcessManager* pm)
 {
-  mShouldLoiter = loiter;
+	mProcessManager = pm;
 }
 	
-void Forte::ProcessHandler::Run(unsigned int timeout) 
+pid_t Forte::ProcessHandler::Run() 
 {
-
+    // need to set everything up, fork/exec, and then hook up the 
+	sigset_t set;
+	
+	mChildPid = fork();
+	if(mChildPid < 0) {
+		throw EProcessHandlerUnableToFork();
+	} else if(mChildPid == 0) {
+		// this is the child
+		mIsRunning = true;
+		char *argv[ARG_MAX];
+		
+		// we need to split the command up
+		std::vector<std::string> strings;
+		boost::split(strings, mCommand, boost::is_any_of("\t "));
+		unsigned int num_args = strings.size();
+		for(unsigned int i = 0; i < num_args; ++i) {
+			// ugh - I hate this cast here, but as this process
+			// is about to be blown away, it is harmless, and
+			// much simpler than trying to avoid it
+			argv[i] = const_cast<char*>(strings[i].c_str());
+		}
+		argv[num_args] = 0;
+		
+		// change current working directory
+        if (!mCurrentWorkingDirectory.empty()) {
+            if (chdir(mCurrentWorkingDirectory)) {
+                hlog(HLOG_CRIT, "Cannot change directory to: %s", mCurrentWorkingDirectory.c_str());
+                cerr << "Cannot change directory to: " << mCurrentWorkingDirectory << endl;
+                exit(-1);
+            }
+        }
+		
+		// set up environment?
+        if (!mEnvironment.empty()) {
+            StrStrMap::const_iterator mi;
+			
+            for (mi = mEnvironment.begin(); mi != mEnvironment.end(); ++mi) {
+                if (mi->second.empty()) unsetenv(mi->first);
+                else setenv(mi->first, mi->second, 1);
+            }
+        }
+		
+        // clear sig mask
+        sigemptyset(&set);
+        pthread_sigmask(SIG_SETMASK, &set, NULL);
+		
+		// create a new process group / session
+        setsid();
+		
+		execv(argv[0], argv);
+		throw EProcessHandlerExecvFailed();
+	} else {
+		// this is the parent
+		// this just returns back to whence it was called
+		// the ProcessManager will now carry out the task
+		// of monitoring the running process.
+		mIsRunning = true;
+	}
+	return mChildPid;
 
 }
 
@@ -84,15 +145,39 @@ void Forte::ProcessHandler::Cancel()
 
 }
 
+unsigned int Forte::ProcessHandler::Wait()
+{
+	while(mIsRunning) {
+		sleep(1);
+	}
+    return -1;
+}
+
 bool Forte::ProcessHandler::IsRunning()
 {
-  return mIsRunning;
+    return mIsRunning;
+}
+
+void Forte::ProcessHandler::SetIsRunning(bool running)
+{
+	mIsRunning = running;
 }
 
 unsigned int Forte::ProcessHandler::GetStatusCode()
 {
-  return 0;
+    return -1;
 }
+
+FString Forte::ProcessHandler::GetOutputString()
+{
+    return "";
+}
+
+FString Forte::ProcessHandler::shellEscape(const FString& arg) 
+{
+    return arg;
+}
+
 
 /*
 // methods

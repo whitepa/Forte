@@ -2,6 +2,7 @@
 #include "boost/test/unit_test.hpp"
 #include "LogManager.h"
 #include "ProcessManager.h"
+#include "ProcessHandler.h"
 
 using namespace boost::unit_test;
 using namespace Forte;
@@ -12,15 +13,13 @@ BOOST_AUTO_TEST_CASE(RunProcess)
 {
     hlog(HLOG_INFO, "CreateProcess");
     ProcessManager pm;
-    ProcessHandler ph = pm.CreateProcess("/bin/sleep 10");
-    ph.Run();
-    BOOST_CHECK(ph.IsRunning());
-    ph.Wait();
-    BOOST_CHECK(!ph.IsRunning());
-    FString out = ph.Output();
+    boost::shared_ptr<ProcessHandler> ph = pm.CreateProcess("/bin/sleep 10");
+    pm.RunProcess(ph);
+    BOOST_CHECK(ph->IsRunning());
+    ph->Wait();
+    BOOST_CHECK(!ph->IsRunning());
+    FString output = ph->GetOutputString();
     hlog(HLOG_INFO, output);
-    
-    
 }
 
 
