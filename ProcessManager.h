@@ -30,6 +30,7 @@ namespace Forte
                                                                 const StrStrMap *environment = NULL,
                                                                 const FString &inputFilename = "/dev/null");
 		virtual void RunProcess(const FString &guid);
+		virtual void AbandonProcess(const FString &guid);
     private:
 		virtual void * run(void);
 		

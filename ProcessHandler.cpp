@@ -144,17 +144,28 @@ pid_t Forte::ProcessHandler::Run()
 
 }
 
-void Forte::ProcessHandler::Cancel()
-{
-
-}
 
 unsigned int Forte::ProcessHandler::Wait()
 {
 	while(mIsRunning) {
 		sleep(1);
 	}
-    return -1;
+    return mStatusCode;
+}
+
+void Forte::ProcessHandler::Cancel()
+{
+	kill(mChildPid, SIGINT);
+	Wait();
+}
+
+void Forte::ProcessHandler::Abandon(bool signal)
+{
+	if(signal) {
+		kill(mChildPid, SIGINT);
+	}
+	mProcessManager->AbandonProcess(mGUID);
+
 }
 
 bool Forte::ProcessHandler::IsRunning()

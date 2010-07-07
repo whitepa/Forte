@@ -61,8 +61,9 @@ namespace Forte
 		void SetProcessManager(ProcessManager *pm);
         
         pid_t Run();
-        void Cancel();
         unsigned int Wait();
+        void Cancel();
+		void Abandon(bool signal = false);
 
         bool IsRunning();
 		void SetIsRunning(bool running);

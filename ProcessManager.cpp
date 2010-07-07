@@ -53,16 +53,26 @@ boost::shared_ptr<ProcessHandler> Forte::ProcessManager::CreateProcess(const FSt
 
 void Forte::ProcessManager::RunProcess(const FString &guid)
 {
-	// do I need this?
-	WaitForInitialize();
-	
 	AutoUnlockMutex lock(mLock);
 	ProcessHandlerMap::iterator it = processHandlers.find(guid);
 	if(it != processHandlers.end()) {
 		runningProcessHandlers[it->second->GetChildPID()] = it->second;
-		processHandlers.erase(it);
 		Notify();
 	}
+}
+
+void Forte::ProcessManager::AbandonProcess(const FString &guid)
+{
+	AutoUnlockMutex lock(mLock);
+	ProcessHandlerMap::iterator it = processHandlers.find(guid);
+	if(it != processHandlers.end()) {
+		RunningProcessHandlerMap::iterator rit = runningProcessHandlers.find(it->second->GetChildPID());
+		if(rit != runningProcessHandlers.end()) {
+			runningProcessHandlers.erase(rit);
+		}
+		processHandlers.erase(it);
+	}
+	
 }
 
 void* Forte::ProcessManager::run(void)
@@ -114,7 +124,9 @@ void* Forte::ProcessManager::run(void)
 					
 					// TODO: find out if this ph has a callback, and then send it
 					
+					ProcessHandlerMap::iterator oit = processHandlers.find(it->second->GetGUID());
 					runningProcessHandlers.erase(it);
+					processHandlers.erase(oit);
 					
 				} else {
 					hlog(HLOG_DEBUG, "Who is this? %u", tpid);
