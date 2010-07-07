@@ -56,6 +56,8 @@ namespace Forte
         virtual ~ProcessHandler();
         
         void SetProcessCompleteCallback(ProcessCompleteCallback processCompleteCallback);
+		ProcessCompleteCallback GetProcessCompleteCallback() { return mProcessCompleteCallback; }
+		
         void SetCurrentWorkingDirectory(const FString &cwd);
         void SetEnvironment(const StrStrMap *env);
         void SetInputFilename(const FString &infile);
@@ -70,11 +72,15 @@ namespace Forte
 		void SetIsRunning(bool running);
 		
 		FString GetGUID() { return mGUID; }
+		
 		pid_t GetChildPID() { return mChildPid; }
+		
 		void SetStatusCode(unsigned int code) { mStatusCode = code; }
         unsigned int GetStatusCode() { return mStatusCode; }
+		
 		void SetProcessTerminationType(ProcessTerminationType type) { mProcessTerminationType = type; }
 		ProcessTerminationType GetProcessTerminationType() { return mProcessTerminationType; }
+		
         FString GetOutputString();
         
     private:

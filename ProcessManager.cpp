@@ -124,14 +124,16 @@ void* Forte::ProcessManager::run(void)
 						hlog(HLOG_DEBUG, "unknown child status (0x%x)", ph->GetStatusCode());
 					}
 					
-					// TODO: find out if this ph has a callback, and then send it
-					
 					FString guid = ph->GetGUID();
 					runningProcessHandlers.erase(it);
 					ProcessHandlerMap::iterator oit = processHandlers.find(guid);
 					processHandlers.erase(oit);
 
 					ph->SetIsRunning(false);
+					ProcessHandler::ProcessCompleteCallback callback = ph->GetProcessCompleteCallback();
+					if(!callback.empty()) {
+						callback(ph);
+					}
 					
 				} else {
 					hlog(HLOG_DEBUG, "Who is this? %u", tpid);
