@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_CASE(RunProcess)
     hlog(HLOG_INFO, "CreateProcess");
     ProcessManager pm;
     boost::shared_ptr<ProcessHandler> ph = pm.CreateProcess("/bin/sleep 3");
-    pm.RunProcess(ph);
+    ph->Run();
     BOOST_CHECK(ph->IsRunning());
     ph->Wait();
     BOOST_CHECK(!ph->IsRunning());
@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(RunProcess)
 	sleep(3);
 	
 	ph = pm.CreateProcess("/bin/sleep 3");
-    pm.RunProcess(ph);
+    ph->Run();
     BOOST_CHECK(ph->IsRunning());
     ph->Wait();
     BOOST_CHECK(!ph->IsRunning());

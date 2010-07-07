@@ -46,17 +46,23 @@ boost::shared_ptr<ProcessHandler> Forte::ProcessManager::CreateProcess(const FSt
                                                             environment, 
                                                             inputFilename));
 	ph->SetProcessManager(this);
+	processHandlers[ph->GetGUID()] = ph;
     
     return ph;
 }
 
-void Forte::ProcessManager::RunProcess(boost::shared_ptr<ProcessHandler> ph)
+void Forte::ProcessManager::RunProcess(const FString &guid)
 {
+	// do I need this?
 	WaitForInitialize();
+	
 	AutoUnlockMutex lock(mLock);
-	pid_t child_pid = ph->Run();
-	processHandlers[child_pid] = ph;
-	Notify();
+	ProcessHandlerMap::iterator it = processHandlers.find(guid);
+	if(it != processHandlers.end()) {
+		runningProcessHandlers[it->second->GetChildPID()] = it->second;
+		processHandlers.erase(it);
+		Notify();
+	}
 }
 
 void* Forte::ProcessManager::run(void)
@@ -67,20 +73,22 @@ void* Forte::ProcessManager::run(void)
 	AutoUnlockMutex lock(mLock);
 	mThreadName.Format("processmanager-%u", GetThreadID());
 	while (!IsShuttingDown()) {
-		if(processHandlers.size()) {
+		if(runningProcessHandlers.size()) {
 			pid_t tpid;
 			hlog(HLOG_DEBUG, "Waiting on our children to come home");
 			
-			// unlock mutex here so other threads can add processes while we are waiting
-			tpid = wait(&child_status);
-			
+			{
+				AutoLockMutex unlock(mLock);
+				// unlock mutex here so other threads can add processes while we are waiting
+				tpid = wait(&child_status);
+			}
 			if(tpid == -1) {
 				hlog(HLOG_DEBUG, "Error waiting!");
 			} else {
 							
 				// check to see which of our threads this belongs
-				ProcessHandlerMap::iterator it;
-				it = processHandlers.find(tpid);
+				RunningProcessHandlerMap::iterator it;
+				it = runningProcessHandlers.find(tpid);
 				if(it->second) {
 					hlog(HLOG_DEBUG, "We have found our man");
 					it->second->SetIsRunning(false);
@@ -106,12 +114,7 @@ void* Forte::ProcessManager::run(void)
 					
 					// TODO: find out if this ph has a callback, and then send it
 					
-					{
-						// remove the handler from processHandlers
-						// need to unlock while we are doing this
-						AutoLockMutex unlock(mLock);
-						processHandlers.erase(it);
-					}
+					runningProcessHandlers.erase(it);
 					
 				} else {
 					hlog(HLOG_DEBUG, "Who is this? %u", tpid);

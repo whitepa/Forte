@@ -18,8 +18,10 @@ namespace Forte
     class ProcessManager : public Thread
     {
     public:
-		typedef std::map < pid_t, boost::shared_ptr<ProcessHandler> > ProcessHandlerMap;
-		typedef std::pair < pid_t, boost::shared_ptr<ProcessHandler> > ProcessHandlerPair; 
+		typedef std::map<FString, boost::shared_ptr<ProcessHandler> > ProcessHandlerMap;
+		typedef std::map<pid_t, boost::shared_ptr<ProcessHandler> > RunningProcessHandlerMap;
+		typedef std::pair<pid_t, boost::shared_ptr<ProcessHandler> > ProcessHandlerPair;
+		
         ProcessManager();
         virtual ~ProcessManager();
 
@@ -27,10 +29,12 @@ namespace Forte
                                                                 const FString &currentWorkingDirectory = "/",
                                                                 const StrStrMap *environment = NULL,
                                                                 const FString &inputFilename = "/dev/null");
-		virtual void RunProcess(boost::shared_ptr<ProcessHandler> ph);
+		virtual void RunProcess(const FString &guid);
     private:
 		virtual void * run(void);
-        ProcessHandlerMap processHandlers;
+		
+		ProcessHandlerMap processHandlers;
+        RunningProcessHandlerMap runningProcessHandlers;
 		Mutex mLock;
     };
 

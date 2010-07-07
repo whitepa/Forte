@@ -9,6 +9,7 @@
 #include "ServerMain.h"
 #include "Util.h"
 #include "FTrace.h"
+#include "GUID.h"
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
@@ -34,6 +35,7 @@ Forte::ProcessHandler::ProcessHandler(const FString &command,
   mCommand(command), 
   mCurrentWorkingDirectory(currentWorkingDirectory),
   mInputFilename(inputFilename),
+  mGUID(GUID::GenerateGUID()),
   mChildPid(-1),
   mIsRunning(false)
 {
@@ -136,6 +138,7 @@ pid_t Forte::ProcessHandler::Run()
 		// the ProcessManager will now carry out the task
 		// of monitoring the running process.
 		mIsRunning = true;
+		mProcessManager->RunProcess(mGUID);
 	}
 	return mChildPid;
 

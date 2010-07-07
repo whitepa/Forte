@@ -66,6 +66,8 @@ namespace Forte
 
         bool IsRunning();
 		void SetIsRunning(bool running);
+		
+		FString GetGUID() { return mGUID; }
 		pid_t GetChildPID() { return mChildPid; }
 		void SetStatusCode(unsigned int code) { mStatusCode = code; }
         unsigned int GetStatusCode() { return mStatusCode; }
@@ -81,6 +83,7 @@ namespace Forte
         StrStrMap mEnvironment;
         FString mInputFilename;
 		
+		FString mGUID;
 		pid_t mChildPid;
 		unsigned int mStatusCode;
 		ProcessTerminationType mProcessTerminationType;
