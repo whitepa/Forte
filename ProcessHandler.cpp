@@ -8,6 +8,7 @@
 #include "LogTimer.h"
 #include "ServerMain.h"
 #include "Util.h"
+#include "FTrace.h"
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
@@ -45,7 +46,7 @@ Forte::ProcessHandler::ProcessHandler(const FString &command,
 
 Forte::ProcessHandler::~ProcessHandler() 
 {
-
+	FTRACE;
 }
 	
 void Forte::ProcessHandler::SetProcessCompleteCallback(ProcessCompleteCallback processCompleteCallback)
@@ -163,14 +164,9 @@ void Forte::ProcessHandler::SetIsRunning(bool running)
 	mIsRunning = running;
 }
 
-unsigned int Forte::ProcessHandler::GetStatusCode()
-{
-    return -1;
-}
-
 FString Forte::ProcessHandler::GetOutputString()
 {
-    return "";
+    return "[unknown]";
 }
 
 FString Forte::ProcessHandler::shellEscape(const FString& arg) 

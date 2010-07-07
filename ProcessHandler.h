@@ -12,6 +12,15 @@
 namespace Forte
 {
 
+	enum ProcessTerminationType
+	{
+		ProcessExited,
+		ProcessKilled,
+		ProcessStopped,
+		ProcessUnknownTermination
+	};
+
+
     EXCEPTION_CLASS(EProcessHandler);
     EXCEPTION_SUBCLASS2(EProcessHandler, EProcessHandlerUnableToFork, "Unable to Fork Child Process");
     EXCEPTION_SUBCLASS2(EProcessHandler, EProcessHandlerExecvFailed, "Execv Call Failed");
@@ -58,7 +67,10 @@ namespace Forte
         bool IsRunning();
 		void SetIsRunning(bool running);
 		pid_t GetChildPID() { return mChildPid; }
-        unsigned int GetStatusCode();
+		void SetStatusCode(unsigned int code) { mStatusCode = code; }
+        unsigned int GetStatusCode() { return mStatusCode; }
+		void SetProcessTerminationType(ProcessTerminationType type) { mProcessTerminationType = type; }
+		ProcessTerminationType GetProcessTerminationType() { return mProcessTerminationType; }
         FString GetOutputString();
         
     private:
@@ -70,6 +82,8 @@ namespace Forte
         FString mInputFilename;
 		
 		pid_t mChildPid;
+		unsigned int mStatusCode;
+		ProcessTerminationType mProcessTerminationType;
 
         bool mIsRunning;
 

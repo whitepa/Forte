@@ -13,25 +13,28 @@ BOOST_AUTO_TEST_CASE(RunProcess)
 {
     hlog(HLOG_INFO, "CreateProcess");
     ProcessManager pm;
-    boost::shared_ptr<ProcessHandler> ph = pm.CreateProcess("/bin/sleep 10");
+    boost::shared_ptr<ProcessHandler> ph = pm.CreateProcess("/bin/sleep 3");
     pm.RunProcess(ph);
     BOOST_CHECK(ph->IsRunning());
     ph->Wait();
     BOOST_CHECK(!ph->IsRunning());
-    FString output = ph->GetOutputString();
-    hlog(HLOG_INFO, output);
+    hlog(HLOG_INFO, "Termination Type: %d", ph->GetProcessTerminationType());
+    hlog(HLOG_INFO, "StatusCode: %d", ph->GetStatusCode());
+    hlog(HLOG_INFO, "OutputString: %s", ph->GetOutputString().c_str());
+	
+	hlog(HLOG_INFO, "Pausing...");
+	sleep(3);
+	
+	ph = pm.CreateProcess("/bin/sleep 3");
+    pm.RunProcess(ph);
+    BOOST_CHECK(ph->IsRunning());
+    ph->Wait();
+    BOOST_CHECK(!ph->IsRunning());
+    hlog(HLOG_INFO, "Termination Type: %d", ph->GetProcessTerminationType());
+    hlog(HLOG_INFO, "StatusCode: %d", ph->GetStatusCode());
+    hlog(HLOG_INFO, "OutputString: %s", ph->GetOutputString().c_str());
 }
 
-
-/*
-BOOST_AUTO_TEST_CASE(StatFSPathDoesNotExist)
-{
-    hlog(HLOG_INFO, "StatFSPathDoesNotExist");
-    FileSystem f;
-    struct statfs st;
-    BOOST_CHECK_THROW(f.StatFS("pathdoesnotexist", &st), EFileSystemNoEnt);
-}
-*/
 
 ////Boost Unit init function ///////////////////////////////////////////////////
 test_suite*
