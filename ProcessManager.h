@@ -27,8 +27,10 @@ namespace Forte
 
         virtual boost::shared_ptr<ProcessHandler> CreateProcess(const FString &command,
                                                                 const FString &currentWorkingDirectory = "/",
-                                                                const StrStrMap *environment = NULL,
-                                                                const FString &inputFilename = "/dev/null");
+                                                                const FString &inputFilename = "/dev/null",
+																const FString &outputFilename = "/dev/null",
+																const FString &errorFilename = "/dev/null",
+                                                                const StrStrMap *environment = NULL);
 		virtual void RunProcess(const FString &guid);
 		virtual void AbandonProcess(const FString &guid);
 		

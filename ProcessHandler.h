@@ -51,8 +51,10 @@ namespace Forte
          */
         ProcessHandler(const FString &command,
                        const FString &currentWorkingDirectory = "/",
-                       const StrStrMap *environment = NULL,
-                       const FString &inputFilename = "/dev/null");
+                       const FString &inputFilename = "/dev/null",
+					   const FString &outputFilename = "/dev/null",
+                       const FString &errorFilename = "/dev/null", 
+					   const StrStrMap *environment = NULL);
         virtual ~ProcessHandler();
         
         void SetProcessCompleteCallback(ProcessCompleteCallback processCompleteCallback);
@@ -90,6 +92,8 @@ namespace Forte
         FString mCurrentWorkingDirectory;
         StrStrMap mEnvironment;
         FString mInputFilename;
+        FString mOutputFilename;
+        FString mErrorFilename;
 		
 		FString mGUID;
 		pid_t mChildPid;

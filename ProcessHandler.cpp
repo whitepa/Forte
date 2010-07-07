@@ -28,19 +28,22 @@
 
 using namespace Forte;
 
-Forte::ProcessHandler::ProcessHandler(const FString &command,
-				    const FString &currentWorkingDirectory ,
-				    const StrStrMap *environment,
-				    const FString &inputFilename) :
-  mCommand(command), 
-  mCurrentWorkingDirectory(currentWorkingDirectory),
-  mInputFilename(inputFilename),
-  mGUID(GUID::GenerateGUID()),
-  mChildPid(-1),
-  mIsRunning(false),
-  mFinishedCond(mFinishedLock)
+Forte::ProcessHandler::ProcessHandler(const FString &command, 
+									  const FString &currentWorkingDirectory, 
+									  const FString &inputFilename, 
+									  const FString &outputFilename, 
+									  const FString &errorFilename,
+									  const StrStrMap *environment) : 
+	mCommand(command), 
+	mCurrentWorkingDirectory(currentWorkingDirectory),
+	mInputFilename(inputFilename),
+	mOutputFilename(outputFilename),
+	mErrorFilename(errorFilename),
+	mGUID(GUID::GenerateGUID()),
+	mChildPid(-1),
+	mIsRunning(false),
+	mFinishedCond(mFinishedLock)
 {
-	FTRACE;
     // copy the environment entries
     if(environment) {
         mEnvironment.insert(environment->begin(), environment->end());
@@ -50,7 +53,6 @@ Forte::ProcessHandler::ProcessHandler(const FString &command,
 
 Forte::ProcessHandler::~ProcessHandler() 
 {
-	FTRACE;
 }
 	
 void Forte::ProcessHandler::SetProcessCompleteCallback(ProcessCompleteCallback processCompleteCallback)
@@ -83,9 +85,7 @@ void Forte::ProcessHandler::SetProcessManager(ProcessManager* pm)
 	
 pid_t Forte::ProcessHandler::Run() 
 {
-	FTRACE;
 	AutoUnlockMutex lock(mFinishedLock);
-    // need to set everything up, fork/exec, and then hook up the 
 	sigset_t set;
 	
 	mChildPid = fork();
@@ -116,6 +116,22 @@ pid_t Forte::ProcessHandler::Run()
                 exit(-1);
             }
         }
+		
+		// setup in, out, err
+		int inputfd = -1;
+		while ((inputfd = open(mInputFilename, O_RDWR)) < 0 && errno == EINTR);
+        if (inputfd != -1)
+            while (dup2(inputfd, 0) == -1 && errno == EINTR);
+
+		int outputfd = -1;
+		while ((outputfd = open(mInputFilename, O_RDWR)) < 0 && errno == EINTR);
+        if (outputfd != -1)
+            while (dup2(outputfd, 1) == -1 && errno == EINTR);
+
+		int errorfd = -1;
+		while ((errorfd = open(mInputFilename, O_RDWR)) < 0 && errno == EINTR);
+        if (errorfd != -1)
+            while (dup2(errorfd, 2) == -1 && errno == EINTR);
 		
 		// set up environment?
         if (!mEnvironment.empty()) {
@@ -151,7 +167,6 @@ pid_t Forte::ProcessHandler::Run()
 
 unsigned int Forte::ProcessHandler::Wait()
 {
-	FTRACE;
 	AutoUnlockMutex lock(mFinishedLock);
 	if(!mIsRunning) {
 		return mStatusCode;

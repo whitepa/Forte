@@ -33,19 +33,22 @@ Forte::ProcessManager::ProcessManager()
 
 Forte::ProcessManager::~ProcessManager() 
 {
-	FTRACE;
 	AutoLockMutex unlock(mLock);
 }
 
 boost::shared_ptr<ProcessHandler> Forte::ProcessManager::CreateProcess(const FString &command,
                                                                        const FString &currentWorkingDirectory,
-                                                                       const StrStrMap *environment,
-                                                                       const FString &inputFilename)
+																	   const FString &inputFilename,
+																	   const FString &outputFilename,
+                                                                       const FString &errorFilename,
+																	   const StrStrMap *environment)
 {
     boost::shared_ptr<ProcessHandler> ph(new ProcessHandler(command, 
                                                             currentWorkingDirectory, 
-                                                            environment, 
-                                                            inputFilename));
+                                                            inputFilename,
+															outputFilename,
+															errorFilename,
+															environment));
 	ph->SetProcessManager(this);
 	processHandlers[ph->GetGUID()] = ph;
     
@@ -79,7 +82,6 @@ void Forte::ProcessManager::AbandonProcess(const FString &guid)
 
 void* Forte::ProcessManager::run(void)
 {
-	FTRACE;
 	hlog(HLOG_DEBUG, "Starting process manager loop");
 	AutoUnlockMutex lock(mLock);
 	mThreadName.Format("processmanager-%u", GetThreadID());
