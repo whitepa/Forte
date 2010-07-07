@@ -13,9 +13,10 @@ namespace Forte
         inline Semaphore(int value) : mValue(value), mNotify(mLock) {};
         virtual ~Semaphore() {};
 
-        inline int Post(void) {
+        inline int Post(int num = 1) {
             AutoUnlockMutex lock(mLock);
-            if (++mValue > 0)
+            mValue+=num;
+            if (mValue > 0)
                 mNotify.Signal();
             return 0;
         };

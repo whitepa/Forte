@@ -124,3 +124,11 @@ int EventQueue::GetEvents(int maxEvents, std::list<shared_ptr<Event> > &result)
     }
     return count;
 }
+
+void EventQueue::Clear(void)
+{
+    AutoUnlockMutex lock(mMutex);
+    mMaxDepth.Post(mQueue.size());
+    mQueue.clear();
+    mEmptyCondition.Broadcast();
+}
