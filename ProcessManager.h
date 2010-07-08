@@ -13,31 +13,31 @@ namespace Forte
 {
 
 
-    class ProcessHandler;
+    class ProcessHandle;
 
     class ProcessManager : public Thread
     {
     public:
-		typedef std::map<FString, boost::shared_ptr<ProcessHandler> > ProcessHandlerMap;
-		typedef std::map<pid_t, boost::shared_ptr<ProcessHandler> > RunningProcessHandlerMap;
-		typedef std::pair<pid_t, boost::shared_ptr<ProcessHandler> > ProcessHandlerPair;
+		typedef std::map<FString, boost::shared_ptr<ProcessHandle> > ProcessHandleMap;
+		typedef std::map<pid_t, boost::shared_ptr<ProcessHandle> > RunningProcessHandleMap;
+		typedef std::pair<pid_t, boost::shared_ptr<ProcessHandle> > ProcessHandlePair;
 		
         ProcessManager();
         virtual ~ProcessManager();
 
-        virtual boost::shared_ptr<ProcessHandler> CreateProcess(const FString &command,
-                                                                const FString &currentWorkingDirectory = "/",
-                                                                const FString &inputFilename = "/dev/null",
-																const FString &outputFilename = "/dev/null",
-                                                                const StrStrMap *environment = NULL);
+        virtual boost::shared_ptr<ProcessHandle> CreateProcess(const FString &command,
+                                                               const FString &currentWorkingDirectory = "/",
+                                                               const FString &inputFilename = "/dev/null",
+                                                               const FString &outputFilename = "/dev/null",
+                                                               const StrStrMap *environment = NULL);
 		virtual void RunProcess(const FString &guid);
 		virtual void AbandonProcess(const FString &guid);
 		
     private:
 		virtual void * run(void);
 		
-		ProcessHandlerMap processHandlers;
-        RunningProcessHandlerMap runningProcessHandlers;
+		ProcessHandleMap processHandlers;
+        RunningProcessHandleMap runningProcessHandles;
 		Mutex mLock;
     };
 

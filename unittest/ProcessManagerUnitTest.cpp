@@ -2,7 +2,7 @@
 #include "boost/test/unit_test.hpp"
 #include "LogManager.h"
 #include "ProcessManager.h"
-#include "ProcessHandler.h"
+#include "ProcessHandle.h"
 
 using namespace boost::unit_test;
 using namespace Forte;
@@ -13,7 +13,7 @@ BOOST_AUTO_TEST_CASE(RunProcess)
 {
     hlog(HLOG_INFO, "CreateProcess");
     ProcessManager pm;
-    boost::shared_ptr<ProcessHandler> ph = pm.CreateProcess("/bin/sleep 3");
+    boost::shared_ptr<ProcessHandle> ph = pm.CreateProcess("/bin/sleep 3");
     ph->Run();
     BOOST_CHECK(ph->IsRunning());
     ph->Wait();
@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_CASE(RunProcess)
 	hlog(HLOG_INFO, "Pausing...");
 	sleep(3);
 	
-	boost::shared_ptr<ProcessHandler> ph2 = pm.CreateProcess("/bin/ls", "/", "/dev/null", "/home/tritchey/temp.out");
+	boost::shared_ptr<ProcessHandle> ph2 = pm.CreateProcess("/bin/ls", "/", "/dev/null", "/home/tritchey/temp.out");
     ph2->Run();
     BOOST_CHECK(ph2->IsRunning());
     ph2->Wait();
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(CancelProcess)
 {
     hlog(HLOG_INFO, "CancelProcess");
     ProcessManager pm;
-    boost::shared_ptr<ProcessHandler> ph = pm.CreateProcess("/bin/sleep 100");
+    boost::shared_ptr<ProcessHandle> ph = pm.CreateProcess("/bin/sleep 100");
     ph->Run();
     BOOST_CHECK(ph->IsRunning());
     ph->Cancel();
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(AbandonProcess)
 {
     hlog(HLOG_INFO, "AbandonProcess");
     ProcessManager pm;
-    boost::shared_ptr<ProcessHandler> ph = pm.CreateProcess("/bin/sleep 100");
+    boost::shared_ptr<ProcessHandle> ph = pm.CreateProcess("/bin/sleep 100");
     ph->Run();
     BOOST_CHECK(ph->IsRunning());
     ph->Abandon();

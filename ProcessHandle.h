@@ -1,5 +1,5 @@
-#ifndef __ProcessHandler_h
-#define __ProcessHandler_h
+#ifndef __ProcessHandle_h
+#define __ProcessHandle_h
 
 #include "Types.h"
 #include "Object.h"
@@ -22,9 +22,9 @@ namespace Forte
 	};
 
 
-    EXCEPTION_CLASS(EProcessHandler);
-    EXCEPTION_SUBCLASS2(EProcessHandler, EProcessHandlerUnableToFork, "Unable to Fork Child Process");
-    EXCEPTION_SUBCLASS2(EProcessHandler, EProcessHandlerExecvFailed, "Execv Call Failed");
+    EXCEPTION_CLASS(EProcessHandle);
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToFork, "Unable to Fork Child Process");
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleExecvFailed, "Execv Call Failed");
 	
 	class ProcessManager;
 
@@ -32,10 +32,10 @@ namespace Forte
      * A handle to a process
      *
      */
-    class ProcessHandler : public Object 
+    class ProcessHandle : public Object 
     {
     public:
-        typedef boost::function<void (boost::shared_ptr<ProcessHandler>)> ProcessCompleteCallback;
+        typedef boost::function<void (boost::shared_ptr<ProcessHandle>)> ProcessCompleteCallback;
         
         
         /**
@@ -49,12 +49,12 @@ namespace Forte
          * @param environment a map of the environment to apply to the command
          * @param inputFilename name of the file to use for input.
          */
-        ProcessHandler(const FString &command,
-                       const FString &currentWorkingDirectory = "/",
-                       const FString &inputFilename = "/dev/null",
-					   const FString &outputFilename = "/dev/null", 
-					   const StrStrMap *environment = NULL);
-        virtual ~ProcessHandler();
+        ProcessHandle(const FString &command,
+                      const FString &currentWorkingDirectory = "/",
+                      const FString &inputFilename = "/dev/null",
+                      const FString &outputFilename = "/dev/null", 
+                      const StrStrMap *environment = NULL);
+        virtual ~ProcessHandle();
         
         void SetProcessCompleteCallback(ProcessCompleteCallback processCompleteCallback);
 		ProcessCompleteCallback GetProcessCompleteCallback() { return mProcessCompleteCallback; }

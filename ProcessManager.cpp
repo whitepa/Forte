@@ -1,6 +1,6 @@
 // ProcessManager.cpp
 #include "ProcessManager.h"
-#include "ProcessHandler.h"
+#include "ProcessHandle.h"
 #include "AutoMutex.h"
 #include "Exception.h"
 #include "LogManager.h"
@@ -36,17 +36,17 @@ Forte::ProcessManager::~ProcessManager()
 	AutoLockMutex unlock(mLock);
 }
 
-boost::shared_ptr<ProcessHandler> Forte::ProcessManager::CreateProcess(const FString &command,
-                                                                       const FString &currentWorkingDirectory,
-																	   const FString &inputFilename,
-																	   const FString &outputFilename,
-																	   const StrStrMap *environment)
+boost::shared_ptr<ProcessHandle> Forte::ProcessManager::CreateProcess(const FString &command,
+                                                                      const FString &currentWorkingDirectory,
+                                                                      const FString &inputFilename,
+                                                                      const FString &outputFilename,
+                                                                      const StrStrMap *environment)
 {
-    boost::shared_ptr<ProcessHandler> ph(new ProcessHandler(command, 
-                                                            currentWorkingDirectory, 
-                                                            inputFilename,
-															outputFilename,
-															environment));
+    boost::shared_ptr<ProcessHandle> ph(new ProcessHandle(command, 
+                                                          currentWorkingDirectory, 
+                                                          inputFilename,
+                                                          outputFilename,
+                                                          environment));
 	ph->SetProcessManager(this);
 	processHandlers[ph->GetGUID()] = ph;
     
@@ -56,10 +56,10 @@ boost::shared_ptr<ProcessHandler> Forte::ProcessManager::CreateProcess(const FSt
 void Forte::ProcessManager::RunProcess(const FString &guid)
 {
 	AutoUnlockMutex lock(mLock);
-	ProcessHandlerMap::iterator it = processHandlers.find(guid);
+	ProcessHandleMap::iterator it = processHandlers.find(guid);
 	if(it != processHandlers.end()) {
 		hlog(HLOG_DEBUG, "Running process (%d) %s", it->second->GetChildPID(), guid.c_str());
-		runningProcessHandlers[it->second->GetChildPID()] = it->second;
+		runningProcessHandles[it->second->GetChildPID()] = it->second;
 		Notify();
 	}
 }
@@ -67,11 +67,11 @@ void Forte::ProcessManager::RunProcess(const FString &guid)
 void Forte::ProcessManager::AbandonProcess(const FString &guid)
 {
 	AutoUnlockMutex lock(mLock);
-	ProcessHandlerMap::iterator it = processHandlers.find(guid);
+	ProcessHandleMap::iterator it = processHandlers.find(guid);
 	if(it != processHandlers.end()) {
-		RunningProcessHandlerMap::iterator rit = runningProcessHandlers.find(it->second->GetChildPID());
-		if(rit != runningProcessHandlers.end()) {
-			runningProcessHandlers.erase(rit);
+		RunningProcessHandleMap::iterator rit = runningProcessHandles.find(it->second->GetChildPID());
+		if(rit != runningProcessHandles.end()) {
+			runningProcessHandles.erase(rit);
 		}
 		processHandlers.erase(it);
 	}
@@ -84,7 +84,7 @@ void* Forte::ProcessManager::run(void)
 	AutoUnlockMutex lock(mLock);
 	mThreadName.Format("processmanager-%u", GetThreadID());
 	while (!IsShuttingDown()) {
-		if(runningProcessHandlers.size()) {
+		if(runningProcessHandles.size()) {
 			pid_t tpid;
 			int child_status = 0;
 			hlog(HLOG_DEBUG, "Waiting on our children to come home");
@@ -99,10 +99,10 @@ void* Forte::ProcessManager::run(void)
 			} else {
 							
 				// check to see which of our threads this belongs
-				RunningProcessHandlerMap::iterator it;
-				it = runningProcessHandlers.find(tpid);
+				RunningProcessHandleMap::iterator it;
+				it = runningProcessHandles.find(tpid);
 				if(it->second) {
-					boost::shared_ptr<ProcessHandler> ph = it->second;
+					boost::shared_ptr<ProcessHandle> ph = it->second;
 					hlog(HLOG_DEBUG, "We have found our man");
 					
 					// how did the child end?
@@ -125,12 +125,12 @@ void* Forte::ProcessManager::run(void)
 					}
 					
 					FString guid = ph->GetGUID();
-					runningProcessHandlers.erase(it);
-					ProcessHandlerMap::iterator oit = processHandlers.find(guid);
+					runningProcessHandles.erase(it);
+					ProcessHandleMap::iterator oit = processHandlers.find(guid);
 					processHandlers.erase(oit);
 
 					ph->SetIsRunning(false);
-					ProcessHandler::ProcessCompleteCallback callback = ph->GetProcessCompleteCallback();
+					ProcessHandle::ProcessCompleteCallback callback = ph->GetProcessCompleteCallback();
 					if(!callback.empty()) {
 						callback(ph);
 					}

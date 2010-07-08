@@ -1,6 +1,6 @@
-// ProcessHandler.cpp
+// ProcessHandle.cpp
 
-#include "ProcessHandler.h"
+#include "ProcessHandle.h"
 #include "ProcessManager.h"
 #include "AutoMutex.h"
 #include "Exception.h"
@@ -28,11 +28,11 @@
 
 using namespace Forte;
 
-Forte::ProcessHandler::ProcessHandler(const FString &command, 
-									  const FString &currentWorkingDirectory, 
-									  const FString &inputFilename, 
-									  const FString &outputFilename, 
-									  const StrStrMap *environment) : 
+Forte::ProcessHandle::ProcessHandle(const FString &command, 
+                                    const FString &currentWorkingDirectory, 
+                                    const FString &inputFilename, 
+                                    const FString &outputFilename, 
+                                    const StrStrMap *environment) : 
 	mCommand(command), 
 	mCurrentWorkingDirectory(currentWorkingDirectory),
 	mInputFilename(inputFilename),
@@ -50,21 +50,21 @@ Forte::ProcessHandler::ProcessHandler(const FString &command,
 
 }
 
-Forte::ProcessHandler::~ProcessHandler() 
+Forte::ProcessHandle::~ProcessHandle() 
 {
 }
 	
-void Forte::ProcessHandler::SetProcessCompleteCallback(ProcessCompleteCallback processCompleteCallback)
+void Forte::ProcessHandle::SetProcessCompleteCallback(ProcessCompleteCallback processCompleteCallback)
 {
     mProcessCompleteCallback = processCompleteCallback;
 }
 
-void Forte::ProcessHandler::SetCurrentWorkingDirectory(const FString &cwd) 
+void Forte::ProcessHandle::SetCurrentWorkingDirectory(const FString &cwd) 
 {
     mCurrentWorkingDirectory = cwd;
 }
 
-void Forte::ProcessHandler::SetEnvironment(const StrStrMap *env)
+void Forte::ProcessHandle::SetEnvironment(const StrStrMap *env)
 {
     if(env) {
         mEnvironment.clear();
@@ -72,24 +72,24 @@ void Forte::ProcessHandler::SetEnvironment(const StrStrMap *env)
     }
 }
 
-void Forte::ProcessHandler::SetInputFilename(const FString &infile)
+void Forte::ProcessHandle::SetInputFilename(const FString &infile)
 {
     mInputFilename = infile;
 }
 
-void Forte::ProcessHandler::SetProcessManager(ProcessManager* pm)
+void Forte::ProcessHandle::SetProcessManager(ProcessManager* pm)
 {
 	mProcessManager = pm;
 }
 	
-pid_t Forte::ProcessHandler::Run() 
+pid_t Forte::ProcessHandle::Run() 
 {
 	AutoUnlockMutex lock(mFinishedLock);
 	sigset_t set;
 	
 	mChildPid = fork();
 	if(mChildPid < 0) {
-		throw EProcessHandlerUnableToFork();
+		throw EProcessHandleUnableToFork();
 	} else if(mChildPid == 0) {
 		// this is the child
 		mIsRunning = true;
@@ -156,7 +156,7 @@ pid_t Forte::ProcessHandler::Run()
         setsid();
 		
 		execv(argv[0], argv);
-		throw EProcessHandlerExecvFailed();
+		throw EProcessHandleExecvFailed();
 	} else {
 		// this is the parent
 		// this just returns back to whence it was called
@@ -170,7 +170,7 @@ pid_t Forte::ProcessHandler::Run()
 }
 
 
-unsigned int Forte::ProcessHandler::Wait()
+unsigned int Forte::ProcessHandle::Wait()
 {
 	AutoUnlockMutex lock(mFinishedLock);
 	if(!mIsRunning) {
@@ -180,13 +180,13 @@ unsigned int Forte::ProcessHandler::Wait()
 	return mStatusCode;
 }
 
-void Forte::ProcessHandler::Cancel()
+void Forte::ProcessHandle::Cancel()
 {
 	kill(mChildPid, SIGINT);
 	Wait();
 }
 
-void Forte::ProcessHandler::Abandon(bool signal)
+void Forte::ProcessHandle::Abandon(bool signal)
 {
 	if(signal) {
 		kill(mChildPid, SIGINT);
@@ -195,12 +195,12 @@ void Forte::ProcessHandler::Abandon(bool signal)
 
 }
 
-bool Forte::ProcessHandler::IsRunning()
+bool Forte::ProcessHandle::IsRunning()
 {
     return mIsRunning;
 }
 
-void Forte::ProcessHandler::SetIsRunning(bool running)
+void Forte::ProcessHandle::SetIsRunning(bool running)
 {
 	AutoUnlockMutex lock(mFinishedLock);
 	if(mIsRunning && !running) {
@@ -215,11 +215,11 @@ void Forte::ProcessHandler::SetIsRunning(bool running)
 			mOutputString.clear();
 			
 			while (in.good())
-			{
-				in.read(buf, sizeof(buf));
-				stmp.assign(buf, in.gcount());
-				mOutputString += stmp;
-			}
+                {
+                    in.read(buf, sizeof(buf));
+                    stmp.assign(buf, in.gcount());
+                    mOutputString += stmp;
+                }
 			
 			// cleanup
 			in.close();
@@ -233,12 +233,12 @@ void Forte::ProcessHandler::SetIsRunning(bool running)
 	
 }
 
-FString Forte::ProcessHandler::GetOutputString()
+FString Forte::ProcessHandle::GetOutputString()
 {
     return mOutputString;
 }
 
-FString Forte::ProcessHandler::shellEscape(const FString& arg) 
+FString Forte::ProcessHandle::shellEscape(const FString& arg) 
 {
     return arg;
 }
