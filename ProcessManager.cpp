@@ -71,7 +71,7 @@ void Forte::ProcessManager::AbandonProcess(const FString &guid)
 	if(it != processHandles.end()) {
 		RunningProcessHandleMap::iterator rit = runningProcessHandles.find(it->second->GetChildPID());
 		if(rit != runningProcessHandles.end()) {
-            hlog(HLOG_DEBUG, "abandoning ProcessHandle %s, guid.c_str()");
+            hlog(HLOG_DEBUG, "abandoning ProcessHandle %s", guid.c_str());
 			runningProcessHandles.erase(rit);
 		} else {
             hlog(HLOG_ERR, "asked to abandon a non-running process ProcessHandle %s", guid.c_str());

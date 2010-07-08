@@ -37,6 +37,8 @@ Forte::ProcessHandle::ProcessHandle(const FString &command,
 	mCurrentWorkingDirectory(currentWorkingDirectory),
 	mInputFilename(inputFilename),
 	mOutputFilename(outputFilename),
+    mInputFD(-1),
+    mOutputFD(-1),
 	mGUID(GUID::GenerateGUID()),
 	mChildPid(-1),
 	mOutputString(""),
@@ -53,6 +55,40 @@ Forte::ProcessHandle::ProcessHandle(const FString &command,
 
 Forte::ProcessHandle::~ProcessHandle() 
 {
+
+    // if something went wrong when we tried to run this process
+    // there is a chance the input and output file descriptors are still open
+    // let's try closing them here as a backup safety measure
+    if(mInputFD != -1) 
+    {
+        hlog(HLOG_ERR, "the child input file descriptor is still set");
+        int closeResult = -1;
+        do
+        {
+            closeResult = close(mInputFD);
+            if(closeResult == -1 && errno != EINTR)
+            {
+                hlog(HLOG_ERR, "unable to close input file (%d)", errno);
+            }
+        }
+        while(closeResult == -1 && errno == EINTR);
+    }
+    
+    if(mOutputFD != -1)
+    {
+        hlog(HLOG_ERR, "the child output file descriptor is still set");
+        int closeResult = -1;
+        do
+        {
+            closeResult = close(mOutputFD);
+            if(closeResult == -1 && errno != EINTR)
+            {
+                hlog(HLOG_ERR, "unable to close output file (%d)", errno);
+            }
+        }
+        while(closeResult == -1 && errno == EINTR);
+    }
+
 }
 	
 void Forte::ProcessHandle::SetProcessCompleteCallback(ProcessCompleteCallback processCompleteCallback)
@@ -90,8 +126,33 @@ pid_t Forte::ProcessHandle::Run()
 	AutoUnlockMutex lock(mFinishedLock);
 	sigset_t set;
 
-    openFiles();
-	
+    // open the input and output files
+    // these will throw if they are unable to open the files
+    // and keep looping if they are interupped during the open
+    do
+    {
+        mInputFD = open(mInputFilename, O_RDWR);
+        if(mInputFD == -1 && errno != EINTR)
+        {
+            hlog(HLOG_ERR, "unable to open input file (%d)", errno);
+            throw EProcessHandleUnableToOpenInputFile();
+        }
+
+    } 
+    while (mInputFD == -1 && errno == EINTR);
+
+    do
+    {
+        mOutputFD = open(mOutputFilename, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR);
+        if(mOutputFD == -1 && errno != EINTR)
+        {
+            hlog(HLOG_ERR, "unable to open output file (%d)", errno);
+            throw EProcessHandleUnableToOpenOutputFile();
+        }
+
+    } 
+    while (mOutputFD == -1 && errno == EINTR);
+
 	mChildPid = fork();
 	if(mChildPid < 0) 
     {
@@ -129,30 +190,61 @@ pid_t Forte::ProcessHandle::Run()
             }
         }
 		
-		
-		
 		// setup in, out, err
-		int inputfd = -1;
-		while ((inputfd = open(mInputFilename, O_RDWR)) < 0 && errno == EINTR);
-        if (inputfd != -1) 
+        int dupResult = -1;
+        do
         {
-            while (dup2(inputfd, 0) == -1 && errno == EINTR);
-		}
+            dupResult = dup2(mInputFD, 0);
+            if(dupResult == -1 && errno != EINTR)
+            {
+                hlog(HLOG_ERR, "unable to duplicate the input file descriptor (%d)", errno);
+                throw EProcessHandleUnableToDuplicateInputFD();
+            }
+        }
+        while (dupResult == -1 && errno == EINTR);
 
-		int outputfd = -1;
-		while ((outputfd = open(mOutputFilename, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR)) < 0 && errno == EINTR);
-        if (outputfd != -1) 
+        dupResult = -1;
+        do
         {
-            while (dup2(outputfd, 1) == -1 && errno == EINTR);
-            while (dup2(outputfd, 2) == -1 && errno == EINTR);
-		}
-		
+            dupResult = dup2(mOutputFD, 1);
+            if(dupResult == -1 && errno != EINTR)
+            {
+                hlog(HLOG_ERR, "unable to duplicate the output file descriptor (%d)", errno);
+                throw EProcessHandleUnableToDuplicateOutputFD();
+            }
+        }
+        while (dupResult == -1 && errno == EINTR);
+
+        dupResult = -1;
+        do
+        {
+            dupResult = dup2(mOutputFD, 2);
+            if(dupResult == -1 && errno != EINTR)
+            {
+                hlog(HLOG_ERR, "unable to duplicate the error file descriptor (%d)", errno);
+                throw EProcessHandleUnableToDuplicateErrorFD();
+            }
+        }
+        while (dupResult == -1 && errno == EINTR);
+
 		// close all other FDs
 		int fdstart = 3;
 		int fdlimit = sysconf(_SC_OPEN_MAX);
 		while (fdstart < fdlimit) 
         {
-			close(fdstart++);
+            int closeResult = -1;
+            do
+            {
+                closeResult = close(fdstart);
+                if(closeResult == -1 && errno == EIO)
+                {
+                    hlog(HLOG_WARN, "unable to close parent file descriptor %d (EIO)", fdstart);
+                }
+            }
+            while(closeResult == -1 && errno == EINTR);
+
+            fdstart++;
+            
         }
 		
 		// set up environment?
@@ -174,11 +266,45 @@ pid_t Forte::ProcessHandle::Run()
         setsid();
 		
 		execv(argv[0], argv);
+        hlog(HLOG_ERR, "unable to execv the command");
 		throw EProcessHandleExecvFailed();
 	} 
     else 
     {
 		// this is the parent
+        // close the input and output fds we opened for our child
+        int closeResult = -1;
+        do
+        {
+            closeResult = close(mInputFD);
+            if(closeResult == -1 && errno != EINTR)
+            {
+                hlog(HLOG_ERR, "unable to close the child input file (%d)", errno);
+                throw EProcessHandleUnableToCloseInputFile();
+            }
+            else 
+            {
+                mInputFD = -1;
+            }
+        }
+        while(closeResult == -1 && errno == EINTR);
+
+        closeResult = -1;
+        do
+        {
+            closeResult = close(mOutputFD);
+            if(closeResult == -1 && errno != EINTR)
+            {
+                hlog(HLOG_ERR, "unable to close the child output file (%d)", errno);
+                throw EProcessHandleUnableToCloseOutputFile();
+            }
+            else
+            {
+                mOutputFD = -1;
+            }
+        }
+        while(closeResult == -1 && errno == EINTR);
+
 		// this just returns back to whence it was called
 		// the ProcessManager will now carry out the task
 		// of monitoring the running process.
@@ -194,6 +320,7 @@ unsigned int Forte::ProcessHandle::Wait()
 {
     if(!mIsRunning) 
     {
+        hlog(HLOG_ERR, "tried waiting on a process that is not current running");
         throw EProcessHandleProcessNotRunning();
     }
 
@@ -232,7 +359,9 @@ bool Forte::ProcessHandle::IsRunning()
 
 void Forte::ProcessHandle::SetIsRunning(bool running)
 {
-	if(mIsRunning && !running) 
+    bool prevState = mIsRunning;
+	mIsRunning = running;
+	if(prevState && !mIsRunning) 
     {
 		// we have gone from a running state to a non-running state
 		// we must be finished! grab the output
@@ -240,9 +369,8 @@ void Forte::ProcessHandle::SetIsRunning(bool running)
 		
         AutoUnlockMutex lock(mFinishedLock);
 		mFinishedCond.Broadcast();
-		
 	}
-	mIsRunning = running;
+
 	
 }
 
@@ -276,10 +404,6 @@ FString Forte::ProcessHandle::GetOutputString()
     return mOutputString;
 }
 
-void Forte::ProcessHandle::openFiles()
-{
-
-}
 
 FString Forte::ProcessHandle::shellEscape(const FString& arg) 
 {

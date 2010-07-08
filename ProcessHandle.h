@@ -23,9 +23,20 @@ namespace Forte
 
 
     EXCEPTION_CLASS(EProcessHandle);
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToOpenInputFile, "Unable to open the input file");
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToCloseInputFile, "Unable to close the input file");
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToOpenOutputFile, "Unable to open the output file");
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToCloseOutputFile, "Unable to close the output file");
     EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToFork, "Unable to Fork Child Process");
     EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleExecvFailed, "Execv Call Failed");
     EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleProcessNotRunning, "Wait called on a non-running process");
+
+
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToDuplicateInputFD, "Unable to duplicate Input File Descriptor");
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToDuplicateOutputFD, "Unable to duplicate Output File Descriptor");
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToDuplicateErrorFD, "Unable to duplicate Error File Descriptor");
+
+
 
 	class ProcessManager;
 
@@ -93,11 +104,16 @@ namespace Forte
         FString mInputFilename;
         FString mOutputFilename;
 		
+        int mInputFD;
+        int mOutputFD;
+
 		FString mGUID;
 		pid_t mChildPid;
 		unsigned int mStatusCode;
 		ProcessTerminationType mProcessTerminationType;
 		FString mOutputString;
+
+
 
         bool mIsRunning;
 		Mutex mFinishedLock;
@@ -105,13 +121,6 @@ namespace Forte
 
         ProcessManager *mProcessManager;
         
-        /**
-         * openFiles() opens the input, output and error files and stores the FDs away. 
-         * This is called before the fork so that we can catch any issues before the 
-         * new process is spun off
-         */
-        virtual void openFiles();
-
         /**
          * shellEscape()  scrubs the string intended for exec'ing to make sure it is safe.
          *
