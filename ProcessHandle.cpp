@@ -137,8 +137,10 @@ pid_t Forte::ProcessHandle::Run()
 		// close all other FDs
 		int fdstart = 3;
 		int fdlimit = sysconf(_SC_OPEN_MAX);
-		while (fdstart < fdlimit)
+		while (fdstart < fdlimit) 
+        {
 			close(fdstart++);
+        }
 		
 		// set up environment?
         if (!mEnvironment.empty()) {
@@ -174,9 +176,14 @@ pid_t Forte::ProcessHandle::Run()
 
 unsigned int Forte::ProcessHandle::Wait()
 {
+    if(!mIsRunning) {
+        throw EProcessHandleProcessNotRunning();
+    }
+
     hlog(HLOG_DEBUG, "waiting for process to end (%s)", mGUID.c_str());
 	AutoUnlockMutex lock(mFinishedLock);
-	if(!mIsRunning) {
+	if(!mIsRunning) 
+    {
 		return mStatusCode;
 	}
 	mFinishedCond.Wait();
@@ -193,7 +200,8 @@ void Forte::ProcessHandle::Cancel()
 void Forte::ProcessHandle::Abandon(bool signal)
 {
     hlog(HLOG_DEBUG, "abandoning process %u (%s)", mChildPid, mGUID.c_str());
-	if(signal) {
+	if(signal) 
+    {
 		kill(mChildPid, SIGINT);
 	}
 	mProcessManager->AbandonProcess(mGUID);
@@ -207,31 +215,12 @@ bool Forte::ProcessHandle::IsRunning()
 
 void Forte::ProcessHandle::SetIsRunning(bool running)
 {
-	AutoUnlockMutex lock(mFinishedLock);
 	if(mIsRunning && !running) {
 		// we have gone from a running state to a non-running state
 		// we must be finished! grab the output
-        hlog(HLOG_DEBUG, "process has terminated %u (%s)", mChildPid, mGUID.c_str());
-		if (mOutputFilename != "/dev/null") {
-			// read log file
-			FString stmp;
-			ifstream in(mOutputFilename, ios::in | ios::binary);
-			char buf[4096];
-			
-			mOutputString.clear();
-			
-			while (in.good())
-                {
-                    in.read(buf, sizeof(buf));
-                    stmp.assign(buf, in.gcount());
-                    mOutputString += stmp;
-                }
-			
-			// cleanup
-			in.close();
-		}
+        hlog(HLOG_DEBUG, "process has terminated %u (%s)", mChildPid, mGUID.c_str());		
 		
-		
+        AutoUnlockMutex lock(mFinishedLock);
 		mFinishedCond.Broadcast();
 		
 	}
@@ -241,6 +230,31 @@ void Forte::ProcessHandle::SetIsRunning(bool running)
 
 FString Forte::ProcessHandle::GetOutputString()
 {
+    // lazy loading of the output string
+    // check to see if the output string is empty
+    // if so, and the output file wasn't the bit bucket
+    // load it up and return it. Otherwise, we just load the
+    // string we have already loaded
+    if (mOutputString.empty() && mOutputFilename != "/dev/null") 
+    {
+        // read log file
+        FString stmp;
+        ifstream in(mOutputFilename, ios::in | ios::binary);
+        char buf[4096];
+		
+        mOutputString.clear();
+		
+        while (in.good())
+            {
+                in.read(buf, sizeof(buf));
+                stmp.assign(buf, in.gcount());
+                mOutputString += stmp;
+            }
+        
+        // cleanup
+        in.close();
+    }
+
     return mOutputString;
 }
 

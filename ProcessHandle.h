@@ -25,7 +25,7 @@ namespace Forte
     EXCEPTION_CLASS(EProcessHandle);
     EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToFork, "Unable to Fork Child Process");
     EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleExecvFailed, "Execv Call Failed");
-	
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleProcessNotRunning, "Wait called on a non-running process");
 	class ProcessManager;
 
     /**
