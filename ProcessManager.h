@@ -36,7 +36,7 @@ namespace Forte
     private:
 		virtual void * run(void);
 		
-		ProcessHandleMap processHandlers;
+		ProcessHandleMap processHandles;
         RunningProcessHandleMap runningProcessHandles;
 		Mutex mLock;
     };

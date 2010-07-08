@@ -84,11 +84,13 @@ void Forte::ProcessHandle::SetProcessManager(ProcessManager* pm)
 	
 pid_t Forte::ProcessHandle::Run() 
 {
+    hlog(HLOG_DEBUG, "Running child process");
 	AutoUnlockMutex lock(mFinishedLock);
 	sigset_t set;
 	
 	mChildPid = fork();
 	if(mChildPid < 0) {
+        hlog(HLOG_ERR, "unable to fork child process");
 		throw EProcessHandleUnableToFork();
 	} else if(mChildPid == 0) {
 		// this is the child
@@ -172,6 +174,7 @@ pid_t Forte::ProcessHandle::Run()
 
 unsigned int Forte::ProcessHandle::Wait()
 {
+    hlog(HLOG_DEBUG, "waiting for process to end (%s)", mGUID.c_str());
 	AutoUnlockMutex lock(mFinishedLock);
 	if(!mIsRunning) {
 		return mStatusCode;
@@ -182,12 +185,14 @@ unsigned int Forte::ProcessHandle::Wait()
 
 void Forte::ProcessHandle::Cancel()
 {
+    hlog(HLOG_DEBUG, "canceling process %u (%s)", mChildPid, mGUID.c_str());
 	kill(mChildPid, SIGINT);
 	Wait();
 }
 
 void Forte::ProcessHandle::Abandon(bool signal)
 {
+    hlog(HLOG_DEBUG, "abandoning process %u (%s)", mChildPid, mGUID.c_str());
 	if(signal) {
 		kill(mChildPid, SIGINT);
 	}
@@ -206,6 +211,7 @@ void Forte::ProcessHandle::SetIsRunning(bool running)
 	if(mIsRunning && !running) {
 		// we have gone from a running state to a non-running state
 		// we must be finished! grab the output
+        hlog(HLOG_DEBUG, "process has terminated %u (%s)", mChildPid, mGUID.c_str());
 		if (mOutputFilename != "/dev/null") {
 			// read log file
 			FString stmp;

@@ -48,7 +48,7 @@ boost::shared_ptr<ProcessHandle> Forte::ProcessManager::CreateProcess(const FStr
                                                           outputFilename,
                                                           environment));
 	ph->SetProcessManager(this);
-	processHandlers[ph->GetGUID()] = ph;
+	processHandles[ph->GetGUID()] = ph;
     
     return ph;
 }
@@ -56,8 +56,8 @@ boost::shared_ptr<ProcessHandle> Forte::ProcessManager::CreateProcess(const FStr
 void Forte::ProcessManager::RunProcess(const FString &guid)
 {
 	AutoUnlockMutex lock(mLock);
-	ProcessHandleMap::iterator it = processHandlers.find(guid);
-	if(it != processHandlers.end()) {
+	ProcessHandleMap::iterator it = processHandles.find(guid);
+	if(it != processHandles.end()) {
 		hlog(HLOG_DEBUG, "Running process (%d) %s", it->second->GetChildPID(), guid.c_str());
 		runningProcessHandles[it->second->GetChildPID()] = it->second;
 		Notify();
@@ -67,35 +67,48 @@ void Forte::ProcessManager::RunProcess(const FString &guid)
 void Forte::ProcessManager::AbandonProcess(const FString &guid)
 {
 	AutoUnlockMutex lock(mLock);
-	ProcessHandleMap::iterator it = processHandlers.find(guid);
-	if(it != processHandlers.end()) {
+	ProcessHandleMap::iterator it = processHandles.find(guid);
+	if(it != processHandles.end()) {
 		RunningProcessHandleMap::iterator rit = runningProcessHandles.find(it->second->GetChildPID());
 		if(rit != runningProcessHandles.end()) {
+            hlog(HLOG_DEBUG, "abandoning ProcessHandle %s, guid.c_str()");
 			runningProcessHandles.erase(rit);
-		}
-		processHandlers.erase(it);
-	}
+		} else {
+            hlog(HLOG_ERR, "asked to abandon a non-running process ProcessHandle %s", guid.c_str());
+        }
+		processHandles.erase(it);
+	} else {
+        hlog(HLOG_ERR, "asked to abandon an unknown ProcessHandle %s", guid.c_str());
+    }
 	
 }
 
 void* Forte::ProcessManager::run(void)
 {
-	hlog(HLOG_DEBUG, "Starting process manager loop");
+	hlog(HLOG_DEBUG, "Starting ProcessManager runloop");
 	AutoUnlockMutex lock(mLock);
 	mThreadName.Format("processmanager-%u", GetThreadID());
 	while (!IsShuttingDown()) {
 		if(runningProcessHandles.size()) {
 			pid_t tpid;
 			int child_status = 0;
-			hlog(HLOG_DEBUG, "Waiting on our children to come home");
-			
 			{
 				AutoLockMutex unlock(mLock);
 				// unlock mutex here so other threads can add processes while we are waiting
 				tpid = wait(&child_status);
 			}
 			if(tpid == -1) {
-				hlog(HLOG_DEBUG, "Error waiting!");
+                if(errno == ECHILD) {
+                    hlog(HLOG_WARN, "wait() error: no unwaited-for children");
+                } else if(errno == EINTR) {
+                    hlog(HLOG_ERR, "wait() error: unblocked signal or SIGCHILD caught");
+                } else if(errno == EINVAL) {
+                    // NOTE: we shouldn't receive this error unless we switch to waitpid
+                    // but I just kept it here for completeness
+                    hlog(HLOG_CRIT, "wait() error: invalid options parameter");
+                } else {
+                    hlog(HLOG_ERR, "wait() error: unknown error");
+                }
 			} else {
 							
 				// check to see which of our threads this belongs
@@ -103,8 +116,6 @@ void* Forte::ProcessManager::run(void)
 				it = runningProcessHandles.find(tpid);
 				if(it->second) {
 					boost::shared_ptr<ProcessHandle> ph = it->second;
-					hlog(HLOG_DEBUG, "We have found our man");
-					
 					// how did the child end?
 					if (WIFEXITED(child_status)) {
 						ph->SetStatusCode(WEXITSTATUS(child_status));
@@ -121,13 +132,13 @@ void* Forte::ProcessManager::run(void)
 					} else {
 						ph->SetStatusCode(child_status);
 						ph->SetProcessTerminationType(ProcessUnknownTermination);
-						hlog(HLOG_DEBUG, "unknown child status (0x%x)", ph->GetStatusCode());
+						hlog(HLOG_ERR, "unknown child exit status (0x%x)", ph->GetStatusCode());
 					}
 					
 					FString guid = ph->GetGUID();
 					runningProcessHandles.erase(it);
-					ProcessHandleMap::iterator oit = processHandlers.find(guid);
-					processHandlers.erase(oit);
+					ProcessHandleMap::iterator oit = processHandles.find(guid);
+					processHandles.erase(oit);
 
 					ph->SetIsRunning(false);
 					ProcessHandle::ProcessCompleteCallback callback = ph->GetProcessCompleteCallback();
@@ -136,8 +147,7 @@ void* Forte::ProcessManager::run(void)
 					}
 					
 				} else {
-					hlog(HLOG_DEBUG, "Who is this? %u", tpid);
-					
+					hlog(HLOG_ERR, "wait() returned a process id we don't know about (%u)", tpid);
 				}
 			}
 		} else {
