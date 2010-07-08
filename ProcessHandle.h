@@ -26,11 +26,11 @@ namespace Forte
     EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToFork, "Unable to Fork Child Process");
     EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleExecvFailed, "Execv Call Failed");
     EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleProcessNotRunning, "Wait called on a non-running process");
+
 	class ProcessManager;
 
     /**
-     * A handle to a process
-     *
+     * A handle to a process managed by ProcessManager
      */
     class ProcessHandle : public Object 
     {
@@ -105,6 +105,20 @@ namespace Forte
 
         ProcessManager *mProcessManager;
         
+        /**
+         * openFiles() opens the input, output and error files and stores the FDs away. 
+         * This is called before the fork so that we can catch any issues before the 
+         * new process is spun off
+         */
+        virtual void openFiles();
+
+        /**
+         * shellEscape()  scrubs the string intended for exec'ing to make sure it is safe.
+         *
+         * @param arg the command string to scrub
+         *
+         * @return a cleaned command string suitable for passing to exec
+         */
         virtual FString shellEscape(const FString& arg);
     };
 

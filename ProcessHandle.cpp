@@ -44,7 +44,8 @@ Forte::ProcessHandle::ProcessHandle(const FString &command,
 	mFinishedCond(mFinishedLock)
 {
     // copy the environment entries
-    if(environment) {
+    if(environment) 
+    {
         mEnvironment.insert(environment->begin(), environment->end());
     }
 
@@ -66,7 +67,8 @@ void Forte::ProcessHandle::SetCurrentWorkingDirectory(const FString &cwd)
 
 void Forte::ProcessHandle::SetEnvironment(const StrStrMap *env)
 {
-    if(env) {
+    if(env) 
+    {
         mEnvironment.clear();
         mEnvironment.insert(env->begin(), env->end());
     }
@@ -87,21 +89,28 @@ pid_t Forte::ProcessHandle::Run()
     hlog(HLOG_DEBUG, "Running child process");
 	AutoUnlockMutex lock(mFinishedLock);
 	sigset_t set;
+
+    openFiles();
 	
 	mChildPid = fork();
-	if(mChildPid < 0) {
+	if(mChildPid < 0) 
+    {
         hlog(HLOG_ERR, "unable to fork child process");
 		throw EProcessHandleUnableToFork();
-	} else if(mChildPid == 0) {
+	} 
+    else if(mChildPid == 0) 
+    {
 		// this is the child
 		mIsRunning = true;
 		char *argv[ARG_MAX];
 		
 		// we need to split the command up
 		std::vector<std::string> strings;
-		boost::split(strings, mCommand, boost::is_any_of("\t "));
+        FString scrubbedCommand = shellEscape(mCommand);
+		boost::split(strings, scrubbedCommand, boost::is_any_of("\t "));
 		unsigned int num_args = strings.size();
-		for(unsigned int i = 0; i < num_args; ++i) {
+		for(unsigned int i = 0; i < num_args; ++i) 
+        {
 			// ugh - I hate this cast here, but as this process
 			// is about to be blown away, it is harmless, and
 			// much simpler than trying to avoid it
@@ -110,8 +119,10 @@ pid_t Forte::ProcessHandle::Run()
 		argv[num_args] = 0;
 		
 		// change current working directory
-        if (!mCurrentWorkingDirectory.empty()) {
-            if (chdir(mCurrentWorkingDirectory)) {
+        if (!mCurrentWorkingDirectory.empty()) 
+        {
+            if (chdir(mCurrentWorkingDirectory)) 
+            {
                 hlog(HLOG_CRIT, "Cannot change directory to: %s", mCurrentWorkingDirectory.c_str());
                 cerr << "Cannot change directory to: " << mCurrentWorkingDirectory << endl;
                 exit(-1);
@@ -123,13 +134,15 @@ pid_t Forte::ProcessHandle::Run()
 		// setup in, out, err
 		int inputfd = -1;
 		while ((inputfd = open(mInputFilename, O_RDWR)) < 0 && errno == EINTR);
-        if (inputfd != -1) {
+        if (inputfd != -1) 
+        {
             while (dup2(inputfd, 0) == -1 && errno == EINTR);
 		}
 
 		int outputfd = -1;
 		while ((outputfd = open(mOutputFilename, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR)) < 0 && errno == EINTR);
-        if (outputfd != -1) {
+        if (outputfd != -1) 
+        {
             while (dup2(outputfd, 1) == -1 && errno == EINTR);
             while (dup2(outputfd, 2) == -1 && errno == EINTR);
 		}
@@ -146,7 +159,8 @@ pid_t Forte::ProcessHandle::Run()
         if (!mEnvironment.empty()) {
             StrStrMap::const_iterator mi;
 			
-            for (mi = mEnvironment.begin(); mi != mEnvironment.end(); ++mi) {
+            for (mi = mEnvironment.begin(); mi != mEnvironment.end(); ++mi) 
+            {
                 if (mi->second.empty()) unsetenv(mi->first);
                 else setenv(mi->first, mi->second, 1);
             }
@@ -161,7 +175,9 @@ pid_t Forte::ProcessHandle::Run()
 		
 		execv(argv[0], argv);
 		throw EProcessHandleExecvFailed();
-	} else {
+	} 
+    else 
+    {
 		// this is the parent
 		// this just returns back to whence it was called
 		// the ProcessManager will now carry out the task
@@ -176,7 +192,8 @@ pid_t Forte::ProcessHandle::Run()
 
 unsigned int Forte::ProcessHandle::Wait()
 {
-    if(!mIsRunning) {
+    if(!mIsRunning) 
+    {
         throw EProcessHandleProcessNotRunning();
     }
 
@@ -215,7 +232,8 @@ bool Forte::ProcessHandle::IsRunning()
 
 void Forte::ProcessHandle::SetIsRunning(bool running)
 {
-	if(mIsRunning && !running) {
+	if(mIsRunning && !running) 
+    {
 		// we have gone from a running state to a non-running state
 		// we must be finished! grab the output
         hlog(HLOG_DEBUG, "process has terminated %u (%s)", mChildPid, mGUID.c_str());		
@@ -245,17 +263,22 @@ FString Forte::ProcessHandle::GetOutputString()
         mOutputString.clear();
 		
         while (in.good())
-            {
-                in.read(buf, sizeof(buf));
-                stmp.assign(buf, in.gcount());
-                mOutputString += stmp;
-            }
+        {
+            in.read(buf, sizeof(buf));
+            stmp.assign(buf, in.gcount());
+            mOutputString += stmp;
+        }
         
         // cleanup
         in.close();
     }
 
     return mOutputString;
+}
+
+void Forte::ProcessHandle::openFiles()
+{
+
 }
 
 FString Forte::ProcessHandle::shellEscape(const FString& arg) 
