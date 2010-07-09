@@ -42,6 +42,7 @@ Forte::ProcessHandle::ProcessHandle(const FString &command,
 	mGUID(GUID::GenerateGUID()),
 	mChildPid(-1),
 	mOutputString(""),
+    mStarted(false),
 	mIsRunning(false),
 	mFinishedCond(mFinishedLock)
 {
@@ -308,6 +309,7 @@ pid_t Forte::ProcessHandle::Run()
 		// this just returns back to whence it was called
 		// the ProcessManager will now carry out the task
 		// of monitoring the running process.
+        mStarted = true;
 		mIsRunning = true;
 		mProcessManager->RunProcess(mGUID);
 	}
@@ -336,6 +338,11 @@ unsigned int Forte::ProcessHandle::Wait()
 
 void Forte::ProcessHandle::Cancel()
 {
+    if(!mIsRunning)
+    {
+        hlog(HLOG_ERR, "tried canceling a process that is not current running");
+        throw EProcessHandleProcessNotRunning();
+    }
     hlog(HLOG_DEBUG, "canceling process %u (%s)", mChildPid, mGUID.c_str());
 	kill(mChildPid, SIGINT);
 	Wait();
@@ -343,6 +350,12 @@ void Forte::ProcessHandle::Cancel()
 
 void Forte::ProcessHandle::Abandon(bool signal)
 {
+    if(!mIsRunning)
+    {
+        hlog(HLOG_ERR, "tried abandoning a process that is not current running");
+        throw EProcessHandleProcessNotRunning();
+    }
+
     hlog(HLOG_DEBUG, "abandoning process %u (%s)", mChildPid, mGUID.c_str());
 	if(signal) 
     {
@@ -374,8 +387,30 @@ void Forte::ProcessHandle::SetIsRunning(bool running)
 	
 }
 
+unsigned int GetStatusCode() 
+{ 
+    if(!mStarted || mIsRunning) {
+        hlog(HLOG_ERR, "tried grabbing the status code from a process that hasn't completed yet");
+        throw EProcessHandleProcessNotFinished();
+    }
+    return mStatusCode; 
+}
+
+ProcessTerminationType GetProcessTerminationType() 
+{ 
+    if(!mStarted || mIsRunning) {
+        hlog(HLOG_ERR, "tried grabbing the termination type from a process that hasn't completed yet");
+        throw EProcessHandleProcessNotFinished();
+    }
+    return mProcessTerminationType; 
+}
+
 FString Forte::ProcessHandle::GetOutputString()
 {
+    if(!mStarted || mIsRunning) {
+        hlog(HLOG_ERR, "tried grabbing the output from a process that hasn't completed yet");
+        throw EProcessHandleProcessNotFinished();
+    }
     // lazy loading of the output string
     // check to see if the output string is empty
     // if so, and the output file wasn't the bit bucket
@@ -403,7 +438,6 @@ FString Forte::ProcessHandle::GetOutputString()
 
     return mOutputString;
 }
-
 
 FString Forte::ProcessHandle::shellEscape(const FString& arg) 
 {
