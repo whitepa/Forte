@@ -117,22 +117,26 @@ void* Forte::ProcessManager::run(void)
 				if(it->second) {
 					boost::shared_ptr<ProcessHandle> ph = it->second;
 					// how did the child end?
+                    unsigned int statusCode = 0;
 					if (WIFEXITED(child_status)) {
-						ph->SetStatusCode(WEXITSTATUS(child_status));
+                        statusCode = WEXITSTATUS(child_status);
+						ph->SetStatusCode(statusCode);
 						ph->SetProcessTerminationType(ProcessExited);
-						hlog(HLOG_DEBUG, "child exited (status %d)", ph->GetStatusCode());
+						hlog(HLOG_DEBUG, "child exited (status %d)", statusCode);
 					} else if (WIFSIGNALED(child_status)) {
-						ph->SetStatusCode(WTERMSIG(child_status));
+                        statusCode = WTERMSIG(child_status);
+						ph->SetStatusCode(statusCode);
 						ph->SetProcessTerminationType(ProcessKilled);
-						hlog(HLOG_DEBUG, "child killed (signal %d)", ph->GetStatusCode());
+						hlog(HLOG_DEBUG, "child killed (signal %d)", statusCode);
 					} else if (WIFSTOPPED(child_status)) {
-						ph->SetStatusCode(WSTOPSIG(child_status));
+                        statusCode = WSTOPSIG(child_status);
+						ph->SetStatusCode(statusCode);
 						ph->SetProcessTerminationType(ProcessStopped);
-						hlog(HLOG_DEBUG, "child stopped (signal %d)", ph->GetStatusCode());
+						hlog(HLOG_DEBUG, "child stopped (signal %d)", statusCode);
 					} else {
 						ph->SetStatusCode(child_status);
 						ph->SetProcessTerminationType(ProcessUnknownTermination);
-						hlog(HLOG_ERR, "unknown child exit status (0x%x)", ph->GetStatusCode());
+						hlog(HLOG_ERR, "unknown child exit status (0x%x)", child_status);
 					}
 					
 					FString guid = ph->GetGUID();

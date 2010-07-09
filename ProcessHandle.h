@@ -32,6 +32,7 @@ namespace Forte
     EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleProcessNotRunning, "Wait called on a non-running process");
     EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleProcessRunning, "method called on a running process");
     EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleProcessStarted, "method called on a process that has already started");
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleProcessNotStarted, "method called on a process that has not been started");
     EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleProcessNotFinished, "method called on a process that is not finished yet");
     EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToDuplicateInputFD, "Unable to duplicate Input File Descriptor");
     EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToDuplicateOutputFD, "Unable to duplicate Output File Descriptor");

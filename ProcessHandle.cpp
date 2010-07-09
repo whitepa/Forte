@@ -387,16 +387,19 @@ void Forte::ProcessHandle::SetIsRunning(bool running)
 	
 }
 
-unsigned int GetStatusCode() 
+unsigned int Forte::ProcessHandle::GetStatusCode() 
 { 
-    if(!mStarted || mIsRunning) {
+    if(!mStarted) {
+        hlog(HLOG_ERR, "tried grabbing the status code from a process that hasn't been started");
+        throw EProcessHandleProcessNotRunning();
+    } else if(mIsRunning) {
         hlog(HLOG_ERR, "tried grabbing the status code from a process that hasn't completed yet");
         throw EProcessHandleProcessNotFinished();
     }
     return mStatusCode; 
 }
 
-ProcessTerminationType GetProcessTerminationType() 
+ProcessTerminationType Forte::ProcessHandle::GetProcessTerminationType() 
 { 
     if(!mStarted || mIsRunning) {
         hlog(HLOG_ERR, "tried grabbing the termination type from a process that hasn't completed yet");
