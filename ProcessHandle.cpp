@@ -320,9 +320,9 @@ pid_t Forte::ProcessHandle::Run()
 
 unsigned int Forte::ProcessHandle::Wait()
 {
-    if(!mIsRunning) 
+    if(!mIsRunning && !mStarted) 
     {
-        hlog(HLOG_ERR, "tried waiting on a process that is not current running");
+        hlog(HLOG_ERR, "tried waiting on a process that has not been started");
         throw EProcessHandleProcessNotRunning();
     }
 
@@ -391,7 +391,7 @@ unsigned int Forte::ProcessHandle::GetStatusCode()
 { 
     if(!mStarted) {
         hlog(HLOG_ERR, "tried grabbing the status code from a process that hasn't been started");
-        throw EProcessHandleProcessNotRunning();
+        throw EProcessHandleProcessNotStarted();
     } else if(mIsRunning) {
         hlog(HLOG_ERR, "tried grabbing the status code from a process that hasn't completed yet");
         throw EProcessHandleProcessNotFinished();
@@ -401,7 +401,10 @@ unsigned int Forte::ProcessHandle::GetStatusCode()
 
 ProcessTerminationType Forte::ProcessHandle::GetProcessTerminationType() 
 { 
-    if(!mStarted || mIsRunning) {
+    if(!mStarted) {
+        hlog(HLOG_ERR, "tried grabbing the termination type from a process that hasn't been started");
+        throw EProcessHandleProcessNotStarted();
+    } else if(mIsRunning) {
         hlog(HLOG_ERR, "tried grabbing the termination type from a process that hasn't completed yet");
         throw EProcessHandleProcessNotFinished();
     }
@@ -410,9 +413,14 @@ ProcessTerminationType Forte::ProcessHandle::GetProcessTerminationType()
 
 FString Forte::ProcessHandle::GetOutputString()
 {
-    if(!mStarted || mIsRunning) {
+    if(!mStarted) {
+        hlog(HLOG_ERR, "tried grabbing the output from a process that hasn't been started");
+        throw EProcessHandleProcessNotStarted();
+    } else if(mIsRunning) {
         hlog(HLOG_ERR, "tried grabbing the output from a process that hasn't completed yet");
         throw EProcessHandleProcessNotFinished();
+    }
+    if(!mStarted || mIsRunning) {
     }
     // lazy loading of the output string
     // check to see if the output string is empty

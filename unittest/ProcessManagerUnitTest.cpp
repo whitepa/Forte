@@ -22,12 +22,8 @@ BOOST_AUTO_TEST_CASE(RunProcess)
     hlog(HLOG_INFO, "StatusCode: %d", ph->GetStatusCode());
     hlog(HLOG_INFO, "OutputString: %s", ph->GetOutputString().c_str());
 	
-	hlog(HLOG_INFO, "Pausing...");
-	sleep(3);
-	
 	boost::shared_ptr<ProcessHandle> ph2 = pm.CreateProcess("/bin/ls", "/", "/dev/null", "/home/tritchey/temp.out");
     ph2->Run();
-    BOOST_CHECK(ph2->IsRunning());
     ph2->Wait();
     BOOST_CHECK(!ph2->IsRunning());
     hlog(HLOG_INFO, "Termination Type: %d", ph2->GetProcessTerminationType());
@@ -35,8 +31,28 @@ BOOST_AUTO_TEST_CASE(RunProcess)
     hlog(HLOG_INFO, "OutputString: %s", ph2->GetOutputString().c_str());
 }
 
-// this must be run with --catch_system_errors=no
- /*
+BOOST_AUTO_TEST_CASE(Exceptions)
+{
+    hlog(HLOG_INFO, "Exceptions");
+    ProcessManager pm;
+    boost::shared_ptr<ProcessHandle> ph = pm.CreateProcess("/bin/sleep 10");
+    BOOST_CHECK_THROW(ph->GetProcessTerminationType(), EProcessHandleProcessNotStarted);
+    BOOST_CHECK_THROW(ph->GetStatusCode(), EProcessHandleProcessNotStarted);    
+    BOOST_CHECK_THROW(ph->GetOutputString(), EProcessHandleProcessNotStarted);
+
+    BOOST_CHECK_THROW(ph->Wait(), EProcessHandleProcessNotRunning);
+    BOOST_CHECK_THROW(ph->Cancel(), EProcessHandleProcessNotRunning);
+    BOOST_CHECK_THROW(ph->Abandon(), EProcessHandleProcessNotRunning);
+
+    ph->Run();
+    BOOST_CHECK_THROW(ph->GetProcessTerminationType(), EProcessHandleProcessNotFinished);
+    BOOST_CHECK_THROW(ph->GetStatusCode(), EProcessHandleProcessNotFinished);    
+    BOOST_CHECK_THROW(ph->GetOutputString(), EProcessHandleProcessNotFinished);
+    
+    ph->Wait();
+
+}
+
 BOOST_AUTO_TEST_CASE(CancelProcess)
 {
     hlog(HLOG_INFO, "CancelProcess");
@@ -49,8 +65,8 @@ BOOST_AUTO_TEST_CASE(CancelProcess)
     hlog(HLOG_INFO, "Termination Type: %d", ph->GetProcessTerminationType());
     hlog(HLOG_INFO, "StatusCode: %d", ph->GetStatusCode());
     hlog(HLOG_INFO, "OutputString: %s", ph->GetOutputString().c_str());
-	
 }
+
 
 BOOST_AUTO_TEST_CASE(AbandonProcess)
 {
@@ -67,15 +83,20 @@ BOOST_AUTO_TEST_CASE(AbandonProcess)
     ph->Abandon(true);
 }
 
-*/
+
 ////Boost Unit init function ///////////////////////////////////////////////////
 test_suite*
 init_unit_test_suite(int argc, char* argv[])
 {
+
     logManager.SetLogMask("//stdout", HLOG_ALL);
     logManager.BeginLogging("//stdout");
 
     // initialize everything here
+
+    // the boost test monitor will catch our attempts to kill
+    // children, so we must set this option
+    setenv("BOOST_TEST_CATCH_SYSTEM_ERRORS", "no", 1);
 
     return 0;
 }
