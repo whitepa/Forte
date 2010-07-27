@@ -18,7 +18,8 @@ namespace Forte
 		ProcessExited,
 		ProcessKilled,
 		ProcessStopped,
-		ProcessUnknownTermination
+		ProcessUnknownTermination,
+        ProcessNotTerminated
 	};
 
 
@@ -169,13 +170,19 @@ namespace Forte
 
 
         /**
-         * Wait() block until the process has finished.
+         * Wait() block until the process has finished, or the process is abandoned.
          *
          * @throw EProcessHandleProcessNotRunning
          *
          * @return unsigned int holding the exit value from the child process
          */
         unsigned int Wait();
+
+
+        /**
+         * NotifyWaiters() broadcasts for anyone waiting on the process to finish
+         */
+        void NotifyWaiters();
 
         /**
          * Cancel() sends a SIGINT signal to the child process and then blocks until it is finished

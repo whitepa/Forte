@@ -33,6 +33,24 @@ Forte::ProcessManager::ProcessManager()
 
 Forte::ProcessManager::~ProcessManager() 
 {
+
+    // we must deal with anyone potentially Wait()'ing on a ProcessHandle to finish
+    // running in another thread
+
+    RunningProcessHandleMap::iterator end = runningProcessHandles.end();
+    for(RunningProcessHandleMap::iterator it = runningProcessHandles.begin(); it != end; ++it)
+    {
+        // double check that we have a valid process handle
+        if(it->second) 
+        {
+            boost::shared_ptr<ProcessHandle> ph = it->second;
+            ph->SetProcessTerminationType(ProcessNotTerminated);
+            ph->NotifyWaiters();
+        }
+
+    }
+    runningProcessHandles.clear();
+
     
 }
 
@@ -56,7 +74,6 @@ boost::shared_ptr<ProcessHandle> Forte::ProcessManager::CreateProcess(const FStr
 void Forte::ProcessManager::RunProcess(const FString &guid)
 {
 	AutoUnlockMutex lock(mLock);
-
 
 	ProcessHandleMap::iterator it = processHandles.find(guid);
 	if(it != processHandles.end()) {

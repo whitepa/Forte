@@ -29,6 +29,13 @@ namespace Forte
 		typedef std::pair<pid_t, boost::shared_ptr<ProcessHandle> > ProcessHandlePair;
 		
         ProcessManager();
+
+        
+        /**
+         * ProcessManager destructor. If the process manager is being destroyed it will
+         * notify all running ProcessHandle Wait()'ers, and mark the process termination
+         * type as ProcessNotTerminated.
+         */
         virtual ~ProcessManager();
 
         /**

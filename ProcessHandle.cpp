@@ -374,6 +374,13 @@ unsigned int Forte::ProcessHandle::Wait()
 	return mStatusCode;
 }
 
+void Forte::ProcessHandle::NotifyWaiters()
+{
+    AutoUnlockMutex lock(mFinishedLock);
+    mFinishedCond.Broadcast();
+
+}
+
 void Forte::ProcessHandle::Cancel()
 {
     if(!mIsRunning)
@@ -400,7 +407,11 @@ void Forte::ProcessHandle::Abandon(bool signal)
 		kill(mChildPid, SIGINT);
 	}
 	mProcessManager->AbandonProcess(mGUID);
-
+    
+    // this might be called on another thread, in which
+    // case we need to broadcast to let anyone
+    // know that might be waiting for a finish
+    NotifyWaiters();
 }
 
 bool Forte::ProcessHandle::IsRunning()
@@ -415,11 +426,10 @@ void Forte::ProcessHandle::SetIsRunning(bool running)
 	if(prevState && !mIsRunning) 
     {
 		// we have gone from a running state to a non-running state
-		// we must be finished! grab the output
+		// we must be finished!
         hlog(HLOG_DEBUG, "process has terminated %u (%s)", mChildPid, mGUID.c_str());		
 		
-        AutoUnlockMutex lock(mFinishedLock);
-		mFinishedCond.Broadcast();
+        NotifyWaiters();
 	}
 
 	
