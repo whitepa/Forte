@@ -161,7 +161,7 @@ TLIBS = -L$(TARGETDIR) -lforte -lpthread
 
 INSTALL = $(if $(RPM), @install $(1) $< $@, @install $(1) $(2) $< $@)
 
-all: ccargs_echo $(LIB)
+all: $(LIB)
 	$(MAKE_SUBDIRS)
 
 utiltest: $(TPROG)
