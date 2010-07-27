@@ -119,6 +119,23 @@ BOOST_AUTO_TEST_CASE(FileIO)
 
 }
 
+void ProcessComplete(boost::shared_ptr<ProcessHandle> ph)
+{
+    hlog(HLOG_DEBUG, "process completion callback triggered");
+    BOOST_CHECK(ph->GetOutputString().find("proc") != string::npos);    
+}
+
+BOOST_AUTO_TEST_CASE(Callbacks)
+{
+    hlog(HLOG_INFO, "Callbacks");
+    ProcessManager pm;
+    boost::shared_ptr<ProcessHandle> ph = pm.CreateProcess("/bin/ls", "/", "temp.out");
+    ph->SetProcessCompleteCallback(ProcessComplete);
+    ph->Run();
+    ph->Wait();
+
+}
+
 ////Boost Unit init function ///////////////////////////////////////////////////
 test_suite*
 init_unit_test_suite(int argc, char* argv[])
