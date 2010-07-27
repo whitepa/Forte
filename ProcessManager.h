@@ -15,6 +15,9 @@ namespace Forte
 
     class ProcessHandle;
 
+    EXCEPTION_CLASS(EProcessManager);
+    EXCEPTION_SUBCLASS2(EProcessManager, EProcessManagerUnableToFork, "Unable fork a child process");
+
     /**
      * ProcessManager provides for the creation and management of child processes in an async manner
      */
@@ -48,8 +51,8 @@ namespace Forte
          */
         virtual boost::shared_ptr<ProcessHandle> CreateProcess(const FString &command,
                                                                const FString &currentWorkingDirectory = "/",
-                                                               const FString &inputFilename = "/dev/null",
                                                                const FString &outputFilename = "/dev/null",
+                                                               const FString &inputFilename = "/dev/null",
                                                                const StrStrMap *environment = NULL);
 
 

@@ -30,13 +30,13 @@ using namespace Forte;
 
 Forte::ProcessHandle::ProcessHandle(const FString &command, 
                                     const FString &currentWorkingDirectory, 
-                                    const FString &inputFilename, 
                                     const FString &outputFilename, 
+                                    const FString &inputFilename, 
                                     const StrStrMap *environment) : 
 	mCommand(command), 
 	mCurrentWorkingDirectory(currentWorkingDirectory),
-	mInputFilename(inputFilename),
 	mOutputFilename(outputFilename),
+	mInputFilename(inputFilename),
     mInputFD(-1),
     mOutputFD(-1),
 	mGUID(GUID::GenerateGUID()),
@@ -167,7 +167,7 @@ pid_t Forte::ProcessHandle::Run()
 
     hlog(HLOG_DEBUG, "Running child process");
 	AutoUnlockMutex lock(mFinishedLock);
-	sigset_t set;
+    mStarted = true;
 
     // open the input and output files
     // these will throw if they are unable to open the files
@@ -196,173 +196,169 @@ pid_t Forte::ProcessHandle::Run()
     } 
     while (mOutputFD == -1 && errno == EINTR);
 
-	mChildPid = fork();
-	if(mChildPid < 0) 
-    {
-        hlog(HLOG_ERR, "unable to fork child process");
-		throw EProcessHandleUnableToFork();
-	} 
-    else if(mChildPid == 0) 
-    {
-		// this is the child
-		mIsRunning = true;
-		char *argv[ARG_MAX];
-		
-		// we need to split the command up
-		std::vector<std::string> strings;
-        FString scrubbedCommand = shellEscape(mCommand);
-		boost::split(strings, scrubbedCommand, boost::is_any_of("\t "));
-		unsigned int num_args = strings.size();
-		for(unsigned int i = 0; i < num_args; ++i) 
-        {
-			// ugh - I hate this cast here, but as this process
-			// is about to be blown away, it is harmless, and
-			// much simpler than trying to avoid it
-			argv[i] = const_cast<char*>(strings[i].c_str());
-		}
-		argv[num_args] = 0;
-		
-		// change current working directory
-        if (!mCurrentWorkingDirectory.empty()) 
-        {
-            if (chdir(mCurrentWorkingDirectory)) 
-            {
-                hlog(HLOG_CRIT, "Cannot change directory to: %s", mCurrentWorkingDirectory.c_str());
-                cerr << "Cannot change directory to: " << mCurrentWorkingDirectory << endl;
-                exit(-1);
-            }
-        }
-		
-		// setup in, out, err
-        int dupResult = -1;
-        do
-        {
-            dupResult = dup2(mInputFD, 0);
-            if(dupResult == -1 && errno != EINTR)
-            {
-                hlog(HLOG_ERR, "unable to duplicate the input file descriptor (%d)", errno);
-                throw EProcessHandleUnableToDuplicateInputFD();
-            }
-        }
-        while (dupResult == -1 && errno == EINTR);
+    mProcessManager->RunProcess(mGUID);
 
-        dupResult = -1;
-        do
-        {
-            dupResult = dup2(mOutputFD, 1);
-            if(dupResult == -1 && errno != EINTR)
-            {
-                hlog(HLOG_ERR, "unable to duplicate the output file descriptor (%d)", errno);
-                throw EProcessHandleUnableToDuplicateOutputFD();
-            }
-        }
-        while (dupResult == -1 && errno == EINTR);
-
-        dupResult = -1;
-        do
-        {
-            dupResult = dup2(mOutputFD, 2);
-            if(dupResult == -1 && errno != EINTR)
-            {
-                hlog(HLOG_ERR, "unable to duplicate the error file descriptor (%d)", errno);
-                throw EProcessHandleUnableToDuplicateErrorFD();
-            }
-        }
-        while (dupResult == -1 && errno == EINTR);
-
-		// close all other FDs
-		int fdstart = 3;
-		int fdlimit = sysconf(_SC_OPEN_MAX);
-		while (fdstart < fdlimit) 
-        {
-            int closeResult = -1;
-            do
-            {
-                closeResult = close(fdstart);
-                if(closeResult == -1 && errno == EIO)
-                {
-                    hlog(HLOG_WARN, "unable to close parent file descriptor %d (EIO)", fdstart);
-                }
-            }
-            while(closeResult == -1 && errno == EINTR);
-
-            fdstart++;
-            
-        }
-		
-		// set up environment?
-        if (!mEnvironment.empty()) {
-            StrStrMap::const_iterator mi;
-			
-            for (mi = mEnvironment.begin(); mi != mEnvironment.end(); ++mi) 
-            {
-                if (mi->second.empty()) unsetenv(mi->first);
-                else setenv(mi->first, mi->second, 1);
-            }
-        }
-		
-        // clear sig mask
-        sigemptyset(&set);
-        pthread_sigmask(SIG_SETMASK, &set, NULL);
-		
-		// create a new process group / session
-        setsid();
-		
-		execv(argv[0], argv);
-        hlog(HLOG_ERR, "unable to execv the command");
-		throw EProcessHandleExecvFailed();
-	} 
-    else 
-    {
-		// this is the parent
-        // close the input and output fds we opened for our child
-        int closeResult = -1;
-        do
-        {
-            closeResult = close(mInputFD);
-            if(closeResult == -1 && errno != EINTR)
-            {
-                hlog(HLOG_ERR, "unable to close the child input file (%d)", errno);
-                throw EProcessHandleUnableToCloseInputFile();
-            }
-            else 
-            {
-                mInputFD = -1;
-            }
-        }
-        while(closeResult == -1 && errno == EINTR);
-
-        closeResult = -1;
-        do
-        {
-            closeResult = close(mOutputFD);
-            if(closeResult == -1 && errno != EINTR)
-            {
-                hlog(HLOG_ERR, "unable to close the child output file (%d)", errno);
-                throw EProcessHandleUnableToCloseOutputFile();
-            }
-            else
-            {
-                mOutputFD = -1;
-            }
-        }
-        while(closeResult == -1 && errno == EINTR);
-
-		// this just returns back to whence it was called
-		// the ProcessManager will now carry out the task
-		// of monitoring the running process.
-        mStarted = true;
-		mIsRunning = true;
-		mProcessManager->RunProcess(mGUID);
-	}
 	return mChildPid;
 
 }
 
+void Forte::ProcessHandle::RunChild()
+{
+    // this is the child
+	sigset_t set;
+    mIsRunning = true;
+    char *argv[ARG_MAX];
+		
+    // we need to split the command up
+    std::vector<std::string> strings;
+    FString scrubbedCommand = shellEscape(mCommand);
+    boost::split(strings, scrubbedCommand, boost::is_any_of("\t "));
+    unsigned int num_args = strings.size();
+    for(unsigned int i = 0; i < num_args; ++i) 
+    {
+        // ugh - I hate this cast here, but as this process
+        // is about to be blown away, it is harmless, and
+        // much simpler than trying to avoid it
+        argv[i] = const_cast<char*>(strings[i].c_str());
+    }
+    argv[num_args] = 0;
+		
+    // change current working directory
+    if (!mCurrentWorkingDirectory.empty()) 
+    {
+        if (chdir(mCurrentWorkingDirectory)) 
+        {
+            hlog(HLOG_CRIT, "Cannot change directory to: %s", mCurrentWorkingDirectory.c_str());
+            cerr << "Cannot change directory to: " << mCurrentWorkingDirectory << endl;
+            exit(-1);
+        }
+    }
+		
+    // setup in, out, err
+    int dupResult = -1;
+    do
+    {
+        dupResult = dup2(mInputFD, 0);
+        if(dupResult == -1 && errno != EINTR)
+        {
+            hlog(HLOG_ERR, "unable to duplicate the input file descriptor (%d)", errno);
+            throw EProcessHandleUnableToDuplicateInputFD();
+        }
+    }
+    while (dupResult == -1 && errno == EINTR);
+
+    dupResult = -1;
+    do
+    {
+        dupResult = dup2(mOutputFD, 1);
+        if(dupResult == -1 && errno != EINTR)
+        {
+            hlog(HLOG_ERR, "unable to duplicate the output file descriptor (%d)", errno);
+            throw EProcessHandleUnableToDuplicateOutputFD();
+        }
+    }
+    while (dupResult == -1 && errno == EINTR);
+
+    dupResult = -1;
+    do
+    {
+        dupResult = dup2(mOutputFD, 2);
+        if(dupResult == -1 && errno != EINTR)
+        {
+            hlog(HLOG_ERR, "unable to duplicate the error file descriptor (%d)", errno);
+            throw EProcessHandleUnableToDuplicateErrorFD();
+        }
+    }
+    while (dupResult == -1 && errno == EINTR);
+
+    // close all other FDs
+    int fdstart = 3;
+    int fdlimit = sysconf(_SC_OPEN_MAX);
+    while (fdstart < fdlimit) 
+    {
+        int closeResult = -1;
+        do
+        {
+            closeResult = close(fdstart);
+            if(closeResult == -1 && errno == EIO)
+            {
+                hlog(HLOG_WARN, "unable to close parent file descriptor %d (EIO)", fdstart);
+            }
+        }
+        while(closeResult == -1 && errno == EINTR);
+
+        fdstart++;
+            
+    }
+		
+    // set up environment?
+    if (!mEnvironment.empty()) {
+        StrStrMap::const_iterator mi;
+			
+        for (mi = mEnvironment.begin(); mi != mEnvironment.end(); ++mi) 
+        {
+            if (mi->second.empty()) unsetenv(mi->first);
+            else setenv(mi->first, mi->second, 1);
+        }
+    }
+		
+    // clear sig mask
+    sigemptyset(&set);
+    pthread_sigmask(SIG_SETMASK, &set, NULL);
+		
+    // create a new process group / session
+    setsid();
+		
+    execv(argv[0], argv);
+    hlog(HLOG_ERR, "unable to execv the command");
+    throw EProcessHandleExecvFailed();
+}
+
+void Forte::ProcessHandle::RunParent(pid_t cpid)
+{
+    mChildPid = cpid;
+    // close the input and output fds we opened for our child
+    int closeResult = -1;
+    do
+    {
+        closeResult = close(mInputFD);
+        if(closeResult == -1 && errno != EINTR)
+        {
+            hlog(HLOG_ERR, "unable to close the child input file (%d)", errno);
+            throw EProcessHandleUnableToCloseInputFile();
+        }
+        else 
+        {
+            mInputFD = -1;
+        }
+    }
+    while(closeResult == -1 && errno == EINTR);
+    
+    closeResult = -1;
+    do
+    {
+        closeResult = close(mOutputFD);
+        if(closeResult == -1 && errno != EINTR)
+        {
+            hlog(HLOG_ERR, "unable to close the child output file (%d)", errno);
+            throw EProcessHandleUnableToCloseOutputFile();
+        }
+        else
+        {
+            mOutputFD = -1;
+        }
+    }
+    while(closeResult == -1 && errno == EINTR);
+    
+    // this just returns back to whence it was called
+    // the ProcessManager will now carry out the task
+    // of monitoring the running process.
+    mIsRunning = true;
+}
 
 unsigned int Forte::ProcessHandle::Wait()
 {
-    if(!mIsRunning && !mStarted) 
+    if(!mStarted) 
     {
         hlog(HLOG_ERR, "tried waiting on a process that has not been started");
         throw EProcessHandleProcessNotRunning();
@@ -462,8 +458,7 @@ FString Forte::ProcessHandle::GetOutputString()
         hlog(HLOG_ERR, "tried grabbing the output from a process that hasn't completed yet");
         throw EProcessHandleProcessNotFinished();
     }
-    if(!mStarted || mIsRunning) {
-    }
+
     // lazy loading of the output string
     // check to see if the output string is empty
     // if so, and the output file wasn't the bit bucket
@@ -487,6 +482,11 @@ FString Forte::ProcessHandle::GetOutputString()
         
         // cleanup
         in.close();
+    } 
+    else if(mOutputFilename == "/dev/null")
+    {
+        hlog(HLOG_WARN, "no output filename set");
+        mOutputString.clear();
     }
 
     return mOutputString;

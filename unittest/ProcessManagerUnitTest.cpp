@@ -21,13 +21,6 @@ BOOST_AUTO_TEST_CASE(RunProcess)
     hlog(HLOG_INFO, "Termination Type: %d", ph->GetProcessTerminationType());
     hlog(HLOG_INFO, "StatusCode: %d", ph->GetStatusCode());
     hlog(HLOG_INFO, "OutputString: %s", ph->GetOutputString().c_str());
-	
-	boost::shared_ptr<ProcessHandle> ph2 = pm.CreateProcess("/bin/ls", "/", "/dev/null", "/home/tritchey/temp.out");
-    ph2->Run();
-    ph2->Wait();
-    BOOST_CHECK(!ph2->IsRunning());
-    hlog(HLOG_INFO, "Termination Type: %d", ph2->GetProcessTerminationType());
-    hlog(HLOG_INFO, "StatusCode: %d", ph2->GetStatusCode());
 }
 
 BOOST_AUTO_TEST_CASE(Exceptions)
@@ -57,8 +50,6 @@ BOOST_AUTO_TEST_CASE(Exceptions)
     BOOST_CHECK_THROW(ph->Run(), EProcessHandleProcessStarted);
 
     ph->Wait();
-
-
 
 }
 
@@ -92,6 +83,41 @@ BOOST_AUTO_TEST_CASE(AbandonProcess)
     ph->Abandon(true);
 }
 
+BOOST_AUTO_TEST_CASE(FileIO)
+{
+    hlog(HLOG_INFO, "FileIO");
+    ProcessManager pm;
+    boost::shared_ptr<ProcessHandle> ph = pm.CreateProcess("/bin/sleep");
+
+    // check that we propery throw when the input file doesn't exist
+    ph->SetInputFilename("/foo/bar/baz");
+    BOOST_CHECK_THROW(ph->Run(), EProcessHandleUnableToOpenInputFile);
+
+    // check that we properly throw when the output file can't be created
+    ph = pm.CreateProcess("/bin/sleep");
+    ph->SetOutputFilename("/foo/bar/baz");
+    BOOST_CHECK_THROW(ph->Run(), EProcessHandleUnableToOpenOutputFile);
+
+    hlog(HLOG_DEBUG, "getting ready to try some output");
+
+    // check that when we can create an output file that we can get 
+    // the contents
+	boost::shared_ptr<ProcessHandle> ph2 = pm.CreateProcess("/bin/ls", "/", "temp.out");
+    ph2->Run();
+    ph2->Wait();
+    BOOST_CHECK(ph2->GetOutputString().find("proc") != string::npos);
+
+    hlog(HLOG_DEBUG, "okay, now what happens when output is to /dev/null");
+
+    // what happens if /dev/null is our output?
+	boost::shared_ptr<ProcessHandle> ph3 = pm.CreateProcess("/bin/ls", "/");
+    ph3->Run();
+    ph3->Wait();
+    BOOST_CHECK(ph3->GetOutputString().find("proc") == string::npos);
+
+    hlog(HLOG_DEBUG, "reached end of function");
+
+}
 
 ////Boost Unit init function ///////////////////////////////////////////////////
 test_suite*

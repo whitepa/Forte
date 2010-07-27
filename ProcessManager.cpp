@@ -38,14 +38,14 @@ Forte::ProcessManager::~ProcessManager()
 
 boost::shared_ptr<ProcessHandle> Forte::ProcessManager::CreateProcess(const FString &command,
                                                                       const FString &currentWorkingDirectory,
-                                                                      const FString &inputFilename,
                                                                       const FString &outputFilename,
+                                                                      const FString &inputFilename,
                                                                       const StrStrMap *environment)
 {
     boost::shared_ptr<ProcessHandle> ph(new ProcessHandle(command, 
                                                           currentWorkingDirectory, 
-                                                          inputFilename,
                                                           outputFilename,
+                                                          inputFilename,
                                                           environment));
 	ph->SetProcessManager(this);
 	processHandles[ph->GetGUID()] = ph;
@@ -56,10 +56,29 @@ boost::shared_ptr<ProcessHandle> Forte::ProcessManager::CreateProcess(const FStr
 void Forte::ProcessManager::RunProcess(const FString &guid)
 {
 	AutoUnlockMutex lock(mLock);
+
+
 	ProcessHandleMap::iterator it = processHandles.find(guid);
 	if(it != processHandles.end()) {
-		hlog(HLOG_DEBUG, "Running process (%d) %s", it->second->GetChildPID(), guid.c_str());
-		runningProcessHandles[it->second->GetChildPID()] = it->second;
+        boost::shared_ptr<ProcessHandle> ph = it->second;
+        pid_t childPid = fork();
+        if(childPid < 0) 
+        {
+            hlog(HLOG_ERR, "unable to fork child process");
+            throw EProcessManagerUnableToFork();
+        }
+        else if(childPid == 0) 
+        {
+            // child
+            ph->RunChild();
+        } 
+        else 
+        {
+            // parent
+            ph->RunParent(childPid);
+        }
+		hlog(HLOG_DEBUG, "Running process (%d) %s", childPid, guid.c_str());
+		runningProcessHandles[childPid] = ph;
 		Notify();
 	}
 }
@@ -114,7 +133,7 @@ void* Forte::ProcessManager::run(void)
 				// check to see which of our threads this belongs
 				RunningProcessHandleMap::iterator it;
 				it = runningProcessHandles.find(tpid);
-				if(it->second) {
+				if(it != runningProcessHandles.end() && it->second) {
 					boost::shared_ptr<ProcessHandle> ph = it->second;
 					// how did the child end?
                     unsigned int statusCode = 0;

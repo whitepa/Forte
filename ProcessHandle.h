@@ -64,8 +64,8 @@ namespace Forte
          */
         ProcessHandle(const FString &command,
                       const FString &currentWorkingDirectory = "/",
-                      const FString &inputFilename = "/dev/null",
                       const FString &outputFilename = "/dev/null", 
+                      const FString &inputFilename = "/dev/null",
                       const StrStrMap *environment = NULL);
 
         /**
@@ -156,6 +156,17 @@ namespace Forte
          * @return pid_t with the process ID of the child process
          */
         pid_t Run();
+
+        /**
+         * RunChild() is called by the process manager to handle the child activity
+         */
+        void RunChild();
+
+        /**
+         * RunParent() is called after the fork from the ProcessManager
+         */
+        void RunParent(pid_t cpid);
+
 
         /**
          * Wait() block until the process has finished.
@@ -258,15 +269,15 @@ namespace Forte
          * @return string containing the output of the child process.
          */
         FString GetOutputString();
-        
+                
     private:
         
         FString mCommand;
         ProcessCompleteCallback mProcessCompleteCallback;
         FString mCurrentWorkingDirectory;
         StrStrMap mEnvironment;
-        FString mInputFilename;
         FString mOutputFilename;
+        FString mInputFilename;
 		
         int mInputFD;
         int mOutputFD;
