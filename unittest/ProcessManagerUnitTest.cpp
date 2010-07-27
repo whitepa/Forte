@@ -28,14 +28,13 @@ BOOST_AUTO_TEST_CASE(RunProcess)
     BOOST_CHECK(!ph2->IsRunning());
     hlog(HLOG_INFO, "Termination Type: %d", ph2->GetProcessTerminationType());
     hlog(HLOG_INFO, "StatusCode: %d", ph2->GetStatusCode());
-    hlog(HLOG_INFO, "OutputString: %s", ph2->GetOutputString().c_str());
 }
 
 BOOST_AUTO_TEST_CASE(Exceptions)
 {
     hlog(HLOG_INFO, "Exceptions");
     ProcessManager pm;
-    boost::shared_ptr<ProcessHandle> ph = pm.CreateProcess("/bin/sleep 10");
+    boost::shared_ptr<ProcessHandle> ph = pm.CreateProcess("/bin/sleep 3");
     BOOST_CHECK_THROW(ph->GetProcessTerminationType(), EProcessHandleProcessNotStarted);
     BOOST_CHECK_THROW(ph->GetStatusCode(), EProcessHandleProcessNotStarted);    
     BOOST_CHECK_THROW(ph->GetOutputString(), EProcessHandleProcessNotStarted);
@@ -48,8 +47,18 @@ BOOST_AUTO_TEST_CASE(Exceptions)
     BOOST_CHECK_THROW(ph->GetProcessTerminationType(), EProcessHandleProcessNotFinished);
     BOOST_CHECK_THROW(ph->GetStatusCode(), EProcessHandleProcessNotFinished);    
     BOOST_CHECK_THROW(ph->GetOutputString(), EProcessHandleProcessNotFinished);
-    
+
+    BOOST_CHECK_THROW(ph->SetProcessCompleteCallback(NULL), EProcessHandleProcessStarted);
+    BOOST_CHECK_THROW(ph->SetCurrentWorkingDirectory(""), EProcessHandleProcessStarted);
+    BOOST_CHECK_THROW(ph->SetEnvironment(NULL), EProcessHandleProcessStarted);
+    BOOST_CHECK_THROW(ph->SetInputFilename(""), EProcessHandleProcessStarted);
+    BOOST_CHECK_THROW(ph->SetOutputFilename(""), EProcessHandleProcessStarted);
+    BOOST_CHECK_THROW(ph->SetProcessManager(NULL), EProcessHandleProcessStarted);
+    BOOST_CHECK_THROW(ph->Run(), EProcessHandleProcessStarted);
+
     ph->Wait();
+
+
 
 }
 

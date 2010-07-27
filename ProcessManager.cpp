@@ -33,7 +33,7 @@ Forte::ProcessManager::ProcessManager()
 
 Forte::ProcessManager::~ProcessManager() 
 {
-	AutoLockMutex unlock(mLock);
+    
 }
 
 boost::shared_ptr<ProcessHandle> Forte::ProcessManager::CreateProcess(const FString &command,
@@ -164,5 +164,6 @@ void* Forte::ProcessManager::run(void)
 			}
 		}
 	}
+    hlog(HLOG_DEBUG, "Ending ProcessManager runloop");
 	return NULL;
 }

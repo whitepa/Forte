@@ -94,16 +94,31 @@ Forte::ProcessHandle::~ProcessHandle()
 	
 void Forte::ProcessHandle::SetProcessCompleteCallback(ProcessCompleteCallback processCompleteCallback)
 {
+    if(mStarted) 
+    {
+        hlog(HLOG_ERR, "tried setting the process complete callback after the process had been started");
+        throw EProcessHandleProcessStarted();
+    }
     mProcessCompleteCallback = processCompleteCallback;
 }
 
 void Forte::ProcessHandle::SetCurrentWorkingDirectory(const FString &cwd) 
 {
+    if(mStarted) 
+    {
+        hlog(HLOG_ERR, "tried setting the current working directory after the process had been started");
+        throw EProcessHandleProcessStarted();
+    }
     mCurrentWorkingDirectory = cwd;
 }
 
 void Forte::ProcessHandle::SetEnvironment(const StrStrMap *env)
 {
+    if(mStarted) 
+    {
+        hlog(HLOG_ERR, "tried setting the environment after the process had been started");
+        throw EProcessHandleProcessStarted();
+    }
     if(env) 
     {
         mEnvironment.clear();
@@ -113,16 +128,43 @@ void Forte::ProcessHandle::SetEnvironment(const StrStrMap *env)
 
 void Forte::ProcessHandle::SetInputFilename(const FString &infile)
 {
+    if(mStarted) 
+    {
+        hlog(HLOG_ERR, "tried setting the input filename after the process had been started");
+        throw EProcessHandleProcessStarted();
+    }
     mInputFilename = infile;
+}
+
+void Forte::ProcessHandle::SetOutputFilename(const FString &outfile)
+{
+    if(mStarted) 
+    {
+        hlog(HLOG_ERR, "tried setting the output filename after the process had been started");
+        throw EProcessHandleProcessStarted();
+    }
+    mOutputFilename = outfile;
 }
 
 void Forte::ProcessHandle::SetProcessManager(ProcessManager* pm)
 {
+    if(mStarted) 
+    {
+        hlog(HLOG_ERR, "tried setting the process manager after the process had been started");
+        throw EProcessHandleProcessStarted();
+    }
 	mProcessManager = pm;
 }
 	
 pid_t Forte::ProcessHandle::Run() 
 {
+
+    if(mStarted)
+    {
+        hlog(HLOG_ERR, "the process as already been started");
+        throw EProcessHandleProcessStarted();
+    }
+
     hlog(HLOG_DEBUG, "Running child process");
 	AutoUnlockMutex lock(mFinishedLock);
 	sigset_t set;

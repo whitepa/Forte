@@ -76,6 +76,8 @@ namespace Forte
         /**
          * set the callback function that should be executed when the process is complete.
          *
+         * @throw EProcessHandleProcessStarted
+         *
          * @param processCompleteCallback a ProcessCompleteCallback function object
          */
         void SetProcessCompleteCallback(ProcessCompleteCallback processCompleteCallback);
@@ -117,6 +119,16 @@ namespace Forte
         void SetInputFilename(const FString &infile);
 
         /**
+         * SetOutputFilename() sets the output file to use. Both stdout and stderr are redirected here.
+         * Can only be called on a process not yet run.
+         *
+         * @throw EProcessHandleProcessStarted
+         *
+         * @param string containing the path to the output file to use
+         */
+        void SetOutputFilename(const FString &outfile);
+
+        /**
          * SetProcessManager() sets the ProcessManager object responsible for managing this ProcessHandle.
          * can only be called on a process that hasn't been started. This is set by the
          * ProcessManager factory function, so you shouldn't be calling this.
@@ -130,6 +142,7 @@ namespace Forte
         /**
          * Run() kicks off the child process by forking and execing the command-line provided at construction.
          *
+         * @throw EProcessHandleProcessStarted
          * @throw EProcessHandleUnableToOpenInputFile
          * @throw EProcessHandleUnableToOpenOutputFile
          * @throw EProcessHandleUnableToFork
