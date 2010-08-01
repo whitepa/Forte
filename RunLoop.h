@@ -31,10 +31,15 @@ namespace Forte
          */
         void AddTimer(shared_ptr<Timer> &timer);
 
+        /**
+         * IsEmpty() checks to see if there is anything scheduled to run
+         */
+        bool IsEmpty() const;
+
     private:
         virtual void * run(void);
 
-        Mutex mLock;
+        mutable Mutex mLock;
 
         class RunLoopScheduleItem
         {

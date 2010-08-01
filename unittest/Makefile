@@ -51,7 +51,7 @@ parent: FORCE
 # progs
 $(PROGS): $(TARGETDIR)/%: $(FORTE) $(FORTE_MOCK) %.cpp $(TARGETDIR)/%.o
 	@echo "Building $@ ..."
-	$(CCC) -o $@ $@.o $(LIBS)
+	@$(CCC) -o $@ $@.o $(LIBS)
 
 # tail
 include $(BUILDROOT)/re/make/tail.mk

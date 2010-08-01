@@ -13,6 +13,18 @@ using namespace Forte;
 
 LogManager logManager;
 
+BOOST_AUTO_TEST_CASE(CheckDeadLock)
+{
+    logManager.BeginLogging();
+
+     // setup
+    Context mContext;
+    mContext.Set("forte.RunLoop", make_shared<RunLoop>());
+    sleep(2);    
+    CGET("forte.RunLoop", RunLoop, rl);
+    BOOST_CHECK(rl.IsEmpty());
+}
+
 BOOST_AUTO_TEST_CASE(Test1)
 {
     logManager.BeginLogging();
