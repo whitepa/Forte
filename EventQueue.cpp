@@ -88,7 +88,8 @@ shared_ptr<Event> EventQueue::Get(void)
         return e;
     e = *i;
     mQueue.pop_front();
-    mMaxDepth.Post();
+    if (mMode == QUEUE_MODE_BLOCKING)
+        mMaxDepth.Post();
     if (mQueue.empty())
         mEmptyCondition.Broadcast();
     return e;
