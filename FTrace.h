@@ -72,18 +72,18 @@ namespace Forte
             _hlog(mFN.c_str(), mFile, mLine, HLOG_DEBUG, "ENTER");
         }        
     
-        FunctionEntry(const char *functionName, const char *file, int line, const char*fmt, ...) __attribute__((format(printf, 5, 6))): mFN(functionName), mFile(file), mLine(line)
-	{
-	    char buffer[512];
-	    va_list args;
-	    va_start(args, fmt);
-	    vsprintf(buffer, fmt, args); // \TODO fix this buffer overflow
-	    _hlog(mFN.c_str(), mFile, mLine, HLOG_DEBUG, "ENTER (%s)", buffer);
-	    va_end(args);
+        FunctionEntry(const char *functionName, const char *file, int line, const char*fmt, ...) __attribute__((format(printf, 5, 6))): mFN(functionName), mFile(file), mLine(line) {
+            char buffer[512];
+            va_list args;
+            va_start(args, fmt);
+            vsnprintf(buffer, sizeof(buffer), fmt, args);
+            _hlog(mFN.c_str(), mFile, mLine, 
+                  HLOG_DEBUG, "ENTER (%s)", buffer);
+            va_end(args);
         }
 
         virtual ~FunctionEntry() {
-	    _hlog(mFN.c_str(), mFile, mLine, HLOG_DEBUG, "EXIT");
+            _hlog(mFN.c_str(), mFile, mLine, HLOG_DEBUG, "EXIT");
         }
     protected:
         FString mFN;
