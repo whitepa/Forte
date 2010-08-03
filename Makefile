@@ -63,6 +63,7 @@ SRCS =	\
 	ProcessHandle.cpp \
 	ProcessManager.cpp \
 	Random.cpp \
+	RandomGenerator.cpp \
 	ReceiverThread.cpp \
 	RunLoop.cpp \
 	RWLock.cpp \
@@ -129,6 +130,7 @@ HEADERS = \
 	PropertyObject.h \
 	PidFile.h \
 	Random.h \
+	RandomGenerator.h \
 	RequestHandler.h \
 	RWLock.h \
 	SecureEnvelope.h \
