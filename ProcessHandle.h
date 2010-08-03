@@ -13,34 +13,48 @@
 namespace Forte
 {
 
-	enum ProcessTerminationType
-	{
-		ProcessExited,
-		ProcessKilled,
-		ProcessStopped,
-		ProcessUnknownTermination,
+    enum ProcessTerminationType
+    {
+        ProcessExited,
+        ProcessKilled,
+        ProcessStopped,
+        ProcessUnknownTermination,
         ProcessNotTerminated
-	};
+    };
 
 
     EXCEPTION_CLASS(EProcessHandle);
-    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToOpenInputFile, "Unable to open the input file");
-    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToCloseInputFile, "Unable to close the input file");
-    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToOpenOutputFile, "Unable to open the output file");
-    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToCloseOutputFile, "Unable to close the output file");
-    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToFork, "Unable to Fork Child Process");
-    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleExecvFailed, "Execv Call Failed");
-    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleProcessNotRunning, "Wait called on a non-running process");
-    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleProcessRunning, "method called on a running process");
-    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleProcessStarted, "method called on a process that has already started");
-    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleProcessNotStarted, "method called on a process that has not been started");
-    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleProcessNotFinished, "method called on a process that is not finished yet");
-    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToDuplicateInputFD, "Unable to duplicate Input File Descriptor");
-    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToDuplicateOutputFD, "Unable to duplicate Output File Descriptor");
-    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToDuplicateErrorFD, "Unable to duplicate Error File Descriptor");
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToOpenInputFile,
+                        "Unable to open the input file");
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToCloseInputFile,
+                        "Unable to close the input file");
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToOpenOutputFile,
+                        "Unable to open the output file");
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToCloseOutputFile,
+                        "Unable to close the output file");
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToFork,
+                        "Unable to Fork Child Process");
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleExecvFailed,
+                        "Execv Call Failed");
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleProcessNotRunning,
+                        "Wait called on a non-running process");
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleProcessRunning,
+                        "method called on a running process");
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleProcessStarted,
+                        "method called on a process that has already started");
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleProcessNotStarted,
+                        "method called on a process that has not been started");
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleProcessNotFinished,
+                        "method called on a process that is not finished yet");
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToDuplicateInputFD,
+                        "Unable to duplicate Input File Descriptor");
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToDuplicateOutputFD,
+                        "Unable to duplicate Output File Descriptor");
+    EXCEPTION_SUBCLASS2(EProcessHandle, EProcessHandleUnableToDuplicateErrorFD,
+                        "Unable to duplicate Error File Descriptor");
 
 
-	class ProcessManager;
+    class ProcessManager;
 
     /**
      * A handle to a process managed by ProcessManager
@@ -75,7 +89,8 @@ namespace Forte
         virtual ~ProcessHandle();
         
         /**
-         * set the callback function that should be executed when the process is complete.
+         * set the callback function that should be executed when the
+         * process is complete.
          *
          * @throw EProcessHandleProcessStarted
          *
@@ -84,19 +99,22 @@ namespace Forte
         void SetProcessCompleteCallback(ProcessCompleteCallback processCompleteCallback);
 
         /**
-         * GetProcessCompleteCallback() returns the callback function used when a process is complete.
+         * GetProcessCompleteCallback() returns the callback function
+         * used when a process is complete.
          *
          * @return ProcessCompleteCallback object
          */
-		ProcessCompleteCallback GetProcessCompleteCallback() { return mProcessCompleteCallback; }
+        ProcessCompleteCallback GetProcessCompleteCallback() { return mProcessCompleteCallback; }
 		
         /**
-         * SetCurrentWorkingDirectory() sets the current working directory the child process should use. This can only be called
-         * for ProcessHandles that have not already been run.
+         * SetCurrentWorkingDirectory() sets the current working
+         * directory the child process should use. This can only be
+         * called for ProcessHandles that have not already been run.
          *
          * @throw EProcessHandleProcessStarted
          *
-         * @parame cdw string containing the directory to use as the current working directory
+         * @param cdw string containing the directory to use as the
+         * current working directory
          */
         void SetCurrentWorkingDirectory(const FString &cwd);
 
@@ -111,7 +129,8 @@ namespace Forte
         void SetEnvironment(const StrStrMap *env);
 
         /**
-         * SetInputFilename() sets the input file to use. Can only be called on a process not yet run.
+         * SetInputFilename() sets the input file to use. Can only be
+         * called on a process not yet run.
          *
          * @throw EProcessHandleProcessStarted
          *
@@ -120,8 +139,9 @@ namespace Forte
         void SetInputFilename(const FString &infile);
 
         /**
-         * SetOutputFilename() sets the output file to use. Both stdout and stderr are redirected here.
-         * Can only be called on a process not yet run.
+         * SetOutputFilename() sets the output file to use. Both
+         * stdout and stderr are redirected here.  Can only be called
+         * on a process not yet run.
          *
          * @throw EProcessHandleProcessStarted
          *
@@ -130,18 +150,21 @@ namespace Forte
         void SetOutputFilename(const FString &outfile);
 
         /**
-         * SetProcessManager() sets the ProcessManager object responsible for managing this ProcessHandle.
-         * can only be called on a process that hasn't been started. This is set by the
-         * ProcessManager factory function, so you shouldn't be calling this.
+         * SetProcessManager() sets the ProcessManager object
+         * responsible for managing this ProcessHandle.  can only be
+         * called on a process that hasn't been started. This is set
+         * by the ProcessManager factory function, so you shouldn't be
+         * calling this.
          *
          * @throw EProcessHandleProcessStarted
          *
          * @param pm raw pointer to a ProcessManager object.
          */
-		void SetProcessManager(ProcessManager *pm);
+        void SetProcessManager(ProcessManager *pm);
         
         /**
-         * Run() kicks off the child process by forking and execing the command-line provided at construction.
+         * Run() kicks off the child process by forking and execing
+         * the command-line provided at construction.
          *
          * @throw EProcessHandleProcessStarted
          * @throw EProcessHandleUnableToOpenInputFile
@@ -192,15 +215,16 @@ namespace Forte
         void Cancel();
 
         /**
-         * Abandon() tells the ProcessManager to stop monitoring this ProcessHandle, optionally
-         * sending the child process a SIGINT signal to terminate.
+         * Abandon() tells the ProcessManager to stop monitoring this
+         * ProcessHandle, optionally sending the child process a
+         * SIGINT signal to terminate.
          *
-         * @param signal indicates whether to send a termination signal to the process before
-         * abandoning it
+         * @param signal indicates whether to send a termination
+         * signal to the process before abandoning it
          *
          * @throw EProcessHandleProcessNotRunning
          */
-		void Abandon(bool signal = false);
+        void Abandon(bool signal = false);
 
         /**
          * IsRunning() returns whether the process is currently running.
@@ -214,26 +238,27 @@ namespace Forte
          *
          * @param running is the child process still running
          */
-		void SetIsRunning(bool running);
+        void SetIsRunning(bool running);
 		
         /**
          * GetGUID() returns the unique ID used to track this ProcessHandle in the ProcessManager
          *
          * @return string containing the guid
          */
-		FString GetGUID() { return mGUID; }
+        FString GetGUID() { return mGUID; }
 		
         /**
          * GetChildPID() returns the process id of the child
          *
          * @return pid_t holding the child process id
          */
-		pid_t GetChildPID() { return mChildPid; }
+        pid_t GetChildPID() { return mChildPid; }
 		
         /**
-         * SetStatusCode() is used by the ProcessManager to set the termination status code from the child process
+         * SetStatusCode() is used by the ProcessManager to set the
+         * termination status code from the child process
          */
-		void SetStatusCode(unsigned int code) { mStatusCode = code; }
+        void SetStatusCode(unsigned int code) { mStatusCode = code; }
 
         /**
          * GetStatusCode() returns the status code from the terminated process
@@ -245,9 +270,10 @@ namespace Forte
         unsigned int GetStatusCode();
 		
         /**
-         * SetProcessTerminationType() is used by the ProcessManager to set how the child process terminated
+         * SetProcessTerminationType() is used by the ProcessManager
+         * to set how the child process terminated
          */
-		void SetProcessTerminationType(ProcessTerminationType type) { mProcessTerminationType = type; }
+        void SetProcessTerminationType(ProcessTerminationType type) { mProcessTerminationType = type; }
 
 
         /**
@@ -263,7 +289,7 @@ namespace Forte
          *
          * @return ProcessTerminationType
          */
-		ProcessTerminationType GetProcessTerminationType();
+        ProcessTerminationType GetProcessTerminationType();
 		
         /**
          * GetOutputString() returns the output from the running process if the output file
@@ -289,18 +315,18 @@ namespace Forte
         int mInputFD;
         int mOutputFD;
 
-		FString mGUID;
-		pid_t mChildPid;
-		unsigned int mStatusCode;
-		ProcessTerminationType mProcessTerminationType;
-		FString mOutputString;
+        FString mGUID;
+        pid_t mChildPid;
+        unsigned int mStatusCode;
+        ProcessTerminationType mProcessTerminationType;
+        FString mOutputString;
 
 
 
         bool mStarted;
         bool mIsRunning;
-		Mutex mFinishedLock;
-		ThreadCondition mFinishedCond;
+        Mutex mFinishedLock;
+        ThreadCondition mFinishedCond;
 
         ProcessManager *mProcessManager;
         

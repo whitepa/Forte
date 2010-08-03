@@ -28,7 +28,7 @@ using namespace Forte;
 
 Forte::ProcessManager::ProcessManager() 
 {
-	initialized();
+    initialized();
 }
 
 Forte::ProcessManager::~ProcessManager() 
@@ -65,18 +65,18 @@ boost::shared_ptr<ProcessHandle> Forte::ProcessManager::CreateProcess(const FStr
                                                           outputFilename,
                                                           inputFilename,
                                                           environment));
-	ph->SetProcessManager(this);
-	processHandles[ph->GetGUID()] = ph;
+    ph->SetProcessManager(this);
+    processHandles[ph->GetGUID()] = ph;
     
     return ph;
 }
 
 void Forte::ProcessManager::RunProcess(const FString &guid)
 {
-	AutoUnlockMutex lock(mLock);
+    AutoUnlockMutex lock(mLock);
 
-	ProcessHandleMap::iterator it = processHandles.find(guid);
-	if(it != processHandles.end()) {
+    ProcessHandleMap::iterator it = processHandles.find(guid);
+    if(it != processHandles.end()) {
         boost::shared_ptr<ProcessHandle> ph = it->second;
         pid_t childPid = fork();
         if(childPid < 0) 
@@ -94,26 +94,26 @@ void Forte::ProcessManager::RunProcess(const FString &guid)
             // parent
             ph->RunParent(childPid);
         }
-		hlog(HLOG_DEBUG, "Running process (%d) %s", childPid, guid.c_str());
-		runningProcessHandles[childPid] = ph;
-		Notify();
-	}
+        hlog(HLOG_DEBUG, "Running process (%d) %s", childPid, guid.c_str());
+        runningProcessHandles[childPid] = ph;
+        Notify();
+    }
 }
 
 void Forte::ProcessManager::AbandonProcess(const FString &guid)
 {
-	AutoUnlockMutex lock(mLock);
-	ProcessHandleMap::iterator it = processHandles.find(guid);
-	if(it != processHandles.end()) {
-		RunningProcessHandleMap::iterator rit = runningProcessHandles.find(it->second->GetChildPID());
-		if(rit != runningProcessHandles.end()) {
+    AutoUnlockMutex lock(mLock);
+    ProcessHandleMap::iterator it = processHandles.find(guid);
+    if(it != processHandles.end()) {
+        RunningProcessHandleMap::iterator rit = runningProcessHandles.find(it->second->GetChildPID());
+        if(rit != runningProcessHandles.end()) {
             hlog(HLOG_DEBUG, "abandoning ProcessHandle %s", guid.c_str());
-			runningProcessHandles.erase(rit);
-		} else {
+            runningProcessHandles.erase(rit);
+        } else {
             hlog(HLOG_ERR, "asked to abandon a non-running process ProcessHandle %s", guid.c_str());
         }
-		processHandles.erase(it);
-	} else {
+        processHandles.erase(it);
+    } else {
         hlog(HLOG_ERR, "asked to abandon an unknown ProcessHandle %s", guid.c_str());
     }
 	
@@ -121,19 +121,19 @@ void Forte::ProcessManager::AbandonProcess(const FString &guid)
 
 void* Forte::ProcessManager::run(void)
 {
-	hlog(HLOG_DEBUG, "Starting ProcessManager runloop");
-	AutoUnlockMutex lock(mLock);
-	mThreadName.Format("processmanager-%u", GetThreadID());
-	while (!IsShuttingDown()) {
-		if(runningProcessHandles.size()) {
-			pid_t tpid;
-			int child_status = 0;
-			{
-				AutoLockMutex unlock(mLock);
-				// unlock mutex here so other threads can add processes while we are waiting
-				tpid = wait(&child_status);
-			}
-			if(tpid == -1) {
+    hlog(HLOG_DEBUG, "Starting ProcessManager runloop");
+    AutoUnlockMutex lock(mLock);
+    mThreadName.Format("processmanager-%u", GetThreadID());
+    while (!IsShuttingDown()) {
+        if(runningProcessHandles.size()) {
+            pid_t tpid;
+            int child_status = 0;
+            {
+                AutoLockMutex unlock(mLock);
+                // unlock mutex here so other threads can add processes while we are waiting
+                tpid = wait(&child_status);
+            }
+            if(tpid == -1) {
                 if(errno == ECHILD) {
                     hlog(HLOG_WARN, "wait() error: no unwaited-for children");
                 } else if(errno == EINTR) {
@@ -145,61 +145,61 @@ void* Forte::ProcessManager::run(void)
                 } else {
                     hlog(HLOG_ERR, "wait() error: unknown error");
                 }
-			} else {
+            } else {
 							
-				// check to see which of our threads this belongs
-				RunningProcessHandleMap::iterator it;
-				it = runningProcessHandles.find(tpid);
-				if(it != runningProcessHandles.end() && it->second) {
-					boost::shared_ptr<ProcessHandle> ph = it->second;
-					// how did the child end?
+                // check to see which of our threads this belongs
+                RunningProcessHandleMap::iterator it;
+                it = runningProcessHandles.find(tpid);
+                if(it != runningProcessHandles.end() && it->second) {
+                    boost::shared_ptr<ProcessHandle> ph = it->second;
+                    // how did the child end?
                     unsigned int statusCode = 0;
-					if (WIFEXITED(child_status)) {
+                    if (WIFEXITED(child_status)) {
                         statusCode = WEXITSTATUS(child_status);
-						ph->SetStatusCode(statusCode);
-						ph->SetProcessTerminationType(ProcessExited);
-						hlog(HLOG_DEBUG, "child exited (status %d)", statusCode);
-					} else if (WIFSIGNALED(child_status)) {
+                        ph->SetStatusCode(statusCode);
+                        ph->SetProcessTerminationType(ProcessExited);
+                        hlog(HLOG_DEBUG, "child exited (status %d)", statusCode);
+                    } else if (WIFSIGNALED(child_status)) {
                         statusCode = WTERMSIG(child_status);
-						ph->SetStatusCode(statusCode);
-						ph->SetProcessTerminationType(ProcessKilled);
-						hlog(HLOG_DEBUG, "child killed (signal %d)", statusCode);
-					} else if (WIFSTOPPED(child_status)) {
+                        ph->SetStatusCode(statusCode);
+                        ph->SetProcessTerminationType(ProcessKilled);
+                        hlog(HLOG_DEBUG, "child killed (signal %d)", statusCode);
+                    } else if (WIFSTOPPED(child_status)) {
                         statusCode = WSTOPSIG(child_status);
-						ph->SetStatusCode(statusCode);
-						ph->SetProcessTerminationType(ProcessStopped);
-						hlog(HLOG_DEBUG, "child stopped (signal %d)", statusCode);
-					} else {
-						ph->SetStatusCode(child_status);
-						ph->SetProcessTerminationType(ProcessUnknownTermination);
-						hlog(HLOG_ERR, "unknown child exit status (0x%x)", child_status);
-					}
+                        ph->SetStatusCode(statusCode);
+                        ph->SetProcessTerminationType(ProcessStopped);
+                        hlog(HLOG_DEBUG, "child stopped (signal %d)", statusCode);
+                    } else {
+                        ph->SetStatusCode(child_status);
+                        ph->SetProcessTerminationType(ProcessUnknownTermination);
+                        hlog(HLOG_ERR, "unknown child exit status (0x%x)", child_status);
+                    }
 					
-					FString guid = ph->GetGUID();
-					runningProcessHandles.erase(it);
-					ProcessHandleMap::iterator oit = processHandles.find(guid);
-					processHandles.erase(oit);
+                    FString guid = ph->GetGUID();
+                    runningProcessHandles.erase(it);
+                    ProcessHandleMap::iterator oit = processHandles.find(guid);
+                    processHandles.erase(oit);
 
-					ph->SetIsRunning(false);
-					ProcessHandle::ProcessCompleteCallback callback = ph->GetProcessCompleteCallback();
-					if(!callback.empty()) {
-						callback(ph);
-					}
+                    ph->SetIsRunning(false);
+                    ProcessHandle::ProcessCompleteCallback callback = ph->GetProcessCompleteCallback();
+                    if(!callback.empty()) {
+                        callback(ph);
+                    }
 					
-				} else {
-					hlog(HLOG_ERR, "wait() returned a process id we don't know about (%u)", tpid);
-				}
-			}
-		} else {
-			// wait here for a process to be added
-			// unlock mutex
-			{
-				AutoLockMutex unlock(mLock);
-				interruptibleSleep(Timespec::FromSeconds(60));
-				continue;
-			}
-		}
-	}
+                } else {
+                    hlog(HLOG_ERR, "wait() returned a process id we don't know about (%u)", tpid);
+                }
+            }
+        } else {
+            // wait here for a process to be added
+            // unlock mutex
+            {
+                AutoLockMutex unlock(mLock);
+                interruptibleSleep(Timespec::FromSeconds(60));
+                continue;
+            }
+        }
+    }
     hlog(HLOG_DEBUG, "Ending ProcessManager runloop");
-	return NULL;
+    return NULL;
 }

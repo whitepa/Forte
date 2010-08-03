@@ -33,18 +33,18 @@ Forte::ProcessHandle::ProcessHandle(const FString &command,
                                     const FString &outputFilename, 
                                     const FString &inputFilename, 
                                     const StrStrMap *environment) : 
-	mCommand(command), 
-	mCurrentWorkingDirectory(currentWorkingDirectory),
-	mOutputFilename(outputFilename),
-	mInputFilename(inputFilename),
+    mCommand(command), 
+    mCurrentWorkingDirectory(currentWorkingDirectory),
+    mOutputFilename(outputFilename),
+    mInputFilename(inputFilename),
     mInputFD(-1),
     mOutputFD(-1),
-	mGUID(GUID::GenerateGUID()),
-	mChildPid(-1),
-	mOutputString(""),
+    mGUID(GUID::GenerateGUID()),
+    mChildPid(-1),
+    mOutputString(""),
     mStarted(false),
-	mIsRunning(false),
-	mFinishedCond(mFinishedLock)
+    mIsRunning(false),
+    mFinishedCond(mFinishedLock)
 {
     // copy the environment entries
     if(environment) 
@@ -153,7 +153,7 @@ void Forte::ProcessHandle::SetProcessManager(ProcessManager* pm)
         hlog(HLOG_ERR, "tried setting the process manager after the process had been started");
         throw EProcessHandleProcessStarted();
     }
-	mProcessManager = pm;
+    mProcessManager = pm;
 }
 	
 pid_t Forte::ProcessHandle::Run() 
@@ -166,7 +166,7 @@ pid_t Forte::ProcessHandle::Run()
     }
 
     hlog(HLOG_DEBUG, "Running child process");
-	AutoUnlockMutex lock(mFinishedLock);
+    AutoUnlockMutex lock(mFinishedLock);
     mStarted = true;
 
     // open the input and output files
@@ -198,14 +198,14 @@ pid_t Forte::ProcessHandle::Run()
 
     mProcessManager->RunProcess(mGUID);
 
-	return mChildPid;
+    return mChildPid;
 
 }
 
 void Forte::ProcessHandle::RunChild()
 {
     // this is the child
-	sigset_t set;
+    sigset_t set;
     mIsRunning = true;
     char *argv[ARG_MAX];
 		
@@ -365,13 +365,13 @@ unsigned int Forte::ProcessHandle::Wait()
     }
 
     hlog(HLOG_DEBUG, "waiting for process to end (%s)", mGUID.c_str());
-	AutoUnlockMutex lock(mFinishedLock);
-	if(!mIsRunning) 
+    AutoUnlockMutex lock(mFinishedLock);
+    if(!mIsRunning) 
     {
-		return mStatusCode;
-	}
-	mFinishedCond.Wait();
-	return mStatusCode;
+        return mStatusCode;
+    }
+    mFinishedCond.Wait();
+    return mStatusCode;
 }
 
 void Forte::ProcessHandle::NotifyWaiters()
@@ -389,8 +389,8 @@ void Forte::ProcessHandle::Cancel()
         throw EProcessHandleProcessNotRunning();
     }
     hlog(HLOG_DEBUG, "canceling process %u (%s)", mChildPid, mGUID.c_str());
-	kill(mChildPid, SIGINT);
-	Wait();
+    kill(mChildPid, SIGINT);
+    Wait();
 }
 
 void Forte::ProcessHandle::Abandon(bool signal)
@@ -402,11 +402,11 @@ void Forte::ProcessHandle::Abandon(bool signal)
     }
 
     hlog(HLOG_DEBUG, "abandoning process %u (%s)", mChildPid, mGUID.c_str());
-	if(signal) 
+    if(signal) 
     {
-		kill(mChildPid, SIGINT);
-	}
-	mProcessManager->AbandonProcess(mGUID);
+        kill(mChildPid, SIGINT);
+    }
+    mProcessManager->AbandonProcess(mGUID);
     
     // this might be called on another thread, in which
     // case we need to broadcast to let anyone
@@ -422,15 +422,15 @@ bool Forte::ProcessHandle::IsRunning()
 void Forte::ProcessHandle::SetIsRunning(bool running)
 {
     bool prevState = mIsRunning;
-	mIsRunning = running;
-	if(prevState && !mIsRunning) 
+    mIsRunning = running;
+    if(prevState && !mIsRunning) 
     {
-		// we have gone from a running state to a non-running state
-		// we must be finished!
+        // we have gone from a running state to a non-running state
+        // we must be finished!
         hlog(HLOG_DEBUG, "process has terminated %u (%s)", mChildPid, mGUID.c_str());		
 		
         NotifyWaiters();
-	}
+    }
 
 	
 }
