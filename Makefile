@@ -50,6 +50,7 @@ SRCS =	\
 	FTime.cpp \
 	FTrace.cpp \
 	GUID.cpp \
+	GUIDGenerator.cpp \
 	LogManager.cpp \
 	LogTimer.cpp \
 	MD5.cpp \
@@ -120,6 +121,7 @@ HEADERS = \
 	FTime.h \
 	FTrace.h \
 	GUID.h \
+	GUIDGenerator.h \
 	LogManager.h \
 	LogTimer.h \
 	Murmur.h \
