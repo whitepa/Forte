@@ -1,0 +1,43 @@
+PROCESS MANAGER
+
+The ProcessManager class allows the creation and management of child
+processes in an asynchronous manner.  Processes may be created with
+custom environments and redirected input and/or output.  Timeouts may
+be set on running processes, and cancellation may occur in a number of
+different ways (either triggered by timeout, or manually).  Supported
+cancellation modes include abandonment (process continues to run in
+the background, and will utilize no resources upon final exit),
+signalling followed by abandonment, signalling followed by waiting for
+exit, or guaranteed completion (with no cancellation).
+
+ASYNCHRONOUSITY
+
+The APIs for the Process Manager are designed to allow for a purely
+asynchronous interface.  Processes may be created, and the calling
+thread may continue processing and periodically check back on the
+status of the running process.  The running process may also be
+cancelled asynchronously.
+
+CANCELLATION MODES
+ - abandon
+ - signal, then abandon
+ - signal, wait for exit
+ - do not cancel, wait for exit
+
+
+USAGE
+
+The ProcessManager class is responsible for the creation of
+ProcessHandle objects.  These objects contain the API calls needed by
+the caller to manage the desired process.  The external interface to
+the ProcessManager class is only used to create ProcessHandles.
+
+IMPLEMENTATION
+
+When ProcessManager::CreateProcess() is called, assuming all inputs
+are valid and the given command is believed to be executable, a
+ProcessHandle object is created and returned.  This handle allows the
+caller to manipulate the desired command.  Under the hood, a new
+management process for that command is created, and a pipe exists
+between the main process and the management process.  This pipe allows
+commands and/or I/O to travel back and forth.
