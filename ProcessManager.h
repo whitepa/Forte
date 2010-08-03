@@ -57,7 +57,8 @@ namespace Forte
          * writing output from the child process. Default value is
          * /dev/null
          * @param environment a string-string map holding environment
-         * variables that will be applied to the child process.
+         * variables that will be applied to the child process.  Note
+         * that these variables are ADDED to the current environment.
          *
          * @return a shared pointer holding a ProcessHandle object.
          */

@@ -73,6 +73,7 @@ boost::shared_ptr<ProcessHandle> Forte::ProcessManager::CreateProcess(const FStr
 
 void Forte::ProcessManager::RunProcess(const FString &guid)
 {
+    // \TODO: check if the given process is already running, throw an exception.
     AutoUnlockMutex lock(mLock);
 
     ProcessHandleMap::iterator it = processHandles.find(guid);
@@ -84,7 +85,7 @@ void Forte::ProcessManager::RunProcess(const FString &guid)
             hlog(HLOG_ERR, "unable to fork child process");
             throw EProcessManagerUnableToFork();
         }
-        else if(childPid == 0) 
+        else if(childPid == 0)
         {
             // child
             ph->RunChild();
@@ -102,6 +103,9 @@ void Forte::ProcessManager::RunProcess(const FString &guid)
 
 void Forte::ProcessManager::AbandonProcess(const FString &guid)
 {
+    // \TODO abandoning a process must prevent a zombie process from
+    // forming when we fail to call wait() on its PID when it dies.
+    // This needs to be re-worked to prevent zombies.
     AutoUnlockMutex lock(mLock);
     ProcessHandleMap::iterator it = processHandles.find(guid);
     if(it != processHandles.end()) {
@@ -116,7 +120,6 @@ void Forte::ProcessManager::AbandonProcess(const FString &guid)
     } else {
         hlog(HLOG_ERR, "asked to abandon an unknown ProcessHandle %s", guid.c_str());
     }
-	
 }
 
 void* Forte::ProcessManager::run(void)
@@ -146,7 +149,6 @@ void* Forte::ProcessManager::run(void)
                     hlog(HLOG_ERR, "wait() error: unknown error");
                 }
             } else {
-							
                 // check to see which of our threads this belongs
                 RunningProcessHandleMap::iterator it;
                 it = runningProcessHandles.find(tpid);

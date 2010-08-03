@@ -208,6 +208,17 @@ void Forte::ProcessHandle::RunChild()
     sigset_t set;
     mIsRunning = true;
     char *argv[ARG_MAX];
+
+    // \TODO: need better handling of the number of args.  Currently
+    // if their are more than ARG_MAX arguments, we would crash.
+
+    // \TODO: ultimately we should be communicating back with the
+    // parent process via some sort of IPC, and notifying of any of
+    // these error details via that mechanism.  NOTE: Exceptions must
+    // not be thrown out of this method!  At this point we are running
+    // in a forked process, and throwing an exception (via calling
+    // exit() ) will cause us to end up with two copies of the process
+    // which originally called Run().
 		
     // we need to split the command up
     std::vector<std::string> strings;
@@ -308,7 +319,7 @@ void Forte::ProcessHandle::RunChild()
 		
     // create a new process group / session
     setsid();
-		
+
     execv(argv[0], argv);
     hlog(HLOG_ERR, "unable to execv the command");
     throw EProcessHandleExecvFailed();
@@ -504,5 +515,6 @@ FString Forte::ProcessHandle::GetOutputString()
 
 FString Forte::ProcessHandle::shellEscape(const FString& arg) 
 {
+    // \TODO: implement this.
     return arg;
 }
