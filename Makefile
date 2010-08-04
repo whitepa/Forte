@@ -57,6 +57,7 @@ SRCS =	\
 	Murmur.cpp \
 	OnDemandDispatcher.cpp \
 	OpenSSLInitializer.cpp \
+	PDUPeer.cpp \
 	PidFile.cpp \
 	PosixTimer.cpp \
 	ProcFileSystem.cpp \
@@ -126,6 +127,8 @@ HEADERS = \
 	LogTimer.h \
 	Murmur.h \
 	OpenSSLInitializer.h \
+	PDU.h \
+	PDUPeer.h \
 	ProcRunner.h \
 	ProcessHandle.h \
 	ProcessManager.h \

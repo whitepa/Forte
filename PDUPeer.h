@@ -1,0 +1,42 @@
+#ifndef __PDU_peer_h_
+#define __PDU_peer_h_
+
+#include "Exception.h"
+#include "Object.h"
+#include "PDU.h"
+#include <boost/shared_array.hpp>
+
+EXCEPTION_CLASS(EPDUPeer);
+EXCEPTION_SUBCLASS2(EPDUPeer, EPeerBufferOverflow, "Peer buffer overflowed");
+EXCEPTION_SUBCLASS2(EPDUPeer, EPeerSendFailed, "Failed to send PDU to peer");
+EXCEPTION_SUBCLASS2(EPDUPeer, EPeerSendInvalid, "Attempt to send invalid PDU");
+EXCEPTION_SUBCLASS2(EPDUPeer, EPDUVersionInvalid, "Received PDU with invalid version");
+EXCEPTION_SUBCLASS2(EPDUPeer, EPDUOpcodeInvalid, "Received PDU with invalid opcode");
+
+namespace Forte
+{
+    class PDUPeer : public Object
+    {
+    public:
+        PDUPeer(int fd, unsigned int bufsize = 65536) :
+            mFD(fd),
+            mCursor(0),
+            mBufSize(bufsize),
+            mPDUBuffer(new char[mBufSize])
+            {
+                memset(mPDUBuffer.get(), 0, mBufSize);
+            }
+        virtual ~PDUPeer() {};
+        int GetFD(void) { return mFD; }
+        void DataIn(size_t len, char *buf);
+        void SendPDU(Forte::PDU &pdu);
+        bool RecvPDU(Forte::PDU &out);
+
+    protected:
+        int mFD;
+        size_t mCursor;
+        size_t mBufSize;
+        boost::shared_array<char> mPDUBuffer;
+    };
+};
+#endif
