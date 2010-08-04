@@ -48,6 +48,9 @@ bool Forte::PDUPeer::RecvPDU(Forte::PDU &out) {
     //     hlog(HLOG_DEBUG2, "invalid PDU opcode");
     //     throw SCUpdatePDUOpcodeInvalid();
     // }
+
+    // \TODO this memmove() based method is inefficient.  Implement a
+    // proper ring-buffer.
     if (mCursor >= minPDUSize + pdu->payloadSize)
     {
         size_t len = minPDUSize + pdu->payloadSize;
