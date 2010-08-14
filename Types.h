@@ -1,20 +1,6 @@
 #ifndef __Types_h
 #define __Types_h
 
-// macros
-/*
-  #ifndef test_virt
-  #  ifdef QA
-  #    define test_virt virtual
-  #  else
-  #    define test_virt
-  #  endif
-  #endif
-*/
-
-//TODO: determine if we can define something virtual for unit testing only
-#define test_virt virtual
-
 // for casting things in printf-like functions
 #define u64 unsigned long long int
 
@@ -29,6 +15,7 @@
 #include <ext/hash_map>
 #include "FString.h"
 #include "Exception.h"
+#include "Foreach.h"
 
 // namespace
 using namespace std;
