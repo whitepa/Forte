@@ -1,13 +1,12 @@
 #ifndef __forte__object_h_
 #define __forte__object_h_
-#include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #include <map>
 #include "FString.h"
 
-
 namespace Forte
 {
-    class Object
+    class Object : public boost::enable_shared_from_this<Forte::Object>
     {
     public:
         virtual ~Object() {};
