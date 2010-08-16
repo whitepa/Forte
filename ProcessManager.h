@@ -1,9 +1,13 @@
 #ifndef __ProcessManager_h
 #define __ProcessManager_h
 
-#include "Types.h"
-#include "Object.h"
+#include "GUIDGenerator.h"
 #include "Thread.h"
+#include "Types.h"
+#include "PDUPeerSet.h"
+#include "Object.h"
+#include "ProcessManagerPDU.h"
+#include <boost/pointer_cast.hpp>
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 #include <unistd.h>
@@ -11,12 +15,11 @@
 
 namespace Forte
 {
-
-
-    class ProcessHandle;
+    class Process;
 
     EXCEPTION_CLASS(EProcessManager);
-    EXCEPTION_SUBCLASS2(EProcessManager, EProcessManagerUnableToFork, "Unable fork a child process");
+    EXCEPTION_SUBCLASS2(EProcessManager, EProcessManagerUnableToFork,
+                        "Unable to fork a child process");
 
     /**
      * ProcessManager provides for the creation and management of
@@ -24,27 +27,46 @@ namespace Forte
      */
     class ProcessManager : public Thread
     {
+        friend class Forte::Process;
+    protected:
+ 
     public:
-        typedef std::map<FString, boost::shared_ptr<ProcessHandle> > ProcessHandleMap;
-        typedef std::map<pid_t, boost::shared_ptr<ProcessHandle> > RunningProcessHandleMap;
-        typedef std::pair<pid_t, boost::shared_ptr<ProcessHandle> > ProcessHandlePair;
-		
+
+        static const int MAX_RUNNING_PROCS;
+        static const int PDU_BUFFER_SIZE;
+
+        typedef std::map<FString, boost::shared_ptr<Process> > ProcessMap;
+        // typedef std::map<pid_t, boost::shared_ptr<Process> > RunningProcessMap;
+        // typedef std::pair<pid_t, boost::shared_ptr<Process> > ProcessPair;
+
         ProcessManager();
 
         /**
          * ProcessManager destructor. If the process manager is being destroyed it will
-         * notify all running ProcessHandle Wait()'ers, and mark the process termination
+         * notify all running Process Wait()'ers, and mark the process termination
          * type as ProcessNotTerminated.
          */
         virtual ~ProcessManager();
 
+
+        /**
+         * Get a shared pointer to this ProcessManager.  NOTE: A
+         * shared_ptr to this ProcessManager must already exist.
+         * 
+         * @return shared_ptr
+         */
+        boost::shared_ptr<ProcessManager> GetPtr(void) {
+            return boost::static_pointer_cast<ProcessManager>(Object::shared_from_this());
+        }
+
+
         /**
          * CreateProcess() is the factory function to create a
-         * ProcessHandle object representing a child process. The
-         * ProcessHandle returned is in a non-running state. Once you
-         * have created the ProcessHandle with the ProcessManager
+         * Process object representing a child process. The
+         * Process returned is in a non-running state. Once you
+         * have created the Process with the ProcessManager
          * factory method, you manage the child through the
-         * ProcessHandle.
+         * Process.
          *
          * @param command string containing the command to run in the
          * child process
@@ -60,39 +82,67 @@ namespace Forte
          * variables that will be applied to the child process.  Note
          * that these variables are ADDED to the current environment.
          *
-         * @return a shared pointer holding a ProcessHandle object.
+         * @return a shared pointer holding a Process object.
          */
-        virtual boost::shared_ptr<ProcessHandle> CreateProcess(
+        virtual boost::shared_ptr<Process> CreateProcess(
             const FString &command,
             const FString &currentWorkingDirectory = "/",
             const FString &outputFilename = "/dev/null",
             const FString &inputFilename = "/dev/null",
             const StrStrMap *environment = NULL);
 
+        virtual const FString & GetProcmonPath(void) { return mProcmonPath; }
 
+    private:
         /**
-         * helper method called by ProcessHandle objects to notify the
+         * helper method called by Process objects to notify the
          * ProcessManager a child process is running.
          */
-        virtual void RunProcess(const FString &guid);
+//        virtual void runProcess(const FString &guid);
 
         /**
-         * helper function called by ProcessHandle objects to notify
+         * helper function called by Process objects to notify
          * the ProcessManager that a child process is being abandoned
          */
-        virtual void AbandonProcess(const FString &guid);
-		
-    private:
+        virtual void abandonProcess(const FString &guid);
+
         /**
          * the main runloop for the ProcessManager thread monitoring
          * child processes.
          */
         virtual void * run(void);
 
-        ProcessHandleMap processHandles;
-        RunningProcessHandleMap runningProcessHandles;
-        Mutex mLock;
-    };
+        /** 
+         * addPeer() is used by new Process objects after creating
+         * their monitoring process.  The ProcessManager object (which
+         * owns the Process object) is responsible for polling the
+         * associated file descriptor.
+         * 
+         * @param fd 
+         */
+        virtual void addPeer(int fd);
 
+        /**
+         * a map of processes, indexed by process GUID
+         */
+        ProcessMap mProcesses;
+
+        /**
+         * Set of PDU peers
+         */
+        PDUPeerSet mPeerSet;
+
+        /**
+         * Lock for this entire proc manager
+         */
+        Mutex mLock;
+
+        /**
+         * GUIDGenerator
+         */
+        GUIDGenerator mGUIDGenerator;
+
+        const FString mProcmonPath;
+    };
 };
 #endif

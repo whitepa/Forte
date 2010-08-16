@@ -23,7 +23,10 @@ CANCELLATION MODES
  - signal, then abandon
  - signal, wait for exit
  - do not cancel, wait for exit
-
+These modes are supported by the following operations:
+ - Signal()
+ - Wait()
+ - Abandon()
 
 USAGE
 
@@ -32,12 +35,98 @@ ProcessHandle objects.  These objects contain the API calls needed by
 the caller to manage the desired process.  The external interface to
 the ProcessManager class is only used to create ProcessHandles.
 
+CONFIGURATION
+
+The process manager needs the following configuration keys defined:
+socket path - path to the management sockets
+
+LIMITATIONS
+
+If output is not redirected to a file or /dev/null, it is streamed
+into a buffer inside the ProcessHandle.  Care must be taken not to run
+a command which will generate a large amount of output.
+
 IMPLEMENTATION
 
 When ProcessManager::CreateProcess() is called, assuming all inputs
 are valid and the given command is believed to be executable, a
 ProcessHandle object is created and returned.  This handle allows the
 caller to manipulate the desired command.  Under the hood, a new
-management process for that command is created, and a pipe exists
-between the main process and the management process.  This pipe allows
-commands and/or I/O to travel back and forth.
+management process for that command is created, and a socket exists
+between the main process and the management process.  This socket allows
+commands, error codes, and/or I/O to travel back and forth.
+
+All ProcessHandles must contain the following data, to allow it to be referenced by the forked management process:
+ - Origin Process Name
+ - Origin PID
+ - Command Line to run
+
+ProcessHandle::Run():
+  Validate the existence/permissions of the command to execute.
+  Verify existence/permissions of the desired working directory.
+  Create desired environment for the child process.
+  fork()
+
+ parent:
+  attempt to connect to listening socket
+  create PDUPeer, store in handle object.
+  register handle object with ProcessManager
+
+ child:
+  set up listening socket
+  change to working directory
+  Open input and output file descriptors, verifying permissions /
+     existence of the files.
+  Close all other open file descriptors.
+  setsid()
+  
+  fork()
+   parent:
+    close opened input/output fds.
+    setup SIGCHLD handler
+    loop:
+      poll() on the socket (and the pipe for I/O if open)
+      if interrupted, wait() on the child.
+      send error / status messages across the socket.
+      if child has died, cleanup
+   child:
+    close listener socket
+    setup correct signal mask
+    execv()
+
+ProcessManager thread:
+  loop:
+    poll all connected sockets, with 100ms timeout
+    if timeout:
+      add any new sockets
+      check for shutdown
+    foreach ready socket:
+      hand data to PDUPeer object
+      while a PDU is ready:
+        processPDU
+    foreach errored socket:
+      disconnect, remove from pollfds
+
+processPDU:
+  switch on PDU opcode:
+    started:
+      update state in process handle
+    completed:
+      update state, return code in process handle
+    error:
+      update state, error code, error msg in process handle
+    output:
+      add output to buffer
+
+
+SOCKET PROTOCOL
+
+Each ProcessHandle object maintains an open socket with its associated
+management process.  Communication on these sockets follows a PDU
+based protocol.
+
+CHANGES FROM FIRST REVISION
+ - modified to use the new GUIDGenerator class.
+ - modified to communicate with sub-process via PDUPeer
+ - renamed ProcessHandle class as simply Process
+ - protected several interfaces between Process and ProcessManager classes

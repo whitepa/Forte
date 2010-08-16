@@ -58,11 +58,12 @@ SRCS =	\
 	OnDemandDispatcher.cpp \
 	OpenSSLInitializer.cpp \
 	PDUPeer.cpp \
+	PDUPeerSet.cpp \
 	PidFile.cpp \
 	PosixTimer.cpp \
 	ProcFileSystem.cpp \
 	ProcRunner.cpp \
-	ProcessHandle.cpp \
+	Process.cpp \
 	ProcessManager.cpp \
 	Random.cpp \
 	RandomGenerator.cpp \
@@ -129,6 +130,7 @@ HEADERS = \
 	OpenSSLInitializer.h \
 	PDU.h \
 	PDUPeer.h \
+	PDUPeerSet.h \
 	ProcRunner.h \
 	ProcessHandle.h \
 	ProcessManager.h \
@@ -172,8 +174,11 @@ TLIBS = -L$(TARGETDIR) -lforte -lpthread
 
 INSTALL = $(if $(RPM), @install $(1) $< $@, @install $(1) $(2) $< $@)
 
-all: $(LIB)
+all: $(LIB) $(TARGETDIR)/procmon
 	$(MAKE_SUBDIRS)
+
+$(TARGETDIR)/procmon: $(TARGETDIR)/procmon.o $(TARGETDIR)/ProcessMonitor.o $(LIB)
+	$(CCC) -o $@ $< $(TARGETDIR)/ProcessMonitor.o -L$(TARGETDIR) -lforte -lpthread
 
 utiltest: $(TPROG)
 

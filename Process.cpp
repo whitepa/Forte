@@ -1,0 +1,491 @@
+// Process.cpp
+
+#include "Process.h"
+#include "ProcessManager.h"
+#include "AutoMutex.h"
+#include "Exception.h"
+#include "LogManager.h"
+#include "LogTimer.h"
+#include "ServerMain.h"
+#include "Util.h"
+#include "FTrace.h"
+#include "GUID.h"
+#include <iostream>
+#include <fstream>
+#include <cstdlib>
+#include <csignal>
+#include <ctime>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <fcntl.h>
+#include <boost/algorithm/string.hpp>
+
+
+using namespace boost;
+using namespace Forte;
+
+Forte::Process::Process(const boost::shared_ptr<ProcessManager> &mgr,
+                        const FString &procmon,
+                        const FString &guid,
+                        const FString &command, 
+                        const FString &currentWorkingDirectory, 
+                        const FString &outputFilename, 
+                        const FString &inputFilename, 
+                        const StrStrMap *environment) : 
+    mProcessManagerPtr(mgr),
+    mProcmonPath(procmon),
+    mCommand(command), 
+    mCurrentWorkingDirectory(currentWorkingDirectory),
+    mOutputFilename(outputFilename),
+    mInputFilename(inputFilename),
+    mInputFD(-1),
+    mOutputFD(-1),
+    mGUID(guid),
+    mChildPid(-1),
+    mOutputString(""),
+    mStarted(false),
+    mIsRunning(false),
+    mFinishedCond(mFinishedLock)
+{
+    // copy the environment entries
+    if(environment) 
+    {
+        mEnvironment.insert(environment->begin(), environment->end());
+    }
+}
+
+Forte::Process::~Process() 
+{
+    try
+    {
+        if (mIsRunning)
+            Abandon();
+    }
+    catch (Exception &e)
+    {
+        hlog(HLOG_ERR, "%s", e.what().c_str());
+    }
+}
+	
+void Forte::Process::SetProcessCompleteCallback(ProcessCompleteCallback processCompleteCallback)
+{
+    if(mStarted) 
+    {
+        hlog(HLOG_ERR, "tried setting the process complete callback after the process had been started");
+        throw EProcessStarted();
+    }
+    mProcessCompleteCallback = processCompleteCallback;
+}
+
+void Forte::Process::SetCurrentWorkingDirectory(const FString &cwd) 
+{
+    if(mStarted) 
+    {
+        hlog(HLOG_ERR, "tried setting the current working directory after the process had been started");
+        throw EProcessStarted();
+    }
+    mCurrentWorkingDirectory = cwd;
+}
+
+void Forte::Process::SetEnvironment(const StrStrMap *env)
+{
+    if(mStarted) 
+    {
+        hlog(HLOG_ERR, "tried setting the environment after the process had been started");
+        throw EProcessStarted();
+    }
+    if(env) 
+    {
+        mEnvironment.clear();
+        mEnvironment.insert(env->begin(), env->end());
+    }
+}
+
+void Forte::Process::SetInputFilename(const FString &infile)
+{
+    if(mStarted) 
+    {
+        hlog(HLOG_ERR, "tried setting the input filename after the process had been started");
+        throw EProcessStarted();
+    }
+    mInputFilename = infile;
+}
+
+void Forte::Process::SetOutputFilename(const FString &outfile)
+{
+    if(mStarted) 
+    {
+        hlog(HLOG_ERR, "tried setting the output filename after the process had been started");
+        throw EProcessStarted();
+    }
+    mOutputFilename = outfile;
+}
+
+boost::shared_ptr<ProcessManager> Forte::Process::GetProcessManager(void)
+{
+    shared_ptr<ProcessManager> mgr(mProcessManagerPtr.lock());
+    if (!mgr)
+    {
+        throw EProcessHandleInvalid();
+    }
+    return mgr;
+}
+
+pid_t Forte::Process::Run()
+{
+    // \TODO
+}
+
+void Forte::Process::startMonitor()
+{
+    int fds[2];
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) < 0)
+        throw EProcessUnableToCreateSocket(FStringFC(), "%s", strerror(errno));
+    AutoFD parentfd(fds[0]);
+    AutoFD childfd(fds[1]);
+
+    pid_t childPid = fork();
+    if(childPid < 0) 
+        throw EProcessUnableToFork(FStringFC(), "%s", strerror(errno));
+    else if(childPid == 0)
+    {
+        // child
+        // close all file descriptors, except the PDU channel
+        while (close(parentfd) == -1 && errno == EINTR);
+        for (int n = 0; n < 1024; ++n)
+            if (n != childfd)
+                while (close(n) == -1 && errno == EINTR);
+        // clear sig mask
+        sigset_t set;
+        sigemptyset(&set);
+        pthread_sigmask(SIG_SETMASK, &set, NULL);
+
+        // create a new process group / session
+        setsid();
+
+        char **vargs = new char* [3];
+        vargs[0] = "(procmon)";
+        vargs[1] = const_cast<char *>(FString(childfd).c_str());
+        vargs[2] = 0;
+        execv(mProcmonPath, vargs);
+        exit(-1);
+    }
+    else
+    {
+        // parent
+        close(childfd);
+        // add a PDUPeer to the PeerSet owned by the ProcessManager
+        shared_ptr<ProcessManager> pm(mProcessManagerPtr.lock());
+        pm->addPeer(parentfd);
+        parentfd.Release();
+    }
+}
+
+    
+//     sigset_t set;
+//     mIsRunning = true;
+//     char *argv[ARG_MAX];
+
+//     // \TODO: need better handling of the number of args.  Currently
+//     // if their are more than ARG_MAX arguments, we would crash.
+
+//     // \TODO: ultimately we should be communicating back with the
+//     // parent process via some sort of IPC, and notifying of any of
+//     // these error details via that mechanism.  NOTE: Exceptions must
+//     // not be thrown out of this method!  At this point we are running
+//     // in a forked process, and throwing an exception (via calling
+//     // exit() ) will cause us to end up with two copies of the process
+//     // which originally called Run().
+
+//     // we need to split the command up
+//     std::vector<std::string> strings;
+//     FString scrubbedCommand = shellEscape(mCommand);
+//     boost::split(strings, scrubbedCommand, boost::is_any_of("\t "));
+//     unsigned int num_args = strings.size();
+//     for(unsigned int i = 0; i < num_args; ++i) 
+//     {
+//         // ugh - I hate this cast here, but as this process
+//         // is about to be blown away, it is harmless, and
+//         // much simpler than trying to avoid it
+//         argv[i] = const_cast<char*>(strings[i].c_str());
+//     }
+//     argv[num_args] = 0;
+		
+//     // change current working directory
+//     if (!mCurrentWorkingDirectory.empty()) 
+//     {
+//         if (chdir(mCurrentWorkingDirectory)) 
+//         {
+//             hlog(HLOG_CRIT, "Cannot change directory to: %s", mCurrentWorkingDirectory.c_str());
+//             cerr << "Cannot change directory to: " << mCurrentWorkingDirectory << endl;
+//             exit(-1);
+//         }
+//     }
+		
+//     // setup in, out, err
+//     int dupResult = -1;
+//     do
+//     {
+//         dupResult = dup2(mInputFD, 0);
+//         if(dupResult == -1 && errno != EINTR)
+//         {
+//             hlog(HLOG_ERR, "unable to duplicate the input file descriptor (%d)", errno);
+//             throw EProcessUnableToDuplicateInputFD();
+//         }
+//     }
+//     while (dupResult == -1 && errno == EINTR);
+
+//     dupResult = -1;
+//     do
+//     {
+//         dupResult = dup2(mOutputFD, 1);
+//         if(dupResult == -1 && errno != EINTR)
+//         {
+//             hlog(HLOG_ERR, "unable to duplicate the output file descriptor (%d)", errno);
+//             throw EProcessUnableToDuplicateOutputFD();
+//         }
+//     }
+//     while (dupResult == -1 && errno == EINTR);
+
+//     dupResult = -1;
+//     do
+//     {
+//         dupResult = dup2(mOutputFD, 2);
+//         if(dupResult == -1 && errno != EINTR)
+//         {
+//             hlog(HLOG_ERR, "unable to duplicate the error file descriptor (%d)", errno);
+//             throw EProcessUnableToDuplicateErrorFD();
+//         }
+//     }
+//     while (dupResult == -1 && errno == EINTR);
+
+//     // close all other FDs
+//     int fdstart = 3;
+//     int fdlimit = sysconf(_SC_OPEN_MAX);
+//     while (fdstart < fdlimit) 
+//     {
+//         int closeResult = -1;
+//         do
+//         {
+//             closeResult = close(fdstart);
+//             if(closeResult == -1 && errno == EIO)
+//             {
+//                 hlog(HLOG_WARN, "unable to close parent file descriptor %d (EIO)", fdstart);
+//             }
+//         }
+//         while(closeResult == -1 && errno == EINTR);
+
+//         fdstart++;
+            
+//     }
+		
+//     // set up environment?
+//     if (!mEnvironment.empty()) {
+//         StrStrMap::const_iterator mi;
+			
+//         for (mi = mEnvironment.begin(); mi != mEnvironment.end(); ++mi) 
+//         {
+//             if (mi->second.empty()) unsetenv(mi->first);
+//             else setenv(mi->first, mi->second, 1);
+//         }
+//     }
+		
+//     // clear sig mask
+//     sigemptyset(&set);
+//     pthread_sigmask(SIG_SETMASK, &set, NULL);
+		
+//     // create a new process group / session
+//     setsid();
+
+//     execv(argv[0], argv);
+//     hlog(HLOG_ERR, "unable to execv the command");
+//     throw EProcessExecvFailed();
+// }
+
+// void Forte::Process::RunParent(pid_t cpid)
+// {
+//     mChildPid = cpid;
+//     // close the input and output fds we opened for our child
+//     int closeResult = -1;
+//     do
+//     {
+//         closeResult = close(mInputFD);
+//         if(closeResult == -1 && errno != EINTR)
+//         {
+//             hlog(HLOG_ERR, "unable to close the child input file (%d)", errno);
+//             throw EProcessUnableToCloseInputFile();
+//         }
+//         else 
+//         {
+//             mInputFD = -1;
+//         }
+//     }
+//     while(closeResult == -1 && errno == EINTR);
+    
+//     closeResult = -1;
+//     do
+//     {
+//         closeResult = close(mOutputFD);
+//         if(closeResult == -1 && errno != EINTR)
+//         {
+//             hlog(HLOG_ERR, "unable to close the child output file (%d)", errno);
+//             throw EProcessUnableToCloseOutputFile();
+//         }
+//         else
+//         {
+//             mOutputFD = -1;
+//         }
+//     }
+//     while(closeResult == -1 && errno == EINTR);
+    
+//     // this just returns back to whence it was called
+//     // the ProcessManager will now carry out the task
+//     // of monitoring the running process.
+//     mIsRunning = true;
+// }
+
+unsigned int Forte::Process::Wait()
+{
+    if(!mStarted) 
+    {
+        hlog(HLOG_ERR, "tried waiting on a process that has not been started");
+        throw EProcessNotRunning();
+    }
+
+    hlog(HLOG_DEBUG, "waiting for process to end (%s)", mGUID.c_str());
+    AutoUnlockMutex lock(mFinishedLock);
+    if(!mIsRunning) 
+    {
+        return mStatusCode;
+    }
+    mFinishedCond.Wait();
+    // \TODO why did we get woken up? are there cases when we would need to throw?
+    // (process is abandoned, for example)
+    return mStatusCode;
+}
+
+void Forte::Process::notifyWaiters()
+{
+    AutoUnlockMutex lock(mFinishedLock);
+    mFinishedCond.Broadcast();
+}
+
+void Forte::Process::Abandon()
+{
+    if(!mIsRunning)
+    {
+        hlog(HLOG_ERR, "tried abandoning a process that is not current running");
+        throw EProcessNotRunning();
+    }
+
+    hlog(HLOG_DEBUG, "abandoning process %u (%s)", mChildPid, mGUID.c_str());
+    
+    GetProcessManager()->abandonProcess(mGUID);
+
+    // close the monitor fd
+    if (mManagementChannel)
+        while (close(mManagementChannel->GetFD()) == -1 && errno == EINTR);
+    
+    
+    // this might be called on another thread, in which
+    // case we need to broadcast to let anyone
+    // know that might be waiting for a finish
+    notifyWaiters();
+}
+
+void Forte::Process::Signal(int signum)
+{
+    throw EUnimplemented();
+}
+
+bool Forte::Process::IsRunning()
+{
+    return mIsRunning;
+}
+
+void Forte::Process::setIsRunning(bool running)
+{
+    bool prevState = mIsRunning;
+    mIsRunning = running;
+    if(prevState && !mIsRunning) 
+    {
+        // we have gone from a running state to a non-running state
+        // we must be finished!
+        hlog(HLOG_DEBUG, "process has terminated %u (%s)", mChildPid, mGUID.c_str());		
+		
+        notifyWaiters();
+    }
+}
+
+unsigned int Forte::Process::GetStatusCode() 
+{ 
+    if(!mStarted) {
+        hlog(HLOG_ERR, "tried grabbing the status code from a process that hasn't been started");
+        throw EProcessNotStarted();
+    } else if(mIsRunning) {
+        hlog(HLOG_ERR, "tried grabbing the status code from a process that hasn't completed yet");
+        throw EProcessNotFinished();
+    }
+    return mStatusCode; 
+}
+
+Forte::Process::ProcessTerminationType Forte::Process::GetProcessTerminationType() 
+{ 
+    if(!mStarted) {
+        hlog(HLOG_ERR, "tried grabbing the termination type from a process that hasn't been started");
+        throw EProcessNotStarted();
+    } else if(mIsRunning) {
+        hlog(HLOG_ERR, "tried grabbing the termination type from a process that hasn't completed yet");
+        throw EProcessNotFinished();
+    }
+    return mProcessTerminationType; 
+}
+
+FString Forte::Process::GetOutputString()
+{
+    if(!mStarted) {
+        hlog(HLOG_ERR, "tried grabbing the output from a process that hasn't been started");
+        throw EProcessNotStarted();
+    } else if(mIsRunning) {
+        hlog(HLOG_ERR, "tried grabbing the output from a process that hasn't completed yet");
+        throw EProcessNotFinished();
+    }
+
+    // lazy loading of the output string
+    // check to see if the output string is empty
+    // if so, and the output file wasn't the bit bucket
+    // load it up and return it. Otherwise, we just load the
+    // string we have already loaded
+    if (mOutputString.empty() && mOutputFilename != "/dev/null") 
+    {
+        // read log file
+        FString stmp;
+        ifstream in(mOutputFilename, ios::in | ios::binary);
+        char buf[4096];
+		
+        mOutputString.clear();
+		
+        while (in.good())
+        {
+            in.read(buf, sizeof(buf));
+            stmp.assign(buf, in.gcount());
+            mOutputString += stmp;
+        }
+        
+        // cleanup
+        in.close();
+    } 
+    else if(mOutputFilename == "/dev/null")
+    {
+        hlog(HLOG_WARN, "no output filename set");
+        mOutputString.clear();
+    }
+
+    return mOutputString;
+}
+
