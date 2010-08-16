@@ -12,7 +12,7 @@ void Forte::PDUPeer::DataIn(size_t len, char *buf)
     mCursor += len;    
 }
 
-void Forte::PDUPeer::SendPDU(Forte::PDU &pdu)
+void Forte::PDUPeer::SendPDU(const Forte::PDU &pdu) const
 {
     size_t len = sizeof(Forte::PDU) - Forte::PDU::PDU_MAX_PAYLOAD;
     len += pdu.payloadSize;
@@ -42,12 +42,6 @@ bool Forte::PDUPeer::RecvPDU(Forte::PDU &out) {
         throw EPDUVersionInvalid();
     }
     // \TODO figure out how to do proper opcode validation
-    // if (pdu->opcode <= SCUPDATE_PDU_OP_BEGIN ||
-    //     pdu->opcode >= SCUPDATE_PDU_OP_END)
-    // {
-    //     hlog(HLOG_DEBUG2, "invalid PDU opcode");
-    //     throw SCUpdatePDUOpcodeInvalid();
-    // }
 
     // \TODO this memmove() based method is inefficient.  Implement a
     // proper ring-buffer.

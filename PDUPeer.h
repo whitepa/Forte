@@ -1,6 +1,7 @@
 #ifndef __PDU_peer_h_
 #define __PDU_peer_h_
 
+#include "AutoFD.h"
 #include "Exception.h"
 #include "Object.h"
 #include "PDU.h"
@@ -17,6 +18,8 @@ namespace Forte
 {
     class PDUPeer : public Object
     {
+    private:
+        PDUPeer(const PDUPeer &other) { throw EUnimplemented(); }
     public:
         PDUPeer(int fd, unsigned int bufsize = 65536) :
             mFD(fd),
@@ -26,14 +29,20 @@ namespace Forte
             {
                 memset(mPDUBuffer.get(), 0, mBufSize);
             }
-        virtual ~PDUPeer() {};
-        int GetFD(void) { return mFD; }
+        virtual ~PDUPeer() { };
+
+        boost::shared_ptr<PDUPeer> GetPtr(void) {
+            return boost::static_pointer_cast<PDUPeer>(Object::shared_from_this());
+        }
+
+        int GetFD(void) const { return mFD; }
         void DataIn(size_t len, char *buf);
-        void SendPDU(Forte::PDU &pdu);
+        void SendPDU(const Forte::PDU &pdu) const;
         bool RecvPDU(Forte::PDU &out);
+        void Close(void) { mFD.Close(); }
 
     protected:
-        int mFD;
+        AutoFD mFD;
         size_t mCursor;
         size_t mBufSize;
         boost::shared_array<char> mPDUBuffer;
