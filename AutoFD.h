@@ -20,7 +20,7 @@ namespace Forte
             if (mDir != NULL) { closedir(mDir); mDir = NULL; mFD = NONE; }
             if (mFD != NONE) { ::close(mFD); mFD = NONE; }
         }
-        inline void Release() { mDir = NULL; mFD = NONE; }
+        inline int Release() { int fd = mFD; mDir = NULL; mFD = NONE; return fd; }
         inline int Fd() const { return mFD; }
         inline DIR* dir() { return mDir; }
         inline const DIR* dir() const { return mDir; }
