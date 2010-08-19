@@ -13,7 +13,15 @@ ServiceConfig::ServiceConfig(const char *configFile) {
 void ServiceConfig::ReadConfigFile(const char *configFile) {
     AutoUnlockMutex lock(mMutex);
     // load the file (INFO format)
-    boost::property_tree::read_info(configFile, mPTree);
+    try
+    {
+        boost::property_tree::read_info(configFile, mPTree);
+    }
+    catch (boost::property_tree::ptree_error &e)
+    {
+        throw EServiceConfig("could not load file");
+    }    
+
 }
 
 void ServiceConfig::Clear()
