@@ -40,6 +40,16 @@ void DbLiteConnection::setError()
 }
 
 
+bool DbLiteConnection::Init(const FString& db, 
+                            const FString& user, 
+                            const FString& pass,
+                            const FString& host,
+                            const FString& socket,
+                            unsigned int retries)
+{
+    return DbConnection::Init(db, user, pass, host, socket, retries);
+}
+
 bool DbLiteConnection::Init(struct sqlite3 *db)
 {
     mDB = db;

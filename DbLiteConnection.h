@@ -17,7 +17,15 @@ namespace Forte
         virtual ~DbLiteConnection();
 
         // initialization
-        virtual bool Init(struct sqlite3 *db);
+        // initialization
+        virtual bool Init(const FString& db, 
+                          const FString& user, 
+                          const FString& pass,
+                          const FString& host = "localhost", 
+                          const FString& socket = "",
+                          unsigned int retries = 3);
+
+        bool Init(struct sqlite3 *db);
 
         // connection management
         virtual bool Connect();
