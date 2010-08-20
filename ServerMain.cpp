@@ -13,7 +13,8 @@ ServerMain::ServerMain(int argc, char * const argv[],
     mShutdown(false),
     mConfigFile(defaultConfig),
     mDaemonName(argv[0]),
-    mDaemon(daemonize)
+    mDaemon(daemonize),
+    mLogManager()
 {
     // check command line
     int i = 0;
@@ -57,7 +58,8 @@ ServerMain::ServerMain(const FString& defaultConfig,
     : mShutdown(false), 
       mConfigFile(defaultConfig),
       mDaemonName(daemonName),
-      mDaemon(daemonize)
+      mDaemon(daemonize),
+      mLogManager()
 {
     init(defaultConfig, logMask);
 }
@@ -65,6 +67,8 @@ ServerMain::ServerMain(const FString& defaultConfig,
 void ServerMain::init(const FString& defaultConfig,
                       int logMask)
 {
+    mLogManager.InitGlobal();
+
     // setup the config
     CSET("forte.ServiceConfig", ServiceConfig);
 
@@ -116,6 +120,7 @@ void ServerMain::initLogging()
 
     // setup logging
     // set logfile path
+    //mLogFile = sc.Get("logfile.path");
     mLogFile = sc.Get("logfile.path");
 
     // if we are not running as a daemon, use the log level
@@ -149,7 +154,19 @@ void ServerMain::initLogging()
         // by CServerMain
         mLogManager.BeginLogging("//stderr");
     }
-    if (!mLogFile.empty()) mLogManager.BeginLogging(mLogFile);
+
+    //if (!mLogFile.empty())
+    if (mLogFile.length() > 0)
+    {
+        mLogManager.BeginLogging(mLogFile);
+    }
+    else
+    {
+        if (mDaemon)
+        {
+            mLogManager.BeginLogging();
+        }
+    }
 
     VersionManager::LogVersions();
 }
