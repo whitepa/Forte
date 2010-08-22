@@ -37,6 +37,7 @@ namespace Forte
     typedef hash_map<FString, FString, hash<const char *>, eqstr> StringHashMap;
     typedef vector<FString> StrList;
     typedef map<FString, FString> StrStrMap;
+    typedef map<FString, FString> FStringFStringMap;
     typedef map<FString, int> StrIntMap;
     typedef map<int, FString> IntStrMap;
     typedef pair<int, FString> IntStrPair;
@@ -44,6 +45,7 @@ namespace Forte
     typedef map<FString, double> StrDoubleMap;
     typedef set<FString> FStringSet;
     typedef vector<FString> FStringVector;
+    typedef list<FString> FStringList;
 };
 
 #endif
