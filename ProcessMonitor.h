@@ -54,7 +54,7 @@ namespace Forte
          * @param peer The peer we received the PDU from.
          * @param pdu The PDU itself.
          */
-        void pduCallback(const PDUPeer &peer, const PDU &pdu);
+        void pduCallback(PDUPeer &peer);
 
         /** 
          * This function is called after a SIGCHLD is received, once

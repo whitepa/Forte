@@ -25,11 +25,11 @@ Forte::ProcessMonitor::ProcessMonitor(int argc, char *argv[]) :
     int fd = fdStr.AsUnsignedInteger();
     mPeerSet.PeerCreate(fd);
     sInstancePtr = this;
+    argv[1] = NULL;
 }
 
 Forte::ProcessMonitor::~ProcessMonitor()
 {
-    
 }
 
 void Forte::ProcessMonitor::Run()
@@ -44,13 +44,13 @@ void Forte::ProcessMonitor::Run()
 
     mPeerSet.SetupEPoll();
 
-    mPeerSet.SetProcessPDUCallback(boost::bind(&ProcessMonitor::pduCallback, this, _1, _2));
+    mPeerSet.SetProcessPDUCallback(boost::bind(&ProcessMonitor::pduCallback, this, _1));
 
     try
     {
         while (mState != STATE_EXITED)
         {
-            mPeerSet.Poll();
+            mPeerSet.Poll(-1);
             if (mGotSIGCHLD)
                 doWait();
         }
@@ -64,19 +64,23 @@ void Forte::ProcessMonitor::Run()
     }
 }
 
-void Forte::ProcessMonitor::pduCallback(const PDUPeer &peer, const PDU &pdu)
+void Forte::ProcessMonitor::pduCallback(PDUPeer &peer)
 {
-    switch(pdu.opcode)
+    PDU pdu;
+    while (peer.RecvPDU(pdu))
     {
-    case ProcessOpPrepare:
-        handlePrepare(peer, pdu);
-        break;
-    case ProcessOpControlReq:
-        handleControlReq(peer, pdu);
-        break;
-    default:
-        hlog(HLOG_ERR, "unexpected PDU with opcode %d", pdu.opcode);
-        break;
+        switch(pdu.opcode)
+        {
+        case ProcessOpPrepare:
+            handlePrepare(peer, pdu);
+            break;
+        case ProcessOpControlReq:
+            handleControlReq(peer, pdu);
+            break;
+        default:
+            hlog(HLOG_ERR, "unexpected PDU with opcode %d", pdu.opcode);
+            break;
+        }
     }
 }
 
@@ -229,6 +233,9 @@ void Forte::ProcessMonitor::startProcess(void)
         char *argv[ARG_MAX];
 
         // we need to split the command up
+
+        // \TODO we should probably run it as /bin/bash -c cmdline
+        // until we have a complete command line parser
         std::vector<std::string> strings;
         FString scrubbedCommand = shellEscape(mCmdline);
         boost::split(strings, scrubbedCommand, boost::is_any_of("\t "));
@@ -270,7 +277,7 @@ void Forte::ProcessMonitor::startProcess(void)
             while(closeResult == -1 && errno == EINTR);
             ++fdstart;
         }
-//     // set up environment? \TODO
+//     // set up environment? \TODO do we need this?
 //     if (!mEnvironment.empty()) {
 //         StrStrMap::const_iterator mi;
 			
