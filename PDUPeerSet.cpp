@@ -88,7 +88,6 @@ void Forte::PDUPeerSet::Poll(int msTimeout)
     }
     // process the fds
     char *buffer = mBuffer.get();
-    int len;
     for (int i = 0; i < nfds; ++i)
     {
         bool error = false;
@@ -102,9 +101,15 @@ void Forte::PDUPeerSet::Poll(int msTimeout)
         if (events[i].events & EPOLLIN)
         {
             // input is ready
-            if ((int)(len = recv(peer->GetFD(), buffer, RECV_BUFFER_SIZE, 0)) <= 0)
+            int len = recv(peer->GetFD(), buffer, RECV_BUFFER_SIZE, 0);
+            if (len < 0)
             {
                 hlog(HLOG_ERR, "recv failed: %s", strerror(errno));
+                error = true;
+            }
+            else if (len == 0)
+            {
+                hlog(HLOG_DEBUG, "socket shutdown");
                 error = true;
             }
             else
