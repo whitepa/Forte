@@ -1,14 +1,20 @@
-#define BOOST_TEST_MODULE "PDUPeer Unit Tests"
+//#define BOOST_TEST_MODULE "PDUPeer Unit Tests"
 
 #include "boost/test/unit_test.hpp"
 #include <boost/shared_ptr.hpp>
 
+#include "AutoFD.h"
 #include "LogManager.h"
 #include "Context.h"
 #include "Foreach.h"
 #include "PDUPeer.h"
+#include "PDUPeerSet.h"
 
 using namespace boost::unit_test;
+using namespace boost;
+using namespace Forte;
+
+LogManager logManager;
 
 struct PDU_Test
 {
@@ -71,6 +77,46 @@ void receiveMultiplePDU(void)
     }
 }
 
+void pollPDU()
+{
+    try
+    {
+        int fds[2];
+        socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
+        Forte::AutoFD fd1(fds[0]);
+        Forte::AutoFD fd2(fds[1]);
+        Forte::PDUPeerSet set1;
+        Forte::PDUPeerSet set2;
+
+        BOOST_CHECK_THROW(set1.Poll(), EPDUPeerSetNotPolling);
+
+        shared_ptr<PDUPeer> peer1 = set1.PeerCreate(fd1);
+        BOOST_CHECK(peer1);
+
+        set1.SetupEPoll();
+        set2.SetupEPoll();
+
+        shared_ptr<PDUPeer> peer2 = set2.PeerCreate(fd2);
+        BOOST_CHECK(peer2);
+
+        PDU pdu, rpdu;
+        size_t len;
+        makeTestPDU(pdu, len);
+
+        peer1->SendPDU(pdu);
+
+        set2.Poll(1000);
+
+        BOOST_CHECK(peer2->IsPDUReady());
+        BOOST_CHECK(peer2->RecvPDU(rpdu));
+        BOOST_CHECK(!memcmp(&pdu, &rpdu, sizeof(PDU)));
+    }
+    catch (Forte::Exception &e)
+    {
+        BOOST_FAIL(e.what().c_str());
+    }
+}
+
 BOOST_AUTO_TEST_CASE(receivePDUTest)
 {
     receivePDU();
@@ -79,3 +125,20 @@ BOOST_AUTO_TEST_CASE(receiveMultiplePDUTest)
 {
     receiveMultiplePDU();
 }
+
+BOOST_AUTO_TEST_CASE(pollUnitTest)
+{
+    pollPDU();
+}
+
+////Boost Unit init function ///////////////////////////////////////////////////
+test_suite*
+init_unit_test_suite(int argc, char* argv[])
+{
+
+    logManager.SetLogMask("//stdout", HLOG_ALL);
+    logManager.BeginLogging("//stdout");
+
+    return 0;
+}
+////////////////////////////////////////////////////////////////////////////////
