@@ -1,3 +1,4 @@
+#include "Exception.h"
 #include "LogManager.h"
 #include "ProcessMonitor.h"
 
@@ -14,11 +15,19 @@ int main(int argc, char *argv[])
     {
         Forte::ProcessMonitor pm(argc, argv);
         pm.Run();
+        fprintf(stderr, "PROCMON: exiting\n");
         return 0;
+    }
+    catch (Forte::Exception &e)
+    {
+        // unhandled exception
+        fprintf(stderr, "PROCMON: %s\n", e.what().c_str());
+        return 1;
     }
     catch (...)
     {
         // unhandled exception
+        fprintf(stderr, "PROCMON: unknown exception\n");
         return 1;
     }
 }
