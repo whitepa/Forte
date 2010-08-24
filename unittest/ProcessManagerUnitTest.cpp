@@ -11,16 +11,29 @@ LogManager logManager;
 
 BOOST_AUTO_TEST_CASE(RunProcess)
 {
-    hlog(HLOG_INFO, "CreateProcess");
-    boost::shared_ptr<ProcessManager> pm(new ProcessManager);
-    boost::shared_ptr<Process> ph = pm->CreateProcess("/bin/sleep 3");
-    ph->Run();
-    BOOST_CHECK(ph->IsRunning());
-    ph->Wait();
-    BOOST_CHECK(!ph->IsRunning());
-    hlog(HLOG_INFO, "Termination Type: %d", ph->GetProcessTerminationType());
-    hlog(HLOG_INFO, "StatusCode: %d", ph->GetStatusCode());
-    hlog(HLOG_INFO, "OutputString: %s", ph->GetOutputString().c_str());
+    try
+    {
+        hlog(HLOG_INFO, "new ProcessManager");
+        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        hlog(HLOG_INFO, "CreateProcess");
+        boost::shared_ptr<Process> ph = pm->CreateProcess("/bin/sleep 3");
+        hlog(HLOG_INFO, "Run Process");
+        ph->Run();
+        hlog(HLOG_INFO, "Is Running");
+        BOOST_CHECK(ph->IsRunning());
+        hlog(HLOG_INFO, "Wait");
+        ph->Wait();
+        hlog(HLOG_INFO, "Is Running");
+        BOOST_CHECK(!ph->IsRunning());
+        hlog(HLOG_INFO, "Termination Type: %d", ph->GetProcessTerminationType());
+        hlog(HLOG_INFO, "StatusCode: %d", ph->GetStatusCode());
+        hlog(HLOG_INFO, "OutputString: %s", ph->GetOutputString().c_str());
+    }
+    catch (Exception &e)
+    {
+        hlog(HLOG_ERR, "%s", e.what().c_str());
+        BOOST_FAIL("caught exception");
+    }
 }
 
 BOOST_AUTO_TEST_CASE(Exceptions)
@@ -97,7 +110,7 @@ BOOST_AUTO_TEST_CASE(FileIO)
 
     // check that when we can create an output file that we can get 
     // the contents
-	boost::shared_ptr<Process> ph2 = pm.CreateProcess("/bin/ls", "/", "temp.out");
+    boost::shared_ptr<Process> ph2 = pm.CreateProcess("/bin/ls", "/", "temp.out");
     ph2->Run();
     ph2->Wait();
     BOOST_CHECK(ph2->GetOutputString().find("proc") != string::npos);
@@ -105,7 +118,7 @@ BOOST_AUTO_TEST_CASE(FileIO)
     hlog(HLOG_DEBUG, "okay, now what happens when output is to /dev/null");
 
     // what happens if /dev/null is our output?
-	boost::shared_ptr<Process> ph3 = pm.CreateProcess("/bin/ls", "/");
+    boost::shared_ptr<Process> ph3 = pm.CreateProcess("/bin/ls", "/");
     ph3->Run();
     ph3->Wait();
     BOOST_CHECK(ph3->GetOutputString().find("proc") == string::npos);
