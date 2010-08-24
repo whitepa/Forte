@@ -56,7 +56,7 @@ namespace Forte
          * @return shared_ptr
          */
         boost::shared_ptr<ProcessManager> GetPtr(void) {
-            return boost::static_pointer_cast<ProcessManager>(Object::shared_from_this());
+            return boost::static_pointer_cast<ProcessManager>(shared_from_this());
         }
 
 
@@ -142,7 +142,7 @@ namespace Forte
          */
         GUIDGenerator mGUIDGenerator;
 
-        const FString mProcmonPath;
+        FString mProcmonPath;
     };
 };
 #endif
