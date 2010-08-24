@@ -19,14 +19,14 @@ namespace Forte
     class PDUPeerSet : public Object
     {
     public:
-        typedef boost::function<void(const PDUPeer &peer, const PDU &pdu)> PDUCallbackFunc;
+        typedef boost::function<void(PDUPeer &peer)> PDUCallbackFunc;
         static const int MAX_PEERS = 256;
         static const int RECV_BUFFER_SIZE = 65536;
 
         PDUPeerSet() : mEPollFD(-1) {}
         virtual ~PDUPeerSet() { if (mEPollFD != -1) close(mEPollFD); }
 
-        void PeerCreate(int fd);
+        boost::shared_ptr<PDUPeer> PeerCreate(int fd);
 
         void SendAll(PDU &pdu);
 
@@ -62,8 +62,11 @@ namespace Forte
          * epoll_wait() call is interrupted, Poll() will return
          * immediately.
          * 
+         * @param msTimeout timeout in milliseconds before returning.
+         * A value of -1 (the default) will wait indefinitely, while a
+         * value of 0 will not wait at all.
          */
-        void Poll(void);
+        void Poll(int msTimeout = -1);
 
         void PeerDelete(const boost::shared_ptr<Forte::PDUPeer> &peer);
 

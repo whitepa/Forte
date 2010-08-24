@@ -19,7 +19,7 @@ void Forte::PDUPeerSet::PeerDelete(const shared_ptr<PDUPeer> &peer)
     }
 }
 
-void Forte::PDUPeerSet::PeerCreate(int fd)
+shared_ptr<PDUPeer> Forte::PDUPeerSet::PeerCreate(int fd)
 {
     shared_ptr<PDUPeer> peer(new PDUPeer(fd));
     mPeerSet.insert(peer);
@@ -27,11 +27,12 @@ void Forte::PDUPeerSet::PeerCreate(int fd)
     ev.events = EPOLLIN | EPOLLOUT | EPOLLERR | 0x2000; // \TODO EPOLLRDHUP = 0x2000
     ev.data.ptr = peer.get();
     if (mEPollFD != -1 &&
-        epoll_ctl(fd, EPOLL_CTL_ADD, fd, &ev) < 0)
+        epoll_ctl(mEPollFD, EPOLL_CTL_ADD, fd, &ev) < 0)
     {
         mPeerSet.erase(peer);
         throw EPDUPeerSetPollAdd(strerror(errno));
     }
+    return peer;
 }
 
 void Forte::PDUPeerSet::SendAll(PDU &pdu)
@@ -67,10 +68,11 @@ int Forte::PDUPeerSet::SetupEPoll(void)
     }
     mBuffer.reset(new char[RECV_BUFFER_SIZE]);
     mEPollFD = fd.Release();
+    hlog(HLOG_DEBUG, "created epoll descriptor on fd %d", mEPollFD);
     return mEPollFD;
 }
 
-void Forte::PDUPeerSet::Poll(void)
+void Forte::PDUPeerSet::Poll(int msTimeout)
 {
     if (mEPollFD == -1 || !mBuffer)
         throw EPDUPeerSetNotPolling();
@@ -100,7 +102,7 @@ void Forte::PDUPeerSet::Poll(void)
         if (events[i].events & EPOLLIN)
         {
             // input is ready
-            if ((int)(len = recv(events[i].data.fd, buffer, RECV_BUFFER_SIZE, 0)) <= 0)
+            if ((int)(len = recv(peer->GetFD(), buffer, RECV_BUFFER_SIZE, 0)) <= 0)
             {
                 hlog(HLOG_ERR, "recv failed: %s", strerror(errno));
                 error = true;
@@ -109,10 +111,8 @@ void Forte::PDUPeerSet::Poll(void)
             {
                 hlog(HLOG_DEBUG, "received %llu bytes", (u64) len);
                 peer->DataIn(len, buffer);
-                // handle PDU if ready
-                PDU pdu;
-                while (peer->RecvPDU(pdu))
-                    mProcessPDUCallback(*peer, pdu);
+                if (mProcessPDUCallback && peer->IsPDUReady())
+                    mProcessPDUCallback(*peer);
             }
         }
         if (error ||
