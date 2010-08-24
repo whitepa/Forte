@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <list>
 #include <math.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
@@ -94,14 +95,19 @@ namespace Forte
         /// Split a delimited string into its components.  Delimiters will not appear in
         /// the output.  If trim is true, external whitespace will be trimmed 
         /// from each component.
-        int Explode(const char *delim, std::vector<FString> &components, bool trim=false, const char* strip_chars = " \t\r\n") const;
-        int Explode(const char *delim, std::vector<std::string> &components, bool trim=false, const char* strip_chars = " \t\r\n") const;
+        int Explode(const char *delim, std::vector<FString> &components, 
+                    bool trim=false, const char* strip_chars = " \t\r\n") const;
+        int Explode(const char *delim, std::vector<std::string> &components, 
+                    bool trim=false, const char* strip_chars = " \t\r\n") const;
 
+
+        // TODO: make templated Implode functions
         /// Combine multiple components into a single string.  Glue will be used
         /// between each component.
         FString& Implode(const char *glue, const std::vector<FString> &components);
         FString& Implode(const char *glue, const std::vector<std::string> &components);
         FString& Implode(const char *glue, const std::set<FString> &components);
+        FString& Implode(const char *glue, const std::list<FString> &components);
 
         /// Scale Computing's split() and Join(), similar to the above Implode() and Explode()
         std::vector<FString> split(const char *separator, size_t max_parts = 0) const;

@@ -295,6 +295,19 @@ FString& FString::Implode(const char *glue, const std::set<FString> &components)
     return *this;
 }
 
+FString& FString::Implode(const char *glue, const std::list<FString> &components)
+{
+    clear();
+    std::list<FString>::const_iterator i;
+    bool first = true;
+    for (i = components.begin(); i != components.end(); ++i)
+    {
+        if (!first) append(glue);
+        append(*i);
+        first = false;
+    }
+    return *this;
+}
 
 std::vector<FString> FString::split(const char *separator, size_t max_parts) const
 {

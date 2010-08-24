@@ -83,7 +83,7 @@ namespace Forte
         }
 
         virtual ~FunctionEntry() {
-            _hlog(mFN.c_str(), mFile, mLine, HLOG_DEBUG, "EXIT");
+            _hlog(mFN.c_str(), mFile, mLine, HLOG_DEBUG3, "EXIT");
         }
     protected:
         FString mFN;
