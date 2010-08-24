@@ -71,7 +71,7 @@ Forte::Process::~Process()
         hlog(HLOG_ERR, "%s", e.what().c_str());
     }
 }
-	
+
 void Forte::Process::SetProcessCompleteCallback(ProcessCompleteCallback processCompleteCallback)
 {
     if(mStarted) 
@@ -138,7 +138,17 @@ boost::shared_ptr<ProcessManager> Forte::Process::GetProcessManager(void)
 
 pid_t Forte::Process::Run()
 {
-    // \TODO
+    // send the control PDU telling the process to start
+    if (!mManagementChannel)
+        throw EProcessHandleInvalid();
+    PDU pdu(ProcessOpControlReq, sizeof(ProcessControlReqPDU));
+    ProcessControlReqPDU *control = reinterpret_cast<ProcessControlReqPDU*>(pdu.payload);
+    control->control = ProcessControlStart;
+    mManagementChannel->SendPDU(pdu);
+    // \TODO need to implement synchronous call where we wait to make
+    // sure the process starts OK, and if not we throw an exception
+    // right here.
+    return 0;
 }
 
 void Forte::Process::startMonitor()
@@ -154,12 +164,13 @@ void Forte::Process::startMonitor()
         throw EProcessUnableToFork(FStringFC(), "%s", strerror(errno));
     else if(childPid == 0)
     {
+        fprintf(stderr, "procmon child, childfd=%d\n", childfd.GetFD());
         // child
         // close all file descriptors, except the PDU channel
         while (close(parentfd) == -1 && errno == EINTR);
-        for (int n = 0; n < 1024; ++n)
-            if (n != childfd)
-                while (close(n) == -1 && errno == EINTR);
+//        for (int n = 0; n < 1024; ++n)
+//            if (n != childfd)
+//                while (close(n) == -1 && errno == EINTR);
         // clear sig mask
         sigset_t set;
         sigemptyset(&set);
@@ -169,10 +180,13 @@ void Forte::Process::startMonitor()
         setsid();
 
         char **vargs = new char* [3];
-        vargs[0] = "(procmon)";
+        vargs[0] = "(procmon)"; // \TODO include the name of the monitored process
         vargs[1] = const_cast<char *>(FString(childfd).c_str());
         vargs[2] = 0;
+        fprintf(stderr, "procmon child, exec '%s' '%s'\n", mProcmonPath.c_str(), vargs[1]);
         execv(mProcmonPath, vargs);
+        fprintf(stderr, "procmon child, exec failed: %d %s\n", errno, strerror(errno));
+        // \TODO should we send back a message indicating the exact failure?
         exit(-1);
     }
     else
@@ -186,7 +200,7 @@ void Forte::Process::startMonitor()
     }
 }
 
-    
+
 //     sigset_t set;
 //     mIsRunning = true;
 //     char *argv[ARG_MAX];
