@@ -31,6 +31,12 @@ const int Forte::ProcessManager::PDU_BUFFER_SIZE = 4096;
 Forte::ProcessManager::ProcessManager() :
     mProcmonPath("/usr/sbin/procmon")
 {
+    char *procmon = getenv("FORTE_PROCMON");
+    if (procmon)
+    {
+        hlog(HLOG_INFO, "FORTE_PROCMON is set; using alternate procmon at path '%s'", procmon);
+        mProcmonPath.assign(procmon);
+    }
     initialized();
 }
 
@@ -66,50 +72,6 @@ Forte::ProcessManager::CreateProcess(const FString &command,
     ph->startMonitor();
     return ph;
 }
-
-// void Forte::ProcessManager::startManager(const shared_ptr<Process> &ph)
-// {
-//     pid_t childPid = fork();
-//     if(childPid < 0) 
-//     {
-//         hlog(HLOG_ERR, "unable to fork child process: %s", strerror(errno));
-//         throw EProcessManagerUnableToFork();
-//     }
-//     else if(childPid == 0)
-//     {
-//         // this should never return
-//         ph->runManager();
-//         exit(1);
-//     }
-
-    // OLD
-    // \TODO: check if the given process is already running, throw an exception.
-    // AutoUnlockMutex lock(mLock);
-
-    // ProcessMap::iterator it = mProcesses.find(guid);
-    // if(it != processHandles.end()) {
-    //     boost::shared_ptr<Process> ph = it->second;
-    //     pid_t childPid = fork();
-    //     if(childPid < 0) 
-    //     {
-    //         hlog(HLOG_ERR, "unable to fork child process");
-    //         throw EProcessManagerUnableToFork();
-    //     }
-    //     else if(childPid == 0)
-    //     {
-    //         // child
-    //         ph->RunChild();
-    //     } 
-    //     else 
-    //     {
-    //         // parent
-    //         ph->RunParent(childPid);
-    //     }
-    //     hlog(HLOG_DEBUG, "Running process (%d) %s", childPid, guid.c_str());
-    //     runningProcesss[childPid] = ph;
-    //     Notify();
-    // }
-//}
 
 void Forte::ProcessManager::abandonProcess(const FString &guid)
 {
