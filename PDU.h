@@ -21,7 +21,10 @@ namespace Forte
         PDU(int op, size_t size, void *data) :
             version(PDU_VERSION),
             opcode(op),
-            payloadSize(size) { memcpy(payload, data, size); }
+            payloadSize(size) { 
+            memset(payload, 0, sizeof(payload));
+            memcpy(payload, data, size);
+        }
 
         unsigned int version;
         unsigned int opcode;
