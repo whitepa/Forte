@@ -38,7 +38,25 @@ namespace Forte
         int GetFD(void) const { return mFD; }
         void DataIn(size_t len, char *buf);
         void SendPDU(const Forte::PDU &pdu) const;
+
+        /** 
+         * Determine whether a full PDU has been received from the
+         * peer, and is ready for the application to get with a
+         * RecvPDU call.
+         * 
+         * @return true if a PDU is ready, false otherwise
+         */
+        bool IsPDUReady(void);
+
+        /** 
+         * Receive a PDU.  Returns true if a PDU was received, false if no complete PDU is ready.
+         * 
+         * @param out 
+         * 
+         * @return true if a PDU was received, false if not.
+         */
         bool RecvPDU(Forte::PDU &out);
+
         void Close(void) { mFD.Close(); }
 
     protected:
