@@ -22,6 +22,7 @@ namespace Forte
         }
         inline int Release() { int fd = mFD; mDir = NULL; mFD = NONE; return fd; }
         inline int Fd() const { return mFD; }
+        inline int GetFD() const { return mFD; }
         inline DIR* dir() { return mDir; }
         inline const DIR* dir() const { return mDir; }
         inline operator int() const { return mFD; }
