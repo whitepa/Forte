@@ -74,13 +74,21 @@ namespace Forte
     };
 
 
-    // global initialization helper class
-    class CurlInitializer : public Object
+// global initialization helper class
+class CurlInitializer
+{
+public:
+    CurlInitializer(long flags = CURL_GLOBAL_ALL)
     {
-    public:
-        CurlInitializer(long flags = CURL_GLOBAL_ALL) { Curl::Init(flags); }
-        ~CurlInitializer() { Curl::Cleanup(); }
-    };
+        curl_global_init(flags);
+        Curl::Init(flags);
+    }
+    ~CurlInitializer() 
+    {
+        curl_global_cleanup();
+        Curl::Cleanup(); 
+    }
+};
 
 
     typedef boost::shared_ptr<Curl> CurlSharedPtr;

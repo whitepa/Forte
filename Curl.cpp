@@ -43,12 +43,14 @@ void Curl::SetInternalCB(void)
 
 void Curl::Init(long flags)
 {
+  hlog(HLOG_INFO, "initializing curl");
     sDidInit = true;
 }
 
 
 void Curl::Cleanup()
 {
+  hlog(HLOG_INFO, "cleaning up curl");
     sDidInit = false;
 }
 
