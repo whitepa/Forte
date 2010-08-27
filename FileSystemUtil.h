@@ -44,7 +44,7 @@ namespace Forte
         void Unmount(const FString& mountPath);
         
     protected:
-              ProcRunner &mProcRunner;
+        ProcRunner &mProcRunner;
     };
 };
 
