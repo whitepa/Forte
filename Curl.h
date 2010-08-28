@@ -80,12 +80,12 @@ class CurlInitializer
 public:
     CurlInitializer(long flags = CURL_GLOBAL_ALL)
     {
-        curl_global_init(flags);
+//        curl_global_init(flags);
         Curl::Init(flags);
     }
     ~CurlInitializer() 
     {
-        curl_global_cleanup();
+//        curl_global_cleanup();
         Curl::Cleanup(); 
     }
 };

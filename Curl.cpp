@@ -11,12 +11,12 @@ using namespace boost;
 // macros
 #define SET_CURL_OPT(OPTION, VALUE)                                     \
     {                                                                   \
-        int errCode = curl_easy_setopt(mHandle, OPTION, VALUE);        \
+        int errCode = curl_easy_setopt(mHandle, OPTION, VALUE);         \
         if (errCode != CURLE_OK)                                        \
         {                                                               \
             FString err(FStringFC(),                                    \
                         "CURL_FAIL_SETOPT|||%s|||%s",                   \
-                        #OPTION, mErrorBuffer);                       \
+                        #OPTION, mErrorBuffer);                         \
             throw CurlException(errCode, err);                          \
         }                                                               \
     }
@@ -43,14 +43,14 @@ void Curl::SetInternalCB(void)
 
 void Curl::Init(long flags)
 {
-  hlog(HLOG_INFO, "initializing curl");
+    hlog(HLOG_INFO, "initializing curl");
     sDidInit = true;
 }
 
 
 void Curl::Cleanup()
 {
-  hlog(HLOG_INFO, "cleaning up curl");
+    hlog(HLOG_INFO, "cleaning up curl");
     sDidInit = false;
 }
 
@@ -221,7 +221,7 @@ void Curl::Perform()
 {
     mBuf.clear();
 
-    checkResolvConf();
+//    checkResolvConf();
 
     int errCode = curl_easy_perform(mHandle);
     if (errCode != CURLE_OK)
