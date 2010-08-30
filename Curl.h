@@ -9,6 +9,11 @@
 
 namespace Forte
 {
+    /**
+     * in order to use this Curl object you need to run curl_global_init() somewhere
+     * in the application before you use the Curl class. You should also call
+     * curl_global_cleanup() when you are done.
+     */
     class Curl : public Object
     {
     public:
