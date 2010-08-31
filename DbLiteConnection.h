@@ -25,6 +25,9 @@ namespace Forte
                           const FString& socket = "",
                           unsigned int retries = 3);
 
+        bool Init(const FString& dbPath, 
+                  unsigned int retries = 3);
+
         bool Init(struct sqlite3 *db);
 
         // connection management
