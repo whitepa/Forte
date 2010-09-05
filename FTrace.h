@@ -69,8 +69,8 @@ namespace Forte
     {
     public:
         FunctionEntry(const char *functionName, const char *file, int line) : mFN(functionName), mFile(file), mLine(line) {
-            _hlog(mFN.c_str(), mFile, mLine, HLOG_DEBUG, "ENTER");
-        }        
+            _hlog(mFN.c_str(), mFile, mLine, HLOG_TRACE, "ENTER");
+        }
     
         FunctionEntry(const char *functionName, const char *file, int line, const char*fmt, ...) __attribute__((format(printf, 5, 6))): mFN(functionName), mFile(file), mLine(line) {
             char buffer[512];
@@ -78,12 +78,12 @@ namespace Forte
             va_start(args, fmt);
             vsnprintf(buffer, sizeof(buffer), fmt, args);
             _hlog(mFN.c_str(), mFile, mLine, 
-                  HLOG_DEBUG, "ENTER (%s)", buffer);
+                  HLOG_TRACE, "ENTER (%s)", buffer);
             va_end(args);
         }
 
         virtual ~FunctionEntry() {
-            _hlog(mFN.c_str(), mFile, mLine, HLOG_DEBUG, "EXIT");
+            _hlog(mFN.c_str(), mFile, mLine, HLOG_TRACE, "EXIT");
         }
     protected:
         FString mFN;
