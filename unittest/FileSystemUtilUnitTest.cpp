@@ -32,45 +32,45 @@ MockProcRunner * FileSystemUtilTest::mProcRunner = NULL;
 TEST_F(FileSystemUtilTest, FormatProcRunnerCommandIsCorrect)
 {
     FTRACE;
-    mProcRunner->SetCommandResponse("/sbin/mkfs.blah  /dev/test", "", 0);
+    mProcRunner->SetCommandResponse("/sbin/mkfs.fakefs  /dev/test", "", 0);
     FileSystemUtil fsutil(*mProcRunner);
-    fsutil.Format("/dev/test", "blah", false);
+    ASSERT_NO_THROW(fsutil.Format("/dev/test", "fakefs", false));
 }
 
 TEST_F(FileSystemUtilTest, FormatProcRunnerCommandIsCorrectWhenForceIsTrue)
 {
     FTRACE;
-    mProcRunner->SetCommandResponse("/sbin/mkfs.blah -F /dev/test", "", 0);
+    mProcRunner->SetCommandResponse("/sbin/mkfs.fakefs -F /dev/test", "", 0);
     FileSystemUtil fsutil(*mProcRunner);
-    fsutil.Format("/dev/test", "blah", true);
+    ASSERT_NO_THROW(fsutil.Format("/dev/test", "fakefs", true));
 }
 
 TEST_F(FileSystemUtilTest, FormatThrowsEDeviceFormat)
 {
     FTRACE;
-    mProcRunner->SetCommandResponse("/sbin/mkfs.blah -F /dev/test", "", 1);
+    mProcRunner->SetCommandResponse("/sbin/mkfs.fakefs -F /dev/test", "", 1);
     FileSystemUtil fsutil(*mProcRunner);
-    ASSERT_THROW(fsutil.Format("/dev/test", "blah", true), EDeviceFormat);
+    ASSERT_THROW(fsutil.Format("/dev/test", "fakefs", true), EDeviceFormat);
 }
 
 TEST_F(FileSystemUtilTest, MountProcRunnerCommandIsCorrect)
 {
     FTRACE;
 
-    mProcRunner->SetCommandResponse("/bin/mount -t blah /dev/test /home/test",
+    mProcRunner->SetCommandResponse("/bin/mount -t fakefs /dev/test /home/test",
                                     "", 0);
     FileSystemUtil fsutil(*mProcRunner);
-    fsutil.Mount("blah", "/dev/test", "/home/test");
+    ASSERT_NO_THROW(fsutil.Mount("fakefs", "/dev/test", "/home/test"));
 }
 
 TEST_F(FileSystemUtilTest, MountThrowsEDeviceMount)
 {
     FTRACE;
 
-    mProcRunner->SetCommandResponse("/bin/mount -t blah /dev/test /home/test",
+    mProcRunner->SetCommandResponse("/bin/mount -t fakefs /dev/test /home/test",
                                     "", 1);
     FileSystemUtil fsutil(*mProcRunner);
-    ASSERT_THROW(fsutil.Mount("blah", "/dev/test", "/home/test"), 
+    ASSERT_THROW(fsutil.Mount("fakefs", "/dev/test", "/home/test"), 
                  EDeviceMount);
 }
 
@@ -81,7 +81,7 @@ TEST_F(FileSystemUtilTest, UnmountProcRunnerCommandIsCorrect)
     mProcRunner->SetCommandResponse("/bin/umount /home/test",
                                     "", 0);
     FileSystemUtil fsutil(*mProcRunner);
-    fsutil.Unmount("/home/test");
+    ASSERT_NO_THROW(fsutil.Unmount("/home/test"));
 
 }
 
