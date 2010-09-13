@@ -68,6 +68,7 @@ namespace Forte {};
 #include "Exception.h"
 #include "ExpDecayingAvg.h"
 #include "FileSystem.h"
+#include "FileSystemUtil.h"
 #include "Foreach.h"
 #include "FString.h"
 #include "FTrace.h"

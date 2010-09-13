@@ -46,6 +46,7 @@ SRCS =	\
 	Exception.cpp \
 	ExpDecayingAvg.cpp \
 	FileSystem.cpp \
+	FileSystemUtil.cpp \
 	FString.cpp \
 	FTime.cpp \
 	FTrace.cpp \
