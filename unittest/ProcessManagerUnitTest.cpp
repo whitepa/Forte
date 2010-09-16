@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(RunProcess)
     }
     catch (Exception &e)
     {
-        hlog(HLOG_ERR, "%s", e.what().c_str());
+        hlog(HLOG_ERR, "exception: %s", e.what().c_str());
         BOOST_FAIL("caught exception");
     }
 }
