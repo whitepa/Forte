@@ -17,7 +17,8 @@ INCLUDE = \
 	-I.. \
 	-I../mockobjects \
 	$(XML_INCLUDE) \
-	$(BOOST_INCLUDE) 
+	$(BOOST_INCLUDE) \
+	$(GTEST_INCLUDE)
 
 LIBS = \
 	-L$(TARGETDIR) \
@@ -30,13 +31,21 @@ LIBS = \
 	$(CURL_LIBS) \
 	$(OS_LIBS) \
 	$(XML_LIBS) \
-	$(BOOST_UNIT_TEST_LIB_STATIC)
+	$(BOOST_UNIT_TEST_LIB_STATIC) \
 
-SRCS = $(wildcard *.cpp)
 
-OBJS = $(SRCS:%.cpp=$(TARGETDIR)/%.o)
-PROGS = $(SRCS:%.cpp=$(TARGETDIR)/%)
+BSRCS = ContextPredicateUnitTest.cpp \
+	ContextUnitTest.cpp \
+	ExpDecayingAvgUnitTest.cpp \
+	FileSystemUnitTest.cpp \
+	ProcFileSystemUnitTest.cpp \
+	StateMachineUnitTest.cpp \
+	StateMachineUnitTest1.cpp
+GSRCS = FileSystemUtilUnitTest.cpp
 
+GPROGS = $(GSRCS:%.cpp=$(TARGETDIR)/%)
+BPROGS = $(BSRCS:%.cpp=$(TARGETDIR)/%)
+PROGS=$(GPROGS) $(BPROGS)
 
 # define LIBDIRS for distclean
 LIBDIRS=$(FORTE_DIR)
@@ -49,9 +58,19 @@ parent: FORCE
 	$(MAKE) -C ../
 
 # progs
-$(PROGS): $(TARGETDIR)/%: $(FORTE) $(FORTE_MOCK) %.cpp $(TARGETDIR)/%.o
+$(BPROGS): $(TARGETDIR)/%: $(FORTE) $(FORTE_MOCK) %.cpp $(TARGETDIR)/%.o
 	@echo "Building $@ ..."
-	$(CCC) -o $@ $@.o $(LIBS)
+	@$(CCC) -o $@ $@.o $(LIBS)
+
+$(TARGETDIR)/FileSystemUtilUnitTest: ../$(TARGETDIR)/FileSystemUtil.o FileSystemUtilUnitTest.cpp
+	echo "Building $@..."
+	$(CCC) FileSystemUtilUnitTest.cpp \
+	-o $@ \
+	../$(TARGETDIR)/FileSystemUtil.o \
+	../$(TARGETDIR)/FileSystem.o \
+	$(INCLUDE) \
+	$(GTEST_LIB) \
+	$(LIBS)
 
 # tail
 include $(BUILDROOT)/re/make/tail.mk

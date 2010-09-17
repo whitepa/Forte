@@ -29,6 +29,12 @@ void Forte::RunLoop::AddTimer(shared_ptr<Timer> &timer)
     Notify();
 }
 
+bool Forte::RunLoop::IsEmpty() const
+{
+    AutoUnlockMutex lock(mLock);
+    return (mSchedule.begin() == mSchedule.end());
+}
+
 void * Forte::RunLoop::run(void)
 {
     mThreadName.Format("runloop-%u", GetThreadID());
@@ -43,6 +49,8 @@ void * Forte::RunLoop::run(void)
         i = mSchedule.begin();
         if (i == mSchedule.end())
         {
+            // sleep in an unlocked scope
+            AutoLockMutex unlock(mLock);
             interruptibleSleep(Timespec::FromSeconds(60));
             continue;
         }
