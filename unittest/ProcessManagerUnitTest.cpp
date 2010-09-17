@@ -1,15 +1,15 @@
 
-#include "boost/test/unit_test.hpp"
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include "LogManager.h"
 #include "ProcessManager.h"
 #include "Process.h"
 
-using namespace boost::unit_test;
 using namespace Forte;
 
 LogManager logManager;
 
-BOOST_AUTO_TEST_CASE(RunProcess)
+TEST(ProcessManager, RunProcess)
 {
     try
     {
@@ -20,11 +20,11 @@ BOOST_AUTO_TEST_CASE(RunProcess)
         hlog(HLOG_INFO, "Run Process");
         ph->Run();
         hlog(HLOG_INFO, "Is Running");
-        BOOST_CHECK(ph->IsRunning());
+        ASSERT(ph->IsRunning());
         hlog(HLOG_INFO, "Wait");
         ph->Wait();
         hlog(HLOG_INFO, "Is Running");
-        BOOST_CHECK(!ph->IsRunning());
+        ASSERT_TRUE(!ph->IsRunning());
         hlog(HLOG_INFO, "Termination Type: %d", ph->GetProcessTerminationType());
         hlog(HLOG_INFO, "StatusCode: %d", ph->GetStatusCode());
         hlog(HLOG_INFO, "OutputString: %s", ph->GetOutputString().c_str());
@@ -36,62 +36,62 @@ BOOST_AUTO_TEST_CASE(RunProcess)
     }
 }
 
-BOOST_AUTO_TEST_CASE(Exceptions)
+TEST(ProcessManager, Exceptions)
 {
     hlog(HLOG_INFO, "Exceptions");
     ProcessManager pm;
     boost::shared_ptr<Process> ph = pm.CreateProcess("/bin/sleep 3");
-    BOOST_CHECK_THROW(ph->GetProcessTerminationType(), EProcessNotStarted);
-    BOOST_CHECK_THROW(ph->GetStatusCode(), EProcessNotStarted);    
-    BOOST_CHECK_THROW(ph->GetOutputString(), EProcessNotStarted);
+    ASSERT_THROW(ph->GetProcessTerminationType(), EProcessNotStarted);
+    ASSERT_THROW(ph->GetStatusCode(), EProcessNotStarted);    
+    ASSERT_THROW(ph->GetOutputString(), EProcessNotStarted);
 
-    BOOST_CHECK_THROW(ph->Wait(), EProcessNotRunning);
-    BOOST_CHECK_THROW(ph->Abandon(), EProcessNotRunning);
+    ASSERT_THROW(ph->Wait(), EProcessNotRunning);
+    ASSERT_THROW(ph->Abandon(), EProcessNotRunning);
 
     ph->Run();
-    BOOST_CHECK_THROW(ph->GetProcessTerminationType(), EProcessNotFinished);
-    BOOST_CHECK_THROW(ph->GetStatusCode(), EProcessNotFinished);    
-    BOOST_CHECK_THROW(ph->GetOutputString(), EProcessNotFinished);
+    ASSERT_THROW(ph->GetProcessTerminationType(), EProcessNotFinished);
+    ASSERT_THROW(ph->GetStatusCode(), EProcessNotFinished);    
+    ASSERT_THROW(ph->GetOutputString(), EProcessNotFinished);
 
-    BOOST_CHECK_THROW(ph->SetProcessCompleteCallback(NULL), EProcessStarted);
-    BOOST_CHECK_THROW(ph->SetCurrentWorkingDirectory(""), EProcessStarted);
-    BOOST_CHECK_THROW(ph->SetEnvironment(NULL), EProcessStarted);
-    BOOST_CHECK_THROW(ph->SetInputFilename(""), EProcessStarted);
-    BOOST_CHECK_THROW(ph->SetOutputFilename(""), EProcessStarted);
-    BOOST_CHECK_THROW(ph->Run(), EProcessStarted);
+    ASSERT_THROW(ph->SetProcessCompleteCallback(NULL), EProcessStarted);
+    ASSERT_THROW(ph->SetCurrentWorkingDirectory(""), EProcessStarted);
+    ASSERT_THROW(ph->SetEnvironment(NULL), EProcessStarted);
+    ASSERT_THROW(ph->SetInputFilename(""), EProcessStarted);
+    ASSERT_THROW(ph->SetOutputFilename(""), EProcessStarted);
+    ASSERT_THROW(ph->Run(), EProcessStarted);
 
     ph->Wait();
 
 }
 
-BOOST_AUTO_TEST_CASE(CancelProcess)
+TEST(ProcessManager, CancelProcess)
 {
     hlog(HLOG_INFO, "CancelProcess");
     ProcessManager pm;
     boost::shared_ptr<Process> ph = pm.CreateProcess("/bin/sleep 100");
     ph->Run();
-    BOOST_CHECK(ph->IsRunning());
+    ASSERT_TRUE(ph->IsRunning());
     ph->Signal(15);
     ph->Wait();
-    BOOST_CHECK(!ph->IsRunning());
+    ASSERT_TRUE(!ph->IsRunning());
     hlog(HLOG_INFO, "Termination Type: %d", ph->GetProcessTerminationType());
     hlog(HLOG_INFO, "StatusCode: %d", ph->GetStatusCode());
     hlog(HLOG_INFO, "OutputString: %s", ph->GetOutputString().c_str());
 }
 
 
-BOOST_AUTO_TEST_CASE(AbandonProcess)
+TEST(ProcessManager, AbandonProcess)
 {
     hlog(HLOG_INFO, "AbandonProcess");
     ProcessManager pm;
     boost::shared_ptr<Process> ph = pm.CreateProcess("/bin/sleep 100");
     ph->Run();
-    BOOST_CHECK(ph->IsRunning());
+    ASSERT_TRUE(ph->IsRunning());
     ph->Abandon();
-    BOOST_CHECK_THROW(ph->Wait(), EProcessHandleInvalid);
+    ASSERT_THROW(ph->Wait(), EProcessHandleInvalid);
 }
 
-BOOST_AUTO_TEST_CASE(FileIO)
+TEST(ProcessManager, FileIO)
 {
     hlog(HLOG_INFO, "FileIO");
     ProcessManager pm;
@@ -99,12 +99,12 @@ BOOST_AUTO_TEST_CASE(FileIO)
 
     // check that we propery throw when the input file doesn't exist
     ph->SetInputFilename("/foo/bar/baz");
-    BOOST_CHECK_THROW(ph->Run(), EProcessUnableToOpenInputFile);
+    ASSERT_THROW(ph->Run(), EProcessUnableToOpenInputFile);
 
     // check that we properly throw when the output file can't be created
     ph = pm.CreateProcess("/bin/sleep");
     ph->SetOutputFilename("/foo/bar/baz");
-    BOOST_CHECK_THROW(ph->Run(), EProcessUnableToOpenOutputFile);
+    ASSERT_THROW(ph->Run(), EProcessUnableToOpenOutputFile);
 
     hlog(HLOG_DEBUG, "getting ready to try some output");
 
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(FileIO)
     boost::shared_ptr<Process> ph2 = pm.CreateProcess("/bin/ls", "/", "temp.out");
     ph2->Run();
     ph2->Wait();
-    BOOST_CHECK(ph2->GetOutputString().find("proc") != string::npos);
+    ASSERT_TRUE(ph2->GetOutputString().find("proc") != string::npos);
 
     hlog(HLOG_DEBUG, "okay, now what happens when output is to /dev/null");
 
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(FileIO)
     boost::shared_ptr<Process> ph3 = pm.CreateProcess("/bin/ls", "/");
     ph3->Run();
     ph3->Wait();
-    BOOST_CHECK(ph3->GetOutputString().find("proc") == string::npos);
+    ASSERT_TRUE(ph3->GetOutputString().find("proc") == string::npos);
 
     hlog(HLOG_DEBUG, "reached end of function");
 
@@ -130,10 +130,10 @@ BOOST_AUTO_TEST_CASE(FileIO)
 void ProcessComplete(boost::shared_ptr<Process> ph)
 {
     hlog(HLOG_DEBUG, "process completion callback triggered");
-    BOOST_CHECK(ph->GetOutputString().find("proc") != string::npos);    
+    ASSERT_TRUE(ph->GetOutputString().find("proc") != string::npos);    
 }
 
-BOOST_AUTO_TEST_CASE(Callbacks)
+TEST(ProcessManager, Callbacks)
 {
     hlog(HLOG_INFO, "Callbacks");
     ProcessManager pm;
@@ -145,19 +145,19 @@ BOOST_AUTO_TEST_CASE(Callbacks)
 }
 
 ////Boost Unit init function ///////////////////////////////////////////////////
-test_suite*
-init_unit_test_suite(int argc, char* argv[])
-{
+// test_suite*
+// init_unit_test_suite(int argc, char* argv[])
+// {
 
-    logManager.SetLogMask("//stdout", HLOG_ALL);
-    logManager.BeginLogging("//stdout");
+//     logManager.SetLogMask("//stdout", HLOG_ALL);
+//     logManager.BeginLogging("//stdout");
 
-    // initialize everything here
+//     // initialize everything here
 
-    // the boost test monitor will catch our attempts to kill
-    // children, so we must set this option
-    setenv("BOOST_TEST_CATCH_SYSTEM_ERRORS", "no", 1);
+//     // the boost test monitor will catch our attempts to kill
+//     // children, so we must set this option
+//     setenv("BOOST_TEST_CATCH_SYSTEM_ERRORS", "no", 1);
 
-    return 0;
-}
+//     return 0;
+// }
 ////////////////////////////////////////////////////////////////////////////////
