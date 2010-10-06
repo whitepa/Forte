@@ -7,13 +7,17 @@
 typedef struct _scsi_idlun
 {
     int  info;    /* 4 separate bytes of info compacted into 1 int */
+                  // TODO: 1 byte/field => 256 values max for each field
+                  //       to find out, if that's as per T10 spec?
+
     int  host_unique_id; /* distinguishes adapter cards from same supplier */
 } scsi_idlun;
 // _____________________________________________________________________________
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(Exception, ESCSIUtil)
+    EXCEPTION_SUBCLASS(Exception, ESCSIDeviceOpenFailed)
+    EXCEPTION_SUBCLASS(Exception, ESCSIUtilioctlFailed)
 
     class SCSIUtil : public Object
     {

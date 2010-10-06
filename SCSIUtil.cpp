@@ -1,25 +1,28 @@
 #include <errno.h>
 #include <fcntl.h>
+#include <string.h>
 #include <sys/ioctl.h>
 #include <scsi/scsi.h>
 
 #include "FTrace.h"
 #include "SCSIUtil.h"
 
+#define  ERR_BUF_LEN    256
+
 using namespace Forte;
-// _____________________________________________________________________________
+// -----------------------------------------------------------------------------
 
 SCSIUtil::SCSIUtil(ProcRunner&  procRunner)
 : mProcRunner(procRunner)
 {
     FTRACE;
 }
-// _____________________________________________________________________________
+// -----------------------------------------------------------------------------
 
 SCSIUtil::~SCSIUtil(void)
 {
 }
-// _____________________________________________________________________________
+// -----------------------------------------------------------------------------
 
 void SCSIUtil::GetDeviceInfo(const FString&  devicePath,
                              int&            hostId,
@@ -30,21 +33,40 @@ void SCSIUtil::GetDeviceInfo(const FString&  devicePath,
     int  fd;
 
     if ((fd = open(devicePath.c_str(), O_RDONLY)) < 0)
-    {
-        /* Note that most SCSI commands require the O_RDWR flag to be set */
+    { /* Note that most SCSI commands require the O_RDWR flag to be set */
+
+        char  err_buf[ERR_BUF_LEN];
+
+        memset(err_buf, 0, ERR_BUF_LEN);
+        strerror_r(errno, err_buf, ERR_BUF_LEN-1);
+
         hlog(HLOG_ERROR, "Failed to open '%s' [errno: %d]",
-             devicePath.c_str(), errno);
-        throw ESCSIUtil(FStringFC(), "Failed to open '%s'", devicePath.c_str());
+                         devicePath.c_str(), errno);
+        hlog(HLOG_ERROR, "strerror: %s", err_buf);
+
+        throw ESCSIDeviceOpenFailed(FStringFC(), "Failed to open '%s'",
+                                                 devicePath.c_str());
     }
 
     scsi_idlun  s;
 
     if (ioctl(fd, SCSI_IOCTL_GET_IDLUN, &s) < 0)
     {
-        hlog(HLOG_ERROR, "ioctl(SCSI_IOCTL_GET_IDLUN) failed ... [errno: %d]", errno);
-        throw ESCSIUtil(FStringFC(),
-                        "ioctl(SCSI_IOCTL_GET_IDLUN) failed ... [errno: %d]",
-                        errno);
+        close(fd);
+
+        char  err_buf[ERR_BUF_LEN];
+
+        memset(err_buf, 0, ERR_BUF_LEN);
+        strerror_r(errno, err_buf, ERR_BUF_LEN-1);
+
+        hlog(HLOG_ERROR, "ioctl(SCSI_IOCTL_GET_IDLUN) failed ... [errno: %d]",
+                         errno);
+        hlog(HLOG_ERROR, "strerror: %s", err_buf);
+
+        throw ESCSIUtilioctlFailed
+              (FStringFC(),
+               "ioctl(SCSI_IOCTL_GET_IDLUN) failed ... [errno: %d]",
+               errno);
     }
 
     hostId = (s.info >> 24) & 0x000000FF,
@@ -59,4 +81,4 @@ void SCSIUtil::GetDeviceInfo(const FString&  devicePath,
     close(fd);
 
 } /* SCSIUtil::GetDeviceInfo() */
-// _____________________________________________________________________________
+// -----------------------------------------------------------------------------
