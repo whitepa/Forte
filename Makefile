@@ -65,6 +65,7 @@ SRCS =	\
 	ReceiverThread.cpp \
 	RunLoop.cpp \
 	RWLock.cpp \
+	SCSIUtil.cpp \
 	SecureEnvelope.cpp \
 	SecureString.cpp \
 	ServerMain.cpp \
