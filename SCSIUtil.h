@@ -16,8 +16,10 @@ typedef struct _scsi_idlun
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(Exception, ESCSIUtilDeviceOpenFailed)
-    EXCEPTION_SUBCLASS(Exception, ESCSIUtilioctlFailed)
+    EXCEPTION_CLASS(ESCSIUtil);
+    EXCEPTION_SUBCLASS(ESCSIUtil, ESCSIUtilDeviceOpenFailed)
+    EXCEPTION_SUBCLASS(ESCSIUtil, ESCSIUtilioctlFailed)
+    EXCEPTION_SUBCLASS(ESCSIUtil, ESCSIScanFailed);
 
     class SCSIUtil : public Object
     {
@@ -35,6 +37,13 @@ namespace Forte
         void GetDeviceInfo(const FString& devicePath,
                            int&           hostId,
                            int&           lunId);
+
+        /**
+         * Re-scans the SCSI host.
+         * @param hostId     the host id to scan
+         * @throws ESCSIScanFailed
+         */
+        void RescanHost(int hostId);
 
     protected:
         ProcRunner&  mProcRunner;

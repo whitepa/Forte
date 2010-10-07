@@ -82,3 +82,19 @@ void SCSIUtil::GetDeviceInfo(const FString&  devicePath,
 
 } /* SCSIUtil::GetDeviceInfo() */
 // -----------------------------------------------------------------------------
+
+void SCSIUtil::RescanHost(int hostId)
+{
+    FTRACE2("%i", hostId);
+
+    FString output;
+    FString cmd(FStringFC(), 
+                "/bin/echo - - - > /sys/class/scsi_host/host%i/scan", hostId);
+    if (mProcRunner.Run(cmd, "", &output, PROC_RUNNER_NO_TIMEOUT) != 0)
+    {
+        hlog(HLOG_ERR, "Unable to rescan the scsi host %i (%s)\n%s",
+             hostId, cmd.c_str(), output.c_str());
+        throw ESCSIScanFailed();
+    }
+}
+// -----------------------------------------------------------------------------
