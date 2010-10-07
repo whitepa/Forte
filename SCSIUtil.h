@@ -16,7 +16,7 @@ typedef struct _scsi_idlun
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(Exception, ESCSIDeviceOpenFailed)
+    EXCEPTION_SUBCLASS(Exception, ESCSIUtilDeviceOpenFailed)
     EXCEPTION_SUBCLASS(Exception, ESCSIUtilioctlFailed)
 
     class SCSIUtil : public Object
@@ -30,7 +30,7 @@ namespace Forte
          * @param[in]  devicePath   path to the device (e.g., /dev/sda)
          * @param[out] hostId       host-id for the given device
          * @param[out] lunId        lun-id for the given device
-         * @throws ESCSIUtil
+         * @throws ESCSIUtilDeviceOpenFailed, ESCSIUtilioctlFailed
          */
         void GetDeviceInfo(const FString& devicePath,
                            int&           hostId,

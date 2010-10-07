@@ -44,8 +44,8 @@ void SCSIUtil::GetDeviceInfo(const FString&  devicePath,
                          devicePath.c_str(), errno);
         hlog(HLOG_ERROR, "strerror: %s", err_buf);
 
-        throw ESCSIDeviceOpenFailed(FStringFC(), "Failed to open '%s'",
-                                                 devicePath.c_str());
+        throw ESCSIUtilDeviceOpenFailed(FStringFC(), "Failed to open '%s'",
+                                                     devicePath.c_str());
     }
 
     scsi_idlun  s;
