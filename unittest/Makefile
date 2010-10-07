@@ -39,8 +39,11 @@ BSRCS = ContextPredicateUnitTest.cpp \
 	ExpDecayingAvgUnitTest.cpp \
 	FileSystemUnitTest.cpp \
 	ProcFileSystemUnitTest.cpp \
-	StateMachineUnitTest.cpp \
-	StateMachineUnitTest1.cpp
+	StateMachineUnitTest1.cpp \
+	StateMachineUnitTest2.cpp \
+	StateMachineUnitTest3.cpp \
+	StateMachineUnitTest4.cpp \
+	StateMachineUnitTest5.cpp
 GSRCS = FileSystemUtilUnitTest.cpp
 
 GPROGS = $(GSRCS:%.cpp=$(TARGETDIR)/%)
