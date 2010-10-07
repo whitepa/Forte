@@ -104,7 +104,19 @@ void XMLBlob::stripControls(FString &dest,
         dest.assign("");
         return;
     }
+
+    // By default all C programs have the "C" locale set, 
+    // which is a rather neutral locale with minimal locale information.
+    // We need to set the locale to the default system locale which
+    // for us is usually "en_US.UTF-8". The will make sure that we 
+    // can appropiately decode UTF-8 strings.
+    setlocale(LC_ALL,"");
+
     int wc_len = mbstowcs(NULL,src,0);
+    if (wc_len == -1)
+    {
+        throw EXMLBlobStripControlsFailed("mbstowcs call failed");
+    }
     wchar_t *wc_src = new wchar_t[wc_len+1];
     wchar_t *wc_dest = new wchar_t[wc_len+1];
     mbstowcs(wc_src, src, wc_len);

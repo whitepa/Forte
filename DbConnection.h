@@ -20,8 +20,11 @@ namespace Forte
         virtual ~DbConnection();
 
         // initialization
-        virtual bool Init(const FString& db, const FString& user, const FString& pass,
-                          const FString& host = "localhost", const FString& socket = "",
+        virtual bool Init(const FString& db, 
+                          const FString& user, 
+                          const FString& pass,
+                          const FString& host = "localhost", 
+                          const FString& socket = "",
                           unsigned int retries = 3);
 
         // connection management

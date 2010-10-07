@@ -149,6 +149,7 @@ namespace Forte
             if (sLogManager) return *sLogManager; else throw EEmptyReference("no log manager instance");
         }
 
+        void InitGlobal(void);
         void BeginLogging(); // start logging on stderr
         void BeginLogging(const char *path);  // log to a file, can be '//stdout' or '//stderr'
         void BeginLogging(const char *path, int mask);  // log to a file, can be '//stdout' or '//stderr'

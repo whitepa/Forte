@@ -235,6 +235,13 @@ LogManager::~LogManager() {
     EndLogging();
 }
 
+void LogManager::InitGlobal(void)
+{
+    if (!sLogManager) {
+        sLogManager = this;
+    }
+}
+
 void LogManager::BeginLogging()
 {
     sLogManager = this;

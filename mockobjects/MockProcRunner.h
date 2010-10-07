@@ -1,9 +1,9 @@
 #ifndef _MockProcRunner_h
 #define _MockProcRunner_h
 
-#include "Forte.h"
 #include "ProcRunner.h"
 #include "Exception.h"
+#include "LogManager.h"
 
 namespace Forte
 {

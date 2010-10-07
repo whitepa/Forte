@@ -4,6 +4,7 @@
 #ifndef FORTE_NO_XML
 
 #include "FString.h"
+#include "Exception.h"
 #include <libxml/parser.h>
 
 #if !defined(LIBXML_TREE_ENABLED) || !defined(LIBXML_OUTPUT_ENABLED)
@@ -15,6 +16,8 @@
 ///
 namespace Forte
 {
+    EXCEPTION_SUBCLASS(Exception, EXMLBlobStripControlsFailed);
+
     class XMLBlob
     {
     public:
