@@ -350,7 +350,8 @@ int ProcRunner::Run(const FString& command,
 }
 
 
-int ProcRunner::RunBackground(const FString& command, const FString& cwd, const StrStrMap *env)
+int ProcRunner::RunBackground(const FString& command, const FString& cwd, 
+                              const StrStrMap *env, bool detach, int *pidReturn)
 {
     if (cwd.empty()) hlog(HLOG_DEBUG3, "run_background(%s)", command.c_str());
     else hlog(HLOG_DEBUG3, "run_background(%s) [in %s]", command.c_str(), cwd.c_str());
@@ -365,8 +366,11 @@ int ProcRunner::RunBackground(const FString& command, const FString& cwd, const 
     {
         // child
 
-        // fork into background
-        daemon(1, 0);
+        if (detach) 
+        {
+            // fork into background
+            daemon(1, 0);
+        }
 
         // vars
         unsigned i = 0;
@@ -454,12 +458,27 @@ int ProcRunner::RunBackground(const FString& command, const FString& cwd, const 
         return ret;
     }
 
-    // wait for child to fork into background
-    if (waitpid(pid, &status, 0) == -1)
+    if (detach) 
     {
-        stmp.Format("Unable to verify status of command: %s", command.c_str());
-        hlog(HLOG_ERR, "%s", stmp.c_str());
-        return ret;
+        // wait for child to fork into background
+        if (waitpid(pid, &status, 0) == -1)
+        {
+            stmp.Format("Unable to verify status of command: %s", 
+                        command.c_str());
+            hlog(HLOG_ERR, "%s", stmp.c_str());
+            return ret;
+        }
+        
+        // the pid we have will no longer be around at this point
+        // (daemon fork() will create new process id)
+        if (pidReturn != NULL)
+        {
+            *pidReturn = 0;
+        }
+    }
+    else if (pidReturn != NULL)
+    {
+        *pidReturn = pid;
     }
 
     // done
