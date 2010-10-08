@@ -39,6 +39,8 @@
 #define HLOG_ERROR       HLOG_ERR
 #define HLOG_DEBUG0      HLOG_DEBUG
 
+#define HLOG_ERRNO_BUF_LEN    256
+
 namespace Forte
 {
     EXCEPTION_SUBCLASS(Exception, ELog);
@@ -201,5 +203,8 @@ namespace Forte
 
 void _hlog(const char *func, const char *file, int line, int level, const char * fmt, ...) __attribute__((format(printf, 5, 6)));
 #define hlog(level, fmt...) _hlog(__FUNCTION__, __FILE__, __LINE__, level, fmt)
+
+void _hlog_errno(const char* func, const char* file, int line, int level);
+#define hlog_errno(level)  _hlog_errno(__FUNCTION__, __FILE__, __LINE__, level)
 
 #endif
