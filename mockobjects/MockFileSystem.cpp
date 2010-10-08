@@ -91,7 +91,7 @@ StrStrMap* MockFileSystem::getCopiedFileMap()
     return &m_copiedFiles;
 }
 
-bool MockFileSystem::file_exists(const FString& path)
+bool MockFileSystem::FileExists(const FString& path)
 {
     return m_fileExistsResultMap[path];
 }

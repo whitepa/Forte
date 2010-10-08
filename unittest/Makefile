@@ -40,7 +40,8 @@ BSRCS = ContextPredicateUnitTest.cpp \
 	FileSystemUnitTest.cpp \
 	ProcFileSystemUnitTest.cpp \
 	StateMachineUnitTest.cpp \
-	StateMachineUnitTest1.cpp
+	StateMachineUnitTest1.cpp \
+	SCSIUtilUnitTest.cpp
 GSRCS = FileSystemUtilUnitTest.cpp
 
 GPROGS = $(GSRCS:%.cpp=$(TARGETDIR)/%)
@@ -72,6 +73,14 @@ $(TARGETDIR)/FileSystemUtilUnitTest: ../$(TARGETDIR)/FileSystemUtil.o FileSystem
 	$(GTEST_LIB) \
 	$(LIBS)
 
+$(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp
+	echo "Building $@..."
+	$(CCC) SCSIUtilUnitTest.cpp \
+	-o $(TARGETDIR)/SCSIUtilUnitTest \
+	$(SCALE_SERVICE_CLIENT_LIBS)  \
+	$(INCLUDE) \
+	$(GTEST_LIB) \
+	$(LIBS)
 # tail
 include $(BUILDROOT)/re/make/tail.mk
 

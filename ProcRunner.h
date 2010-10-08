@@ -30,8 +30,10 @@ namespace Forte
                         const FString &infile = "/dev/null");
 
         virtual int RunBackground(const FString& command, 
-                                   const FString& cwd = "",
-                                   const StrStrMap *env = NULL);
+                                  const FString& cwd = "",
+                                  const StrStrMap *env = NULL,
+                                  bool detach = true,
+                                  int *pidReturn = NULL);
 
         virtual FString ReadPipe(const FString& command, int *exitval = NULL);
 
