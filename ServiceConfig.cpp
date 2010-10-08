@@ -6,16 +6,30 @@ using namespace Forte;
 
 ServiceConfig::ServiceConfig() {
 }
-ServiceConfig::ServiceConfig(const char *configFile) {
-    ReadConfigFile(configFile);
+ServiceConfig::ServiceConfig(
+    const char *configFile,
+    ServiceConfig::ServiceConfigFileType type) {
+    ReadConfigFile(configFile, type);
 }
 
-void ServiceConfig::ReadConfigFile(const char *configFile) {
+void ServiceConfig::ReadConfigFile(
+    const char *configFile, 
+    ServiceConfig::ServiceConfigFileType type) {
     AutoUnlockMutex lock(mMutex);
     // load the file (INFO format)
     try
     {
-        boost::property_tree::read_info(configFile, mPTree);
+        switch (type)
+        {
+        case ServiceConfig::INI:
+            boost::property_tree::read_ini(configFile, mPTree);
+            break;
+        case ServiceConfig::INFO:
+            boost::property_tree::read_info(configFile, mPTree);
+            break;
+        default:
+            throw EServiceConfig("invalid config file type specified");
+        }
     }
     catch (boost::property_tree::ptree_error &e)
     {
