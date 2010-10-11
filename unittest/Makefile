@@ -73,12 +73,10 @@ $(TARGETDIR)/FileSystemUtilUnitTest: ../$(TARGETDIR)/FileSystemUtil.o FileSystem
 	$(GTEST_LIB) \
 	$(LIBS)
 
-$(TARGETDIR)/ProcessManagerUnitTest: ../$(TARGETDIR)/FileSystemUtil.o FileSystemUtilUnitTest.cpp
+$(TARGETDIR)/ProcessManagerUnitTest: ProcessManagerUnitTest.cpp
 	echo "Building $@..."
-	$(CCC) FileSystemUtilUnitTest.cpp \
+	$(CCC) ProcessManagerUnitTest.cpp \
 	-o $@ \
-	../$(TARGETDIR)/FileSystemUtil.o \
-	../$(TARGETDIR)/FileSystem.o \
 	$(INCLUDE) \
 	$(GTEST_LIB) \
 	$(LIBS)
