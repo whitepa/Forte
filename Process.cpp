@@ -48,9 +48,8 @@ Forte::Process::Process(const boost::shared_ptr<ProcessManager> &mgr,
     mGUID(guid),
     mChildPid(-1),
     mOutputString(""),
-    mStarted(false),
-    mIsRunning(false),
-    mFinishedCond(mFinishedLock)
+    mState(STATE_READY),
+    mWaitCond(mWaitLock)
 {
     // copy the environment entries
     if(environment) 
@@ -63,7 +62,9 @@ Forte::Process::~Process()
 {
     try
     {
-        if (mIsRunning)
+        if (mState == STATE_STARTING ||
+            mState == STATE_RUNNING ||
+            mState == STATE_STOPPED)
             Abandon();
     }
     catch (Exception &e)
@@ -74,7 +75,7 @@ Forte::Process::~Process()
 
 void Forte::Process::SetProcessCompleteCallback(ProcessCompleteCallback processCompleteCallback)
 {
-    if(mStarted) 
+    if(mState != STATE_READY) 
     {
         hlog(HLOG_ERR, "tried setting the process complete callback after the process had been started");
         throw EProcessStarted();
@@ -84,7 +85,7 @@ void Forte::Process::SetProcessCompleteCallback(ProcessCompleteCallback processC
 
 void Forte::Process::SetCurrentWorkingDirectory(const FString &cwd) 
 {
-    if(mStarted) 
+    if(mState != STATE_READY) 
     {
         hlog(HLOG_ERR, "tried setting the current working directory after the process had been started");
         throw EProcessStarted();
@@ -94,7 +95,7 @@ void Forte::Process::SetCurrentWorkingDirectory(const FString &cwd)
 
 void Forte::Process::SetEnvironment(const StrStrMap *env)
 {
-    if(mStarted) 
+    if(mState != STATE_READY)
     {
         hlog(HLOG_ERR, "tried setting the environment after the process had been started");
         throw EProcessStarted();
@@ -108,7 +109,7 @@ void Forte::Process::SetEnvironment(const StrStrMap *env)
 
 void Forte::Process::SetInputFilename(const FString &infile)
 {
-    if(mStarted) 
+    if(mState != STATE_READY)
     {
         hlog(HLOG_ERR, "tried setting the input filename after the process had been started");
         throw EProcessStarted();
@@ -118,7 +119,7 @@ void Forte::Process::SetInputFilename(const FString &infile)
 
 void Forte::Process::SetOutputFilename(const FString &outfile)
 {
-    if(mStarted) 
+    if(mState != STATE_READY)
     {
         hlog(HLOG_ERR, "tried setting the output filename after the process had been started");
         throw EProcessStarted();
@@ -138,17 +139,50 @@ boost::shared_ptr<ProcessManager> Forte::Process::GetProcessManager(void)
 
 pid_t Forte::Process::Run()
 {
-    // send the control PDU telling the process to start
     if (!mManagementChannel)
         throw EProcessHandleInvalid();
+
+    // send the prepare PDU, with full command line info, etc
+    PDU preparePDU(ProcessOpPrepare, sizeof(ProcessPreparePDU));
+    ProcessPreparePDU *prepare = reinterpret_cast<ProcessPreparePDU*>(preparePDU.payload);
+
+    // \TODO safe copy of these strings, ensure null termination,
+    // disallow truncation (throw exception if the source strings are
+    // too long)
+    strncpy(prepare->cmdline, mCommand.c_str(), sizeof(prepare->cmdline));
+    strncpy(prepare->cwd, mCurrentWorkingDirectory.c_str(), sizeof(prepare->cwd));
+
+    mManagementChannel->SendPDU(preparePDU);
+
+    // send the control PDU telling the process to start
     PDU pdu(ProcessOpControlReq, sizeof(ProcessControlReqPDU));
     ProcessControlReqPDU *control = reinterpret_cast<ProcessControlReqPDU*>(pdu.payload);
     control->control = ProcessControlStart;
     mManagementChannel->SendPDU(pdu);
-    // \TODO need to implement synchronous call where we wait to make
-    // sure the process starts OK, and if not we throw an exception
-    // right here.
+
+    setState(STATE_STARTING);
+
+    // wait for the process to change state
+    AutoUnlockMutex lock(mWaitLock);
+    while (mState == STATE_STARTING)
+        mWaitCond.TimedWait(1);
+
+    if (mState == STATE_ERROR)
+        // \TODO throw specific error
+        throw EProcess("Failed to start");
+    else if (mState == STATE_RUNNING)
+        hlog(HLOG_DEBUG, "process started");
+    else
+        throw EProcessUnknownState();
+
     return 0;
+}
+
+void Forte::Process::setState(int state)
+{
+    AutoUnlockMutex lock(mWaitLock);
+    mState = state;
+    mWaitCond.Broadcast();
 }
 
 void Forte::Process::startMonitor()
@@ -195,7 +229,7 @@ void Forte::Process::startMonitor()
         close(childfd);
         // add a PDUPeer to the PeerSet owned by the ProcessManager
         shared_ptr<ProcessManager> pm(mProcessManagerPtr.lock());
-        pm->addPeer(parentfd);
+        mManagementChannel = pm->addPeer(parentfd);
         parentfd.Release();
     }
 }
@@ -365,95 +399,91 @@ void Forte::Process::startMonitor()
 
 unsigned int Forte::Process::Wait()
 {
-    if(!mStarted) 
+    if(mState == STATE_READY) 
     {
         hlog(HLOG_ERR, "tried waiting on a process that has not been started");
         throw EProcessNotRunning();
     }
 
     hlog(HLOG_DEBUG, "waiting for process to end (%s)", mGUID.c_str());
-    AutoUnlockMutex lock(mFinishedLock);
-    if(!mIsRunning) 
+    AutoUnlockMutex lock(mWaitLock);
+    while (!isInTerminalState())
     {
-        return mStatusCode;
+        // \TODO need a wait which honors the current thread shutdown
+        // status. Implement this via a static
+        // Thread::interruptibleSleep() which can identify the correct
+        // Thread object to call interruptibleSleep() on.  Then make a
+        // ThreadCondition::InterruptibleWait() which works with that.
+        mWaitCond.Wait();
     }
-    mFinishedCond.Wait();
-    // \TODO why did we get woken up? are there cases when we would need to throw?
-    // (process is abandoned, for example)
     return mStatusCode;
 }
 
 void Forte::Process::notifyWaiters()
 {
-    AutoUnlockMutex lock(mFinishedLock);
-    mFinishedCond.Broadcast();
+    AutoUnlockMutex lock(mWaitLock);
+    mWaitCond.Broadcast();
 }
 
 void Forte::Process::Abandon()
 {
-    if(!mIsRunning)
+    if(!isInActiveState())
     {
-        hlog(HLOG_ERR, "tried abandoning a process that is not current running");
+        hlog(HLOG_ERR, "tried abandoning a process that is not currently running");
         throw EProcessNotRunning();
     }
 
     hlog(HLOG_DEBUG, "abandoning process %u (%s)", mChildPid, mGUID.c_str());
     
-    GetProcessManager()->abandonProcess(mGUID);
+    GetProcessManager()->abandonProcess(mManagementChannel->GetFD());
 
     // close the monitor fd
     if (mManagementChannel)
         while (close(mManagementChannel->GetFD()) == -1 && errno == EINTR);
     
-    
-    // this might be called on another thread, in which
-    // case we need to broadcast to let anyone
-    // know that might be waiting for a finish
-    notifyWaiters();
+    setState(STATE_ABANDONED);
 }
 
 void Forte::Process::Signal(int signum)
 {
+    // \TODO implement me!
     throw EUnimplemented();
 }
 
 bool Forte::Process::IsRunning()
 {
-    return mIsRunning;
-}
-
-void Forte::Process::setIsRunning(bool running)
-{
-    bool prevState = mIsRunning;
-    mIsRunning = running;
-    if(prevState && !mIsRunning) 
-    {
-        // we have gone from a running state to a non-running state
-        // we must be finished!
-        hlog(HLOG_DEBUG, "process has terminated %u (%s)", mChildPid, mGUID.c_str());		
-		
-        notifyWaiters();
-    }
+    return isInRunningState();
 }
 
 unsigned int Forte::Process::GetStatusCode() 
 { 
-    if(!mStarted) {
+    if(mState == STATE_READY)
+    {
         hlog(HLOG_ERR, "tried grabbing the status code from a process that hasn't been started");
         throw EProcessNotStarted();
-    } else if(mIsRunning) {
+    }
+    else if (!isInTerminalState())
+    {
         hlog(HLOG_ERR, "tried grabbing the status code from a process that hasn't completed yet");
         throw EProcessNotFinished();
     }
-    return mStatusCode; 
+    else if (mState != STATE_EXITED)
+    {
+        hlog(HLOG_ERR, "tried grabbing the status code from a process that didn't exit cleanly");
+        throw EProcessNoExit();        
+    }
+    return mStatusCode;
 }
 
 Forte::Process::ProcessTerminationType Forte::Process::GetProcessTerminationType() 
 { 
-    if(!mStarted) {
+    if(mState == STATE_READY)
+    {
         hlog(HLOG_ERR, "tried grabbing the termination type from a process that hasn't been started");
         throw EProcessNotStarted();
-    } else if(mIsRunning) {
+    }
+    else if (!isInTerminalState())
+    {
         hlog(HLOG_ERR, "tried grabbing the termination type from a process that hasn't completed yet");
         throw EProcessNotFinished();
     }
@@ -462,10 +492,13 @@ Forte::Process::ProcessTerminationType Forte::Process::GetProcessTerminationType
 
 FString Forte::Process::GetOutputString()
 {
-    if(!mStarted) {
+    if(mState == STATE_READY)
+    {
         hlog(HLOG_ERR, "tried grabbing the output from a process that hasn't been started");
         throw EProcessNotStarted();
-    } else if(mIsRunning) {
+    }
+    else if(!isInTerminalState())
+    {
         hlog(HLOG_ERR, "tried grabbing the output from a process that hasn't completed yet");
         throw EProcessNotFinished();
     }
@@ -503,3 +536,66 @@ FString Forte::Process::GetOutputString()
     return mOutputString;
 }
 
+void Forte::Process::handlePDU(PDUPeer &peer)
+{
+    FTRACE;
+    PDU pdu;
+    while (peer.RecvPDU(pdu))
+    {
+        hlog(HLOG_DEBUG, "PDU opcode %d", pdu.opcode);
+        switch (pdu.opcode)
+        {
+        case ProcessOpControlRes:
+            handleControlRes(peer, pdu);
+            break;
+        case ProcessOpStatus:
+            handleStatus(peer, pdu);
+            break;
+        default:
+            hlog(HLOG_ERR, "unexpected PDU with opcode %d", pdu.opcode);
+            break;
+        }
+    }
+}
+
+void Forte::Process::handleControlRes(PDUPeer &peer, const PDU &pdu)
+{
+    FTRACE;
+    const ProcessControlResPDU *resPDU = reinterpret_cast<const ProcessControlResPDU*>(pdu.payload);
+    hlog(HLOG_DEBUG, "got back result code %d", resPDU->result);
+    if (resPDU->result == ProcessSuccess)
+        setState(STATE_RUNNING);
+    else
+    {
+        // \TODO set specific error code, allowing Run() to throw specific exception
+        setState(STATE_ERROR);
+    }
+}
+
+void Forte::Process::handleStatus(PDUPeer &peer, const PDU &pdu)
+{
+    FTRACE;
+    const ProcessStatusPDU *status = reinterpret_cast<const ProcessStatusPDU*>(pdu.payload);
+    hlog(HLOG_DEBUG, "got back status type %d code %d", status->type, status->statusCode);
+    switch (status->type)
+    {
+    case ProcessStatusStarted:
+        setState(STATE_RUNNING);
+        break;
+    case ProcessStatusError:
+        setState(STATE_ERROR);
+        break;
+    case ProcessStatusExited:
+        setState(STATE_EXITED);
+        break;
+    case ProcessStatusKilled:
+        setState(STATE_KILLED);
+        break;
+    case ProcessStatusStopped:
+        setState(STATE_STOPPED);
+        break;
+    default:
+        hlog(HLOG_ERR, "unknown status type!");
+        break;
+    }
+}

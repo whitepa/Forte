@@ -37,6 +37,10 @@ Forte::ProcessManager::ProcessManager() :
         hlog(HLOG_INFO, "FORTE_PROCMON is set; using alternate procmon at path '%s'", procmon);
         mProcmonPath.assign(procmon);
     }
+
+    mPeerSet.SetupEPoll();
+    mPeerSet.SetProcessPDUCallback(boost::bind(&ProcessManager::pduCallback, this, _1));
+
     initialized();
 }
 
@@ -68,14 +72,14 @@ Forte::ProcessManager::CreateProcess(const FString &command,
                     outputFilename,
                     inputFilename,
                     environment));
-    mProcesses[guid] = ph;
     ph->startMonitor();
+    mProcesses[ph->getManagementFD()] = ph;
     return ph;
 }
 
-void Forte::ProcessManager::abandonProcess(const FString &guid)
+void Forte::ProcessManager::abandonProcess(const int fd)
 {
-    mProcesses.erase(guid);
+    mProcesses.erase(fd);
     // OLD
     // \TODO abandoning a process must prevent a zombie process from
     // forming when we fail to call wait() on its PID when it dies.
@@ -96,14 +100,41 @@ void Forte::ProcessManager::abandonProcess(const FString &guid)
     // }
 }
 
-void Forte::ProcessManager::addPeer(int fd)
+boost::shared_ptr<Forte::PDUPeer> Forte::ProcessManager::addPeer(int fd)
 {
     hlog(HLOG_DEBUG, "adding ProcessMonitor peer on fd %d", fd);
-    mPeerSet.PeerCreate(fd);
+    return mPeerSet.PeerCreate(fd);
+}
+
+void Forte::ProcessManager::pduCallback(PDUPeer &peer)
+{
+    FTRACE;
+    // route this to the correct Process object
+    int fd = peer.GetFD();
+
+    ProcessMap::iterator i;
+    if ((i = mProcesses.find(fd)) == mProcesses.end())
+        throw EProcessManagerInvalidPeer();
+    Process &p(*((*i).second));
+    p.handlePDU(peer);
 }
 
 void* Forte::ProcessManager::run(void)
 {
+    while (!mThreadShutdown)
+    {
+        try
+        {
+            // 500ms poll timeout
+            mPeerSet.Poll(500);
+        }
+        catch (Exception &e)
+        {
+            hlog(HLOG_ERR, "caught exception: %s", e.what().c_str());
+            sleep(1); // prevent tight loops
+        }
+    }
+    return NULL;
     // OLD
     // mThreadName.Format("processmanager-%u", GetThreadID());
     // hlog(HLOG_DEBUG, "Starting ProcessManager runloop");

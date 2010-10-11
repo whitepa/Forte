@@ -20,6 +20,8 @@ namespace Forte
     EXCEPTION_CLASS(EProcessManager);
     EXCEPTION_SUBCLASS2(EProcessManager, EProcessManagerUnableToFork,
                         "Unable to fork a child process");
+    EXCEPTION_SUBCLASS2(EProcessManager, EProcessManagerInvalidPeer,
+                        "Received message from an invalid peer");
 
     /**
      * ProcessManager provides for the creation and management of
@@ -35,7 +37,8 @@ namespace Forte
         static const int MAX_RUNNING_PROCS;
         static const int PDU_BUFFER_SIZE;
 
-        typedef std::map<FString, boost::shared_ptr<Process> > ProcessMap;
+//        typedef std::map<FString, boost::shared_ptr<Process> > ProcessMap;
+        typedef std::map<int, boost::shared_ptr<Process> > ProcessMap;
         // typedef std::map<pid_t, boost::shared_ptr<Process> > RunningProcessMap;
         // typedef std::pair<pid_t, boost::shared_ptr<Process> > ProcessPair;
 
@@ -103,8 +106,10 @@ namespace Forte
         /**
          * helper function called by Process objects to notify
          * the ProcessManager that a child process is being abandoned
+         *
+         * @param fd file descriptor connected to the process being abandoned
          */
-        virtual void abandonProcess(const FString &guid);
+        virtual void abandonProcess(const int fd);
 
         /**
          * the main runloop for the ProcessManager thread monitoring
@@ -119,8 +124,18 @@ namespace Forte
          * associated file descriptor.
          * 
          * @param fd 
+         * @return shared pointer to the newly created PDU Peer
          */
-        virtual void addPeer(int fd);
+        virtual boost::shared_ptr<Forte::PDUPeer> addPeer(int fd);
+
+        /** 
+         * This function gets called whenever a PDU is received on any
+         * peer.
+         * 
+         * @param peer The peer we received the PDU from.
+         * @param pdu The PDU itself.
+         */
+        void pduCallback(PDUPeer &peer);
 
         /**
          * a map of processes, indexed by process GUID

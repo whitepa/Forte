@@ -39,6 +39,8 @@ namespace Forte
                         "method called on a process that has not been started");
     EXCEPTION_SUBCLASS2(EProcess, EProcessNotFinished,
                         "method called on a process that is not finished yet");
+    EXCEPTION_SUBCLASS2(EProcess, EProcessNoExit,
+                        "Process did not exit");
     EXCEPTION_SUBCLASS2(EProcess, EProcessUnableToDuplicateInputFD,
                         "Unable to duplicate Input File Descriptor");
     EXCEPTION_SUBCLASS2(EProcess, EProcessUnableToDuplicateOutputFD,
@@ -51,6 +53,8 @@ namespace Forte
                         "Process handle is invalid");
     EXCEPTION_SUBCLASS2(EProcess, EProcessManagementProcFailed,
                         "An error occurred in the management process");
+    EXCEPTION_SUBCLASS2(EProcess, EProcessUnknownState,
+                        "Process is in unknown state");
     
 
     /**
@@ -317,6 +321,70 @@ namespace Forte
          */
         void setProcessTerminationType(ProcessTerminationType type) { mProcessTerminationType = type; }
 
+        /** 
+         * Set the internal state of the process handle.  This will
+         * wake up anyone waiting for a state change.
+         * 
+         * @param state 
+         */
+        void setState(int state);
+
+        bool isInTerminalState(void) { 
+            return (mState == STATE_ERROR ||
+                    mState == STATE_EXITED ||
+                    mState == STATE_KILLED);
+        }
+
+        /** 
+         * Return true if the process is in an 'active' state, where
+         * active is defined as the process possibly existing
+         * (possibly because it may not have been created yet if in
+         * STATE_STARTING, but it will be created shortly).
+         * 
+         * @return bool
+         */
+        bool isInActiveState(void) { 
+            return (mState == STATE_STARTING ||
+                    mState == STATE_RUNNING ||
+                    mState == STATE_STOPPED);
+        }
+
+        /** 
+         * Return true if the process is definitively in a 'running'
+         * state, where running is defined as the process has already
+         * started, and has not yet terminated in any way.
+         * 
+         * @return bool
+         */
+        bool isInRunningState(void) { 
+            return (mState == STATE_RUNNING ||
+                    mState == STATE_STOPPED);
+        }
+
+        /** 
+         * Return the file descriptor of the connection to the monitor
+         * process.
+         * 
+         * 
+         * @return file descriptor
+         */
+        int getManagementFD(void) {
+            if (!mManagementChannel)
+                throw EProcess(); // \TODO more specific
+            return mManagementChannel->GetFD();
+        }
+
+        /** 
+         * Handle an incoming PDU
+         * 
+         * @param peer 
+         */
+        void handlePDU(PDUPeer &peer);
+
+        void handleControlRes(PDUPeer &peer, const PDU &pdu);
+        void handleStatus(PDUPeer &peer, const PDU &pdu);
+
+
     private:
         boost::weak_ptr<ProcessManager> mProcessManagerPtr;
 
@@ -341,10 +409,21 @@ namespace Forte
         ProcessTerminationType mProcessTerminationType;
         FString mOutputString;
 
-        bool mStarted;
-        bool mIsRunning;
-        Mutex mFinishedLock;
-        ThreadCondition mFinishedCond;
+        enum {
+            STATE_READY,    // Process obj created
+            STATE_STARTING, // ControlReq(start) sent, waiting for response
+            STATE_RUNNING,  // ControlRes(success) received after ControlReq(start)
+            STATE_ERROR,    // ControlRes(error) received after ControlReq(start)
+            STATE_EXITED,
+            STATE_KILLED,
+            STATE_STOPPED,
+            STATE_ABANDONED,
+            STATE_UNKNOWN
+        };
+        int mState;
+
+        Mutex mWaitLock;
+        ThreadCondition mWaitCond;
     };
 };
 #endif

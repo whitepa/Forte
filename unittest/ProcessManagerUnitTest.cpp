@@ -11,6 +11,7 @@ LogManager logManager;
 
 TEST(ProcessManager, RunProcess)
 {
+    logManager.BeginLogging("//stderr");
     try
     {
         hlog(HLOG_INFO, "new ProcessManager");

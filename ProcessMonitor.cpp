@@ -8,6 +8,7 @@
 #include "LogManager.h"
 #include "ProcessMonitor.h"
 #include "ProcessManagerPDU.h"
+#include "FTrace.h"
 
 Forte::ProcessMonitor * Forte::ProcessMonitor::sInstancePtr = NULL;
 
@@ -40,6 +41,7 @@ void Forte::ProcessMonitor::Run()
     sigset_t set;
     sigemptyset(&set);
     signal(SIGCHLD, handleSIGCHLD);
+    signal(SIGPIPE, SIG_IGN);
     pthread_sigmask(SIG_SETMASK, &set, NULL);
 
     mPeerSet.SetupEPoll();
@@ -66,9 +68,11 @@ void Forte::ProcessMonitor::Run()
 
 void Forte::ProcessMonitor::pduCallback(PDUPeer &peer)
 {
+    FTRACE;
     PDU pdu;
     while (peer.RecvPDU(pdu))
     {
+        hlog(HLOG_DEBUG, "PDU opcode %d", pdu.opcode);
         switch(pdu.opcode)
         {
         case ProcessOpPrepare:
@@ -86,6 +90,7 @@ void Forte::ProcessMonitor::pduCallback(PDUPeer &peer)
 
 void Forte::ProcessMonitor::handlePrepare(const PDUPeer &peer, const PDU &pdu)
 {
+    FTRACE;
     const ProcessPreparePDU *preparePDU = reinterpret_cast<const ProcessPreparePDU*>(pdu.payload);
     mCmdline.assign(preparePDU->cmdline);
     mCWD.assign(preparePDU->cwd);
@@ -95,6 +100,7 @@ void Forte::ProcessMonitor::handlePrepare(const PDUPeer &peer, const PDU &pdu)
 }
 void Forte::ProcessMonitor::handleControlReq(const PDUPeer &peer, const PDU &pdu)
 {
+    FTRACE;
     const ProcessControlReqPDU *controlPDU = reinterpret_cast<const ProcessControlReqPDU*>(pdu.payload);
     try
     {
@@ -120,6 +126,7 @@ void Forte::ProcessMonitor::handleControlReq(const PDUPeer &peer, const PDU &pdu
 
 void Forte::ProcessMonitor::sendControlRes(const PDUPeer &peer, int result, const char *desc)
 {
+    FTRACE;
     PDU p(ProcessOpControlRes, sizeof(ProcessControlResPDU));
     ProcessControlResPDU *response = reinterpret_cast<ProcessControlResPDU*>(p.payload);
     response->result = result;
@@ -134,6 +141,7 @@ void Forte::ProcessMonitor::handleSIGCHLD(int sig)
 
 void Forte::ProcessMonitor::doWait(void)
 {
+    FTRACE;
     mGotSIGCHLD = false;
     int child_status;
     pid_t tpid = waitpid(-1, &child_status, WNOHANG);
@@ -165,24 +173,24 @@ void Forte::ProcessMonitor::doWait(void)
         {
             status->statusCode = WEXITSTATUS(child_status);
             hlog(HLOG_DEBUG, "child exited (status %d)", status->statusCode);
-            status->type = ProcessExited;
+            status->type = ProcessStatusExited;
         }
         else if (WIFSIGNALED(child_status))
         {
             status->statusCode = WTERMSIG(child_status);
-            status->type = ProcessKilled;
+            status->type = ProcessStatusKilled;
             hlog(HLOG_DEBUG, "child killed (signal %d)", status->statusCode);
         }
         else if (WIFSTOPPED(child_status))
         {
             status->statusCode = WSTOPSIG(child_status);
-            status->type = ProcessStopped;
+            status->type = ProcessStatusStopped;
             hlog(HLOG_DEBUG, "child stopped (signal %d)", status->statusCode);
         }
         else
         {
             status->statusCode = child_status;
-            status->type = ProcessUnknownTermination;
+            status->type = ProcessStatusUnknownTermination;
             hlog(HLOG_ERR, "unknown child exit status (0x%x)", child_status);
         }
         // Send the status PDU to all peer connections
@@ -196,6 +204,7 @@ void Forte::ProcessMonitor::doWait(void)
 
 void Forte::ProcessMonitor::startProcess(void)
 {
+    FTRACE;
     if (mState != STATE_READY)
         throw EProcessMonitor(); // \TODO specific errors
 
@@ -309,11 +318,12 @@ void Forte::ProcessMonitor::startProcess(void)
     else
     {
         // successful
-        
+        mPID = pid;
     }
 }
 void Forte::ProcessMonitor::signalProcess(int signal)
 {
+    FTRACE;
     if (mState != STATE_RUNNING &&
         mState != STATE_STOPPED &&
         mPID != 0 &&

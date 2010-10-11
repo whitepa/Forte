@@ -38,6 +38,7 @@ BSRCS = ContextPredicateUnitTest.cpp \
 	ContextUnitTest.cpp \
 	ExpDecayingAvgUnitTest.cpp \
 	FileSystemUnitTest.cpp \
+	PDUPeerUnitTest.cpp \
 	ProcFileSystemUnitTest.cpp \
 	StateMachineUnitTest.cpp \
 	StateMachineUnitTest1.cpp
@@ -63,6 +64,7 @@ $(BPROGS): $(TARGETDIR)/%: $(FORTE) $(FORTE_MOCK) %.cpp $(TARGETDIR)/%.o
 	@echo "Building $@ ..."
 	@$(CCC) -o $@ $@.o $(LIBS)
 
+# the dependencies in this rule are wrong:
 $(TARGETDIR)/FileSystemUtilUnitTest: ../$(TARGETDIR)/FileSystemUtil.o FileSystemUtilUnitTest.cpp
 	echo "Building $@..."
 	$(CCC) FileSystemUtilUnitTest.cpp \
@@ -73,7 +75,7 @@ $(TARGETDIR)/FileSystemUtilUnitTest: ../$(TARGETDIR)/FileSystemUtil.o FileSystem
 	$(GTEST_LIB) \
 	$(LIBS)
 
-$(TARGETDIR)/ProcessManagerUnitTest: ProcessManagerUnitTest.cpp
+$(TARGETDIR)/ProcessManagerUnitTest: ProcessManagerUnitTest.cpp $(FORTE)
 	echo "Building $@..."
 	$(CCC) ProcessManagerUnitTest.cpp \
 	-o $@ \

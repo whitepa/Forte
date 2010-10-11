@@ -17,13 +17,13 @@ namespace Forte
 
     enum ProcessStatusType
     {
-        ProcessStarted,
-        ProcessError,
-        ProcessExited,
-        ProcessKilled,
-        ProcessStopped,
-        ProcessUnknownTermination,
-        ProcessNotTerminated
+        ProcessStatusStarted,
+        ProcessStatusError,
+        ProcessStatusExited,
+        ProcessStatusKilled,
+        ProcessStatusStopped,
+        ProcessStatusUnknownTermination,
+        ProcessStatusNotTerminated
     };
 
     struct ProcessPreparePDU
