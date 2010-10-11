@@ -41,7 +41,8 @@ BSRCS = ContextPredicateUnitTest.cpp \
 	ProcFileSystemUnitTest.cpp \
 	StateMachineUnitTest.cpp \
 	StateMachineUnitTest1.cpp
-GSRCS = FileSystemUtilUnitTest.cpp
+GSRCS = FileSystemUtilUnitTest.cpp \
+	ProcessManagerUnitTest.cpp
 
 GPROGS = $(GSRCS:%.cpp=$(TARGETDIR)/%)
 BPROGS = $(BSRCS:%.cpp=$(TARGETDIR)/%)
@@ -63,6 +64,16 @@ $(BPROGS): $(TARGETDIR)/%: $(FORTE) $(FORTE_MOCK) %.cpp $(TARGETDIR)/%.o
 	@$(CCC) -o $@ $@.o $(LIBS)
 
 $(TARGETDIR)/FileSystemUtilUnitTest: ../$(TARGETDIR)/FileSystemUtil.o FileSystemUtilUnitTest.cpp
+	echo "Building $@..."
+	$(CCC) FileSystemUtilUnitTest.cpp \
+	-o $@ \
+	../$(TARGETDIR)/FileSystemUtil.o \
+	../$(TARGETDIR)/FileSystem.o \
+	$(INCLUDE) \
+	$(GTEST_LIB) \
+	$(LIBS)
+
+$(TARGETDIR)/ProcessManagerUnitTest: ../$(TARGETDIR)/FileSystemUtil.o FileSystemUtilUnitTest.cpp
 	echo "Building $@..."
 	$(CCC) FileSystemUtilUnitTest.cpp \
 	-o $@ \

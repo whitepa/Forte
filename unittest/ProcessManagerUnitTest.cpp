@@ -20,7 +20,7 @@ TEST(ProcessManager, RunProcess)
         hlog(HLOG_INFO, "Run Process");
         ph->Run();
         hlog(HLOG_INFO, "Is Running");
-        ASSERT(ph->IsRunning());
+        ASSERT_TRUE(ph->IsRunning());
         hlog(HLOG_INFO, "Wait");
         ph->Wait();
         hlog(HLOG_INFO, "Is Running");
@@ -32,7 +32,7 @@ TEST(ProcessManager, RunProcess)
     catch (Exception &e)
     {
         hlog(HLOG_ERR, "exception: %s", e.what().c_str());
-        BOOST_FAIL("caught exception");
+        FAIL();
     }
 }
 
