@@ -146,10 +146,13 @@ TEST(ProcessManager, FileIO)
 
 }
 
+bool complete = false;
+
 void ProcessComplete(boost::shared_ptr<Process> ph)
 {
     hlog(HLOG_DEBUG, "process completion callback triggered");
-    ASSERT_TRUE(ph->GetOutputString().find("proc") != string::npos);    
+    ASSERT_TRUE(ph->GetOutputString().find("proc") != string::npos);
+    complete = true;
 }
 
 TEST(ProcessManager, Callbacks)
@@ -160,7 +163,7 @@ TEST(ProcessManager, Callbacks)
     ph->SetProcessCompleteCallback(ProcessComplete);
     ph->Run();
     ph->Wait();
-
+    ASSERT_TRUE(complete);
 }
 
 ////Boost Unit init function ///////////////////////////////////////////////////
