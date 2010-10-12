@@ -48,21 +48,26 @@ void Forte::ProcessMonitor::Run()
 
     mPeerSet.SetProcessPDUCallback(boost::bind(&ProcessMonitor::pduCallback, this, _1));
 
-    try
+    while (mState != STATE_EXITED)
     {
-        while (mState != STATE_EXITED)
+        try
         {
             mPeerSet.Poll(-1);
             if (mGotSIGCHLD)
                 doWait();
         }
-    }
-    catch (EPDUPeerSetPollFailed &e)
-    {
-        // this is a fatal error, so we must send the error PDU
-        hlog(HLOG_ERR, "exception in Poll(): %s", e.what().c_str());
-        // \TODO send error PDU
-        throw;
+        catch (EPDUPeerSetNoPeers &e)
+        {
+            // no problem, sleep and try again
+            usleep(100000);
+        }
+        catch (EPDUPeerSetPollFailed &e)
+        {
+            // this is a fatal error, so we must send the error PDU
+            hlog(HLOG_ERR, "exception in Poll(): %s", e.what().c_str());
+            // \TODO send error PDU
+            throw;
+        }
     }
 }
 

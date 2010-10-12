@@ -13,6 +13,7 @@ EXCEPTION_SUBCLASS2(EPDUPeerSet, EPDUPeerSetPollFailed, "Failed to poll");
 EXCEPTION_SUBCLASS2(EPDUPeerSet, EPDUPeerSetPollCreate, "Failed to create poll socket");
 EXCEPTION_SUBCLASS2(EPDUPeerSet, EPDUPeerSetPollAdd, "Failed to add descriptor to poll socket");
 EXCEPTION_SUBCLASS2(EPDUPeerSet, EPDUPeerSetNotPolling, "PDUPeerSet is not set up for polling");
+EXCEPTION_SUBCLASS2(EPDUPeerSet, EPDUPeerSetNoPeers, "No peers have been added for polling");
 
 namespace Forte
 {

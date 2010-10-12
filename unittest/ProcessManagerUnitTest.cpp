@@ -104,11 +104,12 @@ TEST(ProcessManager, AbandonProcess)
     hlog(HLOG_INFO, "AbandonProcess");
     boost::shared_ptr<ProcessManager> pm(new ProcessManager);
     boost::shared_ptr<Process> ph = pm->CreateProcess("/bin/sleep 100");
-    ph->Run();
+    pid_t pid = ph->Run();
     ASSERT_TRUE(ph->IsRunning());
     ph->Abandon();
     ASSERT_THROW(ph->Wait(), EProcessAbandoned);
-    // TODO verify the process is still running
+    // make sure the process still exists:
+    ASSERT_TRUE(kill(pid, 0) == 0);
 }
 
 TEST(ProcessManager, FileIO)

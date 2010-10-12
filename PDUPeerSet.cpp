@@ -24,7 +24,7 @@ shared_ptr<PDUPeer> Forte::PDUPeerSet::PeerCreate(int fd)
     shared_ptr<PDUPeer> peer(new PDUPeer(fd));
     mPeerSet.insert(peer);
     struct epoll_event ev;
-    ev.events = EPOLLIN | EPOLLOUT | EPOLLERR | 0x2000; // \TODO EPOLLRDHUP = 0x2000
+    ev.events = EPOLLIN | EPOLLERR | 0x2000; // \TODO EPOLLRDHUP = 0x2000
     ev.data.ptr = peer.get();
     if (mEPollFD != -1 &&
         epoll_ctl(mEPollFD, EPOLL_CTL_ADD, fd, &ev) < 0)
@@ -59,7 +59,7 @@ int Forte::PDUPeerSet::SetupEPoll(void)
     if (fd == -1)
         throw EPDUPeerSetPollCreate(strerror(errno));
     struct epoll_event ev;
-    ev.events = EPOLLIN | EPOLLOUT | EPOLLERR | 0x2000; // \TODO EPOLLRDHUP = 0x2000
+    ev.events = EPOLLIN | EPOLLERR | 0x2000; // \TODO EPOLLRDHUP = 0x2000
     foreach (const shared_ptr<PDUPeer> &p, mPeerSet)
     {
         ev.data.ptr = p.get();
@@ -76,8 +76,13 @@ void Forte::PDUPeerSet::Poll(int msTimeout)
 {
     if (mEPollFD == -1 || !mBuffer)
         throw EPDUPeerSetNotPolling();
+    if (mPeerSet.size() == 0)
+        // \TODO need a way to wait even if no peers exist, and
+        // seamlessly transition to a real epoll if a peer is added.
+        throw EPDUPeerSetNoPeers();
     struct epoll_event events[32];
-    int nfds = epoll_wait(mEPollFD, events, 32, -1);
+    int nfds = epoll_wait(mEPollFD, events, 32, msTimeout);
+//    hlog(HLOG_DEBUG, "epoll_wait complete, nfds=%d", nfds);
     if (nfds < 0 &&
         ((errno == EBADF ||
           errno == EFAULT ||
@@ -90,6 +95,7 @@ void Forte::PDUPeerSet::Poll(int msTimeout)
     char *buffer = mBuffer.get();
     for (int i = 0; i < nfds; ++i)
     {
+//        hlog(HLOG_DEBUG, "i=%d events=0x%x", i, events[i].events);
         bool error = false;
         PDUPeer *p = reinterpret_cast<PDUPeer *>(events[i].data.ptr);
         const shared_ptr<PDUPeer> &peer(p->GetPtr());
