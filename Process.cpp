@@ -408,6 +408,9 @@ unsigned int Forte::Process::Wait()
         throw EProcessNotRunning();
     }
 
+    if (mState == STATE_ABANDONED)
+        throw EProcessAbandoned();
+
     hlog(HLOG_DEBUG, "waiting for process to end (%s)", mGUID.c_str());
     AutoUnlockMutex lock(mWaitLock);
     while (!isInTerminalState())

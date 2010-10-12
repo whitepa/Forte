@@ -41,6 +41,8 @@ namespace Forte
                         "method called on a process that is not finished yet");
     EXCEPTION_SUBCLASS2(EProcess, EProcessNoExit,
                         "Process did not exit");
+    EXCEPTION_SUBCLASS2(EProcess, EProcessAbandoned,
+                        "Process has been abandoned");
     EXCEPTION_SUBCLASS2(EProcess, EProcessUnableToDuplicateInputFD,
                         "Unable to duplicate Input File Descriptor");
     EXCEPTION_SUBCLASS2(EProcess, EProcessUnableToDuplicateOutputFD,
@@ -334,7 +336,8 @@ namespace Forte
         bool isInTerminalState(void) { 
             return (mState == STATE_ERROR ||
                     mState == STATE_EXITED ||
-                    mState == STATE_KILLED);
+                    mState == STATE_KILLED ||
+                    mState == STATE_ABANDONED);
         }
 
         /** 

@@ -107,7 +107,7 @@ TEST(ProcessManager, AbandonProcess)
     ph->Run();
     ASSERT_TRUE(ph->IsRunning());
     ph->Abandon();
-    ASSERT_THROW(ph->Wait(), EProcessHandleInvalid);
+    ASSERT_THROW(ph->Wait(), EProcessAbandoned);
 }
 
 TEST(ProcessManager, FileIO)
