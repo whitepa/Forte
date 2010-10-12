@@ -55,6 +55,8 @@ void Forte::PDUPeerSet::SendAll(PDU &pdu)
 
 int Forte::PDUPeerSet::SetupEPoll(void)
 {
+    if (mEPollFD != -1)
+        return mEPollFD; // already set up
     AutoFD fd = epoll_create(4);
     if (fd == -1)
         throw EPDUPeerSetPollCreate(strerror(errno));
@@ -70,6 +72,15 @@ int Forte::PDUPeerSet::SetupEPoll(void)
     mEPollFD = fd.Release();
     hlog(HLOG_DEBUG, "created epoll descriptor on fd %d", mEPollFD);
     return mEPollFD;
+}
+
+void Forte::PDUPeerSet::TeardownEPoll(void)
+{
+    if (mEPollFD != -1)
+    {
+        close(mEPollFD);
+        mEPollFD = -1;
+    }
 }
 
 void Forte::PDUPeerSet::Poll(int msTimeout)
