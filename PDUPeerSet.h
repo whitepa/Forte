@@ -2,6 +2,7 @@
 #define __PDU_peer_set_h_
 
 #include "AutoFD.h"
+#include "AutoMutex.h"
 #include "PDUPeer.h"
 #include <boost/function.hpp>
 #include <boost/shared_array.hpp>
@@ -70,9 +71,12 @@ namespace Forte
         void Poll(int msTimeout = -1);
 
         void PeerDelete(const boost::shared_ptr<Forte::PDUPeer> &peer);
+    private:
+        void peerDeleteLocked(const boost::shared_ptr<Forte::PDUPeer> &peer);
 
     protected:
         int mEPollFD;
+        Forte::Mutex mLock;
         std::set < boost::shared_ptr<PDUPeer> > mPeerSet;
         boost::shared_array<char> mBuffer;
         PDUCallbackFunc mProcessPDUCallback;

@@ -1,9 +1,11 @@
+#include "AutoMutex.h"
 #include "LogManager.h"
 #include "PDUPeer.h"
 #include "Types.h"
 
 void Forte::PDUPeer::DataIn(size_t len, char *buf)
 {
+    AutoUnlockMutex lock(mLock);
     if ((mCursor + len) > mBufSize)
         throw EPeerBufferOverflow();
     memcpy(mPDUBuffer.get() + mCursor, buf, len);
@@ -14,6 +16,7 @@ void Forte::PDUPeer::DataIn(size_t len, char *buf)
 
 void Forte::PDUPeer::SendPDU(const Forte::PDU &pdu) const
 {
+    AutoUnlockMutex lock(mLock);
     size_t len = sizeof(Forte::PDU) - Forte::PDU::PDU_MAX_PAYLOAD;
     len += pdu.payloadSize;
     if (len > sizeof(Forte::PDU))
@@ -22,7 +25,12 @@ void Forte::PDUPeer::SendPDU(const Forte::PDU &pdu) const
         throw EPeerSendFailed(FStringFC(), "%s", strerror(errno));
 }
 
-bool Forte::PDUPeer::IsPDUReady(void)
+bool Forte::PDUPeer::IsPDUReady(void) const
+{
+    AutoUnlockMutex lock(mLock);
+    return lockedIsPDUReady();
+}
+bool Forte::PDUPeer::lockedIsPDUReady(void) const
 {
     // returns true if a PDU has been received
     //         false otherwise
@@ -52,7 +60,8 @@ bool Forte::PDUPeer::IsPDUReady(void)
 
 bool Forte::PDUPeer::RecvPDU(Forte::PDU &out)
 {
-    if (!IsPDUReady())
+    AutoUnlockMutex lock(mLock);
+    if (!lockedIsPDUReady())
         return false;
     size_t minPDUSize = sizeof(Forte::PDU) - Forte::PDU::PDU_MAX_PAYLOAD;
     Forte::PDU *pdu = reinterpret_cast<Forte::PDU *>(mPDUBuffer.get());

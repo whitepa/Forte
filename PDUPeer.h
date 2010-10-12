@@ -46,7 +46,10 @@ namespace Forte
          * 
          * @return true if a PDU is ready, false otherwise
          */
-        bool IsPDUReady(void);
+        bool IsPDUReady(void) const;
+    private:
+        bool lockedIsPDUReady(void) const;
+    public:
 
         /** 
          * Receive a PDU.  Returns true if a PDU was received, false if no complete PDU is ready.
@@ -60,6 +63,7 @@ namespace Forte
         void Close(void) { mFD.Close(); }
 
     protected:
+        mutable Forte::Mutex mLock;
         AutoFD mFD;
         size_t mCursor;
         size_t mBufSize;

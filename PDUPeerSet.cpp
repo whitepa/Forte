@@ -9,6 +9,12 @@ using namespace Forte;
 
 void Forte::PDUPeerSet::PeerDelete(const shared_ptr<PDUPeer> &peer)
 {
+    AutoUnlockMutex lock(mLock);
+    peerDeleteLocked(peer);
+}
+
+void Forte::PDUPeerSet::peerDeleteLocked(const shared_ptr<PDUPeer> &peer)
+{
     if (peer)
     {
         // erase from FD map
@@ -55,6 +61,7 @@ void Forte::PDUPeerSet::SendAll(PDU &pdu)
 
 int Forte::PDUPeerSet::SetupEPoll(void)
 {
+    AutoUnlockMutex lock(mLock);
     if (mEPollFD != -1)
         return mEPollFD; // already set up
     AutoFD fd = epoll_create(4);
@@ -76,15 +83,18 @@ int Forte::PDUPeerSet::SetupEPoll(void)
 
 void Forte::PDUPeerSet::TeardownEPoll(void)
 {
+    AutoUnlockMutex lock(mLock);
     if (mEPollFD != -1)
     {
         close(mEPollFD);
         mEPollFD = -1;
+        mBuffer.reset();
     }
 }
 
 void Forte::PDUPeerSet::Poll(int msTimeout)
 {
+    AutoUnlockMutex lock(mLock);
     if (mEPollFD == -1 || !mBuffer)
         throw EPDUPeerSetNotPolling();
     if (mPeerSet.size() == 0)
@@ -143,7 +153,7 @@ void Forte::PDUPeerSet::Poll(int msTimeout)
             events[i].events & 0x2000) // \TODO EPOLLRDHUP
         {
             // disconnected, or needs a disconnect
-            PeerDelete(peer);
+            peerDeleteLocked(peer);
             peer->Close();
         }
     }
