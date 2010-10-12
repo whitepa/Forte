@@ -61,6 +61,7 @@ Forte::ProcessManager::CreateProcess(const FString &command,
                                      const FString &inputFilename,
                                      const StrStrMap *environment)
 {
+    AutoUnlockMutex lock(mLock);
     FString guid;
     mGUIDGenerator.GenerateGUID(guid);
     boost::shared_ptr<Process> ph(
@@ -79,6 +80,7 @@ Forte::ProcessManager::CreateProcess(const FString &command,
 
 void Forte::ProcessManager::abandonProcess(const int fd)
 {
+    AutoUnlockMutex lock(mLock);
     mProcesses.erase(fd);
     // OLD
     // \TODO abandoning a process must prevent a zombie process from
