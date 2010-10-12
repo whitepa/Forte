@@ -108,6 +108,7 @@ TEST(ProcessManager, AbandonProcess)
     ASSERT_TRUE(ph->IsRunning());
     ph->Abandon();
     ASSERT_THROW(ph->Wait(), EProcessAbandoned);
+    // TODO verify the process is still running
 }
 
 TEST(ProcessManager, FileIO)

@@ -131,6 +131,8 @@ void Forte::ProcessMonitor::sendControlRes(const PDUPeer &peer, int result, cons
     PDU p(ProcessOpControlRes, sizeof(ProcessControlResPDU));
     ProcessControlResPDU *response = reinterpret_cast<ProcessControlResPDU*>(p.payload);
     response->result = result;
+    response->processPID = mPID;
+    response->monitorPID = getpid();
     strncpy(response->error, desc, sizeof(response->error));
     peer.SendPDU(p);
 }

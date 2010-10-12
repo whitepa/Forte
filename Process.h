@@ -247,11 +247,11 @@ namespace Forte
         FString GetGUID() { return mGUID; }
 		
         /**
-         * GetChildPID() returns the process id of the child
+         * GetProcessPID() returns the process id of the child process
          *
          * @return pid_t holding the child process id
          */
-        pid_t GetChildPID() { return mChildPid; }
+        pid_t GetProcessPID() { return mProcessPid; }
 		
         /**
          * GetStatusCode() returns the status code from the terminated
@@ -409,7 +409,8 @@ namespace Forte
         int mOutputFD;
 
         FString mGUID;
-        pid_t mChildPid;
+        pid_t mMonitorPid;
+        pid_t mProcessPid;
         unsigned int mStatusCode;
         ProcessTerminationType mProcessTerminationType;
         FString mOutputString;

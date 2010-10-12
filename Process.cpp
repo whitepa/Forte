@@ -46,7 +46,8 @@ Forte::Process::Process(const boost::shared_ptr<ProcessManager> &mgr,
     mInputFD(-1),
     mOutputFD(-1),
     mGUID(guid),
-    mChildPid(-1),
+    mMonitorPid(-1),
+    mProcessPid(-1),
     mOutputString(""),
     mState(STATE_READY),
     mWaitCond(mWaitLock)
@@ -178,7 +179,7 @@ pid_t Forte::Process::Run()
     else
         throw EProcessUnknownState();
 
-    return 0;
+    return mProcessPid;
 }
 
 void Forte::Process::setState(int state)
@@ -439,7 +440,7 @@ void Forte::Process::Abandon()
         throw EProcessNotRunning();
     }
 
-    hlog(HLOG_DEBUG, "abandoning process %u (%s)", mChildPid, mGUID.c_str());
+    hlog(HLOG_DEBUG, "abandoning process %u (%s)", mProcessPid, mGUID.c_str());
     
     GetProcessManager()->abandonProcess(mManagementChannel->GetFD());
 
@@ -575,6 +576,8 @@ void Forte::Process::handleControlRes(PDUPeer &peer, const PDU &pdu)
     FTRACE;
     const ProcessControlResPDU *resPDU = reinterpret_cast<const ProcessControlResPDU*>(pdu.payload);
     hlog(HLOG_DEBUG, "got back result code %d", resPDU->result);
+    mMonitorPid = resPDU->monitorPID;
+    mProcessPid = resPDU->processPID;
     if (resPDU->result == ProcessSuccess)
         setState(STATE_RUNNING);
     else
