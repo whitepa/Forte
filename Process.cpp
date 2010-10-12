@@ -142,6 +142,9 @@ pid_t Forte::Process::Run()
     if (!mManagementChannel)
         throw EProcessHandleInvalid();
 
+    if (mState != STATE_READY)
+        throw EProcessStarted();
+
     // send the prepare PDU, with full command line info, etc
     PDU preparePDU(ProcessOpPrepare, sizeof(ProcessPreparePDU));
     ProcessPreparePDU *prepare = reinterpret_cast<ProcessPreparePDU*>(preparePDU.payload);
@@ -446,8 +449,14 @@ void Forte::Process::Abandon()
 
 void Forte::Process::Signal(int signum)
 {
-    // \TODO implement me!
-    throw EUnimplemented();
+    if (!isInRunningState())
+        throw EProcessNotRunning();
+
+    PDU pdu(ProcessOpControlReq, sizeof(ProcessControlReqPDU));
+    ProcessControlReqPDU *control = reinterpret_cast<ProcessControlReqPDU*>(pdu.payload);
+    control->control = ProcessControlSignal;
+    control->signum = signum;
+    mManagementChannel->SendPDU(pdu);
 }
 
 bool Forte::Process::IsRunning()
@@ -467,11 +476,6 @@ unsigned int Forte::Process::GetStatusCode()
         hlog(HLOG_ERR, "tried grabbing the status code from a process that hasn't completed yet");
         throw EProcessNotFinished();
     }
-    else if (mState != STATE_EXITED)
-    {
-        hlog(HLOG_ERR, "tried grabbing the status code from a process that didn't exit cleanly");
-        throw EProcessNoExit();        
-    }
     return mStatusCode;
 }
 
@@ -487,7 +491,12 @@ Forte::Process::ProcessTerminationType Forte::Process::GetProcessTerminationType
         hlog(HLOG_ERR, "tried grabbing the termination type from a process that hasn't completed yet");
         throw EProcessNotFinished();
     }
-    return mProcessTerminationType; 
+    else if (mState == STATE_EXITED)
+        return ProcessExited;
+    else if (mState == STATE_KILLED)
+        return ProcessKilled;
+    else
+        return ProcessUnknownTermination;
 }
 
 FString Forte::Process::GetOutputString()
@@ -577,6 +586,7 @@ void Forte::Process::handleStatus(PDUPeer &peer, const PDU &pdu)
     FTRACE;
     const ProcessStatusPDU *status = reinterpret_cast<const ProcessStatusPDU*>(pdu.payload);
     hlog(HLOG_DEBUG, "got back status type %d code %d", status->type, status->statusCode);
+    mStatusCode = status->statusCode;
     switch (status->type)
     {
     case ProcessStatusStarted:

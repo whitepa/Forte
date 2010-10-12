@@ -70,9 +70,9 @@ namespace Forte
         {
             ProcessExited,
             ProcessKilled,
-            ProcessStopped,
+            ProcessStopped,            // \TODO not a terminal state
             ProcessUnknownTermination,
-            ProcessNotTerminated
+            ProcessNotTerminated       // \TODO not a terminal state
         };
 
     protected:
@@ -252,7 +252,9 @@ namespace Forte
         pid_t GetChildPID() { return mChildPid; }
 		
         /**
-         * GetStatusCode() returns the status code from the terminated process
+         * GetStatusCode() returns the status code from the terminated
+         * process.  If the process was terminated abnormally via
+         * signal, this is the signal number.
          *
          * @throw EProcessNotFinished
          *

@@ -120,6 +120,7 @@ void Forte::ProcessMonitor::handleControlReq(const PDUPeer &peer, const PDU &pdu
     }
     catch (EProcessMonitor &e)
     {
+        // \TODO catch specific errors and send specific error codes
         sendControlRes(peer, ProcessUnknownError);
     }
 }
@@ -321,11 +322,13 @@ void Forte::ProcessMonitor::startProcess(void)
         mPID = pid;
     }
 }
+
 void Forte::ProcessMonitor::signalProcess(int signal)
 {
     FTRACE;
-    if (mState != STATE_RUNNING &&
-        mState != STATE_STOPPED &&
+    hlog(HLOG_DEBUG, "state = %d", mState);
+    if ((mState == STATE_RUNNING ||
+         mState != STATE_STOPPED) &&
         mPID != 0 &&
         kill(mPID, signal) == -1)
         throw EProcessSignalFailed();

@@ -22,6 +22,8 @@ namespace Forte
                         "Unable to fork a child process");
     EXCEPTION_SUBCLASS2(EProcessManager, EProcessManagerInvalidPeer,
                         "Received message from an invalid peer");
+    EXCEPTION_SUBCLASS2(EProcessManager, EProcessManagerNoSharedPtr,
+                        "No shared pointer exists to this process manager");
 
     /**
      * ProcessManager provides for the creation and management of
@@ -59,7 +61,14 @@ namespace Forte
          * @return shared_ptr
          */
         boost::shared_ptr<ProcessManager> GetPtr(void) {
-            return boost::static_pointer_cast<ProcessManager>(shared_from_this());
+            try
+            {
+                return boost::static_pointer_cast<ProcessManager>(shared_from_this());
+            }
+            catch (boost::bad_weak_ptr &e)
+            {
+                throw EProcessManagerNoSharedPtr();
+            }
         }
 
 
