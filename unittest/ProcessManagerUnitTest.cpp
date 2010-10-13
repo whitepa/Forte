@@ -114,38 +114,50 @@ TEST(ProcessManager, AbandonProcess)
 
 TEST(ProcessManager, FileIO)
 {
-    hlog(HLOG_INFO, "FileIO");
-    boost::shared_ptr<ProcessManager> pm(new ProcessManager);
-    boost::shared_ptr<Process> ph = pm->CreateProcess("/bin/sleep 1");
+    try
+    {
+        hlog(HLOG_INFO, "FileIO");
+        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        boost::shared_ptr<Process> ph = pm->CreateProcess("/bin/sleep 1");
 
-    // check that we propery throw when the input file doesn't exist
-    ph->SetInputFilename("/foo/bar/baz");
-    ASSERT_THROW(ph->Run(), EProcessUnableToOpenInputFile);
+        // check that we propery throw when the input file doesn't exist
+        ph->SetInputFilename("/foo/bar/baz");
+        ASSERT_THROW(ph->Run(), EProcessUnableToOpenInputFile);
 
-    // check that we properly throw when the output file can't be created
-    ph = pm->CreateProcess("/bin/sleep");
-    ph->SetOutputFilename("/foo/bar/baz");
-    ASSERT_THROW(ph->Run(), EProcessUnableToOpenOutputFile);
+        // check that we properly throw when the output file can't be created
+        ph = pm->CreateProcess("/bin/sleep");
+        ph->SetOutputFilename("/foo/bar/baz");
+        ASSERT_THROW(ph->Run(), EProcessUnableToOpenOutputFile);
 
-    hlog(HLOG_DEBUG, "getting ready to try some output");
+        hlog(HLOG_DEBUG, "getting ready to try some output");
 
-    // check that when we can create an output file that we can get 
-    // the contents
-    boost::shared_ptr<Process> ph2 = pm->CreateProcess("/bin/ls", "/", "temp.out");
-    ph2->Run();
-    ph2->Wait();
-    ASSERT_TRUE(ph2->GetOutputString().find("proc") != string::npos);
+        // check that when we can create an output file that we can get 
+        // the contents
+        boost::shared_ptr<Process> ph2 = pm->CreateProcess("/bin/ls", "/", "temp.out");
+        ph2->Run();
+        ph2->Wait();
+        ASSERT_TRUE(ph2->GetOutputString().find("proc") != string::npos);
 
-    hlog(HLOG_DEBUG, "okay, now what happens when output is to /dev/null");
+        hlog(HLOG_DEBUG, "okay, now what happens when output is to /dev/null");
 
-    // what happens if /dev/null is our output?
-    boost::shared_ptr<Process> ph3 = pm->CreateProcess("/bin/ls", "/");
-    ph3->Run();
-    ph3->Wait();
-    ASSERT_TRUE(ph3->GetOutputString().find("proc") == string::npos);
+        // what happens if /dev/null is our output?
+        boost::shared_ptr<Process> ph3 = pm->CreateProcess("/bin/ls", "/");
+        ph3->Run();
+        ph3->Wait();
+        ASSERT_TRUE(ph3->GetOutputString().find("proc") == string::npos);
 
-    hlog(HLOG_DEBUG, "reached end of function");
-
+        hlog(HLOG_DEBUG, "reached end of function");
+    }
+    catch (Exception &e)
+    {
+        hlog(HLOG_ERR, "Exception: %s", e.what().c_str());
+        FAIL();
+    }
+    catch (std::exception &e)
+    {
+        hlog(HLOG_ERR, "std::exception: %s", e.what());
+        FAIL();
+    }
 }
 
 bool complete = false;

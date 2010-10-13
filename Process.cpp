@@ -143,7 +143,10 @@ pid_t Forte::Process::Run()
     if (mState != STATE_READY)
         throw EProcessStarted();
 
-    // send the prepare PDU, with full command line info, etc
+    // we must set the state prior to sending the start PDU to avoid a race
+    setState(STATE_STARTING);
+
+    // send the param PDUs, with full command line info, etc
     PDU paramPDU(ProcessOpParam, sizeof(ProcessParamPDU));
     ProcessParamPDU *param = reinterpret_cast<ProcessParamPDU*>(paramPDU.payload);
 
@@ -165,15 +168,12 @@ pid_t Forte::Process::Run()
     strncpy(param->str, mOutputFilename.c_str(), sizeof(param->str));
     param->param = ProcessOutfile;
     mManagementChannel->SendPDU(paramPDU);
-    
 
     // send the control PDU telling the process to start
     PDU pdu(ProcessOpControlReq, sizeof(ProcessControlReqPDU));
     ProcessControlReqPDU *control = reinterpret_cast<ProcessControlReqPDU*>(pdu.payload);
     control->control = ProcessControlStart;
     mManagementChannel->SendPDU(pdu);
-
-    setState(STATE_STARTING);
 
     // wait for the process to change state
     AutoUnlockMutex lock(mWaitLock);
@@ -198,11 +198,6 @@ pid_t Forte::Process::Run()
             break;
         }
     }
-    else if (mState == STATE_RUNNING)
-        hlog(HLOG_DEBUG, "process started");
-    else
-        throw EProcessUnknownState();
-
     return mProcessPid;
 }
 
