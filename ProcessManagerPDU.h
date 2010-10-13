@@ -6,7 +6,7 @@ namespace Forte
 
     enum PDUOpcodes
     {
-        ProcessOpPrepare,
+        ProcessOpParam,
         ProcessOpStatus,
         ProcessOpOutput,
         ProcessOpControlReq,
@@ -26,10 +26,18 @@ namespace Forte
         ProcessStatusNotTerminated
     };
 
-    struct ProcessPreparePDU
+    enum ProcessParamCode
     {
-        char cmdline[2048];
-        char cwd[1024];
+        ProcessCmdline,
+        ProcessCwd,
+        ProcessInfile,
+        ProcessOutfile
+    };
+
+    struct ProcessParamPDU
+    {
+        int param;
+        char str[2048];
     } __attribute__((__packed__));
     
     struct ProcessStatusPDU

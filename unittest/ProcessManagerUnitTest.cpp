@@ -116,7 +116,7 @@ TEST(ProcessManager, FileIO)
 {
     hlog(HLOG_INFO, "FileIO");
     boost::shared_ptr<ProcessManager> pm(new ProcessManager);
-    boost::shared_ptr<Process> ph = pm->CreateProcess("/bin/sleep");
+    boost::shared_ptr<Process> ph = pm->CreateProcess("/bin/sleep 1");
 
     // check that we propery throw when the input file doesn't exist
     ph->SetInputFilename("/foo/bar/baz");

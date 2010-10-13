@@ -147,16 +147,28 @@ pid_t Forte::Process::Run()
         throw EProcessStarted();
 
     // send the prepare PDU, with full command line info, etc
-    PDU preparePDU(ProcessOpPrepare, sizeof(ProcessPreparePDU));
-    ProcessPreparePDU *prepare = reinterpret_cast<ProcessPreparePDU*>(preparePDU.payload);
+    PDU paramPDU(ProcessOpParam, sizeof(ProcessParamPDU));
+    ProcessParamPDU *param = reinterpret_cast<ProcessParamPDU*>(paramPDU.payload);
 
     // \TODO safe copy of these strings, ensure null termination,
     // disallow truncation (throw exception if the source strings are
     // too long)
-    strncpy(prepare->cmdline, mCommand.c_str(), sizeof(prepare->cmdline));
-    strncpy(prepare->cwd, mCurrentWorkingDirectory.c_str(), sizeof(prepare->cwd));
+    strncpy(param->str, mCommand.c_str(), sizeof(param->str));
+    param->param = ProcessCmdline;
+    mManagementChannel->SendPDU(paramPDU);
 
-    mManagementChannel->SendPDU(preparePDU);
+    strncpy(param->str, mCurrentWorkingDirectory.c_str(), sizeof(param->str));
+    param->param = ProcessCwd;
+    mManagementChannel->SendPDU(paramPDU);
+    
+    strncpy(param->str, mInputFilename.c_str(), sizeof(param->str));
+    param->param = ProcessInfile;
+    mManagementChannel->SendPDU(paramPDU);
+    
+    strncpy(param->str, mOutputFilename.c_str(), sizeof(param->str));
+    param->param = ProcessOutfile;
+    mManagementChannel->SendPDU(paramPDU);
+    
 
     // send the control PDU telling the process to start
     PDU pdu(ProcessOpControlReq, sizeof(ProcessControlReqPDU));
@@ -172,8 +184,23 @@ pid_t Forte::Process::Run()
         mWaitCond.TimedWait(1);
 
     if (mState == STATE_ERROR)
-        // \TODO throw specific error
-        throw EProcess("Failed to start");
+    {
+        switch (mStatusCode)
+        {
+        case ProcessUnableToOpenInputFile:
+            throw EProcessUnableToOpenInputFile(mErrorString);
+            break;
+        case ProcessUnableToOpenOutputFile:
+            throw EProcessUnableToOpenOutputFile(mErrorString);
+            break;
+        case ProcessUnableToFork:
+            throw EProcessUnableToFork(mErrorString);
+            break;
+        default:
+            throw EProcess(mErrorString);
+            break;
+        }
+    }
     else if (mState == STATE_RUNNING)
         hlog(HLOG_DEBUG, "process started");
     else
@@ -578,11 +605,12 @@ void Forte::Process::handleControlRes(PDUPeer &peer, const PDU &pdu)
     hlog(HLOG_DEBUG, "got back result code %d", resPDU->result);
     mMonitorPid = resPDU->monitorPID;
     mProcessPid = resPDU->processPID;
+    mStatusCode = resPDU->result;
     if (resPDU->result == ProcessSuccess)
         setState(STATE_RUNNING);
     else
     {
-        // \TODO set specific error code, allowing Run() to throw specific exception
+        mErrorString.assign(resPDU->error);
         setState(STATE_ERROR);
     }
 }

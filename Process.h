@@ -413,6 +413,7 @@ namespace Forte
         pid_t mProcessPid;
         unsigned int mStatusCode;
         ProcessTerminationType mProcessTerminationType;
+        FString mErrorString;
         FString mOutputString;
 
         enum {

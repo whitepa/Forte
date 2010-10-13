@@ -11,6 +11,10 @@ namespace Forte
     EXCEPTION_SUBCLASS(EProcess, EProcessMonitor);
     EXCEPTION_SUBCLASS2(EProcessMonitor, EProcessMonitorArguments,
                         "Incorrect command line arguments");
+    EXCEPTION_SUBCLASS2(EProcessMonitor, EProcessMonitorUnableToOpenInputFile,
+                        "Unable to open input file");
+    EXCEPTION_SUBCLASS2(EProcessMonitor, EProcessMonitorUnableToOpenOutputFile,
+                        "Unable to open output file");
 
     class ProcessMonitor
     {
@@ -81,7 +85,7 @@ namespace Forte
         static void handleSIGCHLD(int sig);
 
 
-        void handlePrepare(const PDUPeer &peer, const PDU &pdu);
+        void handleParam(const PDUPeer &peer, const PDU &pdu);
         void handleControlReq(const PDUPeer &peer, const PDU &pdu);
         void sendControlRes(const PDUPeer &peer, int resultCode, const char *desc = "");
 

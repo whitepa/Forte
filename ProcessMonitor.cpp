@@ -80,8 +80,8 @@ void Forte::ProcessMonitor::pduCallback(PDUPeer &peer)
         hlog(HLOG_DEBUG, "PDU opcode %d", pdu.opcode);
         switch(pdu.opcode)
         {
-        case ProcessOpPrepare:
-            handlePrepare(peer, pdu);
+        case ProcessOpParam:
+            handleParam(peer, pdu);
             break;
         case ProcessOpControlReq:
             handleControlReq(peer, pdu);
@@ -93,15 +93,32 @@ void Forte::ProcessMonitor::pduCallback(PDUPeer &peer)
     }
 }
 
-void Forte::ProcessMonitor::handlePrepare(const PDUPeer &peer, const PDU &pdu)
+void Forte::ProcessMonitor::handleParam(const PDUPeer &peer, const PDU &pdu)
 {
+    // \TODO better string handling here, don't assume null
+    // termination of paramPDU->str
     FTRACE;
-    const ProcessPreparePDU *preparePDU = reinterpret_cast<const ProcessPreparePDU*>(pdu.payload);
-    mCmdline.assign(preparePDU->cmdline);
-    mCWD.assign(preparePDU->cwd);
-    mState = STATE_READY;
-    hlog(HLOG_DEBUG, "received command line: %s", mCmdline.c_str());
-    hlog(HLOG_DEBUG, "received cwd: %s", mCWD.c_str());
+    const ProcessParamPDU *paramPDU = reinterpret_cast<const ProcessParamPDU*>(pdu.payload);
+    hlog(HLOG_DEBUG, "received param %d", paramPDU->param);
+    switch (paramPDU->param)
+    {
+    case ProcessCmdline:
+        mCmdline.assign(paramPDU->str);
+        mState = STATE_READY;
+        break;
+    case ProcessCwd:
+        mCWD.assign(paramPDU->str);
+        break;
+    case ProcessInfile:
+        mInputFilename.assign(paramPDU->str);
+        break;
+    case ProcessOutfile:
+        mOutputFilename.assign(paramPDU->str);
+        break;
+    default:
+        hlog(HLOG_ERR, "received unknown param code %d", paramPDU->param);
+        break;
+    }
 }
 void Forte::ProcessMonitor::handleControlReq(const PDUPeer &peer, const PDU &pdu)
 {
@@ -122,6 +139,14 @@ void Forte::ProcessMonitor::handleControlReq(const PDUPeer &peer, const PDU &pdu
             break;
         }
         sendControlRes(peer, ProcessSuccess);
+    }
+    catch (EProcessMonitorUnableToOpenInputFile &e)
+    {
+        sendControlRes(peer, ProcessUnableToOpenInputFile);
+    }
+    catch (EProcessMonitorUnableToOpenOutputFile &e)
+    {
+        sendControlRes(peer, ProcessUnableToOpenOutputFile);
     }
     catch (EProcessMonitor &e)
     {
@@ -218,16 +243,13 @@ void Forte::ProcessMonitor::startProcess(void)
 
     // open the input and output files
     // these will throw if they are unable to open the files
-    // and keep looping if they are interupped during the open
+    // and keep looping if they are interrupted during the open
     int inputfd, outputfd;
     do
     {
         inputfd = open(mInputFilename, O_RDWR);
         if(inputfd == -1 && errno != EINTR)
-        {
-            hlog(HLOG_ERR, "unable to open input file (%d)", errno);
-            throw EProcessUnableToOpenInputFile();
-        }
+            throw EProcessMonitorUnableToOpenInputFile(FStringFC(), "%s", strerror(errno));
     } 
     while (inputfd == -1 && errno == EINTR);
 
@@ -235,10 +257,7 @@ void Forte::ProcessMonitor::startProcess(void)
     {
         outputfd = open(mOutputFilename, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR);
         if(outputfd == -1 && errno != EINTR)
-        {
-            hlog(HLOG_ERR, "unable to open output file (%d)", errno);
-            throw EProcessUnableToOpenOutputFile();
-        }
+            throw EProcessMonitorUnableToOpenOutputFile(FStringFC(), "%s", strerror(errno));
     }
     while (outputfd == -1 && errno == EINTR);
 
