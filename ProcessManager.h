@@ -39,8 +39,6 @@ namespace Forte
         static const int PDU_BUFFER_SIZE;
 
         typedef std::map<int, boost::shared_ptr<Process> > ProcessMap;
-        // typedef std::map<pid_t, boost::shared_ptr<Process> > RunningProcessMap;
-        // typedef std::pair<pid_t, boost::shared_ptr<Process> > ProcessPair;
 
         ProcessManager();
 

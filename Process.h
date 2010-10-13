@@ -196,13 +196,6 @@ namespace Forte
          */
         pid_t Run();
 
-
-        /**
-         * RunParent() is called after the fork from the ProcessManager
-         */
-//        void RunParent(pid_t cpid);
-
-
         /**
          * Wait() block until the process has finished, or the process is abandoned.
          *
