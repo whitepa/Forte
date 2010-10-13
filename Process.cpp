@@ -234,9 +234,9 @@ void Forte::Process::startMonitor()
         // child
         // close all file descriptors, except the PDU channel
         while (close(parentfd) == -1 && errno == EINTR);
-        // for (int n = 0; n < 1024; ++n)
-        //     if (n != childfd)
-        //         while (close(n) == -1 && errno == EINTR);
+        for (int n = 0; n < 1024; ++n)
+            if (n != childfd)
+                while (close(n) == -1 && errno == EINTR);
         // clear sig mask
         sigset_t set;
         sigemptyset(&set);
