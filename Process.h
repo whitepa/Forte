@@ -304,12 +304,6 @@ namespace Forte
          */
         void setStatusCode(unsigned int code) { mStatusCode = code; }
 
-        /**
-         * SetProcessTerminationType() is used by the ProcessManager
-         * to set how the child process terminated
-         */
-        void setProcessTerminationType(ProcessTerminationType type) { mProcessTerminationType = type; }
-
         /** 
          * Set the internal state of the process handle.  This will
          * wake up anyone waiting for a state change.
@@ -374,6 +368,13 @@ namespace Forte
         void handleControlRes(PDUPeer &peer, const PDU &pdu);
         void handleStatus(PDUPeer &peer, const PDU &pdu);
 
+        /** 
+         * Called when an unrecoverable error has occurred on the
+         * connection to a peer.
+         * 
+         * @param peer 
+         */
+        void handleError(PDUPeer &peer);
 
     private:
         boost::weak_ptr<ProcessManager> mProcessManagerPtr;
@@ -396,7 +397,6 @@ namespace Forte
         pid_t mMonitorPid;
         pid_t mProcessPid;
         unsigned int mStatusCode;
-        ProcessTerminationType mProcessTerminationType;
         FString mErrorString;
         FString mOutputString;
 

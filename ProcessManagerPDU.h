@@ -74,6 +74,7 @@ namespace Forte
         ProcessUnableToFork,
         ProcessNotRunning,
         ProcessRunning,
+        ProcessProcmonFailure,
         ProcessUnknownError
     };
     struct ProcessControlResPDU

@@ -11,6 +11,7 @@ LogManager logManager;
 
 TEST(ProcessManager, RunProcess)
 {
+    signal(SIGPIPE, SIG_IGN);
     logManager.BeginLogging("//stderr");
     try
     {
@@ -85,31 +86,57 @@ TEST(ProcessManager, Exceptions)
 
 TEST(ProcessManager, CancelProcess)
 {
-    hlog(HLOG_INFO, "CancelProcess");
-    boost::shared_ptr<ProcessManager> pm(new ProcessManager);
-    boost::shared_ptr<Process> ph = pm->CreateProcess("/bin/sleep 100");
-    ph->Run();
-    ASSERT_TRUE(ph->IsRunning());
-    ph->Signal(15);
-    ph->Wait();
-    ASSERT_TRUE(!ph->IsRunning());
-    ASSERT_TRUE(ph->GetStatusCode() == 15);
-    ASSERT_TRUE(ph->GetProcessTerminationType() == Forte::Process::ProcessKilled);
-    hlog(HLOG_INFO, "OutputString: %s", ph->GetOutputString().c_str());
+    try
+    {
+        hlog(HLOG_INFO, "CancelProcess");
+        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        boost::shared_ptr<Process> ph = pm->CreateProcess("/bin/sleep 100");
+        ph->Run();
+        ASSERT_TRUE(ph->IsRunning());
+        ph->Signal(15);
+        ph->Wait();
+        ASSERT_TRUE(!ph->IsRunning());
+        ASSERT_TRUE(ph->GetStatusCode() == 15);
+        ASSERT_TRUE(ph->GetProcessTerminationType() == Forte::Process::ProcessKilled);
+        hlog(HLOG_INFO, "OutputString: %s", ph->GetOutputString().c_str());
+    }
+    catch (Exception &e)
+    {
+        hlog(HLOG_ERR, "Exception: %s", e.what().c_str());
+        FAIL();
+    }
+    catch (std::exception &e)
+    {
+        hlog(HLOG_ERR, "std::exception: %s", e.what());
+        FAIL();
+    }    
 }
 
 
 TEST(ProcessManager, AbandonProcess)
 {
-    hlog(HLOG_INFO, "AbandonProcess");
-    boost::shared_ptr<ProcessManager> pm(new ProcessManager);
-    boost::shared_ptr<Process> ph = pm->CreateProcess("/bin/sleep 100");
-    pid_t pid = ph->Run();
-    ASSERT_TRUE(ph->IsRunning());
-    ph->Abandon();
-    ASSERT_THROW(ph->Wait(), EProcessAbandoned);
-    // make sure the process still exists:
-    ASSERT_TRUE(kill(pid, 0) == 0);
+    try
+    {
+        hlog(HLOG_INFO, "AbandonProcess");
+        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        boost::shared_ptr<Process> ph = pm->CreateProcess("/bin/sleep 100");
+        pid_t pid = ph->Run();
+        ASSERT_TRUE(ph->IsRunning());
+        ph->Abandon();
+        ASSERT_THROW(ph->Wait(), EProcessAbandoned);
+        // make sure the process still exists:
+        ASSERT_TRUE(kill(pid, 0) == 0);
+    }
+    catch (Exception &e)
+    {
+        hlog(HLOG_ERR, "Exception: %s", e.what().c_str());
+        FAIL();
+    }
+    catch (std::exception &e)
+    {
+        hlog(HLOG_ERR, "std::exception: %s", e.what());
+        FAIL();
+    }
 }
 
 TEST(ProcessManager, FileIO)
@@ -171,29 +198,24 @@ void ProcessComplete(boost::shared_ptr<Process> ph)
 
 TEST(ProcessManager, Callbacks)
 {
-    hlog(HLOG_INFO, "Callbacks");
-    boost::shared_ptr<ProcessManager> pm(new ProcessManager);
-    boost::shared_ptr<Process> ph = pm->CreateProcess("/bin/ls", "/", "temp.out");
-    ph->SetProcessCompleteCallback(ProcessComplete);
-    ph->Run();
-    ph->Wait();
-    ASSERT_TRUE(complete);
+    try
+    {
+        hlog(HLOG_INFO, "Callbacks");
+        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        boost::shared_ptr<Process> ph = pm->CreateProcess("/bin/ls", "/", "temp.out");
+        ph->SetProcessCompleteCallback(ProcessComplete);
+        ph->Run();
+        ph->Wait();
+        ASSERT_TRUE(complete);
+    }
+    catch (Exception &e)
+    {
+        hlog(HLOG_ERR, "Exception: %s", e.what().c_str());
+        FAIL();
+    }
+    catch (std::exception &e)
+    {
+        hlog(HLOG_ERR, "std::exception: %s", e.what());
+        FAIL();
+    }
 }
-
-////Boost Unit init function ///////////////////////////////////////////////////
-// test_suite*
-// init_unit_test_suite(int argc, char* argv[])
-// {
-
-//     logManager.SetLogMask("//stdout", HLOG_ALL);
-//     logManager.BeginLogging("//stdout");
-
-//     // initialize everything here
-
-//     // the boost test monitor will catch our attempts to kill
-//     // children, so we must set this option
-//     setenv("BOOST_TEST_CATCH_SYSTEM_ERRORS", "no", 1);
-
-//     return 0;
-// }
-////////////////////////////////////////////////////////////////////////////////

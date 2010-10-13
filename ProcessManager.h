@@ -137,6 +137,15 @@ namespace Forte
          */
         void pduCallback(PDUPeer &peer);
 
+        /** 
+         * This function gets called when an error is encountered on a
+         * peer connection and the peer is removed from the
+         * PDUPeerSet.
+         * 
+         * @param peer 
+         */
+        void errorCallback(PDUPeer &peer);
+
         /**
          * a map of processes, indexed by process ID
          */

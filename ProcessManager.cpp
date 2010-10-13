@@ -40,6 +40,7 @@ Forte::ProcessManager::ProcessManager() :
 
     mPeerSet.SetupEPoll();
     mPeerSet.SetProcessPDUCallback(boost::bind(&ProcessManager::pduCallback, this, _1));
+    mPeerSet.SetErrorCallback(boost::bind(&ProcessManager::errorCallback, this, _1));
 
     initialized();
 }
@@ -98,6 +99,19 @@ void Forte::ProcessManager::pduCallback(PDUPeer &peer)
         throw EProcessManagerInvalidPeer();
     Process &p(*((*i).second));
     p.handlePDU(peer);
+}
+
+void Forte::ProcessManager::errorCallback(PDUPeer &peer)
+{
+    FTRACE;
+    // route this to the correct Process object
+    int fd = peer.GetFD();
+
+    ProcessMap::iterator i;
+    if ((i = mProcesses.find(fd)) == mProcesses.end())
+        throw EProcessManagerInvalidPeer();
+    Process &p(*((*i).second));
+    p.handleError(peer);
 }
 
 void* Forte::ProcessManager::run(void)

@@ -146,35 +146,42 @@ pid_t Forte::Process::Run()
     // we must set the state prior to sending the start PDU to avoid a race
     setState(STATE_STARTING);
 
-    // send the param PDUs, with full command line info, etc
-    PDU paramPDU(ProcessOpParam, sizeof(ProcessParamPDU));
-    ProcessParamPDU *param = reinterpret_cast<ProcessParamPDU*>(paramPDU.payload);
+    try
+    {
 
-    // \TODO safe copy of these strings, ensure null termination,
-    // disallow truncation (throw exception if the source strings are
-    // too long)
-    strncpy(param->str, mCommand.c_str(), sizeof(param->str));
-    param->param = ProcessCmdline;
-    mManagementChannel->SendPDU(paramPDU);
+        // send the param PDUs, with full command line info, etc
+        PDU paramPDU(ProcessOpParam, sizeof(ProcessParamPDU));
+        ProcessParamPDU *param = reinterpret_cast<ProcessParamPDU*>(paramPDU.payload);
 
-    strncpy(param->str, mCurrentWorkingDirectory.c_str(), sizeof(param->str));
-    param->param = ProcessCwd;
-    mManagementChannel->SendPDU(paramPDU);
+        // \TODO safe copy of these strings, ensure null termination,
+        // disallow truncation (throw exception if the source strings are
+        // too long)
+        strncpy(param->str, mCommand.c_str(), sizeof(param->str));
+        param->param = ProcessCmdline;
+        mManagementChannel->SendPDU(paramPDU);
+
+        strncpy(param->str, mCurrentWorkingDirectory.c_str(), sizeof(param->str));
+        param->param = ProcessCwd;
+        mManagementChannel->SendPDU(paramPDU);
     
-    strncpy(param->str, mInputFilename.c_str(), sizeof(param->str));
-    param->param = ProcessInfile;
-    mManagementChannel->SendPDU(paramPDU);
+        strncpy(param->str, mInputFilename.c_str(), sizeof(param->str));
+        param->param = ProcessInfile;
+        mManagementChannel->SendPDU(paramPDU);
     
-    strncpy(param->str, mOutputFilename.c_str(), sizeof(param->str));
-    param->param = ProcessOutfile;
-    mManagementChannel->SendPDU(paramPDU);
+        strncpy(param->str, mOutputFilename.c_str(), sizeof(param->str));
+        param->param = ProcessOutfile;
+        mManagementChannel->SendPDU(paramPDU);
 
-    // send the control PDU telling the process to start
-    PDU pdu(ProcessOpControlReq, sizeof(ProcessControlReqPDU));
-    ProcessControlReqPDU *control = reinterpret_cast<ProcessControlReqPDU*>(pdu.payload);
-    control->control = ProcessControlStart;
-    mManagementChannel->SendPDU(pdu);
-
+        // send the control PDU telling the process to start
+        PDU pdu(ProcessOpControlReq, sizeof(ProcessControlReqPDU));
+        ProcessControlReqPDU *control = reinterpret_cast<ProcessControlReqPDU*>(pdu.payload);
+        control->control = ProcessControlStart;
+        mManagementChannel->SendPDU(pdu);
+    }
+    catch (Exception &e)
+    {
+        throw EProcessManagementProcFailed(e.what().c_str());
+    }
     // wait for the process to change state
     AutoUnlockMutex lock(mWaitLock);
     while (mState == STATE_STARTING)
@@ -192,6 +199,9 @@ pid_t Forte::Process::Run()
             break;
         case ProcessUnableToFork:
             throw EProcessUnableToFork(mErrorString);
+            break;
+        case ProcessProcmonFailure:
+            throw EProcessManagementProcFailed();
             break;
         default:
             throw EProcess(mErrorString);
@@ -244,10 +254,9 @@ void Forte::Process::startMonitor()
         vargs[0] = "(procmon)"; // \TODO include the name of the monitored process
         vargs[1] = const_cast<char *>(FString(childfd).c_str());
         vargs[2] = 0;
-        fprintf(stderr, "procmon child, exec '%s' '%s'\n", mProcmonPath.c_str(), vargs[1]);
+//        fprintf(stderr, "procmon child, exec '%s' '%s'\n", mProcmonPath.c_str(), vargs[1]);
         execv(mProcmonPath, vargs);
-        fprintf(stderr, "procmon child, exec failed: %d %s\n", errno, strerror(errno));
-        // \TODO should we send back a message indicating the exact failure?
+//        fprintf(stderr, "procmon child, exec failed: %d %s\n", errno, strerror(errno));
         exit(-1);
     }
     else
@@ -359,7 +368,7 @@ Forte::Process::ProcessTerminationType Forte::Process::GetProcessTerminationType
         return ProcessExited;
     else if (mState == STATE_KILLED)
         return ProcessKilled;
-    else
+    else // STATE_ERROR or other
         return ProcessUnknownTermination;
 }
 
@@ -474,5 +483,17 @@ void Forte::Process::handleStatus(PDUPeer &peer, const PDU &pdu)
     default:
         hlog(HLOG_ERR, "unknown status type!");
         break;
+    }
+}
+
+void Forte::Process::handleError(PDUPeer &peer)
+{
+    // the process monitor connection has encountered an unrecoverable
+    // error.
+    hlog(HLOG_ERR, "lost connection to procmon");
+    if (!isInTerminalState())
+    {
+        mStatusCode = ProcessProcmonFailure;
+        setState(STATE_ERROR);
     }
 }
