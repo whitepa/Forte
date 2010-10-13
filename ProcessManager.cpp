@@ -120,8 +120,8 @@ void* Forte::ProcessManager::run(void)
     {
         try
         {
-            // 500ms poll timeout
-            mPeerSet.Poll(500);
+            // 100ms poll timeout
+            mPeerSet.Poll(100);
         }
         catch (Exception &e)
         {
