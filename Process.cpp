@@ -211,8 +211,12 @@ pid_t Forte::Process::Run()
 
 void Forte::Process::setState(int state)
 {
-    AutoUnlockMutex lock(mWaitLock);
     mState = state;
+    if (mProcessCompleteCallback && isInTerminalState())
+    {
+        mProcessCompleteCallback(static_pointer_cast<Process>(shared_from_this()));
+    }
+    AutoUnlockMutex lock(mWaitLock);
     mWaitCond.Broadcast();
 }
 
