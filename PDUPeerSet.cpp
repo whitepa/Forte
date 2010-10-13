@@ -153,7 +153,10 @@ void Forte::PDUPeerSet::Poll(int msTimeout)
             events[i].events & 0x2000) // \TODO EPOLLRDHUP
         {
             // disconnected, or needs a disconnect
+            hlog(HLOG_DEBUG, "deleting peer on fd %d", peer->GetFD());
             peerDeleteLocked(peer);
+            if (mErrorCallback)
+                mErrorCallback(*peer);
             peer->Close();
         }
     }

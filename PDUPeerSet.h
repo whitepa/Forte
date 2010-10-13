@@ -21,7 +21,7 @@ namespace Forte
     class PDUPeerSet : public Object
     {
     public:
-        typedef boost::function<void(PDUPeer &peer)> PDUCallbackFunc;
+        typedef boost::function<void(PDUPeer &peer)> CallbackFunc;
         static const int MAX_PEERS = 256;
         static const int RECV_BUFFER_SIZE = 65536;
 
@@ -34,8 +34,12 @@ namespace Forte
 
         void SendAll(PDU &pdu);
 
-        void SetProcessPDUCallback(PDUCallbackFunc f) {
+        void SetProcessPDUCallback(CallbackFunc f) {
             mProcessPDUCallback = f;
+        }
+
+        void SetErrorCallback(CallbackFunc f) {
+            mErrorCallback = f;
         }
 
         /** 
@@ -81,7 +85,8 @@ namespace Forte
         Forte::Mutex mLock;
         std::set < boost::shared_ptr<PDUPeer> > mPeerSet;
         boost::shared_array<char> mBuffer;
-        PDUCallbackFunc mProcessPDUCallback;
+        CallbackFunc mProcessPDUCallback;
+        CallbackFunc mErrorCallback;
     };
 };
 #endif
