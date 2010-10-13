@@ -97,10 +97,6 @@ void Forte::PDUPeerSet::Poll(int msTimeout)
     AutoUnlockMutex lock(mLock);
     if (mEPollFD == -1 || !mBuffer)
         throw EPDUPeerSetNotPolling();
-    if (mPeerSet.size() == 0)
-        // \TODO need a way to wait even if no peers exist, and
-        // seamlessly transition to a real epoll if a peer is added.
-        throw EPDUPeerSetNoPeers();
     struct epoll_event events[32];
     int nfds = epoll_wait(mEPollFD, events, 32, msTimeout);
 //    hlog(HLOG_DEBUG, "epoll_wait complete, nfds=%d", nfds);
