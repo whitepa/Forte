@@ -52,7 +52,6 @@ void Forte::ProcessMonitor::Run()
     //  the process terminates AND all peer connections close
     while (isActiveState() || mPeerSet.GetSize() > 0)
     {
-        hlog(HLOG_INFO, "state = %d  peerset.size = %u", mState, mPeerSet.GetSize());
         try
         {
             if (mGotSIGCHLD)
