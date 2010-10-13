@@ -96,7 +96,6 @@ namespace Forte
          */
         Process(const boost::shared_ptr<Forte::ProcessManager> &mgr,
                 const FString &procmon,
-                const FString &guid,
                 const FString &command,
                 const FString &currentWorkingDirectory = "/",
                 const FString &outputFilename = "/dev/null", 
@@ -239,13 +238,6 @@ namespace Forte
          */
         bool IsRunning();
 
-        /**
-         * GetGUID() returns the unique ID used to track this Process in the ProcessManager
-         *
-         * @return string containing the guid
-         */
-        FString GetGUID() { return mGUID; }
-		
         /**
          * GetProcessPID() returns the process id of the child process
          *
@@ -408,7 +400,6 @@ namespace Forte
         int mInputFD;
         int mOutputFD;
 
-        FString mGUID;
         pid_t mMonitorPid;
         pid_t mProcessPid;
         unsigned int mStatusCode;

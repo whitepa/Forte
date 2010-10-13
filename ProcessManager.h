@@ -1,7 +1,6 @@
 #ifndef __ProcessManager_h
 #define __ProcessManager_h
 
-#include "GUIDGenerator.h"
 #include "Thread.h"
 #include "Types.h"
 #include "PDUPeerSet.h"
@@ -39,7 +38,6 @@ namespace Forte
         static const int MAX_RUNNING_PROCS;
         static const int PDU_BUFFER_SIZE;
 
-//        typedef std::map<FString, boost::shared_ptr<Process> > ProcessMap;
         typedef std::map<int, boost::shared_ptr<Process> > ProcessMap;
         // typedef std::map<pid_t, boost::shared_ptr<Process> > RunningProcessMap;
         // typedef std::pair<pid_t, boost::shared_ptr<Process> > ProcessPair;
@@ -106,11 +104,6 @@ namespace Forte
         virtual const FString & GetProcmonPath(void) { return mProcmonPath; }
 
     private:
-        /**
-         * helper method called by Process objects to notify the
-         * ProcessManager a child process is running.
-         */
-//        virtual void runProcess(const FString &guid);
 
         /**
          * helper function called by Process objects to notify
@@ -147,7 +140,7 @@ namespace Forte
         void pduCallback(PDUPeer &peer);
 
         /**
-         * a map of processes, indexed by process GUID
+         * a map of processes, indexed by process ID
          */
         ProcessMap mProcesses;
 
@@ -160,11 +153,6 @@ namespace Forte
          * Lock for this entire proc manager
          */
         Mutex mLock;
-
-        /**
-         * GUIDGenerator
-         */
-        GUIDGenerator mGUIDGenerator;
 
         FString mProcmonPath;
     };

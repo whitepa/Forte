@@ -62,12 +62,9 @@ Forte::ProcessManager::CreateProcess(const FString &command,
                                      const StrStrMap *environment)
 {
     AutoUnlockMutex lock(mLock);
-    FString guid;
-    mGUIDGenerator.GenerateGUID(guid);
     boost::shared_ptr<Process> ph(
         new Process(GetPtr(),
                     GetProcmonPath(),
-                    guid,
                     command,
                     currentWorkingDirectory,
                     outputFilename,

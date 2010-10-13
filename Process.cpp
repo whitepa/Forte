@@ -9,7 +9,6 @@
 #include "ServerMain.h"
 #include "Util.h"
 #include "FTrace.h"
-#include "GUID.h"
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
@@ -31,7 +30,6 @@ using namespace Forte;
 
 Forte::Process::Process(const boost::shared_ptr<ProcessManager> &mgr,
                         const FString &procmon,
-                        const FString &guid,
                         const FString &command, 
                         const FString &currentWorkingDirectory, 
                         const FString &outputFilename, 
@@ -45,7 +43,6 @@ Forte::Process::Process(const boost::shared_ptr<ProcessManager> &mgr,
     mInputFilename(inputFilename),
     mInputFD(-1),
     mOutputFD(-1),
-    mGUID(guid),
     mMonitorPid(-1),
     mProcessPid(-1),
     mOutputString(""),
@@ -443,7 +440,7 @@ unsigned int Forte::Process::Wait()
     if (mState == STATE_ABANDONED)
         throw EProcessAbandoned();
 
-    hlog(HLOG_DEBUG, "waiting for process to end (%s)", mGUID.c_str());
+    hlog(HLOG_DEBUG, "waiting for process ID %u to end", mProcessPid);
     AutoUnlockMutex lock(mWaitLock);
     while (!isInTerminalState())
     {
@@ -471,7 +468,7 @@ void Forte::Process::Abandon()
         throw EProcessNotRunning();
     }
 
-    hlog(HLOG_DEBUG, "abandoning process %u (%s)", mProcessPid, mGUID.c_str());
+    hlog(HLOG_DEBUG, "abandoning process ID %u", mProcessPid);
     
     GetProcessManager()->abandonProcess(mManagementChannel->GetFD());
 
