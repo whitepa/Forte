@@ -28,6 +28,8 @@ namespace Forte
         PDUPeerSet() : mEPollFD(-1) {}
         virtual ~PDUPeerSet() { if (mEPollFD != -1) close(mEPollFD); }
 
+        unsigned int GetSize(void) { return mPeerSet.size(); }
+
         boost::shared_ptr<PDUPeer> PeerCreate(int fd);
 
         void SendAll(PDU &pdu);
