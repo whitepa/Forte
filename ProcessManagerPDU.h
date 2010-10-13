@@ -22,6 +22,7 @@ namespace Forte
         ProcessStatusExited,
         ProcessStatusKilled,
         ProcessStatusStopped,
+        ProcessStatusContinued,
         ProcessStatusUnknownTermination,
         ProcessStatusNotTerminated
     };

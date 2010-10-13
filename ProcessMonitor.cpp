@@ -48,13 +48,16 @@ void Forte::ProcessMonitor::Run()
 
     mPeerSet.SetProcessPDUCallback(boost::bind(&ProcessMonitor::pduCallback, this, _1));
 
-    while (mState != STATE_EXITED)
+    // The process monitor should exit when:
+    //  the process terminates AND all peer connections close
+    while (isActiveState() || mPeerSet.GetSize() > 0)
     {
+        hlog(HLOG_INFO, "state = %d  peerset.size = %u", mState, mPeerSet.GetSize());
         try
         {
-            mPeerSet.Poll(-1);
             if (mGotSIGCHLD)
                 doWait();
+            mPeerSet.Poll(500);
         }
         catch (EPDUPeerSetNoPeers &e)
         {
@@ -207,24 +210,35 @@ void Forte::ProcessMonitor::doWait(void)
             status->statusCode = WEXITSTATUS(child_status);
             hlog(HLOG_DEBUG, "child exited (status %d)", status->statusCode);
             status->type = ProcessStatusExited;
+            mState = STATE_EXITED;
         }
         else if (WIFSIGNALED(child_status))
         {
             status->statusCode = WTERMSIG(child_status);
             status->type = ProcessStatusKilled;
             hlog(HLOG_DEBUG, "child killed (signal %d)", status->statusCode);
+            mState = STATE_EXITED;
         }
         else if (WIFSTOPPED(child_status))
         {
             status->statusCode = WSTOPSIG(child_status);
             status->type = ProcessStatusStopped;
             hlog(HLOG_DEBUG, "child stopped (signal %d)", status->statusCode);
+            mState = STATE_STOPPED;
+        }
+        else if (WIFCONTINUED(child_status))
+        {
+            status->statusCode = 0;
+            status->type = ProcessStatusContinued;
+            hlog(HLOG_DEBUG, "child continued");
+            mState = STATE_RUNNING;
         }
         else
         {
             status->statusCode = child_status;
             status->type = ProcessStatusUnknownTermination;
             hlog(HLOG_ERR, "unknown child exit status (0x%x)", child_status);
+            mState = STATE_EXITED;
         }
         // Send the status PDU to all peer connections
         mPeerSet.SendAll(p);
@@ -346,6 +360,7 @@ void Forte::ProcessMonitor::startProcess(void)
     {
         // successful
         mPID = pid;
+        mState = STATE_RUNNING;
     }
 }
 

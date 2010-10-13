@@ -51,6 +51,11 @@ namespace Forte
 
     private:
         
+        bool isActiveState(void) {
+            return (mState == STATE_RUNNING ||
+                    mState == STATE_STOPPED);
+        }
+
         /** 
          * This function gets called whenever a PDU is received on any
          * peer.
