@@ -50,6 +50,13 @@ bool DbLiteConnection::Init(const FString& db,
     return DbConnection::Init(db, user, pass, host, socket, retries);
 }
 
+bool DbLiteConnection::Init(const FString& dbPath, 
+                            unsigned int retries)
+{
+    return DbConnection::Init(dbPath, "", "", "", "", retries);
+}
+
+
 bool DbLiteConnection::Init(struct sqlite3 *db)
 {
     mDB = db;

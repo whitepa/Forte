@@ -8,27 +8,27 @@ EventQueue::EventQueue() :
     mMode(QUEUE_MODE_BLOCKING),
     mShutdown(false),
     mMaxDepth(EVQ_MAX_DEPTH),
-    mEmptyCondition(mMutex)
+    mEmptyCondition(mMutex),
+    mNotify(NULL)
 {
-    mNotify = NULL;
 }
 
 EventQueue::EventQueue(int maxdepth) :
     mMode(QUEUE_MODE_BLOCKING),
     mShutdown(false),
     mMaxDepth((maxdepth <= EVQ_MAX_DEPTH) ? maxdepth : EVQ_MAX_DEPTH),
-    mEmptyCondition(mMutex)
+    mEmptyCondition(mMutex),
+    mNotify(NULL)
 {
-    mNotify = NULL;
 }
 
 EventQueue::EventQueue(int maxdepth, ThreadCondition *notifier) :
     mMode(QUEUE_MODE_BLOCKING),
     mShutdown(false),
     mMaxDepth((maxdepth <= EVQ_MAX_DEPTH) ? maxdepth : EVQ_MAX_DEPTH),
-    mEmptyCondition(mMutex)
+    mEmptyCondition(mMutex),
+    mNotify(notifier)
 {
-    mNotify = notifier;
 }
 
 EventQueue::~EventQueue()
