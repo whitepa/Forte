@@ -18,6 +18,10 @@ TEST(ProcessManager, RunProcess)
         hlog(HLOG_INFO, "new ProcessManager");
         boost::shared_ptr<ProcessManager> pm(new ProcessManager);
         hlog(HLOG_INFO, "CreateProcess");
+
+        sleep(1); // causes a race condition where the next Process is
+                  // added during the epoll_wait
+
         boost::shared_ptr<Process> ph = pm->CreateProcess("/bin/sleep 3");
         hlog(HLOG_INFO, "Run Process");
         ph->Run();
