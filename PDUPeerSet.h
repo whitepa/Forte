@@ -18,6 +18,12 @@ EXCEPTION_SUBCLASS2(EPDUPeerSet, EPDUPeerSetNoPeers, "No peers have been added f
 
 namespace Forte
 {
+    /**
+     * PDUPeerSet manages a set of PDUPeer objects, and provides a
+     * mechanism for polling the entire set for input simultaneously.
+     * 'PDU ready' and 'error' callbacks may be used as part of the
+     * polling mechanism.
+     */
     class PDUPeerSet : public Object
     {
     public:
@@ -28,16 +34,57 @@ namespace Forte
         PDUPeerSet() : mEPollFD(-1) {}
         virtual ~PDUPeerSet() { if (mEPollFD != -1) close(mEPollFD); }
 
+        /** 
+         * GetSize() returns the current number of PDUPeer objects
+         * being managed by this PDUPeerSet.
+         * 
+         * 
+         * @return size of the set
+         */
         unsigned int GetSize(void) { return mPeerSet.size(); }
 
+
+        /** 
+         * PeerCreate will create a new PDUPeer object for the already
+         * open peer connection on the given file descriptor.
+         * 
+         * @param fd 
+         * 
+         * @return 
+         */
         boost::shared_ptr<PDUPeer> PeerCreate(int fd);
 
-        void SendAll(PDU &pdu);
 
+        /** 
+         * SendAll will send the given PDU to ALL of the peers being
+         * managed by this PDUPeerSet.
+         * 
+         * @param pdu 
+         */
+        void SendAll(const PDU &pdu) const;
+
+
+        /** 
+         * SetProcessPDUCallback sets the single callback function to
+         * use when a complete PDU has been received on any of the
+         * peer connections.
+         * 
+         * @param f 
+         */
         void SetProcessPDUCallback(CallbackFunc f) {
             mProcessPDUCallback = f;
         }
 
+        /** 
+         * SetErrorCallback sets the single callback function to use
+         * when an unrecoverable error has occurred on any of the peer
+         * connections.  The file descriptor within the errored
+         * PDUPeer will still be valid at the time the callback is
+         * made, but will be closed immediately after the callback
+         * returns.
+         * 
+         * @param f 
+         */
         void SetErrorCallback(CallbackFunc f) {
             mErrorCallback = f;
         }
@@ -76,6 +123,12 @@ namespace Forte
          */
         void Poll(int msTimeout = -1);
 
+        /** 
+         * PeerDelete will delete the given peer from the PDUPeerSet,
+         * and remove the peer from any poll operation in progress.
+         * 
+         * @param peer 
+         */
         void PeerDelete(const boost::shared_ptr<Forte::PDUPeer> &peer);
     private:
         void peerDeleteLocked(const boost::shared_ptr<Forte::PDUPeer> &peer);
