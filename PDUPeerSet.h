@@ -135,7 +135,7 @@ namespace Forte
 
     protected:
         int mEPollFD;
-        Forte::Mutex mLock;
+        mutable Forte::Mutex mLock;
         std::set < boost::shared_ptr<PDUPeer> > mPeerSet;
         boost::shared_array<char> mBuffer;
         CallbackFunc mProcessPDUCallback;

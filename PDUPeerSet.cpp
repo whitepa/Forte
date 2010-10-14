@@ -4,6 +4,11 @@
 #include "LogManager.h"
 #include "Types.h"
 
+// \TODO remove this once EPOLLRDHUP makes it into sys/epoll.h
+#ifndef EPOLLRDHUP
+#define EPOLLRDHUP 0x2000
+#endif
+
 using namespace boost;
 using namespace Forte;
 
@@ -17,20 +22,20 @@ void Forte::PDUPeerSet::peerDeleteLocked(const shared_ptr<PDUPeer> &peer)
 {
     if (peer)
     {
-        // erase from FD map
-        mPeerSet.erase(peer);
         if (mEPollFD != -1 &&
             epoll_ctl(mEPollFD, EPOLL_CTL_DEL, peer->GetFD(), NULL) < 0)
             hlog(HLOG_ERR, "EPOLL_CTL_DEL failed: %s", strerror(errno));
+        // erase from FD map
+        mPeerSet.erase(peer);
     }
 }
-
 shared_ptr<PDUPeer> Forte::PDUPeerSet::PeerCreate(int fd)
 {
+    AutoUnlockMutex lock(mLock);
     shared_ptr<PDUPeer> peer(new PDUPeer(fd));
     mPeerSet.insert(peer);
     struct epoll_event ev;
-    ev.events = EPOLLIN | EPOLLERR | 0x2000; // \TODO EPOLLRDHUP = 0x2000
+    ev.events = EPOLLIN | EPOLLERR | EPOLLRDHUP;
     ev.data.ptr = peer.get();
     if (mEPollFD != -1 &&
         epoll_ctl(mEPollFD, EPOLL_CTL_ADD, fd, &ev) < 0)
@@ -41,8 +46,9 @@ shared_ptr<PDUPeer> Forte::PDUPeerSet::PeerCreate(int fd)
     return peer;
 }
 
-void Forte::PDUPeerSet::SendAll(PDU &pdu)
+void Forte::PDUPeerSet::SendAll(const PDU &pdu) const
 {
+    AutoUnlockMutex lock(mLock);
     foreach (const shared_ptr<PDUPeer> &peer, mPeerSet)
     {
         if (!peer) continue;
@@ -68,7 +74,8 @@ int Forte::PDUPeerSet::SetupEPoll(void)
     if (fd == -1)
         throw EPDUPeerSetPollCreate(strerror(errno));
     struct epoll_event ev;
-    ev.events = EPOLLIN | EPOLLERR | 0x2000; // \TODO EPOLLRDHUP = 0x2000
+    ev.events = EPOLLIN | EPOLLERR | EPOLLRDHUP;
+
     foreach (const shared_ptr<PDUPeer> &p, mPeerSet)
     {
         ev.data.ptr = p.get();
@@ -146,7 +153,7 @@ void Forte::PDUPeerSet::Poll(int msTimeout)
         if (error ||
             events[i].events & EPOLLERR ||
             events[i].events & EPOLLHUP ||
-            events[i].events & 0x2000) // \TODO EPOLLRDHUP
+            events[i].events & EPOLLRDHUP)
         {
             // disconnected, or needs a disconnect
             hlog(HLOG_DEBUG, "deleting peer on fd %d", peer->GetFD());
