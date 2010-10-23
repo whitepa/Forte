@@ -31,6 +31,12 @@ namespace Forte
             }
         virtual ~PDUPeer() { };
 
+        /** 
+         * Get a shared pointer to this PDUPeer.  NOTE: A shared_ptr
+         * to this object must already exist.
+         * 
+         * @return shared_ptr
+         */
         boost::shared_ptr<PDUPeer> GetPtr(void) {
             return boost::static_pointer_cast<PDUPeer>(Object::shared_from_this());
         }

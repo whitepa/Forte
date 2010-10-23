@@ -52,7 +52,10 @@ Forte::ProcessManager::~ProcessManager()
     // the Process objects.
 
     // \TODO abandon processes
-
+    
+    // shut down the thread
+    Shutdown();
+    WaitForShutdown();
 }
 
 boost::shared_ptr<Process> 
@@ -62,7 +65,7 @@ Forte::ProcessManager::CreateProcess(const FString &command,
                                      const FString &inputFilename,
                                      const StrStrMap *environment)
 {
-    AutoUnlockMutex lock(mLock);
+    FTRACE;
     boost::shared_ptr<Process> ph(
         new Process(GetPtr(),
                     GetProcmonPath(),
@@ -72,14 +75,26 @@ Forte::ProcessManager::CreateProcess(const FString &command,
                     inputFilename,
                     environment));
     ph->startMonitor();
+    AutoUnlockMutex lock(mProcessesLock);
     mProcesses[ph->getManagementFD()] = ph;
     return ph;
 }
 
 void Forte::ProcessManager::abandonProcess(const int fd)
 {
-    AutoUnlockMutex lock(mLock);
+    // don't allow the object to be destroyed while the lock is held,
+    // as the Process destructor also will attempt to abandon itself
+    // here.
+
+    // order of declarations is important!
+    boost::shared_ptr<Process> processPtr;
+    AutoUnlockMutex lock(mProcessesLock);
+    ProcessMap::iterator i = mProcesses.find(fd);
+    if (i == mProcesses.end()) return;
+    processPtr = (*i).second;
     mProcesses.erase(fd);
+    // lock is unlocked
+    // object is destroyed
 }
 
 boost::shared_ptr<Forte::PDUPeer> Forte::ProcessManager::addPeer(int fd)

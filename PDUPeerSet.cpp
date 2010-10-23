@@ -15,11 +15,6 @@ using namespace Forte;
 void Forte::PDUPeerSet::PeerDelete(const shared_ptr<PDUPeer> &peer)
 {
     AutoUnlockMutex lock(mLock);
-    peerDeleteLocked(peer);
-}
-
-void Forte::PDUPeerSet::peerDeleteLocked(const shared_ptr<PDUPeer> &peer)
-{
     if (peer)
     {
         if (mEPollFD != -1 &&
@@ -29,6 +24,7 @@ void Forte::PDUPeerSet::peerDeleteLocked(const shared_ptr<PDUPeer> &peer)
         mPeerSet.erase(peer);
     }
 }
+
 shared_ptr<PDUPeer> Forte::PDUPeerSet::PeerCreate(int fd)
 {
     AutoUnlockMutex lock(mLock);
@@ -67,15 +63,19 @@ void Forte::PDUPeerSet::SendAll(const PDU &pdu) const
 
 int Forte::PDUPeerSet::SetupEPoll(void)
 {
-    AutoUnlockMutex lock(mLock);
-    if (mEPollFD != -1)
-        return mEPollFD; // already set up
-    AutoFD fd = epoll_create(4);
-    if (fd == -1)
-        throw EPDUPeerSetPollCreate(strerror(errno));
+    AutoFD fd;
+    {
+        AutoUnlockMutex lock(mEPollLock);
+        if (mEPollFD != -1)
+            return mEPollFD; // already set up
+        fd = epoll_create(4);
+        if (fd == -1)
+            throw EPDUPeerSetPollCreate(strerror(errno));
+    }
     struct epoll_event ev;
     ev.events = EPOLLIN | EPOLLERR | EPOLLRDHUP;
 
+    AutoUnlockMutex lock(mLock);
     foreach (const shared_ptr<PDUPeer> &p, mPeerSet)
     {
         ev.data.ptr = p.get();
@@ -90,7 +90,7 @@ int Forte::PDUPeerSet::SetupEPoll(void)
 
 void Forte::PDUPeerSet::TeardownEPoll(void)
 {
-    AutoUnlockMutex lock(mLock);
+    AutoUnlockMutex lock(mEPollLock);
     if (mEPollFD != -1)
     {
         close(mEPollFD);
@@ -101,11 +101,16 @@ void Forte::PDUPeerSet::TeardownEPoll(void)
 
 void Forte::PDUPeerSet::Poll(int msTimeout)
 {
-    AutoUnlockMutex lock(mLock);
-    if (mEPollFD == -1 || !mBuffer)
-        throw EPDUPeerSetNotPolling();
+    int nfds = 0;
     struct epoll_event events[32];
-    int nfds = epoll_wait(mEPollFD, events, 32, msTimeout);
+    boost::shared_array<char> buffer;
+    {
+        AutoUnlockMutex lock(mEPollLock);
+        if (mEPollFD == -1 || !mBuffer)
+            throw EPDUPeerSetNotPolling();
+        nfds = epoll_wait(mEPollFD, events, 32, msTimeout);
+        buffer = mBuffer;
+    }
 //    hlog(HLOG_DEBUG, "epoll_wait complete, nfds=%d", nfds);
     if (nfds < 0 &&
         ((errno == EBADF ||
@@ -116,13 +121,29 @@ void Forte::PDUPeerSet::Poll(int msTimeout)
         throw EPDUPeerSetPollFailed(strerror(errno));
     }
     // process the fds
-    char *buffer = mBuffer.get();
+    char *rawBuffer = buffer.get();
     for (int i = 0; i < nfds; ++i)
     {
 //        hlog(HLOG_DEBUG, "i=%d events=0x%x", i, events[i].events);
         bool error = false;
-        PDUPeer *p = reinterpret_cast<PDUPeer *>(events[i].data.ptr);
-        const shared_ptr<PDUPeer> &peer(p->GetPtr());
+        shared_ptr<PDUPeer> peer;
+        {
+            AutoUnlockMutex lock(mLock);
+            PDUPeer *peerRawPtr = reinterpret_cast<PDUPeer *>(events[i].data.ptr);
+            // we must validate the peer pointer in case the peer was
+            // deleted prior to obtaining mLock
+            // \TODO make this more efficient
+            bool found = false;
+            foreach(const boost::shared_ptr<PDUPeer> &p, mPeerSet)
+            {
+                if (p.get() == peerRawPtr)
+                {
+                    found = true;
+                    break;
+                }
+            }
+            peer = peerRawPtr->GetPtr();
+        }
         if (!peer)
         {
             hlog(HLOG_CRIT, "invalid peer in epoll data");
@@ -131,7 +152,7 @@ void Forte::PDUPeerSet::Poll(int msTimeout)
         if (events[i].events & EPOLLIN)
         {
             // input is ready
-            int len = recv(peer->GetFD(), buffer, RECV_BUFFER_SIZE, 0);
+            int len = recv(peer->GetFD(), rawBuffer, RECV_BUFFER_SIZE, 0);
             if (len < 0)
             {
                 hlog(HLOG_ERR, "recv failed: %s", strerror(errno));
@@ -145,7 +166,7 @@ void Forte::PDUPeerSet::Poll(int msTimeout)
             else
             {
                 hlog(HLOG_DEBUG, "received %llu bytes", (u64) len);
-                peer->DataIn(len, buffer);
+                peer->DataIn(len, rawBuffer);
                 if (mProcessPDUCallback && peer->IsPDUReady())
                     mProcessPDUCallback(*peer);
             }
@@ -157,7 +178,7 @@ void Forte::PDUPeerSet::Poll(int msTimeout)
         {
             // disconnected, or needs a disconnect
             hlog(HLOG_DEBUG, "deleting peer on fd %d", peer->GetFD());
-            peerDeleteLocked(peer);
+            PeerDelete(peer);
             if (mErrorCallback)
                 mErrorCallback(*peer);
             peer->Close();

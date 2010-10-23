@@ -147,6 +147,11 @@ namespace Forte
         void errorCallback(PDUPeer &peer);
 
         /**
+         * Lock for the process map
+         */
+        Mutex mProcessesLock;
+
+        /**
          * a map of processes, indexed by process ID
          */
         ProcessMap mProcesses;
@@ -155,11 +160,6 @@ namespace Forte
          * Set of PDU peers
          */
         PDUPeerSet mPeerSet;
-
-        /**
-         * Lock for this entire proc manager
-         */
-        Mutex mLock;
 
         FString mProcmonPath;
     };

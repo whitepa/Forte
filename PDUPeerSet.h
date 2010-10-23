@@ -130,14 +130,20 @@ namespace Forte
          * @param peer 
          */
         void PeerDelete(const boost::shared_ptr<Forte::PDUPeer> &peer);
-    private:
-        void peerDeleteLocked(const boost::shared_ptr<Forte::PDUPeer> &peer);
 
     protected:
+        /**
+         * mEPollLock protects mEPollFD and mBuffer
+         */
+        mutable Forte::Mutex mEPollLock;
         int mEPollFD;
+        boost::shared_array<char> mBuffer;
+
+        /**
+         * mLock protects mPeerSet
+         */
         mutable Forte::Mutex mLock;
         std::set < boost::shared_ptr<PDUPeer> > mPeerSet;
-        boost::shared_array<char> mBuffer;
         CallbackFunc mProcessPDUCallback;
         CallbackFunc mErrorCallback;
     };

@@ -249,10 +249,10 @@ void Forte::Process::startMonitor()
 
         // create a new process group / session
         setsid();
-
+        FString childfdStr(childfd);
         char **vargs = new char* [3];
         vargs[0] = "(procmon)"; // \TODO include the name of the monitored process
-        vargs[1] = const_cast<char *>(FString(childfd).c_str());
+        vargs[1] = const_cast<char *>(childfdStr.c_str());
         vargs[2] = 0;
 //        fprintf(stderr, "procmon child, exec '%s' '%s'\n", mProcmonPath.c_str(), vargs[1]);
         execv(mProcmonPath, vargs);
@@ -262,7 +262,7 @@ void Forte::Process::startMonitor()
     else
     {
         // parent
-        close(childfd);
+        childfd.Close();
         // add a PDUPeer to the PeerSet owned by the ProcessManager
         shared_ptr<ProcessManager> pm(mProcessManagerPtr.lock());
         mManagementChannel = pm->addPeer(parentfd);
