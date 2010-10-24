@@ -109,6 +109,7 @@ void Forte::ProcessManager::pduCallback(PDUPeer &peer)
     // route this to the correct Process object
     int fd = peer.GetFD();
 
+    AutoUnlockMutex lock(mProcessesLock);
     ProcessMap::iterator i;
     if ((i = mProcesses.find(fd)) == mProcesses.end())
         throw EProcessManagerInvalidPeer();
@@ -122,6 +123,7 @@ void Forte::ProcessManager::errorCallback(PDUPeer &peer)
     // route this to the correct Process object
     int fd = peer.GetFD();
 
+    AutoUnlockMutex lock(mProcessesLock);
     ProcessMap::iterator i;
     if ((i = mProcesses.find(fd)) == mProcesses.end())
         throw EProcessManagerInvalidPeer();
