@@ -1,6 +1,7 @@
 #include <sys/epoll.h>
 #include "PDUPeerSet.h"
 #include "Foreach.h"
+#include "FTrace.h"
 #include "LogManager.h"
 #include "Types.h"
 
@@ -14,6 +15,7 @@ using namespace Forte;
 
 void Forte::PDUPeerSet::PeerDelete(const shared_ptr<PDUPeer> &peer)
 {
+    AutoReadUnlock epollLock(mEPollLock);
     AutoUnlockMutex lock(mLock);
     if (peer)
     {
@@ -27,6 +29,7 @@ void Forte::PDUPeerSet::PeerDelete(const shared_ptr<PDUPeer> &peer)
 
 shared_ptr<PDUPeer> Forte::PDUPeerSet::PeerCreate(int fd)
 {
+    AutoReadUnlock epollLock(mEPollLock);
     AutoUnlockMutex lock(mLock);
     shared_ptr<PDUPeer> peer(new PDUPeer(fd));
     mPeerSet.insert(peer);
@@ -63,9 +66,10 @@ void Forte::PDUPeerSet::SendAll(const PDU &pdu) const
 
 int Forte::PDUPeerSet::SetupEPoll(void)
 {
+    FTRACE;
+    AutoWriteUnlock pollLock(mEPollLock);
     AutoFD fd;
     {
-        AutoUnlockMutex lock(mEPollLock);
         if (mEPollFD != -1)
             return mEPollFD; // already set up
         fd = epoll_create(4);
@@ -90,7 +94,7 @@ int Forte::PDUPeerSet::SetupEPoll(void)
 
 void Forte::PDUPeerSet::TeardownEPoll(void)
 {
-    AutoUnlockMutex lock(mEPollLock);
+    AutoWriteUnlock lock(mEPollLock);
     if (mEPollFD != -1)
     {
         close(mEPollFD);
@@ -105,7 +109,7 @@ void Forte::PDUPeerSet::Poll(int msTimeout)
     struct epoll_event events[32];
     boost::shared_array<char> buffer;
     {
-        AutoUnlockMutex lock(mEPollLock);
+        AutoReadUnlock lock(mEPollLock);
         if (mEPollFD == -1 || !mBuffer)
             throw EPDUPeerSetNotPolling();
         nfds = epoll_wait(mEPollFD, events, 32, msTimeout);
@@ -142,12 +146,16 @@ void Forte::PDUPeerSet::Poll(int msTimeout)
                     break;
                 }
             }
-            peer = peerRawPtr->GetPtr();
-        }
-        if (!peer)
-        {
-            hlog(HLOG_CRIT, "invalid peer in epoll data");
-            throw EPDUPeerSetPollFailed();
+            if (found)
+                peer = peerRawPtr->GetPtr();
+            else
+            {
+                // this means the peer was removed after the poll but
+                // before we got around to processing the received
+                // data.
+                hlog(HLOG_DEBUG, "peer removed before data processed; skipping");
+                continue;
+            }
         }
         if (events[i].events & EPOLLIN)
         {

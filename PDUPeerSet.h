@@ -4,6 +4,7 @@
 #include "AutoFD.h"
 #include "AutoMutex.h"
 #include "PDUPeer.h"
+#include "RWLock.h"
 #include <boost/function.hpp>
 #include <boost/shared_array.hpp>
 
@@ -135,7 +136,7 @@ namespace Forte
         /**
          * mEPollLock protects mEPollFD and mBuffer
          */
-        mutable Forte::Mutex mEPollLock;
+        mutable RWLock mEPollLock;
         int mEPollFD;
         boost::shared_array<char> mBuffer;
 
