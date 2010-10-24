@@ -82,8 +82,8 @@ namespace Forte
     struct ProcessControlResPDU
     {
         int result; // 0 = success
-        int monitorPID;
-        int processPID;
+        pid_t monitorPID;
+        pid_t processPID;
         char error[1024]; // description of error
     } __attribute__((__packed__));
     struct ProcessInfoReqPDU

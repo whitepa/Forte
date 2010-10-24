@@ -393,9 +393,6 @@ namespace Forte
         FString mOutputFilename;
         FString mInputFilename;
 
-        int mInputFD;
-        int mOutputFD;
-
         pid_t mMonitorPid;
         pid_t mProcessPid;
         unsigned int mStatusCode;

@@ -41,8 +41,6 @@ Forte::Process::Process(const boost::shared_ptr<ProcessManager> &mgr,
     mCurrentWorkingDirectory(currentWorkingDirectory),
     mOutputFilename(outputFilename),
     mInputFilename(inputFilename),
-    mInputFD(-1),
-    mOutputFD(-1),
     mMonitorPid(-1),
     mProcessPid(-1),
     mOutputString(""),
@@ -68,6 +66,14 @@ Forte::Process::~Process()
     catch (Exception &e)
     {
         hlog(HLOG_ERR, "%s", e.what().c_str());
+    }
+    catch (std::exception &e)
+    {
+        hlog(HLOG_ERR, "%s", e.what());
+    }
+    catch (...)
+    {
+        hlog(HLOG_ERR, "Unknown exception!");
     }
 }
 
