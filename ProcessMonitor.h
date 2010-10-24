@@ -15,6 +15,8 @@ namespace Forte
                         "Unable to open input file");
     EXCEPTION_SUBCLASS2(EProcessMonitor, EProcessMonitorUnableToOpenOutputFile,
                         "Unable to open output file");
+    EXCEPTION_SUBCLASS2(EProcessMonitor, EProcessMonitorUnknownMessage,
+                        "Received an unsupported/unknown message");
 
     class ProcessMonitor
     {

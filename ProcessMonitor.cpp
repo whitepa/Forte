@@ -138,6 +138,7 @@ void Forte::ProcessMonitor::handleControlReq(const PDUPeer &peer, const PDU &pdu
             break;
         default:
             hlog(HLOG_ERR, "unknown control opcode %d", controlPDU->control);
+            throw EProcessMonitorUnknownMessage();
             break;
         }
         sendControlRes(peer, ProcessSuccess);
@@ -153,7 +154,7 @@ void Forte::ProcessMonitor::handleControlReq(const PDUPeer &peer, const PDU &pdu
     catch (EProcessMonitor &e)
     {
         // \TODO catch specific errors and send specific error codes
-        sendControlRes(peer, ProcessUnknownError);
+        sendControlRes(peer, ProcessUnknownError, e.what().c_str());
     }
 }
 
