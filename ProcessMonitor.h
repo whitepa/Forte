@@ -111,12 +111,6 @@ namespace Forte
 
 
         /**
-         * This pointer is used by the handleSIGCHLD() function in the
-         * management process only.
-         */
-        static ProcessMonitor *sInstancePtr;
-
-        /**
          * A log manager, so we can log.
          */
         Forte::LogManager mLogManager;
@@ -125,7 +119,7 @@ namespace Forte
          * flag to indicate a SIGCHLD has been received, and wait()
          * must be called.
          */
-        bool mGotSIGCHLD;
+        static bool sGotSIGCHLD;
 
         /**
          * epoll descriptor

@@ -10,7 +10,7 @@
 #include "ProcessManagerPDU.h"
 #include "FTrace.h"
 
-Forte::ProcessMonitor * Forte::ProcessMonitor::sInstancePtr = NULL;
+bool Forte::ProcessMonitor::sGotSIGCHLD = false;
 
 Forte::ProcessMonitor::ProcessMonitor(int argc, char *argv[]) :
     mInputFilename("/dev/null"),
@@ -25,7 +25,6 @@ Forte::ProcessMonitor::ProcessMonitor(int argc, char *argv[]) :
         throw EProcessMonitorArguments();
     int fd = fdStr.AsUnsignedInteger();
     mPeerSet.PeerCreate(fd);
-    sInstancePtr = this;
     argv[1] = NULL;
 }
 
@@ -37,7 +36,7 @@ void Forte::ProcessMonitor::Run()
 {    
     // this is the "main function" of the management process.
     // install a SIGCHLD handler
-    mGotSIGCHLD = false;
+    sGotSIGCHLD = false;
     sigset_t set;
     sigemptyset(&set);
     signal(SIGCHLD, handleSIGCHLD);
@@ -54,7 +53,7 @@ void Forte::ProcessMonitor::Run()
     {
         try
         {
-            if (mGotSIGCHLD)
+            if (sGotSIGCHLD)
                 doWait();
             mPeerSet.Poll(500);
         }
@@ -172,13 +171,13 @@ void Forte::ProcessMonitor::sendControlRes(const PDUPeer &peer, int result, cons
 
 void Forte::ProcessMonitor::handleSIGCHLD(int sig)
 {
-    sInstancePtr->mGotSIGCHLD = true;
+    sGotSIGCHLD = true;
 }
 
 void Forte::ProcessMonitor::doWait(void)
 {
     FTRACE;
-    mGotSIGCHLD = false;
+    sGotSIGCHLD = false;
     int child_status;
     pid_t tpid = waitpid(-1, &child_status, WNOHANG);
     if(tpid == -1)
