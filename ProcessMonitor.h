@@ -140,11 +140,6 @@ namespace Forte
         pid_t mPID;
 
         /**
-         * GUID given to us by the ProcessManager
-         */
-        FString mGUID;
-
-        /**
          * Peers we may be sending/receiving PDUs to/from.
          */
         PDUPeerSet mPeerSet;
