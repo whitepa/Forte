@@ -23,12 +23,14 @@ namespace Forte
                         "Unable to open the output file");
     EXCEPTION_SUBCLASS2(EProcess, EProcessUnableToCloseOutputFile,
                         "Unable to close the output file");
+    EXCEPTION_SUBCLASS2(EProcess, EProcessUnableToCWD,
+                        "Unable to change to working directory");
     EXCEPTION_SUBCLASS2(EProcess, EProcessUnableToFork,
                         "Unable to Fork Child Process");
+    EXCEPTION_SUBCLASS2(EProcess, EProcessUnableToExec,
+                        "Unable to Exec Child Process");
     EXCEPTION_SUBCLASS2(EProcess, EProcessUnableToCreateSocket,
                         "Unable to create a socketpair");
-    EXCEPTION_SUBCLASS2(EProcess, EProcessExecvFailed,
-                        "Execv Call Failed");
     EXCEPTION_SUBCLASS2(EProcess, EProcessNotRunning,
                         "Wait called on a non-running process");
     EXCEPTION_SUBCLASS2(EProcess, EProcessRunning,

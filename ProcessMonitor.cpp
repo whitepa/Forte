@@ -150,9 +150,20 @@ void Forte::ProcessMonitor::handleControlReq(const PDUPeer &peer, const PDU &pdu
     {
         sendControlRes(peer, ProcessUnableToOpenOutputFile);
     }
+    catch (EProcessMonitorUnableToCWD &e)
+    {
+        sendControlRes(peer, ProcessUnableToCWD);
+    }
+    catch (EProcessMonitorUnableToFork &e)
+    {
+        sendControlRes(peer, ProcessUnableToFork);
+    }
+    catch (EProcessMonitorUnableToExec &e)
+    {
+        sendControlRes(peer, ProcessUnableToExec);
+    }
     catch (EProcessMonitor &e)
     {
-        // \TODO catch specific errors and send specific error codes
         sendControlRes(peer, ProcessUnknownError, e.what().c_str());
     }
 }
@@ -252,7 +263,7 @@ void Forte::ProcessMonitor::startProcess(void)
 {
     FTRACE;
     if (mState != STATE_READY)
-        throw EProcessMonitor(); // \TODO specific errors
+        throw EProcessMonitorInvalidState();
 
     // open the input and output files
     // these will throw if they are unable to open the files
@@ -302,7 +313,7 @@ void Forte::ProcessMonitor::startProcess(void)
         if (!mCWD.empty() && chdir(mCWD))
         {
             hlog(HLOG_CRIT, "Cannot change directory to: %s", mCWD.c_str());
-            exit(-1);
+            throw EProcessMonitorUnableToCWD();
         }
 
         while (dup2(inputfd, 0) == -1 && errno == EINTR);
@@ -345,7 +356,7 @@ void Forte::ProcessMonitor::startProcess(void)
         
         execv(argv[0], argv);
         hlog(HLOG_ERR, "unable to execv the command");
-        exit(-1);
+        throw EProcessMonitorUnableToExec();
     }
     // parent
     while (close(inputfd) == -1 && errno == EINTR);
@@ -354,6 +365,7 @@ void Forte::ProcessMonitor::startProcess(void)
     if (pid < 0)
     {
         // failed to fork
+        throw EProcessMonitorUnableToFork();
     }
     else
     {

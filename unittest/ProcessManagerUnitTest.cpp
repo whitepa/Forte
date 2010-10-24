@@ -97,10 +97,10 @@ TEST(ProcessManager, CancelProcess)
         boost::shared_ptr<Process> ph = pm->CreateProcess("/bin/sleep 100");
         ph->Run();
         ASSERT_TRUE(ph->IsRunning());
-        ph->Signal(15);
+        ph->Signal(SIGTERM);
         ph->Wait();
         ASSERT_TRUE(!ph->IsRunning());
-        ASSERT_TRUE(ph->GetStatusCode() == 15);
+        ASSERT_TRUE(ph->GetStatusCode() == SIGTERM);
         ASSERT_TRUE(ph->GetProcessTerminationType() == Forte::Process::ProcessKilled);
         hlog(HLOG_INFO, "OutputString: %s", ph->GetOutputString().c_str());
     }

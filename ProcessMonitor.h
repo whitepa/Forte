@@ -15,8 +15,16 @@ namespace Forte
                         "Unable to open input file");
     EXCEPTION_SUBCLASS2(EProcessMonitor, EProcessMonitorUnableToOpenOutputFile,
                         "Unable to open output file");
+    EXCEPTION_SUBCLASS2(EProcessMonitor, EProcessMonitorUnableToCWD,
+                        "Unable to change to working directory");
+    EXCEPTION_SUBCLASS2(EProcessMonitor, EProcessMonitorUnableToFork,
+                        "Unable to fork a new process");
+    EXCEPTION_SUBCLASS2(EProcessMonitor, EProcessMonitorUnableToExec,
+                        "Unable to execute command");
     EXCEPTION_SUBCLASS2(EProcessMonitor, EProcessMonitorUnknownMessage,
                         "Received an unsupported/unknown message");
+    EXCEPTION_SUBCLASS2(EProcessMonitor, EProcessMonitorInvalidState,
+                        "Process Monitor in invalid state");
 
     class ProcessMonitor
     {

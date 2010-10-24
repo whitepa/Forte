@@ -196,9 +196,15 @@ pid_t Forte::Process::Run()
             break;
         case ProcessUnableToOpenOutputFile:
             throw EProcessUnableToOpenOutputFile(mErrorString);
+            break;  
+        case ProcessUnableToCWD:
+            throw EProcessUnableToCWD(mErrorString);
             break;
         case ProcessUnableToFork:
             throw EProcessUnableToFork(mErrorString);
+            break;
+        case ProcessUnableToExec:
+            throw EProcessUnableToExec(mErrorString);
             break;
         case ProcessProcmonFailure:
             throw EProcessManagementProcFailed();
