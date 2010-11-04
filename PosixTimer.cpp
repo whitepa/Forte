@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+#include "SystemCallUtil.h"
 
 using namespace Forte;
 
@@ -56,12 +57,12 @@ void PosixTimer::Init(sigevent_t& se)
             {
                 err = errno;
                 throw EPosixTimer("LOCK_TIMER_FAIL|||" +
-                             mFileSystem.StrError(err));
+                                  SystemCallUtil::GetErrorDescription(err));
             }
         }
         err = errno;
 
-        throw EPosixTimer(mFileSystem.StrError(err));
+        throw EPosixTimer(SystemCallUtil::GetErrorDescription(err));
     }
     mValidPosixTimer = true;
     //hlog(HLOG_DEBUG4, "Timer Create %u", mPosixTimer);
