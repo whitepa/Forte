@@ -32,7 +32,6 @@ namespace Forte
     EXCEPTION_SUBCLASS(EFileSystem, EFileSystemReadlink);
     EXCEPTION_SUBCLASS(EFileSystem, EFileSystemRename);
     EXCEPTION_SUBCLASS(EFileSystem, EFileSystemResolveSymLink);
-    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemSymLink);
     EXCEPTION_SUBCLASS(EFileSystem, EFileSystemTouch);
     EXCEPTION_SUBCLASS(EFileSystem, EFileSystemUnlink);
 

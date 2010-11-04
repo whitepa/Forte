@@ -6,6 +6,7 @@
 #include <vector>
 #include <cstring>
 #include <sys/time.h>
+#include "SystemErrorException.h"
 
 using namespace Forte;
 
@@ -465,7 +466,7 @@ void FileSystem::SymLink(const FString& from, const FString& to)
     {
         stmp.Format("FORTE_CREATE_SYMLINK_FAIL|||%s|||%s|||%s",
                     from.c_str(), to.c_str(), StrError(errno).c_str());
-        throw EFileSystemSymLink(stmp);
+        THROW_ERRNO_EXCEPTION(stmp);
     }
 }
 
@@ -480,7 +481,7 @@ void FileSystem::SymLinkAt(const FString& from, int dir_to_fd, const FString& to
     {
         stmp.Format("FORTE_CREATE_SYMLINK_FAIL|||%s|||%s|||%s",
                     from.c_str(), to.c_str(), StrError(errno).c_str());
-        throw EFileSystemSymLink(stmp);
+        THROW_ERRNO_EXCEPTION(stmp);
     }
 }
 
