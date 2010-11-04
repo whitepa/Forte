@@ -128,3 +128,24 @@ bool MockFileSystem::SymLinkWasCreated(const FString& from, const FString& to)
 
     return false;
 }
+
+void MockFileSystem::Unlink(const FString& path, bool unlink_children,
+                    progress_callback_t progress_callback,
+                    void *callback_data)
+{
+    FTRACE2("%s", path.c_str());
+
+    mFilesUnlinked[path] = true;
+}
+
+void MockFileSystem::ClearFilesUnlinked()
+{
+    mFilesUnlinked.clear();
+}
+
+bool MockFileSystem::FileWasUnlinked(const FString& path)
+{
+    FTRACE2("%s", path.c_str());
+
+    return (mFilesUnlinked.find(path) != mFilesUnlinked.end());
+}
