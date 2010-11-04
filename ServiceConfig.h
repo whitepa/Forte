@@ -5,6 +5,7 @@
 #include "AutoMutex.h"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/info_parser.hpp>
+#include <boost/property_tree/ini_parser.hpp>
 
 namespace Forte
 {
@@ -21,6 +22,14 @@ namespace Forte
      */
     class ServiceConfig : public Object {
     public:
+
+        enum ServiceConfigFileType
+        {
+            INI,
+            INFO,
+            UNKNOWN,
+        };
+
         ServiceConfig();
         /** 
          * Create a ServiceConfig object, and parse the specified
@@ -30,7 +39,7 @@ namespace Forte
          * 
          * @return 
          */
-        ServiceConfig(const char *configFile);
+        ServiceConfig(const char *configFile, ServiceConfigFileType type = INFO);
 
         /** 
          * Read the configuration file at the given path, and populate
@@ -40,7 +49,7 @@ namespace Forte
          * 
          * @param configFile 
          */
-        void ReadConfigFile(const char *configFile);
+        void ReadConfigFile(const char *configFile, ServiceConfigFileType type = INFO);
 
         /** 
          * Set a given key to the given value.  Previous information
@@ -70,8 +79,24 @@ namespace Forte
                              const char *subkey,
                              FStringVector &vec);
 
+        /**
+         * Write the configuration back to the service config
+         * file that it read from
+         */
+        void WriteToConfigFile(void);
+
+        /**
+         * Write the configuration to a new config file
+         *
+         * @param newConfigFile the new config file to write.
+         */
+        void WriteToConfigFile(const char *newConfigFile);
+        
+
     protected:
 
+        ServiceConfigFileType mConfigFileType;
+        std::string mConfigFileName;
         Mutex mMutex;
         boost::property_tree::ptree mPTree;
     };
