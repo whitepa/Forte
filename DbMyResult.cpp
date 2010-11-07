@@ -105,7 +105,7 @@ size_t DbMyResult::MyData::GetNumRows()
     return mysql_num_rows(mResult);
 }
 
-bool DbMyResult::MyData::seek(size_t offset)
+bool DbMyResult::MyData::Seek(size_t offset)
 {
     if (mResult == NULL) return false;
     mysql_data_seek(mResult, offset);

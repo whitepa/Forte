@@ -21,6 +21,12 @@ namespace Forte
         virtual ~DbMyConnection();
 
         // initialization
+        virtual bool Init(const FString& db, 
+                          const FString& user, 
+                          const FString& pass,
+                          const FString& host = "localhost", 
+                          const FString& socket = "",
+                          unsigned int retries = 3);
         virtual bool Init(MYSQL *mysql);
 
         // connection management
