@@ -43,11 +43,20 @@ SSHRunner::SSHRunner(
     }
 }
 
+SSHRunner::SSHRunner() :
+    mSession (NULL),
+    mSocket (0)
+{
+}
+
 SSHRunner::~SSHRunner()
 {
-    libssh2_session_disconnect(mSession, "Goodbye");
-    libssh2_session_free(mSession);    
-    close(mSocket);
+    if (mSession != NULL)
+    {
+        libssh2_session_disconnect(mSession, "Goodbye");
+        libssh2_session_free(mSession);    
+        close(mSocket);
+    }
 }
 
 int SSHRunner::Run(

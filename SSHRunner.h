@@ -25,6 +25,12 @@ namespace Forte
     {
     public:
         /**
+         * Empty constructor
+         * Mostly for mock object which might inherit.
+         */
+        SSHRunner();
+
+        /**
          * Constructor
          *
          * @param username
