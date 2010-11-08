@@ -41,7 +41,9 @@ void ServiceConfig::ReadConfigFile(
     }
     catch (boost::property_tree::ptree_error &e)
     {
-        throw EServiceConfig("could not load file");
+        FString stmp;
+        stmp.Format("could not load file %s", mConfigFileName.c_str());
+        throw EServiceConfig(stmp);
     }    
 
 }
@@ -122,6 +124,8 @@ void ServiceConfig::WriteToConfigFile(const char *newConfigFile)
     }
     catch (boost::property_tree::ptree_error &e)
     {
-        throw EServiceConfig("could not write to config file");
+        FString stmp;
+        stmp.Format("could not write to config file : %s", newConfigFile);
+        throw EServiceConfig(stmp);
     }
 }
