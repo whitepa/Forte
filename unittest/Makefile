@@ -18,7 +18,8 @@ INCLUDE = \
 	-I../mockobjects \
 	$(XML_INCLUDE) \
 	$(BOOST_INCLUDE) \
-	$(GTEST_INCLUDE)
+	$(GTEST_INCLUDE) \
+	$(DB_INCLUDE)
 
 LIBS = \
 	-L$(TARGETDIR) \
