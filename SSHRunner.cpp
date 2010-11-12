@@ -169,7 +169,8 @@ unsigned int SSHRunner::createSocketAndConnect(
     {
         FString stmp;
         stmp.Format("could not get hostbyname for %s", ipAddress);
-        hlog(HLOG_ERR, "%s", stmp.c_str());
+        hlog(HLOG_ERR, "%s (%i: %s)", stmp.c_str(), h_errno, 
+             hstrerror(h_errno));
         throw ESocketError(stmp);
     }
 
