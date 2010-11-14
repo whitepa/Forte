@@ -7,10 +7,10 @@
 #include <unistd.h>
 
 // constants
-const char* Forte::CClusterLock::LOCK_PATH = "/var/lock";
-const unsigned Forte::CClusterLock::DEFAULT_TIMEOUT = 120;
-const int Forte::CClusterLock::TIMER_SIGNAL = SIGRTMIN + 10;
-const char* Forte::CClusterLock::VALID_LOCK_CHARS =
+const char* Forte::ClusterLock::LOCK_PATH = "/var/lock";
+const unsigned Forte::ClusterLock::DEFAULT_TIMEOUT = 120;
+const int Forte::ClusterLock::TIMER_SIGNAL = SIGRTMIN + 10;
+const char* Forte::ClusterLock::VALID_LOCK_CHARS =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
     "0123456789"
@@ -18,21 +18,21 @@ const char* Forte::CClusterLock::VALID_LOCK_CHARS =
 
 
 // statics
-Forte::Mutex Forte::CClusterLock::sMutex;
-std::map<Forte::FString, Forte::Mutex> Forte::CClusterLock::sMutexMap;
-bool Forte::CClusterLock::sSigactionInitialized = false;
+Forte::Mutex Forte::ClusterLock::sMutex;
+std::map<Forte::FString, Forte::Mutex> Forte::ClusterLock::sMutexMap;
+bool Forte::ClusterLock::sSigactionInitialized = false;
 
 // debug statics
-// CMutex CClusterLock::s_counter_mutex;
-// int CClusterLock::s_counter = 0;
-// int CClusterLock::s_outstanding_locks = 0;
-// int CClusterLock::s_outstanding_timers = 0;
+// CMutex ClusterLock::s_counter_mutex;
+// int ClusterLock::s_counter = 0;
+// int ClusterLock::s_outstanding_locks = 0;
+// int ClusterLock::s_outstanding_timers = 0;
 
 using namespace Forte;
 // -----------------------------------------------------------------------------
 
 // ctor/dtor
-CClusterLock::CClusterLock(const FString& name, unsigned timeout)
+ClusterLock::ClusterLock(const FString& name, unsigned timeout)
     : mName(name)
     , mFD(-1)
     , mTimer()
@@ -42,8 +42,19 @@ CClusterLock::CClusterLock(const FString& name, unsigned timeout)
     lock(name, timeout);
 }
 
+ClusterLock::ClusterLock(const FString& name, unsigned timeout,  
+                         const Forte::FString& errorString)
+    : mName(name)
+    , mFD(-1)
+    , mTimer()
+    , mMutex(NULL)
+{
+    init();
+    lock(name, timeout, errorString);
+}
 
-CClusterLock::CClusterLock()
+
+ClusterLock::ClusterLock()
     : mFD(-1)
     , mTimer()
     , mMutex(NULL)
@@ -52,7 +63,7 @@ CClusterLock::CClusterLock()
 }
 
 
-CClusterLock::~CClusterLock()
+ClusterLock::~ClusterLock()
 {
     unlock();
     fini();
@@ -60,13 +71,13 @@ CClusterLock::~CClusterLock()
 
 
 // helpers
-void CClusterLock::sig_action(int sig, siginfo_t *info, void *context)
+void ClusterLock::sig_action(int sig, siginfo_t *info, void *context)
 {
     // cout << pthread_self() << "  caught signal " << sig << endl;
 }
 
 
-void CClusterLock::init()
+void ClusterLock::init()
 {
 //     //debug
 //     {
@@ -88,7 +99,7 @@ void CClusterLock::init()
             // init sigaction (once per process)
             memset(&sa, 0, sizeof(sa));
             sigemptyset(&sa.sa_mask);
-            sa.sa_sigaction = &CClusterLock::sig_action;
+            sa.sa_sigaction = &ClusterLock::sig_action;
             sa.sa_flags = SA_SIGINFO;
             sigaction(TIMER_SIGNAL, &sa, NULL);
             sSigactionInitialized = true;
@@ -117,32 +128,32 @@ void CClusterLock::init()
 //     {
 //         CAutoUnlockMutex lock(s_counter_mutex);
 //         s_outstanding_timers++;
-//         hlog(HLOG_DEBUG4, "CClusterLock: %u ( timer create, %i outstanding", m_counter, s_outstanding_timers);
+//         hlog(HLOG_DEBUG4, "ClusterLock: %u ( timer create, %i outstanding", m_counter, s_outstanding_timers);
 //     }
 }
 
 
-void CClusterLock::fini()
+void ClusterLock::fini()
 {
     /*int ret_code;
     ret_code = timer_delete(mTimer);
     if (ret_code != 0)
     {
         // not sure if we can do anything about this but it'd be nice to know
-        hlog(HLOG_ERR, "CClusterLock: Failed to delete timer. %i", ret_code);
+        hlog(HLOG_ERR, "ClusterLock: Failed to delete timer. %i", ret_code);
         }*/
     
 //     //debug
 //     {
 //         CAutoUnlockMutex lock(s_counter_mutex);
 //         s_outstanding_timers--;
-//         hlog(HLOG_DEBUG4, "CClusterLock: %u ) timer delete, %i outstanding", m_counter, s_outstanding_timers);
+//         hlog(HLOG_DEBUG4, "ClusterLock: %u ) timer delete, %i outstanding", m_counter, s_outstanding_timers);
 //     }
 }
 
 
 // lock/unlock
-void CClusterLock::lock(const FString& name, unsigned timeout, const FString& errorString)
+void ClusterLock::lock(const FString& name, unsigned timeout, const FString& errorString)
 {
     if (name == "/fsscale0/lock/state_db")
         hlog(HLOG_DEBUG, "LOCK STATE DB");
@@ -169,7 +180,7 @@ void CClusterLock::lock(const FString& name, unsigned timeout, const FString& er
     // changing lock names?
     if (filename != mName && (!mName.empty()))
     {
-        hlog(HLOG_INFO, "CClusterLock - reusing lock with a different name");
+        hlog(HLOG_INFO, "ClusterLock - reusing lock with a different name");
         unlock();
     }
 
@@ -266,17 +277,17 @@ void CClusterLock::lock(const FString& name, unsigned timeout, const FString& er
     if (name == "/fsscale0/lock/state_db")
         hlog(HLOG_DEBUG, "LOCKED STATE DB");
 
-    //hlog(HLOG_DEBUG4, "CClusterLock: %u [ locked", mTimer.TimerID());
+    //hlog(HLOG_DEBUG4, "ClusterLock: %u [ locked", mTimer.TimerID());
 //     //debug
 //     {
 //         CAutoUnlockMutex lock(s_counter_mutex);
 //         s_outstanding_locks++;
-//         hlog(HLOG_DEBUG4, "CClusterLock: %u [ locked, %i outstanding", m_counter, s_outstanding_locks);
+//         hlog(HLOG_DEBUG4, "ClusterLock: %u [ locked, %i outstanding", m_counter, s_outstanding_locks);
 //     }
 }
 
 
-void CClusterLock::unlock()
+void ClusterLock::unlock()
 {
     if (mName == "/fsscale0/lock/state_db")
         hlog(HLOG_DEBUG, "UNLOCKED STATE DB");
@@ -291,18 +302,18 @@ void CClusterLock::unlock()
         mLock->unlock();
         mLock.reset();
         mFD.Close();
-        //hlog(HLOG_DEBUG4, "CClusterLock: %u ] unlocked", mTimer.TimerID());
+        //hlog(HLOG_DEBUG4, "ClusterLock: %u ] unlocked", mTimer.TimerID());
 //         //debug
 //         {
 //             CAutoUnlockMutex lock(s_counter_mutex);
 //             s_outstanding_locks--;
-//             hlog(HLOG_DEBUG4, "CClusterLock: %u ] unlocked, %i outstanding", m_counter, s_outstanding_locks);
+//             hlog(HLOG_DEBUG4, "ClusterLock: %u ] unlocked, %i outstanding", m_counter, s_outstanding_locks);
 //         }
     }
 //     //debug
 //     else
 //     {
-//         hlog(HLOG_DEBUG4, "CClusterLock: unlock called on %i mFD is -1", m_counter);
+//         hlog(HLOG_DEBUG4, "ClusterLock: unlock called on %i mFD is -1", m_counter);
 //     }
 
     // release mutex?

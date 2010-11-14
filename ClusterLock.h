@@ -24,12 +24,13 @@ EXCEPTION_SUBCLASS(EClusterLock,
                    EClusterLockFile);
 // -----------------------------------------------------------------------------
 
-class CClusterLock
+class ClusterLock
 {
 public:
-    CClusterLock();
-    CClusterLock(const Forte::FString& name, unsigned timeout = 120);
-    virtual ~CClusterLock();
+    ClusterLock();
+    ClusterLock(const Forte::FString& name, unsigned timeout = 120);
+    ClusterLock(const Forte::FString& name, unsigned timeout, const Forte::FString& errorString);
+    virtual ~ClusterLock();
 
     void unlock();
     void lock(const Forte::FString& name, unsigned timeout, const Forte::FString& errorString = "");
