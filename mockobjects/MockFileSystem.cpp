@@ -1,4 +1,5 @@
 #include "MockFileSystem.h"
+#include "FTrace.h"
 
 using namespace Forte;
 
@@ -93,10 +94,58 @@ StrStrMap* MockFileSystem::getCopiedFileMap()
 
 bool MockFileSystem::file_exists(const FString& path)
 {
+    return FileExists(path);
+}
+
+bool MockFileSystem::FileExists(const FString& path)
+{
     return m_fileExistsResultMap[path];
 }
 
 void MockFileSystem::setFileExistsResult(const FString& path, bool result)
 {
     m_fileExistsResultMap[path] = result;
+}
+
+void MockFileSystem::SymLink(const FString& from, const FString& to)
+{
+    mSymLinksCreated[from] = to;
+}
+
+bool MockFileSystem::SymLinkWasCreated(const FString& from, const FString& to)
+{
+    FTRACE2("%s -> %s", from.c_str(), to.c_str());
+
+    StrStrMap::const_iterator i;
+    if ((i = mSymLinksCreated.find(from)) == mSymLinksCreated.end())
+    {
+        return false;
+    } 
+    else if ((*i).second == to) // make sure the to matches
+    {
+        return true;
+    }
+
+    return false;
+}
+
+void MockFileSystem::Unlink(const FString& path, bool unlink_children,
+                    progress_callback_t progress_callback,
+                    void *callback_data)
+{
+    FTRACE2("%s", path.c_str());
+
+    mFilesUnlinked[path] = true;
+}
+
+void MockFileSystem::ClearFilesUnlinked()
+{
+    mFilesUnlinked.clear();
+}
+
+bool MockFileSystem::FileWasUnlinked(const FString& path)
+{
+    FTRACE2("%s", path.c_str());
+
+    return (mFilesUnlinked.find(path) != mFilesUnlinked.end());
 }
