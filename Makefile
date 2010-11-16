@@ -60,6 +60,8 @@ SRCS =	\
 	OnDemandDispatcher.cpp \
 	OpenSSLInitializer.cpp \
 	PidFile.cpp \
+	PDUPeer.cpp \
+	PDUPeerSet.cpp \
 	PosixTimer.cpp \
 	ProcFileSystem.cpp \
 	ProcRunner.cpp \
