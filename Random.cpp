@@ -1,5 +1,6 @@
 #include "FString.h"
 #include "Random.h"
+#include "LogManager.h"
 #include <fstream>
 
 using namespace Forte;
@@ -8,6 +9,7 @@ using namespace std;
 FString Random::GetSecureRandomData(unsigned int length)
 {
     ifstream device;
+    hlog(HLOG_WARN, "Random::GetSecureRandomData is deprecated");
     device.open("/dev/random", ios::in | ios::binary);
     if (!device.good())
         throw ERandom("unable to open /dev/random");
@@ -20,6 +22,7 @@ FString Random::GetSecureRandomData(unsigned int length)
 FString Random::GetRandomData(unsigned int length)
 {
     ifstream device;
+    hlog(HLOG_WARN, "Random::GetSecureRandomData is deprecated");
     device.open("/dev/urandom", ios::in | ios::binary);
     if (!device.good())
         throw ERandom("unable to open /dev/urandom");
@@ -32,6 +35,7 @@ FString Random::GetRandomData(unsigned int length)
 unsigned int Random::GetRandomUInt(void)
 {
     ifstream device;
+    hlog(HLOG_WARN, "Random::GetSecureRandomData is deprecated");
     device.open("/dev/urandom", ios::in | ios::binary);
     if (!device.good())
         throw ERandom("unable to open /dev/urandom");
