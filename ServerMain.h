@@ -35,11 +35,11 @@ namespace Forte
         void WritePidFile();
         virtual void PrepareSigmask();
  
-	/**
-	 * Tell this server to shutdown
-	 */
-	void Shutdown();
-	bool mShutdown;
+        /**
+         * Tell this server to shutdown
+         */
+        void Shutdown();
+        bool mShutdown;
 
         FString mHostname;
         FString mConfigFile;
