@@ -76,7 +76,7 @@ void * Forte::ReceiverThread::run(void)
 
         // TODO: shared_ptr
         boost::shared_ptr<RequestEvent> e = make_shared<RequestEvent>();
-        e->mFd = s;
+        e->mFD = s;
         // mark the time of accept
         gettimeofday(&(e->mTime), NULL);
         // TODO: store client IP address in mClient
