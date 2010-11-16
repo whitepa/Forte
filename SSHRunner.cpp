@@ -186,6 +186,7 @@ unsigned int SSHRunner::createSocketAndConnect(
 
     if(connect(sock, (struct sockaddr *)&s, sizeof(s)) < 0)
     {
+        close(sock);
         FString stmp;
         stmp.Format("Failed to connect with sock : %d", sock);
         hlog(HLOG_ERR, "%s", stmp.c_str());
