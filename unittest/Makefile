@@ -18,7 +18,8 @@ INCLUDE = \
 	-I../mockobjects \
 	$(XML_INCLUDE) \
 	$(BOOST_INCLUDE) \
-	$(GTEST_INCLUDE)
+	$(GTEST_INCLUDE) \
+	$(DB_INCLUDE)
 
 LIBS = \
 	-L$(TARGETDIR) \
@@ -43,7 +44,8 @@ BSRCS = ContextPredicateUnitTest.cpp \
 	StateMachineUnitTest2.cpp \
 	StateMachineUnitTest3.cpp \
 	StateMachineUnitTest4.cpp \
-	StateMachineUnitTest5.cpp
+	StateMachineUnitTest5.cpp \
+	SCSIUtilUnitTest.cpp
 GSRCS = FileSystemUtilUnitTest.cpp
 
 GPROGS = $(GSRCS:%.cpp=$(TARGETDIR)/%)
@@ -75,6 +77,14 @@ $(TARGETDIR)/FileSystemUtilUnitTest: ../$(TARGETDIR)/FileSystemUtil.o FileSystem
 	$(GTEST_LIB) \
 	$(LIBS)
 
+$(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp
+	echo "Building $@..."
+	$(CCC) SCSIUtilUnitTest.cpp \
+	-o $(TARGETDIR)/SCSIUtilUnitTest \
+	$(SCALE_SERVICE_CLIENT_LIBS)  \
+	$(INCLUDE) \
+	$(GTEST_LIB) \
+	$(LIBS)
 # tail
 include $(BUILDROOT)/re/make/tail.mk
 
