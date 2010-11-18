@@ -57,7 +57,7 @@ namespace Forte
 
             switch (theErrNo) {
             case 0:
-                break;
+                throw ESystemError("Unexpected errno=0");
             case EPERM:
                 throw EErrNoEPERM(errDesc);
             case ENOENT:
