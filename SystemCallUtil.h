@@ -48,12 +48,11 @@ namespace Forte
     class SystemCallUtil
     {
     public:
-        static void CheckAndThrowOnError(int theErrNo) {
-            CheckAndThrowOnError(theErrNo, GetErrorDescription(theErrNo));
+        static void ThrowErrNoException(int theErrNo) {
+            ThrowErrNoException(theErrNo, GetErrorDescription(theErrNo));
         }
 
-        static void CheckAndThrowOnError(int theErrNo, 
-                                         const FString& errDesc) {
+        static void ThrowErrNoException(int theErrNo, const FString& errDesc) {
             hlog(HLOG_ERR, "errno %d (%s)", theErrNo, errDesc.c_str()); 
 
             switch (theErrNo) {
