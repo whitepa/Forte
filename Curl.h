@@ -9,6 +9,11 @@
 
 namespace Forte
 {
+    /**
+     * in order to use this Curl object you need to run curl_global_init() somewhere
+     * in the application before you use the Curl class. You should also call
+     * curl_global_cleanup() when you are done.
+     */
     class Curl : public Object
     {
     public:
@@ -74,13 +79,21 @@ namespace Forte
     };
 
 
-    // global initialization helper class
-    class CurlInitializer : public Object
+// global initialization helper class
+class CurlInitializer
+{
+public:
+    CurlInitializer(long flags = CURL_GLOBAL_ALL)
     {
-    public:
-        CurlInitializer(long flags = CURL_GLOBAL_ALL) { Curl::Init(flags); }
-        ~CurlInitializer() { Curl::Cleanup(); }
-    };
+//        curl_global_init(flags);
+        Curl::Init(flags);
+    }
+    ~CurlInitializer() 
+    {
+//        curl_global_cleanup();
+        Curl::Cleanup(); 
+    }
+};
 
 
     typedef boost::shared_ptr<Curl> CurlSharedPtr;
