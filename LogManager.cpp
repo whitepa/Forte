@@ -1,3 +1,6 @@
+#include <errno.h>
+#include <string.h>
+
 #include "Foreach.h"
 #include "FTrace.h"
 #include "LogManager.h"
@@ -544,6 +547,16 @@ void _hlog(const char *func, const char * file, int line, int level, const char 
     {
     }
     va_end(ap);
+}
+
+void _hlog_errno(const char* func, const char* file, int line, int level)
+{
+    char  err_buf[HLOG_ERRNO_BUF_LEN];
+
+    memset(err_buf, 0, HLOG_ERRNO_BUF_LEN);
+    strerror_r(errno, err_buf, HLOG_ERRNO_BUF_LEN-1);
+
+    _hlog(func, file, line, level, "strerror: %s", err_buf);
 }
 
 static const char *levelstr[] = 
