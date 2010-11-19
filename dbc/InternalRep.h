@@ -177,7 +177,8 @@ namespace DBC {
     };
     class BigIntType : public Object {
     public:
-        BigIntType(int size) : mSize(size) { };
+        BigIntType(int size, int options = OPT_NONE) : mSize(size)
+            { addOptions(options); }
 
         int mSize;
     };

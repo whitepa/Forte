@@ -264,6 +264,8 @@ column_type:
             {$$ = NEWOBJ(TinyIntType(TC(IntNum,$3).asInt()));}
       | UNSIGNED INT '(' INTNUM ')'
             {$$ = NEWOBJ(IntType(TC(IntNum,$4).asInt(), OPT_UNSIGNED));}
+      | UNSIGNED BIGINT '(' INTNUM ')'
+            {$$ = NEWOBJ(BigIntType(TC(IntNum,$4).asInt(), OPT_UNSIGNED));}
       | LONGTEXT
             {$$ = NEWOBJ(LongTextType());}
       | TEXT
