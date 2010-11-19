@@ -1,6 +1,8 @@
 #ifndef _RequestHandler_h
 #define _RequestHandler_h
 
+#include "Thread.h"
+
 namespace Forte
 {
 // base class for a user-defined request handler
@@ -8,7 +10,7 @@ namespace Forte
     public:
         inline RequestHandler(unsigned int timeout = 0) : mTimeout(timeout) {};
         inline virtual ~RequestHandler() {};
-        virtual void Handler(Event *e) = 0;
+        virtual void Handler(Event *e, Thread* myThread) = 0;
         virtual void Busy(void) = 0;
         virtual void Periodic(void) = 0;
         virtual void Init(void) = 0;

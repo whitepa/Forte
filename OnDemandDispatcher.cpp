@@ -89,7 +89,7 @@ void * Forte::OnDemandDispatcherWorker::run()
     OnDemandDispatcher &disp(dynamic_cast<OnDemandDispatcher&>(mDispatcher));
     mThreadName.Format("%s-od-%u", disp.mDispatcherName.c_str(), GetThreadID());
     disp.mRequestHandler->Init();
-    disp.mRequestHandler->Handler(mEventPtr.get());
+    disp.mRequestHandler->Handler(mEventPtr.get(), this);
     // thread is complete at this point, resetting our event pointer
     // will cause the manager to reap us
     mEventPtr.reset();
