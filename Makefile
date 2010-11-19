@@ -19,6 +19,8 @@ INCLUDE = $(DB_INCLUDE) $(XML_INCLUDE) $(BOOST_INCLUDE) -I. $(MYSQL_INCLUDE)
 CCARGS += -Wall -DFORTE_FUNCTION_TRACING
 SRCS =	\
 	Base64.cpp \
+	AdvisoryLock.cpp \
+	ClusterLock.cpp \
 	CheckedValue.cpp \
 	Clock.cpp \
 	Collector.cpp \
