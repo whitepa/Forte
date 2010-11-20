@@ -72,8 +72,13 @@ void ParseContext::generateMk(void)
 {
     FILE *m;
     FString mFilename;
-    mFilename.Format("%s/dbc_generated_srcs.mk", 
-                     ParseContext::get().getOutputPath().c_str());
+    if (!mMakefileName.empty())
+        mFilename.Format("%s/%s", 
+                         ParseContext::get().getOutputPath().c_str(),
+                         mMakefileName.c_str());
+    else
+        mFilename.Format("%s/dbc_generated_srcs.mk", 
+                         ParseContext::get().getOutputPath().c_str());
     if ((m = fopen(mFilename, "w"))==NULL)
         throw Exception(FStringFC(), "unable to open file '%s'", mFilename.c_str());
 

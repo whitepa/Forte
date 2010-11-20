@@ -10,11 +10,11 @@ using namespace DBC;
 int main(int argc, char *argv[])
 {
     int i = 0;
-    FString outputPath, inputFile, customInclude, filenamePrefix;
+    FString outputPath, inputFile, customInclude, filenamePrefix, makefileName;
     while (!i)
     {
         int c;
-        c = getopt(argc, argv, "i:o:c:p:");
+        c = getopt(argc, argv, "i:o:c:p:m:");
         switch (c)
         {
         case -1:
@@ -35,6 +35,9 @@ int main(int argc, char *argv[])
         case 'p':
             filenamePrefix = optarg;
             break;
+        case 'm':
+            makefileName = optarg;
+            break;
         }
     }
     if (inputFile.empty())
@@ -50,6 +53,8 @@ int main(int argc, char *argv[])
         pc.setOutputPath(outputPath);
     if (!filenamePrefix.empty())
         pc.setFilenamePrefix(filenamePrefix);
+    if (!makefileName.empty())
+        pc.setMakefileName(makefileName);
     // open the input file
     if ((yyin = fopen(inputFile, "r"))==NULL)
     {

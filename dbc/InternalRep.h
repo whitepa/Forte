@@ -86,6 +86,7 @@ namespace DBC {
         void setOutputPath(const char *path) { mOutputPath = path; }
         void setIncludePath(const char *path) { mIncludePath = path; }
         void setFilenamePrefix(const char *prefix) { mFilenamePrefix = prefix; }
+        void setMakefileName(const char *path) { mMakefileName = path; }
 
         // validation
         void validate(void);
@@ -103,6 +104,7 @@ namespace DBC {
         FString mOutputPath;
         FString mIncludePath;
         FString mFilenamePrefix;
+        FString mMakefileName;
         static ParseContext *sSingletonPtr;
     };
 
