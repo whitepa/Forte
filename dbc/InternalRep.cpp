@@ -2149,7 +2149,7 @@ FString TableColumn::cFormatElement(void) const
     FString str;
     if (mType->GetType() == typeid(BigIntType)) {
         if (mOptions & OPT_UNSIGNED) str += "%llu";
-        else str += "%ll";
+        else str += "%lli";
     } else if (mType->GetType() == typeid(BlobType) ||
                mType->GetType() == typeid(CharType) ||
                mType->GetType() == typeid(VarCharType) ||

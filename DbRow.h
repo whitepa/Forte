@@ -25,6 +25,7 @@ namespace Forte
         static bool IsNull(const DbResultRow& row, int index);
         static int GetInt(const DbResultRow& row, int index);
         static unsigned int GetUInt(const DbResultRow& row, int index);
+        static long long GetLLInt(const DbResultRow& row, int index);
         static unsigned long long GetULLInt(const DbResultRow& row, int index);
         static bool GetBool(const DbResultRow& row, int index);
         static FString GetString(const DbResultRow& row, int index);
