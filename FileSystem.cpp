@@ -784,10 +784,17 @@ FString FileSystem::FileGetContents(const FString& filename)
 }
 
 
-void FileSystem::FilePutContents(const FString& filename, const FString& data)
+void FileSystem::FilePutContents(const FString& filename, const FString& data, bool append)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::file_get_contents(%s, [data])", filename.c_str());
-    ofstream out(filename, ios::out | ios::binary);
+    hlog(HLOG_DEBUG4, "FileSystem::file_put_contents(%s, [data])", 
+         filename.c_str());
+    ios_base::openmode mode=ios::out | ios::binary;
+
+    if (append) {
+        mode=mode | ios::app;
+    }
+
+    ofstream out(filename, mode);
     if (out.good()) out.write(data.c_str(), data.size());
 }
 

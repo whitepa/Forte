@@ -107,7 +107,8 @@ namespace Forte
 
         virtual FString FileGetContents(const FString& filename);
         virtual void FilePutContents(const FString& filename, 
-                                     const FString& data);
+                                     const FString& data,
+                                     bool append=false);
 
         /// deep_copy copies a directory tree from 'source' to 'dest'.
         virtual void DeepCopy(const FString& source, const FString& dest, 
