@@ -40,6 +40,7 @@ BSRCS = ContextPredicateUnitTest.cpp \
 	ExpDecayingAvgUnitTest.cpp \
 	FileSystemUnitTest.cpp \
 	PDUPeerUnitTest.cpp \
+	ProcessManagerUnitTest.cpp \
 	ProcFileSystemUnitTest.cpp \
 	StateMachineUnitTest1.cpp \
 	StateMachineUnitTest2.cpp \
@@ -90,10 +91,11 @@ $(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp
 	$(GTEST_LIB) \
 	$(LIBS)
 
-$(TARGETDIR)/ProcessManagerUnitTest: ProcessManagerUnitTest.cpp $(FORTE)
+$(TARGETDIR)/ProcessManagerUnitTest: ../$(TARGETDIR)/ProcessManager.o ProcessManagerUnitTest.cpp
 	echo "Building $@..."
 	$(CCC) ProcessManagerUnitTest.cpp \
 	-o $@ \
+	$(FORTE) \
 	$(INCLUDE) \
 	$(GTEST_LIB) \
 	$(LIBS)
