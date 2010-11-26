@@ -51,17 +51,23 @@ SRCS =	\
 	FTime.cpp \
 	FTrace.cpp \
 	GUID.cpp \
+	GUIDGenerator.cpp \
 	LogManager.cpp \
 	LogTimer.cpp \
 	MD5.cpp \
 	Murmur.cpp \
 	OnDemandDispatcher.cpp \
 	OpenSSLInitializer.cpp \
+	PDUPeer.cpp \
+	PDUPeerSet.cpp \
 	PidFile.cpp \
 	PosixTimer.cpp \
 	ProcFileSystem.cpp \
 	ProcRunner.cpp \
+	Process.cpp \
+	ProcessManager.cpp \
 	Random.cpp \
+	RandomGenerator.cpp \
 	ReceiverThread.cpp \
 	RunLoop.cpp \
 	RWLock.cpp \
@@ -119,14 +125,21 @@ HEADERS = \
 	FTime.h \
 	FTrace.h \
 	GUID.h \
+	GUIDGenerator.h \
 	LogManager.h \
 	LogTimer.h \
 	Murmur.h \
 	OpenSSLInitializer.h \
+	PDU.h \
+	PDUPeer.h \
+	PDUPeerSet.h \
 	ProcRunner.h \
+	ProcessHandle.h \
+	ProcessManager.h \
 	PropertyObject.h \
 	PidFile.h \
 	Random.h \
+	RandomGenerator.h \
 	RequestHandler.h \
 	RWLock.h \
 	SecureEnvelope.h \
@@ -163,8 +176,11 @@ TLIBS = -L$(TARGETDIR) -lforte -lpthread
 
 INSTALL = $(if $(RPM), @install $(1) $< $@, @install $(1) $(2) $< $@)
 
-all: $(LIB)
+all: $(LIB) $(TARGETDIR)/procmon
 	$(MAKE_SUBDIRS)
+
+$(TARGETDIR)/procmon: $(TARGETDIR)/procmon.o $(TARGETDIR)/ProcessMonitor.o $(LIB)
+	$(CCC) -o $@ $< $(TARGETDIR)/ProcessMonitor.o -L$(TARGETDIR) -lforte -lpthread
 
 utiltest: $(TPROG)
 
