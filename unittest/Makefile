@@ -41,8 +41,11 @@ BSRCS = ContextPredicateUnitTest.cpp \
 	FileSystemUnitTest.cpp \
 	PDUPeerUnitTest.cpp \
 	ProcFileSystemUnitTest.cpp \
-	StateMachineUnitTest.cpp \
 	StateMachineUnitTest1.cpp \
+	StateMachineUnitTest2.cpp \
+	StateMachineUnitTest3.cpp \
+	StateMachineUnitTest4.cpp \
+	StateMachineUnitTest5.cpp \
 	SCSIUtilUnitTest.cpp
 
 GSRCS = FileSystemUtilUnitTest.cpp \
