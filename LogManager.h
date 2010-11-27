@@ -62,6 +62,17 @@ namespace Forte
     public:
         LogFilter(const FString sourceFile, int mask) :
             mSourceFile(sourceFile), mMask(mask), mMode(0) {};
+        LogFilter(const LogFilter &other) {
+            *this = other;
+        }
+        const LogFilter & operator= (const LogFilter &rhs) {
+            mSourceFile = rhs.mSourceFile;
+            mMask = rhs.mMask;
+            mMode = rhs.mMode;
+            return *this;
+        }
+        
+           
         FString mSourceFile;
         int mMask;
         int mMode; ///< FUTURE USE:  include (only) / exclude

@@ -32,6 +32,16 @@ namespace Forte
     class EventPredicate : public Object
     {
     public:
+        EventPredicate(const EventPredicate &other) {
+            *this = other;
+        };
+        const EventPredicate & operator= (const EventPredicate &rhs) {
+            mType = rhs.mType;
+            mArg1 = rhs.mArg1;
+            mArg2 = rhs.mArg2;
+            mOperands = rhs.mOperands;
+            return *this;
+        };
         EventPredicate(int type, 
                          const FString &arg1) :
             mType(type), mArg1(arg1) {};

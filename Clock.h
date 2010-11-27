@@ -15,11 +15,18 @@ namespace Forte
         Timespec() { 
             Clear();
         };
+        Timespec(const Timespec &ts) {
+            *this = ts;
+        };
         Timespec(const struct timespec &ts) {
-            mTimespec.tv_sec = ts.tv_sec;
-            mTimespec.tv_nsec = ts.tv_nsec;
+            *this = ts;
         };
         virtual ~Timespec() {};
+        Timespec operator=(const Timespec &ts) {
+            mTimespec.tv_sec = ts.mTimespec.tv_sec;
+            mTimespec.tv_nsec = ts.mTimespec.tv_nsec;
+            return *this;
+        }
         Timespec operator=(const struct timespec &ts) {
             mTimespec.tv_sec = ts.tv_sec;
             mTimespec.tv_nsec = ts.tv_nsec;
