@@ -34,7 +34,7 @@ namespace Forte
         StrStrMap m_copiedFiles; //from -> to
 
         bool file_exists(const FString& path);
-        bool FileExists(const FString& path);
+        bool FileExists(const FString& path) const;
         map<FString, bool> m_fileExistsResultMap;
         void setFileExistsResult(const FString& path, bool result);
 
@@ -48,6 +48,15 @@ namespace Forte
         map<FString, bool> mFilesUnlinked;
         bool FileWasUnlinked(const FString& path);
         void ClearFilesUnlinked();
+
+        map<FString, vector<FString> > mChildren;
+        void SetChildren(const FString& parentPath, 
+                         std::vector<Forte::FString> &children);
+
+        void GetChildren(const FString& path, 
+                         std::vector<Forte::FString> &children,
+                         bool recurse = false) const;
+        
 
     protected:
         StrStrMap m_files;

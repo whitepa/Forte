@@ -97,9 +97,16 @@ bool MockFileSystem::file_exists(const FString& path)
     return FileExists(path);
 }
 
-bool MockFileSystem::FileExists(const FString& path)
+bool MockFileSystem::FileExists(const FString& path) const
 {
-    return m_fileExistsResultMap[path];
+    map<FString, bool>::const_iterator i;
+
+    if ((i = m_fileExistsResultMap.find(path)) != m_fileExistsResultMap.end())
+    {
+        return i->second;
+    }
+
+    return false;
 }
 
 void MockFileSystem::setFileExistsResult(const FString& path, bool result)
@@ -149,3 +156,33 @@ bool MockFileSystem::FileWasUnlinked(const FString& path)
 
     return (mFilesUnlinked.find(path) != mFilesUnlinked.end());
 }
+
+void MockFileSystem::SetChildren(const FString &parentPath,
+                                 std::vector<FString> &children)
+{
+    FTRACE2("%s", parentPath.c_str());
+
+    foreach (const FString &child, children)
+    {
+        mChildren[parentPath].push_back(child);
+    }
+}
+
+void MockFileSystem::GetChildren(const FString& path, 
+                                 std::vector<Forte::FString> &children,
+                                 bool recurse) const
+{
+    FTRACE2("%s", path.c_str());
+    map<FString, vector<FString> >::const_iterator i;
+
+    if ((i = mChildren.find(path)) == mChildren.end())
+    {
+        return;
+    }
+    
+    foreach (const FString &child, i->second)
+    {
+        children.push_back(child);
+    }
+}
+
