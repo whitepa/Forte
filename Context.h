@@ -15,7 +15,10 @@
 
 //#define CGET_TMP(key, type) mContext.Get<type>(key)
 
-#define CSET(key, type, args...)                                \
+#define CSET(key, type, obj)                    \
+    mContext.Set(key, shared_ptr<type>( obj ))
+
+#define CNEW(key, type, args...)                                \
     mContext.Set(key, shared_ptr<type>(new type( args )))
 
 namespace Forte
