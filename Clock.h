@@ -22,12 +22,12 @@ namespace Forte
             *this = ts;
         };
         virtual ~Timespec() {};
-        Timespec operator=(const Timespec &ts) {
+        Timespec & operator=(const Timespec &ts) {
             mTimespec.tv_sec = ts.mTimespec.tv_sec;
             mTimespec.tv_nsec = ts.mTimespec.tv_nsec;
             return *this;
         }
-        Timespec operator=(const struct timespec &ts) {
+        Timespec & operator=(const struct timespec &ts) {
             mTimespec.tv_sec = ts.tv_sec;
             mTimespec.tv_nsec = ts.tv_nsec;
             return *this;
