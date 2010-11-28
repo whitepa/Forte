@@ -19,20 +19,9 @@ namespace Forte
 {
     // typed exceptions
     EXCEPTION_SUBCLASS(Exception, EFileSystem);
-
-    // general system call exceptions (move to Exception.h?)
-    //EXCEPTION_SUBCLASS(Exception, ENotDir);
-//    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemNotDir);
-//    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemFault);
-//    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemNoEnt);
-
     EXCEPTION_SUBCLASS(EFileSystem, EFileSystemCopy);
-//    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemLink);
     EXCEPTION_SUBCLASS(EFileSystem, EFileSystemMakeDir);
-//    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemReadlink);
-//    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemRename);
     EXCEPTION_SUBCLASS(EFileSystem, EFileSystemResolveSymLink);
-//    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemUnlink);
 
 
     class FileSystem : public Object
@@ -48,12 +37,15 @@ namespace Forte
         // interface
         virtual FString GetCWD();
         virtual void Touch(const FString& file);
-        virtual bool FileExists(const FString& filename);
+        virtual bool FileExists(const FString& filename) const;
 
         virtual void StatFS(const FString& path, struct statfs *st);
 
         virtual int Stat(const FString& path, struct stat *st);
-        virtual bool IsDir(const FString& path);
+        virtual bool IsDir(const FString& path) const;
+        virtual void GetChildren(const FString& path, 
+                                 std::vector<Forte::FString> &children,
+                                 bool recurse = false) const;
         virtual int LStat(const FString& path, struct stat *st);
         virtual int StatAt(int dir_fd, const FString& path, struct stat *st);
         virtual int LStatAt(int dir_fd, const FString& path, struct stat *st);
