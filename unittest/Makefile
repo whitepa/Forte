@@ -86,7 +86,6 @@ $(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp
 	echo "Building $@..."
 	$(CCC) SCSIUtilUnitTest.cpp \
 	-o $(TARGETDIR)/SCSIUtilUnitTest \
-	$(SCALE_SERVICE_CLIENT_LIBS)  \
 	$(INCLUDE) \
 	$(GTEST_LIB) \
 	$(LIBS)
