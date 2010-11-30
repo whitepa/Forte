@@ -17,7 +17,6 @@ namespace Forte
     class AutoDynamicLibraryHandle
     {
     public:
-        // \TODO: add Load() method???
         AutoDynamicLibraryHandle(const Forte::FString &path) : mHandle(NULL), mPath(path) {
             FTRACE2("%s", path.c_str());
         }
@@ -28,7 +27,8 @@ namespace Forte
             {
                 hlog(HLOG_ERR, "Error loading '%s':\n%s", mPath.c_str(), 
                      dlerror());
-                throw EUnableToLoadLibrary(mPath);
+                throw EUnableToLoadLibrary(FStringFC(), 
+                                           "Error loading '%s'", mPath.c_str());
             }
             dlerror();    // Clear any existing error
         }
@@ -50,7 +50,8 @@ namespace Forte
             
             if (!IsLoaded())
             {
-                throw ELibraryNotLoaded(mPath);
+                hlog(HLOG_ERR, "Unable to get pointer to %s because the library %s is not loaded", fName.c_str(), mPath.c_str());
+                throw ELibraryNotLoaded(FStringFC(), "Unable to get pointer to %s because the library %s is not loaded", fName.c_str(), mPath.c_str());
             }
             
             func = dlsym(mHandle, fName.c_str());
@@ -58,7 +59,7 @@ namespace Forte
             {
                 hlog(HLOG_ERR, "Error loading symbol for '%s' in '%s':\n%s", 
                      mPath.c_str(), fName.c_str(), error);
-                throw EUnableToLoadFunction(fName);
+                throw EUnableToLoadFunction(FStringFC(), "Error loading symbol for '%s' in '%s':\n%s", mPath.c_str(), fName.c_str(), error);
             }
             
             return func;
@@ -78,6 +79,7 @@ namespace Forte
             FTRACE2("%s", path.c_str());
             AutoDynamicLibraryHandlePtr autoHandle(
                 new AutoDynamicLibraryHandle(path));
+            autoHandle->Load();
             return autoHandle;
         }
     };

@@ -40,6 +40,7 @@ namespace Forte
             FTRACE2("%s", path.c_str());
             MockAutoDynamicLibraryHandlePtr autoHandle(
                 new MockAutoDynamicLibraryHandle(path));
+            autoHandle->Load();
             return autoHandle;
         }
     };
