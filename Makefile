@@ -15,7 +15,9 @@ LIB_INSTALL_PATH = $(PREFIX)/lib
 
 SUBDIRS = dbc
 
-INCLUDE = $(DB_INCLUDE) $(XML_INCLUDE) $(BOOST_INCLUDE) $(SSH2_INCLUDE) -I.
+
+INCLUDE = $(DB_INCLUDE) $(XML_INCLUDE) $(BOOST_INCLUDE) $(SSH2_INCLUDE) -I. $(MYSQL_INCLUDE)
+
 CCARGS += -Wall -DFORTE_FUNCTION_TRACING
 SRCS =	\
 	Base64.cpp \
@@ -65,6 +67,7 @@ SRCS =	\
 	ReceiverThread.cpp \
 	RunLoop.cpp \
 	RWLock.cpp \
+	SCSIUtil.cpp \
 	SecureEnvelope.cpp \
 	SecureString.cpp \
 	ServerMain.cpp \
