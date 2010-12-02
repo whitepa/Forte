@@ -7,8 +7,10 @@
 #include "AutoFD.h"
 #include "FileSystem.h"
 #include "PosixTimer.h"
+#include "ThreadKey.h"
 #include <csignal>
 #include <ctime>
+#include "boost/shared_ptr.hpp"
 
 namespace Forte{
 
@@ -59,6 +61,7 @@ protected:
 
     // statics
     static std::map<Forte::FString, Forte::Mutex> sMutexMap;
+    static std::map<Forte::FString, boost::shared_ptr<Forte::ThreadKey> > sThreadKeyMap;
     static Forte::Mutex sMutex;
     static bool sSigactionInitialized;
 

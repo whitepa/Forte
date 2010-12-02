@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+#include <boost/make_shared.hpp>
 
 // constants
 const char* Forte::ClusterLock::LOCK_PATH = "/var/lock";
@@ -20,6 +21,7 @@ const char* Forte::ClusterLock::VALID_LOCK_CHARS =
 // statics
 Forte::Mutex Forte::ClusterLock::sMutex;
 std::map<Forte::FString, Forte::Mutex> Forte::ClusterLock::sMutexMap;
+std::map<Forte::FString, boost::shared_ptr<Forte::ThreadKey> > Forte::ClusterLock::sThreadKeyMap;
 bool Forte::ClusterLock::sSigactionInitialized = false;
 
 // debug statics
@@ -29,6 +31,7 @@ bool Forte::ClusterLock::sSigactionInitialized = false;
 // int ClusterLock::s_outstanding_timers = 0;
 
 using namespace Forte;
+using namespace boost;
 // -----------------------------------------------------------------------------
 
 // ctor/dtor
@@ -155,6 +158,7 @@ void ClusterLock::fini()
 // lock/unlock
 void ClusterLock::lock(const FString& name, unsigned timeout, const FString& errorString)
 {
+    FTRACE2("name='%s' timeout=%u", name.c_str(), timeout);
     if (name == "/fsscale0/lock/state_db")
         hlog(HLOG_DEBUG, "LOCK STATE DB");
 
@@ -183,11 +187,31 @@ void ClusterLock::lock(const FString& name, unsigned timeout, const FString& err
         hlog(HLOG_INFO, "ClusterLock - reusing lock with a different name");
         unlock();
     }
+    mName = filename;
 
-    // assign mutex
+    // assign mutex and thread key
     {
         AutoUnlockMutex lock(sMutex);
-        mMutex = &sMutexMap[filename];
+        shared_ptr<ThreadKey> key;
+        mMutex = &sMutexMap[mName];
+        if (sThreadKeyMap.find(mName) == sThreadKeyMap.end())
+        {
+            key = sThreadKeyMap[mName] = make_shared<ThreadKey>();
+            key->Set(0);
+        }
+        else {
+            key = sThreadKeyMap[mName];
+        }
+
+        // check to see if we already hold this cluster lock in this thread
+        u64 refcount = (u64)key->Get();
+        if (refcount > 0)
+        {
+            key->Set((void*)(++refcount));
+            hlog(HLOG_DEBUG2, "cluster lock '%s' threadkey %p refcount incremented to %llu",
+                 mName.c_str(), key.get(), refcount);
+            return;
+        }
     }
 
     // open file?
@@ -277,6 +301,31 @@ void ClusterLock::lock(const FString& name, unsigned timeout, const FString& err
     if (name == "/fsscale0/lock/state_db")
         hlog(HLOG_DEBUG, "LOCKED STATE DB");
 
+    // we got the lock, increment the refcount
+    {
+        AutoUnlockMutex lock(sMutex);
+        if (sThreadKeyMap.find(mName) == sThreadKeyMap.end())
+        {
+            hlog(HLOG_ERR, "failed to locate thread key after lock for cluster lock '%s'",
+                 mName.c_str());
+        }
+        else
+        {
+            shared_ptr<ThreadKey> key = sThreadKeyMap[mName];
+
+            // check to see if we already hold this cluster lock in this thread
+            u64 refcount = (u64)key->Get();
+            if (refcount != 0)
+                hlog(HLOG_ERR, "cluster lock '%s' threadkey refcount > 0 after lock acquired",
+                     name.c_str());
+            key->Set((void*)(++refcount)); // should be setting this to 1
+            hlog(HLOG_DEBUG2, "cluster lock '%s' threadkey %p refcount %llu after lock",
+                 mName.c_str(), key.get(), refcount);
+            hlog(HLOG_DEBUG2, "threadkey %p shows %p", key.get(), key->Get());
+        }
+    }
+
+
     //hlog(HLOG_DEBUG4, "ClusterLock: %u [ locked", mTimer.TimerID());
 //     //debug
 //     {
@@ -289,8 +338,37 @@ void ClusterLock::lock(const FString& name, unsigned timeout, const FString& err
 
 void ClusterLock::unlock()
 {
+    FTRACE2("name='%s'", mName.c_str());
     if (mName == "/fsscale0/lock/state_db")
         hlog(HLOG_DEBUG, "UNLOCKED STATE DB");
+
+    if (!mName.empty())
+    {
+        AutoUnlockMutex lock(sMutex);
+        if (sThreadKeyMap.find(mName) == sThreadKeyMap.end())
+        {
+            hlog(HLOG_ERR, "unlock failed to locate thread key for cluster lock '%s'", mName.c_str());
+        }
+        else
+        {
+            shared_ptr<ThreadKey> key = sThreadKeyMap[mName];
+            u64 refcount = (u64)key->Get();
+            if (refcount == 0) {
+                hlog(HLOG_ERR, "cluster lock '%s' threadkey %p refcount == 0 before unlock",
+                     mName.c_str(), key.get());
+            }
+            else
+            {
+                key->Set((void*)--refcount);
+                hlog(HLOG_DEBUG2, "cluster lock '%s' threadkey %p refcount decremented to %llu",
+                     mName.c_str(), key.get(), refcount);
+                if (refcount > 0)
+                {
+                    return;
+                }
+            }
+        }
+    }
 
     // clear name
     mName.clear();
