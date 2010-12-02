@@ -33,6 +33,7 @@ namespace Forte
         StrStrMap* getCopiedFileMap();
         StrStrMap m_copiedFiles; //from -> to
 
+        bool file_exists(const FString& path);
         bool FileExists(const FString& path);
         map<FString, bool> m_fileExistsResultMap;
         void setFileExistsResult(const FString& path, bool result);
