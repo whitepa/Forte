@@ -17,19 +17,19 @@ public:
     
     /// getLock returns a lock description equivalent to the lock
     /// currently blocking us.
-    AdvisoryLock getLock(bool exclusive = false);
+    AdvisoryLock GetLock(bool exclusive = false);
 
     /// sharedLock will return true on success, false if the lock failed
     ///
-    bool sharedLock(bool wait = true);
+    bool SharedLock(bool wait = true);
     
     /// exclusiveLock will return true on success, false if the lock failed
     ///
-    bool exclusiveLock(bool wait = true);
+    bool ExclusiveLock(bool wait = true);
 
     /// unlock will remove the current lock
     ///
-    void unlock(void);
+    void Unlock(void);
 
 protected:
     struct flock m_lock;
@@ -45,11 +45,11 @@ public:
         m_advisoryLock(fd, start, len, whence)
         {
             if (exclusive)
-                m_advisoryLock.exclusiveLock();
+                m_advisoryLock.ExclusiveLock();
             else
-                m_advisoryLock.sharedLock();
+                m_advisoryLock.SharedLock();
         }
-    virtual ~AdvisoryAutoUnlock() { m_advisoryLock.unlock(); }
+    virtual ~AdvisoryAutoUnlock() { m_advisoryLock.Unlock(); }
 protected:
     AdvisoryLock m_advisoryLock;
 };

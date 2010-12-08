@@ -18,7 +18,7 @@ AdvisoryLock::AdvisoryLock(int fd, off64_t start, off64_t len, short whence)
 
 /// getLock gets the first lock that blocks the lock description
 ///
-AdvisoryLock AdvisoryLock::getLock(bool exclusive)
+AdvisoryLock AdvisoryLock::GetLock(bool exclusive)
 {
     AdvisoryLock lock(*this);
     if (exclusive)
@@ -37,7 +37,7 @@ AdvisoryLock AdvisoryLock::getLock(bool exclusive)
 
 /// sharedLock will return true on success, false if the lock failed
 ///
-bool AdvisoryLock::sharedLock(bool wait)
+bool AdvisoryLock::SharedLock(bool wait)
 {
     m_lock.l_type = F_RDLCK;
     if (fcntl(m_fd, wait ? F_SETLKW : F_SETLK, &m_lock) == -1)
@@ -53,7 +53,7 @@ bool AdvisoryLock::sharedLock(bool wait)
 
 /// exclusiveLock will return true on success, false if the lock failed
 ///
-bool AdvisoryLock::exclusiveLock(bool wait)
+bool AdvisoryLock::ExclusiveLock(bool wait)
 {
     m_lock.l_type = F_WRLCK;
     if (fcntl(m_fd, wait ? F_SETLKW : F_SETLK, &m_lock) == -1)
@@ -69,7 +69,7 @@ bool AdvisoryLock::exclusiveLock(bool wait)
 
 /// unlock will remove the current lock
 ///
-void AdvisoryLock::unlock(void)
+void AdvisoryLock::Unlock(void)
 {
     m_lock.l_type = F_UNLCK;
     if (fcntl(m_fd, F_SETLK, &m_lock) == -1)

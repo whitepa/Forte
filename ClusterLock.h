@@ -34,10 +34,10 @@ public:
     ClusterLock(const Forte::FString& name, unsigned timeout, const Forte::FString& errorString);
     virtual ~ClusterLock();
 
-    void unlock();
-    void lock(const Forte::FString& name, unsigned timeout, const Forte::FString& errorString = "");
+    void Unlock();
+    void Lock(const Forte::FString& name, unsigned timeout, const Forte::FString& errorString = "");
 
-    inline Forte::FString getName() const { return mName; }
+    inline Forte::FString GetName() const { return mName; }
     
     // constants
     static const char *LOCK_PATH;

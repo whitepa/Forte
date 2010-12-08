@@ -42,7 +42,7 @@ ClusterLock::ClusterLock(const FString& name, unsigned timeout)
     , mMutex(NULL)
 {
     init();
-    lock(name, timeout);
+    Lock(name, timeout);
 }
 
 ClusterLock::ClusterLock(const FString& name, unsigned timeout,  
@@ -53,7 +53,7 @@ ClusterLock::ClusterLock(const FString& name, unsigned timeout,
     , mMutex(NULL)
 {
     init();
-    lock(name, timeout, errorString);
+    Lock(name, timeout, errorString);
 }
 
 
@@ -68,7 +68,7 @@ ClusterLock::ClusterLock()
 
 ClusterLock::~ClusterLock()
 {
-    unlock();
+    Unlock();
     fini();
 }
 
@@ -156,7 +156,7 @@ void ClusterLock::fini()
 
 
 // lock/unlock
-void ClusterLock::lock(const FString& name, unsigned timeout, const FString& errorString)
+void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& errorString)
 {
     FTRACE2("name='%s' timeout=%u", name.c_str(), timeout);
     if (name == "/fsscale0/lock/state_db")
@@ -185,7 +185,7 @@ void ClusterLock::lock(const FString& name, unsigned timeout, const FString& err
     if (filename != mName && (!mName.empty()))
     {
         hlog(HLOG_INFO, "ClusterLock - reusing lock with a different name");
-        unlock();
+        Unlock();
     }
     mName = filename;
 
@@ -247,7 +247,7 @@ void ClusterLock::lock(const FString& name, unsigned timeout, const FString& err
         }
 
         // acquire lock?
-        if (!(locked = mLock->exclusiveLock(true)))
+        if (!(locked = mLock->ExclusiveLock(true)))
         {
             // release mutex
             mMutex->Unlock();
@@ -336,7 +336,7 @@ void ClusterLock::lock(const FString& name, unsigned timeout, const FString& err
 }
 
 
-void ClusterLock::unlock()
+void ClusterLock::Unlock()
 {
     FTRACE2("name='%s'", mName.c_str());
     if (mName == "/fsscale0/lock/state_db")
@@ -377,7 +377,7 @@ void ClusterLock::unlock()
     if (mFD != -1)
     {
         // release lock
-        mLock->unlock();
+        mLock->Unlock();
         mLock.reset();
         mFD.Close();
         //hlog(HLOG_DEBUG4, "ClusterLock: %u ] unlocked", mTimer.TimerID());
