@@ -44,7 +44,7 @@ TEST_F(ExceptionTest, StdExceptionWhatIsOverriden)
     }
     catch (Exception &e)
     {
-        ASSERT_STREQ(e.what().c_str(), "test");
+        ASSERT_STREQ(e.what(), "test");
     }
 }
 

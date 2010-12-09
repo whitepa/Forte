@@ -65,7 +65,7 @@ Forte::Process::~Process()
     }
     catch (Exception &e)
     {
-        hlog(HLOG_ERR, "%s", e.what().c_str());
+        hlog(HLOG_ERR, "%s", e.what());
     }
     catch (std::exception &e)
     {
@@ -186,7 +186,7 @@ pid_t Forte::Process::Run()
     }
     catch (Exception &e)
     {
-        throw EProcessManagementProcFailed(e.what().c_str());
+        throw EProcessManagementProcFailed(e.what());
     }
     // wait for the process to change state
     AutoUnlockMutex lock(mWaitLock);

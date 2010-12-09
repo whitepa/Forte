@@ -124,7 +124,7 @@ void ClusterLock::init()
         // translate error to what we are expected to throw
         throw EClusterLockUnvailable(FStringFC(),
                                      "LOCK_TIMER_FAIL|||%s", 
-                                     e.what().c_str());
+                                     e.what());
     }
 
 //     //debug

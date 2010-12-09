@@ -142,7 +142,7 @@ void* Forte::ProcessManager::run(void)
         }
         catch (Exception &e)
         {
-            hlog(HLOG_ERR, "caught exception: %s", e.what().c_str());
+            hlog(HLOG_ERR, "caught exception: %s", e.what());
             sleep(1); // prevent tight loops
         }
     }

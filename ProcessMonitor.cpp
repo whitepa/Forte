@@ -65,7 +65,7 @@ void Forte::ProcessMonitor::Run()
         catch (EPDUPeerSetPollFailed &e)
         {
             // this is a fatal error, so we must send the error PDU
-            hlog(HLOG_ERR, "exception in Poll(): %s", e.what().c_str());
+            hlog(HLOG_ERR, "exception in Poll(): %s", e.what());
             // \TODO send error PDU
             throw;
         }
@@ -164,7 +164,7 @@ void Forte::ProcessMonitor::handleControlReq(const PDUPeer &peer, const PDU &pdu
     }
     catch (EProcessMonitor &e)
     {
-        sendControlRes(peer, ProcessUnknownError, e.what().c_str());
+        sendControlRes(peer, ProcessUnknownError, e.what());
     }
 }
 

@@ -113,7 +113,7 @@ void pollPDU()
     }
     catch (Forte::Exception &e)
     {
-        BOOST_FAIL(e.what().c_str());
+        BOOST_FAIL(e.what());
     }
 }
 
