@@ -45,7 +45,8 @@ BSRCS = ContextPredicateUnitTest.cpp \
 	StateMachineUnitTest1.cpp
 
 GSRCS = FileSystemUtilUnitTest.cpp \
-	ProcessManagerUnitTest.cpp
+	ProcessManagerUnitTest.cpp \
+	ExceptionUnitTest.cpp
 
 GPROGS = $(GSRCS:%.cpp=$(TARGETDIR)/%)
 BPROGS = $(BSRCS:%.cpp=$(TARGETDIR)/%)
@@ -73,6 +74,14 @@ $(TARGETDIR)/FileSystemUtilUnitTest: ../$(TARGETDIR)/FileSystemUtil.o FileSystem
 	-o $@ \
 	../$(TARGETDIR)/FileSystemUtil.o \
 	../$(TARGETDIR)/FileSystem.o \
+	$(INCLUDE) \
+	$(GTEST_LIB) \
+	$(LIBS)
+
+$(TARGETDIR)/ExceptionUnitTest: ../$(TARGETDIR)/Exception.o ExceptionUnitTest.cpp
+	echo "Building $@..."
+	$(CCC) ExceptionUnitTest.cpp \
+	-o $@ \
 	$(INCLUDE) \
 	$(GTEST_LIB) \
 	$(LIBS)
