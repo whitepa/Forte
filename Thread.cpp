@@ -54,11 +54,6 @@ void * Thread::startThread(void *obj)
     {
         // normal condition from here on out
     }
-    catch (Exception &e)
-    {
-        hlog(HLOG_ERR, "exception in thread run(): %s",
-             e.GetDescription().c_str());
-    }
     catch (std::exception &e)
     {
         hlog(HLOG_ERR, "exception in thread run(): %s",
