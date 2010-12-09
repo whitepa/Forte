@@ -22,6 +22,14 @@
 using namespace Forte;
 
 // methods
+int ProcRunner::RunNoTimeout(const FString& command, 
+                             const FString& cwd, 
+                             FString *output)
+{
+    return Run(command, cwd, output, PROC_RUNNER_NO_TIMEOUT);
+}
+
+
 int ProcRunner::Run(const FString& command, 
                     const FString& cwd, 
                     FString *output, 
