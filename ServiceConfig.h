@@ -5,6 +5,7 @@
 #include "AutoMutex.h"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/info_parser.hpp>
+#include <boost/property_tree/ini_parser.hpp>
 
 namespace Forte
 {
@@ -21,6 +22,13 @@ namespace Forte
      */
     class ServiceConfig : public Object {
     public:
+
+        enum ServiceConfigFileType
+        {
+            INI,
+            INFO,
+        };
+
         ServiceConfig();
         /** 
          * Create a ServiceConfig object, and parse the specified
@@ -30,7 +38,7 @@ namespace Forte
          * 
          * @return 
          */
-        ServiceConfig(const char *configFile);
+        ServiceConfig(const char *configFile, ServiceConfigFileType type = INFO);
 
         /** 
          * Read the configuration file at the given path, and populate
@@ -40,7 +48,7 @@ namespace Forte
          * 
          * @param configFile 
          */
-        void ReadConfigFile(const char *configFile);
+        void ReadConfigFile(const char *configFile, ServiceConfigFileType type = INFO);
 
         /** 
          * Set a given key to the given value.  Previous information
