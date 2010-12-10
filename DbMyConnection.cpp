@@ -4,6 +4,9 @@
 #include "DbMyConnection.h"
 #include "DbMyResult.h"
 #include "DbException.h"
+#include "LogManager.h"
+#include "Util.h"
+#include "FTrace.h"
 
 using namespace Forte;
 
@@ -50,6 +53,15 @@ bool DbMyConnection::Init(MYSQL *mysql)
     return true;
 }
 
+bool DbMyConnection::Init(const FString& db, 
+                          const FString& user, 
+                          const FString& pass,
+                          const FString& host,
+                          const FString& socket,
+                          unsigned int retries)
+{
+    return DbConnection::Init(db, user, pass, host, socket, retries);
+}
 
 bool DbMyConnection::Connect(void)
 {
@@ -96,6 +108,8 @@ bool DbMyConnection::Connect(void)
 
 bool DbMyConnection::Close(void)
 {
+    FTRACE;
+
     if (mDB != NULL) mysql_close(mDB);
     mDB = NULL;
     return true;
@@ -197,7 +211,7 @@ DbResult DbMyConnection::Store(const FString& sql)
 }
 
 
-DbResult DbMyConnection::use(const FString& sql)
+DbResult DbMyConnection::Use(const FString& sql)
 {
     DbMyResult result;
     if (!Execute(sql)) return result;
@@ -206,7 +220,7 @@ DbResult DbMyConnection::use(const FString& sql)
 }
 
 
-bool DbMyConnection::isTemporaryError() const
+bool DbMyConnection::IsTemporaryError() const
 {
     return (mErrno == ER_GET_TEMPORARY_ERRMSG ||
             mErrno == ER_TRANS_CACHE_FULL ||
@@ -216,7 +230,7 @@ bool DbMyConnection::isTemporaryError() const
 }
 
 
-FString DbMyConnection::escape(const char *str)
+FString DbMyConnection::Escape(const char *str)
 {
     FString ret, sql(str);
     char *foo = new char[2 + 2 * sql.length()];
