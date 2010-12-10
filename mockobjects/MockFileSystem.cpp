@@ -17,86 +17,92 @@ void MockFileSystem::StatFS(const FString& path, struct statfs *st)
 
 FString MockFileSystem::FileGetContents(const FString& filename)
 {
-    return m_files[filename];
+    return mFiles[filename];
 }
 
 void MockFileSystem::FilePutContents(const FString& filename, 
                                      const FString& data,
                                      bool append)
 {
-    m_files[filename] = data;
+    mFiles[filename] = data;
 }
 
 void MockFileSystem::clearFileMap()
 {
-    m_files.clear();
+    mFiles.clear();
 }
 StrStrMap* MockFileSystem::getFileMap()
 {
-    return &m_files;
+    return &mFiles;
 }
 
-int MockFileSystem::stat(const FString& path, struct stat *st)
+int MockFileSystem::Stat(const FString& path, struct stat *st)
 {
     hlog(HLOG_DEBUG4, "MockFileSystem::%s(%s, [stat])", __FUNCTION__, path.c_str());
     map<FString, struct stat>::iterator stat_it;
-    stat_it = m_statMap.find(path);
-    if (stat_it == m_statMap.end())
+    stat_it = mStatMap.find(path);
+    if (stat_it == mStatMap.end())
     {
         return 1;
     }
 
     st->st_nlink = stat_it->second.st_nlink;
-    return m_statResultMap[path];
+    return mStatResultMap[path];
 }
 
-void MockFileSystem::setStatResult(const FString& path, struct stat st, int result)
+void MockFileSystem::SetStatResult(const FString& path, struct stat st, int result)
 {
-    m_statMap[path] = st;
-    m_statResultMap[path] = result;
+    mStatMap[path] = st;
+    mStatResultMap[path] = result;
 }
 
-void MockFileSystem::mkdir(const FString& path, mode_t mode, bool make_parents)
+void MockFileSystem::MakeDir(const FString& path, mode_t mode, bool make_parents)
 {
     hlog(HLOG_DEBUG4, "MockFileSystem::%s(%s, ...)", __FUNCTION__, path.c_str());
-    m_dirsCreated.push_back(path);
+    mDirsCreated.push_back(path);
 }
-
-vector<FString> MockFileSystem::getDirsCreated()
+void MockFileSystem::ClearDirsCreated()
 {
-    return m_dirsCreated;
+    mDirsCreated.clear();
 }
-
-bool MockFileSystem::dirWasCreated(const FString& path)
+vector<FString> MockFileSystem::GetDirsCreated()
 {
-    if (find(m_dirsCreated.begin(),
-             m_dirsCreated.end(),
-             path) == m_dirsCreated.end())
+    return mDirsCreated;
+}
+bool MockFileSystem::DirWasCreated(const FString& path)
+{
+    if (find(mDirsCreated.begin(),
+             mDirsCreated.end(),
+             path) == mDirsCreated.end())
     {
         return false;
     }
     return true;
 }
 
-void MockFileSystem::file_copy(const FString& from, const FString& to, mode_t mode)
+void MockFileSystem::FileCopy(ProcRunner &pr, const FString& from, const FString& to, mode_t mode)
 {
-    m_copiedFiles[from] = to;
+    mCopiedFiles[from] = to;
 }
-void MockFileSystem::clearCopiedFileMap()
+bool MockFileSystem::FileWasCopied(const FString& key)
 {
-    m_copiedFiles.clear();
+    return mCopiedFiles.find(key) != mCopiedFiles.end();
 }
-StrStrMap* MockFileSystem::getCopiedFileMap()
+void MockFileSystem::ClearCopiedFileMap()
 {
-    return &m_copiedFiles;
+    mCopiedFiles.clear();
+}
+StrStrMap* MockFileSystem::GetCopiedFileMap()
+{
+    return &mCopiedFiles;
 }
 
 bool MockFileSystem::FileExists(const FString& path)
 {
-    return m_fileExistsResultMap[path];
+    return mFileExistsResultMap[path];
 }
 
-void MockFileSystem::setFileExistsResult(const FString& path, bool result)
+void MockFileSystem::SetFileExistsResult(const FString& path, bool result)
 {
-    m_fileExistsResultMap[path] = result;
+    mFileExistsResultMap[path] = result;
 }
