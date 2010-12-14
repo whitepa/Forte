@@ -1,20 +1,37 @@
-//#define BOOST_TEST_MODULE "PDUPeer Unit Tests"
 
-#include "boost/test/unit_test.hpp"
-#include <boost/shared_ptr.hpp>
+#include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 #include "AutoFD.h"
+#include "FTrace.h"
 #include "LogManager.h"
 #include "Context.h"
 #include "Foreach.h"
 #include "PDUPeer.h"
 #include "PDUPeerSet.h"
 
-using namespace boost::unit_test;
 using namespace boost;
 using namespace Forte;
 
 LogManager logManager;
+// -----------------------------------------------------------------------------
+
+class PDUPeerUnitTest : public ::testing::Test
+{
+public:
+    // Override this to define how to set up the environment.
+    static void SetUpTestCase() {
+        logManager.SetLogMask("//stdout", HLOG_ALL);
+        logManager.BeginLogging("//stdout");
+        hlog(HLOG_DEBUG, "Starting test...");
+    }
+
+    // Override this to define how to tear down the environment.
+    static void TearDownTestCase() {
+    }
+
+};
+// -----------------------------------------------------------------------------
 
 struct PDU_Test
 {
@@ -36,26 +53,31 @@ void makeTestPDU(Forte::PDU &pdu, size_t &len)
     len = sizeof(Forte::PDU) - Forte::PDU::PDU_MAX_PAYLOAD;
     len += pdu.payloadSize;
 }
+// -----------------------------------------------------------------------------
 
-void receivePDU(void)
+TEST_F(PDUPeerUnitTest, receivePDUTest)
 {
+    FTRACE;
+
     Forte::PDU pdu;
     size_t len;
     makeTestPDU(pdu, len);
 
     Forte::PDUPeer peer(0);
     peer.DataIn(len, (char *)&pdu);
-    
+
     Forte::PDU out;
     bool received = peer.RecvPDU(out);
-    BOOST_CHECK_EQUAL(received, true);
+    ASSERT_EQ(received, true);
 
     int cmp = memcmp(&pdu, &out, len);
-    BOOST_CHECK_EQUAL(cmp, 0);
+    ASSERT_EQ(cmp, 0);
 }
 
-void receiveMultiplePDU(void)
+TEST_F(PDUPeerUnitTest, receiveMultiplePDUTest)
 {
+    FTRACE;
+
     Forte::PDU pdu;
     size_t len;
     makeTestPDU(pdu, len);
@@ -65,20 +87,22 @@ void receiveMultiplePDU(void)
     for (int i = 0; i < 3; ++i)
     {
         peer.DataIn(len, (char *)&pdu);
-    }    
+    }
 
     Forte::PDU out;
     for (int i = 0; i < 3; ++i)
     {
         bool received = peer.RecvPDU(out);
-        BOOST_CHECK_EQUAL(received, true);
+        ASSERT_EQ(received, true);
         int cmp = memcmp(&pdu, &out, len);
-        BOOST_CHECK_EQUAL(cmp, 0);
+        ASSERT_EQ(cmp, 0);
     }
 }
 
-void pollPDU()
+TEST_F(PDUPeerUnitTest, pollPDUTest)
 {
+    FTRACE;
+
     try
     {
         int fds[2];
@@ -88,16 +112,14 @@ void pollPDU()
         Forte::PDUPeerSet set1;
         Forte::PDUPeerSet set2;
 
-        BOOST_CHECK_THROW(set1.Poll(), EPDUPeerSetNotPolling);
+        ASSERT_THROW(set1.Poll(), EPDUPeerSetNotPolling);
 
         shared_ptr<PDUPeer> peer1 = set1.PeerCreate(fd1);
-        BOOST_CHECK(peer1);
 
         set1.SetupEPoll();
         set2.SetupEPoll();
 
         shared_ptr<PDUPeer> peer2 = set2.PeerCreate(fd2);
-        BOOST_CHECK(peer2);
 
         PDU pdu, rpdu;
         size_t len;
@@ -107,38 +129,30 @@ void pollPDU()
 
         set2.Poll(1000);
 
-        BOOST_CHECK(peer2->IsPDUReady());
-        BOOST_CHECK(peer2->RecvPDU(rpdu));
-        BOOST_CHECK(!memcmp(&pdu, &rpdu, sizeof(PDU)));
+        EXPECT_EQ(true, peer2->IsPDUReady());
+        EXPECT_EQ(true, peer2->RecvPDU(rpdu));
+        EXPECT_EQ(0, memcmp(&pdu, &rpdu, sizeof(PDU)));
     }
     catch (Forte::Exception &e)
     {
-        BOOST_FAIL(e.what());
+        hlog(HLOG_ERR, "caught exception: %s\n", e.what());
     }
 }
 
-BOOST_AUTO_TEST_CASE(receivePDUTest)
+TEST_F(PDUPeerUnitTest, DataInBufferOverflowTest)
 {
-    receivePDU();
-}
-BOOST_AUTO_TEST_CASE(receiveMultiplePDUTest)
-{
-    receiveMultiplePDU();
-}
+    FTRACE;
 
-BOOST_AUTO_TEST_CASE(pollUnitTest)
-{
-    pollPDU();
+    Forte::PDU pdu;
+    size_t len;
+    makeTestPDU(pdu, len);
+
+    Forte::PDUPeer peer(0, 512);
+
+    for (int i = 0; i < 3; ++i)
+    {
+        peer.DataIn(len, (char *)&pdu);
+    }
+
+    ASSERT_THROW(peer.DataIn(len, (char*) &pdu), EPeerBufferOverflow);
 }
-
-////Boost Unit init function ///////////////////////////////////////////////////
-test_suite*
-init_unit_test_suite(int argc, char* argv[])
-{
-
-    logManager.SetLogMask("//stdout", HLOG_ALL);
-    logManager.BeginLogging("//stdout");
-
-    return 0;
-}
-////////////////////////////////////////////////////////////////////////////////

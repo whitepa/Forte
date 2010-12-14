@@ -103,6 +103,16 @@ $(TARGETDIR)/ProcessManagerUnitTest: ProcessManagerUnitTest.cpp $(FORTE)
 	$(GTEST_LIB) \
 	$(LIBS)
 
+$(TARGETDIR)/PDUPeerUnitTest: PDUPeerUnitTest.cpp $(FORTE)
+	echo "Building $@..."
+	$(CCC) PDUPeerUnitTest.cpp \
+	-o $@ \
+	$(INCLUDE) \
+	$(OS_LIBS) \
+	$(GTEST_LIB) \
+	$(FORTE_LIBS) \
+	$(FORTE_MOCK_LIBS) \
+
 # tail
 include $(BUILDROOT)/re/make/tail.mk
 
