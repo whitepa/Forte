@@ -21,7 +21,7 @@ namespace Forte
     private:
         PDUPeer(const PDUPeer &other) { throw EUnimplemented(); }
     public:
-        PDUPeer(int fd, unsigned int bufsize = 65536) :
+        PDUPeer(int fd, unsigned int bufsize = 65536 + PDU::PDU_SIZE) :
             mFD(fd),
             mCursor(0),
             mBufSize(bufsize),
