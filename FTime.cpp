@@ -1,21 +1,15 @@
-#ifndef FORTE_NO_BOOST
-#ifdef FORTE_WITH_DATETIME
 #include "FTime.h"
+#include "LogManager.h"
 
+using namespace std;
 using namespace Forte;
 
-
-Mutex FTime::sLock;
-tz_database FTime::sTimezoneDb;
-bool FTime::sInitialized = false;
-
-void FTime::init(const char *timezoneDatafile)
+FTime::FTime(const char *timezoneDatafile)
 {
     try
     {
-        AutoUnlockMutex lock(sLock); 
-        sTimezoneDb.load_from_file(timezoneDatafile);
-        sInitialized = true;
+        AutoUnlockMutex lock(mLock);
+        mTimezoneDb.load_from_file(timezoneDatafile);
     }
     catch(data_not_accessible &dna)
     {
@@ -26,13 +20,11 @@ void FTime::init(const char *timezoneDatafile)
         hlog(HLOG_ERR, "Bad field count error with time zone data file: %s", bfc.what());
     }
 }
-ptime FTime::from_time_t(time_t t, const char *tz)
+ptime FTime::FromTimeT(time_t t, const char *tz)
 {
-    AutoUnlockMutex lock(sLock);
-    if (!sInitialized)
-        throw ForteUninitializedException("FTime class has not been initialized");
-    time_zone_ptr tzp = sTimezoneDb.time_zone_from_region(tz);
-    time_zone_ptr utc_tzp = sTimezoneDb.time_zone_from_region("UTC");
+    AutoUnlockMutex lock(mLock);
+    time_zone_ptr tzp = mTimezoneDb.time_zone_from_region(tz);
+    time_zone_ptr utc_tzp = mTimezoneDb.time_zone_from_region("UTC");
     ptime epoch(date(1970, 1, 1));
 //    cout << "from_time_t: " << t << "  (TZ " << tz << ")" << endl;
 //    cout << "Epoch: " << epoch << endl;
@@ -42,19 +34,17 @@ ptime FTime::from_time_t(time_t t, const char *tz)
 //    cout << "Ret: " << ret << endl;
     return ret;
 }
-time_t FTime::day(time_t t, const char *tz)
+time_t FTime::Day(time_t t, const char *tz)
 {
-    ptime pt = FTime::from_time_t(t, tz);
-    return day(pt, tz);
+    ptime pt = FTime::FromTimeT(t, tz);
+    return Day(pt, tz);
 }
-time_t FTime::day(const ptime pt, const char *tz)
+time_t FTime::Day(const ptime pt, const char *tz)
 {
-    AutoUnlockMutex lock(sLock);
-    if (!sInitialized)
-        throw ForteUninitializedException("FTime class has not been initialized");
+    AutoUnlockMutex lock(mLock);
     try
     {
-        time_zone_ptr tzp = sTimezoneDb.time_zone_from_region(tz);
+        time_zone_ptr tzp = mTimezoneDb.time_zone_from_region(tz);
         date in_date(pt.date());
 //        cout << "in_date: " << in_date << endl;
         time_duration td; // use 00:00
@@ -77,12 +67,10 @@ time_t FTime::day(const ptime pt, const char *tz)
 }
 time_t FTime::f_to_time_t(const char *filename, int line, const char * arg, const ptime &pt, const char *tz)
 {
-    AutoUnlockMutex lock(sLock);
-    if (!sInitialized)
-        throw ForteUninitializedException("FTime class has not been initialized");
+    AutoUnlockMutex lock(mLock);
     try
     {
-        time_zone_ptr tzp = sTimezoneDb.time_zone_from_region(tz);
+        time_zone_ptr tzp = mTimezoneDb.time_zone_from_region(tz);
         date in_date(pt.date());
 //    cout << "in_date: " << in_date << endl;
         time_duration td(pt.time_of_day());
@@ -99,15 +87,15 @@ time_t FTime::f_to_time_t(const char *filename, int line, const char * arg, cons
     {
         hlog(HLOG_ERR, "FTime::f_to_time_t(): called from %s:%d (argument %s): %s", 
              filename, line, arg, e.what());
-        throw ForteFTimeException(FStringFC(), "Invalid time in argument '%s' (%s:%d): %s",
-                         arg, filename, line, e.what());
+        throw EFTime(FStringFC(), "Invalid time in argument '%s' (%s:%d): %s",
+                     arg, filename, line, e.what());
     }
     catch (...)
     {
         hlog(HLOG_ERR, "FTime::f_to_time_t(): called from %s:%d (argument %s); unknown exception", 
              filename, line, arg);
-        throw ForteFTimeException(FStringFC(), "Invalid time in argument '%s' (%s:%d); unknown exception",
-                         arg, filename, line);
+        throw EFTime(FStringFC(), "Invalid time in argument '%s' (%s:%d); unknown exception",
+                     arg, filename, line);
     }
 }
 time_t FTime::f_to_time_t(const char *filename, int line, const char * arg, const ptime &pt, const std::string &tz)
@@ -126,15 +114,15 @@ time_t FTime::f_to_time_t(const char *filename, int line, const char * arg, cons
     {
         hlog(HLOG_ERR, "FTime::f_to_time_t(): called from %s:%d (argument %s): %s", 
              filename, line, arg, e.what());
-        throw ForteFTimeException(FStringFC(), "Invalid time in argument '%s' (%s:%d): %s",
-                         arg, filename, line, e.what());
+        throw EFTime(FStringFC(), "Invalid time in argument '%s' (%s:%d): %s",
+                     arg, filename, line, e.what());
     }
     catch (...)
     {
         hlog(HLOG_ERR, "FTime::f_to_time_t(): called from %s:%d (argument %s); unknown exception", 
              filename, line, arg);
-        throw ForteFTimeException(FStringFC(), "Invalid time in argument '%s' (%s:%d); unknown exception",
-                         arg, filename, line);
+        throw EFTime(FStringFC(), "Invalid time in argument '%s' (%s:%d); unknown exception",
+                     arg, filename, line);
     }
     return f_to_time_t(filename, line, arg, pt, tz);
 }
@@ -143,17 +131,11 @@ time_t FTime::f_to_time_t(const char *filename, int line, const char * arg, cons
     return f_to_time_t(filename, line, arg, timeStr, tz.c_str());
 }
 
-std::string FTime::to_str(const ptime &pt, const char *tz, const char *format)
+std::string FTime::ToStr(const ptime &pt, const char *tz, const char *format)
 {
-    AutoUnlockMutex lock(sLock);
-    if (!sInitialized)
-        throw ForteUninitializedException("FTime class has not been initialized");
-    time_zone_ptr tzp = sTimezoneDb.time_zone_from_region(tz);
-//    time_zone_ptr utc_tzp = sTimezoneDb.time_zone_from_region("UTC");
-//    local_date_time utc(pt, utc_tzp);
-//    local_date_time zoneTime = utc.local_time_in(tzp);
+    AutoUnlockMutex lock(mLock);
+    time_zone_ptr tzp = mTimezoneDb.time_zone_from_region(tz);
     local_date_time zoneTime(pt, tzp);
-//    cout << "to_str: ptime " << pt << " (TZ " << tz << ")" << endl;
     stringstream ss;
     local_time_facet *output_facet = new local_time_facet();
     ss.imbue(locale(locale::classic(), output_facet));
@@ -162,23 +144,20 @@ std::string FTime::to_str(const ptime &pt, const char *tz, const char *format)
     else
         output_facet->format(format);
     ss << zoneTime;
-//    cout << "str = " << ss.str() << endl;
     return ss.str();
 }
-std::string FTime::to_str(const ptime &pt, const std::string &tz, const char *format)
+std::string FTime::ToStr(const ptime &pt, const std::string &tz, const char *format)
 {
-    return to_str(pt, tz.c_str(), format);
+    return ToStr(pt, tz.c_str(), format);
 }
-std::string FTime::to_str(const time_t t, const char *tz, const char *format)
+std::string FTime::ToStr(const time_t t, const char *tz, const char *format)
 {
-    ptime pt = FTime::from_time_t(t, "UTC");
-    return to_str(pt, tz, format);
-}
-
-std::string FTime::to_str(const time_t t, const std::string &tz, const char *format)
-{
-    return to_str(t, tz.c_str(), format);
+    ptime pt = FTime::FromTimeT(t, "UTC");
+    return ToStr(pt, tz, format);
 }
 
-#endif
-#endif // FORTE_NO_BOOST
+std::string FTime::ToStr(const time_t t, const std::string &tz, const char *format)
+{
+    return ToStr(t, tz.c_str(), format);
+}
+
