@@ -98,6 +98,7 @@ SRCS =	\
 HEADERS = \
 	AnyPtr.h \
 	AutoMutex.h \
+	AutoDoUndo.h \
 	Base64.h \
 	Clock.h \
 	Condition.h \
