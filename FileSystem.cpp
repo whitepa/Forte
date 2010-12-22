@@ -398,6 +398,17 @@ void FileSystem::MakeDir(const FString& path, mode_t mode, bool make_parents)
     }
 }
 
+int FileSystem::ScanDir(const FString& path, struct dirent ***namelist, int(*compar)(const void *, const void *))
+{
+	int n = 0;
+	struct stat st;
+	if (stat(path, &st) != 0 || !S_ISDIR(st.st_mode))
+	{
+		n= scandir(path,namelist,0,compar);
+	}
+	return n;
+
+}
 
 void FileSystem::MakeDirAt(int dir_fd, const FString& path, mode_t mode)
 {

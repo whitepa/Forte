@@ -40,6 +40,17 @@ namespace Forte
         map<Forte::FString, bool> mFileExistsResultMap;
         void SetFileExistsResult(const Forte::FString& path, bool result);
 
+        bool IsDir(const Forte::FString& path);
+		map<Forte::FString, bool> mIsDirResultMap;
+		void SetIsDirResult(const Forte::FString& path, bool result);
+
+
+        int ScanDir(const FString& path, struct dirent ***namelist, int(*compar)(const void *, const void *));
+        map<Forte::FString, vector<struct dirent> > m_scanDirResultsMap;
+        void AddScanDirResult(const FString& path, struct dirent *namelist);
+
+        void AddDirectoryPathToFileSystem(const FString& path);
+        void AddFileToFileSystem(const FString& path, bool createPath);
 
     protected:
         StrStrMap mFiles;

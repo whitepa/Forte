@@ -79,7 +79,7 @@ namespace Forte
                               int dir_to_fd, const FString& to);
         virtual void MakeDir(const FString& path, mode_t mode = 0777, bool make_parents = false);
         virtual void MakeDirAt(int dir_fd, const FString& path, mode_t mode = 0777);
-
+        virtual int ScanDir(const FString& path, struct dirent ***namelist, int(*compar)(const void *, const void *));
         inline void MakeFullPath(const FString& path, mode_t mode = 0777) 
         { 
             MakeDir(path, mode, true); 
