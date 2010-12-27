@@ -39,6 +39,7 @@ BSRCS = ContextPredicateUnitTest.cpp \
 	ContextUnitTest.cpp \
 	ExpDecayingAvgUnitTest.cpp \
 	FileSystemUnitTest.cpp \
+	GUIDGeneratorUnitTest.cpp \
 	PDUPeerUnitTest.cpp \
 	ProcessManagerUnitTest.cpp \
 	ProcFileSystemUnitTest.cpp \

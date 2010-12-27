@@ -1,6 +1,6 @@
 // GUID.h
-#ifndef __forte_guid_h__
-#define __forte_guid_h__
+#ifndef __forte_guid_generator_h__
+#define __forte_guid_generator_h__
 
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
@@ -14,6 +14,7 @@ namespace Forte
     {
     public:
         GUIDGenerator();
+        virtual ~GUIDGenerator() {};
 
         FString & GenerateGUID(FString &out);
 
