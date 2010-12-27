@@ -15,7 +15,7 @@ namespace Forte
     public:
         GUIDGenerator();
 
-        FString & GenerateGUID(FString &out, bool pathSafe = false);
+        FString & GenerateGUID(FString &out);
 
     private:
         RandomGenerator mRG;

@@ -12,7 +12,7 @@ Forte::GUIDGenerator::GUIDGenerator() :
 {
 }
 
-FString & Forte::GUIDGenerator::GenerateGUID(FString &out, bool pathSafe)
+FString & Forte::GUIDGenerator::GenerateGUID(FString &out)
 {
     // generate a GUID
     boost::uuids::uuid u = mUUIDGen();
