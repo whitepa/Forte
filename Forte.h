@@ -72,7 +72,6 @@ namespace Forte {};
 #include "Foreach.h"
 #include "FString.h"
 #include "FTrace.h"
-#include "GUID.h"
 #include "LogManager.h"
 #include "LogTimer.h"
 #include "FMD5.h"
