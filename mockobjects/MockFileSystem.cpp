@@ -120,28 +120,22 @@ void MockFileSystem::SetIsDirResult(const FString& path, bool result)
 }
 
 
-int MockFileSystem::ScanDir(const FString& path, struct dirent ***namelist, int(*compar)(const void *, const void *))
+int MockFileSystem::ScanDir(const FString& path, vector<FString> *namelist, int(*compar)(const void *, const void *))
 {
-	int arraysz = (int)m_scanDirResultsMap[path].size();
-	struct dirent **namearray = (struct dirent **)malloc(arraysz * sizeof(struct dirent *));;
-	int i = 0;
-	foreach (struct dirent curdirent, m_scanDirResultsMap[path])
-	{
-		namearray[i] = &m_scanDirResultsMap[path][i];
-		i++;
-	}
 
-	*namelist = namearray;
+
+
+	*namelist = m_scanDirResultsMap[path];
 
 	return (int)m_scanDirResultsMap[path].size();
 }
 
 
-void MockFileSystem::AddScanDirResult(const FString& path, struct dirent *namelist)
+void MockFileSystem::AddScanDirResult(const FString& path, FString name)
 {
 	hlog(HLOG_DEBUG4, "AddScanDirResult: %s", path.c_str());
 
-	m_scanDirResultsMap[path].push_back(*namelist);
+	m_scanDirResultsMap[path].push_back(name);
 
 	hlog(HLOG_DEBUG4, "AddScanDirResult resulting size: %d", (int)m_scanDirResultsMap[path].size());
 
@@ -170,10 +164,8 @@ void MockFileSystem::AddDirectoryPathToFileSystem(const FString& path)
 
 		if (curindex < ((int)pathsplit.size() - 1))
 		{
-			struct dirent scanResult;
-			strcpy(scanResult.d_name, pathsplit[curindex+1].c_str());
-			scanResult.d_type = DT_DIR;
-			AddScanDirResult(curPath, &scanResult);
+
+			AddScanDirResult(curPath, pathsplit[curindex+1]);
 
 			curindex++;
 
