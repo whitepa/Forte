@@ -16,12 +16,15 @@ COMMON_INCLUDE = \
 	$(LIBSCALE_INCLUDE) \
 	$(DB_INCLUDE) \
 	$(SOAP_INCLUDE) \
+	$(BOOST_INCLUDE) \
 
 COMMON_LIBS = \
 	$(GTEST_LIB) \
 	$(FORTE_LIBS) \
 	$(LIBSCALE_LIBS) \
 	$(LIBSQLITE) \
+	$(BOOST_LIBS) \
+	$(BOOST_FS_LIB) \
 	-lpthread -lrt
 
 PROGS=$(TARGETDIR)/MockFileSystemUnitTest \
