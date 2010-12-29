@@ -2,12 +2,14 @@
 
 #include "FileSystem.h"
 #include "LogManager.h"
+#include <boost/filesystem.hpp>
 #include <fstream>
 #include <vector>
 #include <cstring>
 #include <sys/time.h>
 
 using namespace Forte;
+namespace boostfs = boost::filesystem;
 
 // constants
 const unsigned MAX_RESOLVE = 1000;
@@ -398,16 +400,19 @@ void FileSystem::MakeDir(const FString& path, mode_t mode, bool make_parents)
     }
 }
 
-int FileSystem::ScanDir(const FString& path, struct dirent ***namelist, int(*compar)(const void *, const void *))
+int FileSystem::ScanDir(const FString& path, std::vector<FString> &namelist)
 {
-	int n = 0;
-	struct stat st;
-	if (stat(path, &st) != 0 || !S_ISDIR(st.st_mode))
+	if (boostfs::exists(path))
 	{
-		n= scandir(path,namelist,0,compar);
-	}
-	return n;
+		boostfs::directory_iterator end_itr; // default construction yields past-the-end
+		  for (boostfs::directory_iterator itr(path);itr != end_itr; ++itr )
+		  {
 
+		    namelist.push_back(itr->path().filename());
+		  }
+
+	}
+	return (int)namelist.size();
 }
 
 void FileSystem::MakeDirAt(int dir_fd, const FString& path, mode_t mode)

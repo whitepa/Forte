@@ -24,6 +24,16 @@ BOOST_AUTO_TEST_CASE(StatFSPathDoesNotExist)
     BOOST_CHECK_THROW(f.StatFS("pathdoesnotexist", &st), EFileSystemNoEnt);
 }
 
+BOOST_AUTO_TEST_CASE(ScanDirReplacement)
+{
+    hlog(HLOG_INFO, "ScanDirReplacement");
+    FileSystem f;
+
+    vector<FString> names;
+    f.ScanDir("/",names);
+    BOOST_CHECK(names.size() != 0);
+}
+
 
 ////Boost Unit init function ///////////////////////////////////////////////////
 test_suite*
