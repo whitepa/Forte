@@ -20,7 +20,7 @@ const char* Forte::ClusterLock::VALID_LOCK_CHARS =
 
 // statics
 Forte::Mutex Forte::ClusterLock::sMutex;
-std::map<Forte::FString, Forte::Mutex> Forte::ClusterLock::sMutexMap;
+std::map<Forte::FString, boost::shared_ptr<Forte::Mutex> > Forte::ClusterLock::sMutexMap;
 std::map<Forte::FString, boost::shared_ptr<Forte::ThreadKey> > Forte::ClusterLock::sThreadKeyMap;
 bool Forte::ClusterLock::sSigactionInitialized = false;
 
@@ -39,7 +39,6 @@ ClusterLock::ClusterLock(const FString& name, unsigned timeout)
     : mName(name)
     , mFD(-1)
     , mTimer()
-    , mMutex(NULL)
 {
     init();
     Lock(name, timeout);
@@ -50,7 +49,6 @@ ClusterLock::ClusterLock(const FString& name, unsigned timeout,
     : mName(name)
     , mFD(-1)
     , mTimer()
-    , mMutex(NULL)
 {
     init();
     Lock(name, timeout, errorString);
@@ -60,7 +58,6 @@ ClusterLock::ClusterLock(const FString& name, unsigned timeout,
 ClusterLock::ClusterLock()
     : mFD(-1)
     , mTimer()
-    , mMutex(NULL)
 {
     init();
 }
@@ -193,7 +190,6 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
     {
         AutoUnlockMutex lock(sMutex);
         shared_ptr<ThreadKey> key;
-        mMutex = &sMutexMap[mName];
         if (sThreadKeyMap.find(mName) == sThreadKeyMap.end())
         {
             key = sThreadKeyMap[mName] = make_shared<ThreadKey>();
@@ -202,6 +198,16 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
         else {
             key = sThreadKeyMap[mName];
         }
+
+        if (sMutexMap.find(mName) == sMutexMap.end())
+        {
+            sMutexMap[mName] = make_shared<Mutex>();
+        }
+
+        mMutex = sMutexMap[mName];
+
+        hlog(HLOG_DEBUG, "sMutexMap.size: %zu, mName: %s, mutex use_count: %ld\n",
+             sMutexMap.size(), mName.c_str(), mMutex.use_count()); // use_count() is for DEBUG *only*
 
         // check to see if we already hold this cluster lock in this thread
         u64 refcount = (u64)key->Get();
@@ -251,7 +257,6 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
         {
             // release mutex
             mMutex->Unlock();
-            mMutex = NULL;
         }
 
         // did the lock timeout?
@@ -272,7 +277,6 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
                  (unsigned int) pthread_self(),
                  mFileSystem.StrError(err).c_str());
         }
-        mMutex = NULL;
     }
 
     // stop timer
@@ -370,6 +374,9 @@ void ClusterLock::Unlock()
         }
     }
 
+    hlog(HLOG_DEBUG, "sMutexMap.size: %zu, mName: %s, mutex use_count: %ld\n",
+         sMutexMap.size(), mName.c_str(), mMutex.use_count()); // use_count() is for DEBUG *only*
+
     // clear name
     mName.clear();
 
@@ -395,9 +402,8 @@ void ClusterLock::Unlock()
 //     }
 
     // release mutex?
-    if (mMutex != NULL)
+    if ( mMutex )
     {
         mMutex->Unlock();
-        mMutex = NULL;
     }
 }

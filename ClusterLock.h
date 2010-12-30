@@ -50,7 +50,7 @@ protected:
     Forte::AutoFD mFD;
     std::auto_ptr<Forte::AdvisoryLock> mLock;
     Forte::PosixTimer mTimer;
-    Forte::Mutex* mMutex;
+    boost::shared_ptr<Forte::Mutex> mMutex;
 
     Forte::FileSystem  mFileSystem;
 
@@ -60,7 +60,7 @@ protected:
     static void sig_action(int sig, siginfo_t *info, void *context);
 
     // statics
-    static std::map<Forte::FString, Forte::Mutex> sMutexMap;
+    static std::map<Forte::FString, boost::shared_ptr<Forte::Mutex> > sMutexMap;
     static std::map<Forte::FString, boost::shared_ptr<Forte::ThreadKey> > sThreadKeyMap;
     static Forte::Mutex sMutex;
     static bool sSigactionInitialized;
