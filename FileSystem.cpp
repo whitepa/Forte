@@ -404,6 +404,7 @@ int FileSystem::ScanDir(const FString& path, std::vector<FString> &namelist)
 {
 	if (boostfs::exists(path))
 	{
+		namelist.clear();
 		boostfs::directory_iterator end_itr; // default construction yields past-the-end
 		  for (boostfs::directory_iterator itr(path);itr != end_itr; ++itr )
 		  {
