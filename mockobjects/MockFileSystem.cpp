@@ -120,7 +120,7 @@ void MockFileSystem::SetIsDirResult(const FString& path, bool result)
 }
 
 
-int MockFileSystem::ScanDir(const FString& path, vector<FString> *namelist, int(*compar)(const void *, const void *))
+int MockFileSystem::ScanDir(const FString& path, vector<FString> *namelist)
 {
 
 
