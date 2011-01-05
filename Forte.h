@@ -1,6 +1,7 @@
 #ifndef __forte__h
 #define __forte__h
 
+#include <cstdarg>
 #include <memory>
 #include <string>
 #include <vector>

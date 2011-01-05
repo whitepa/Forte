@@ -1,6 +1,10 @@
 #ifndef __FString_h
 #define __FString_h
 
+#include <string.h>
+#include <stdio.h>
+#include <cstdlib>
+#include <cstdarg>
 #include <string>
 #include <vector>
 #include <set>
