@@ -56,7 +56,6 @@ protected:
 
     // helpers
     void init();
-    void fini();
     static void sig_action(int sig, siginfo_t *info, void *context);
 
     // statics
@@ -64,13 +63,6 @@ protected:
     static std::map<Forte::FString, boost::shared_ptr<Forte::ThreadKey> > sThreadKeyMap;
     static Forte::Mutex sMutex;
     static bool sSigactionInitialized;
-
-/*     // debugging  */
-/*     static CMutex s_counter_mutex; */
-/*     static int s_counter; */
-/*     static int s_outstanding_locks; */
-/*     static int s_outstanding_timers; */
-/*     unsigned int m_counter; */
 };
 
 }; /* namespace Forte{} */

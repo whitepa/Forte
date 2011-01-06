@@ -24,12 +24,6 @@ std::map<Forte::FString, boost::shared_ptr<Forte::Mutex> > Forte::ClusterLock::s
 std::map<Forte::FString, boost::shared_ptr<Forte::ThreadKey> > Forte::ClusterLock::sThreadKeyMap;
 bool Forte::ClusterLock::sSigactionInitialized = false;
 
-// debug statics
-// CMutex ClusterLock::s_counter_mutex;
-// int ClusterLock::s_counter = 0;
-// int ClusterLock::s_outstanding_locks = 0;
-// int ClusterLock::s_outstanding_timers = 0;
-
 using namespace Forte;
 using namespace boost;
 // -----------------------------------------------------------------------------
@@ -66,7 +60,6 @@ ClusterLock::ClusterLock()
 ClusterLock::~ClusterLock()
 {
     Unlock();
-    fini();
 }
 
 
@@ -79,13 +72,6 @@ void ClusterLock::sig_action(int sig, siginfo_t *info, void *context)
 
 void ClusterLock::init()
 {
-//     //debug
-//     {
-//         CAutoUnlockMutex lock(s_counter_mutex);
-//         s_counter++;
-//         m_counter = s_counter;
-//     }
-
     struct sigaction sa;
     sigevent_t se;
 
@@ -105,6 +91,7 @@ void ClusterLock::init()
             sSigactionInitialized = true;
         }
     }
+
     // init sigevent
     memset(&se, 0, sizeof(se));
     se.sigev_value.sival_ptr = this;
@@ -123,32 +110,6 @@ void ClusterLock::init()
                                      "LOCK_TIMER_FAIL|||%s", 
                                      e.what());
     }
-
-//     //debug
-//     {
-//         CAutoUnlockMutex lock(s_counter_mutex);
-//         s_outstanding_timers++;
-//         hlog(HLOG_DEBUG4, "ClusterLock: %u ( timer create, %i outstanding", m_counter, s_outstanding_timers);
-//     }
-}
-
-
-void ClusterLock::fini()
-{
-    /*int ret_code;
-    ret_code = timer_delete(mTimer);
-    if (ret_code != 0)
-    {
-        // not sure if we can do anything about this but it'd be nice to know
-        hlog(HLOG_ERR, "ClusterLock: Failed to delete timer. %i", ret_code);
-        }*/
-    
-//     //debug
-//     {
-//         CAutoUnlockMutex lock(s_counter_mutex);
-//         s_outstanding_timers--;
-//         hlog(HLOG_DEBUG4, "ClusterLock: %u ) timer delete, %i outstanding", m_counter, s_outstanding_timers);
-//     }
 }
 
 
@@ -156,8 +117,6 @@ void ClusterLock::fini()
 void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& errorString)
 {
     FTRACE2("name='%s' timeout=%u", name.c_str(), timeout);
-    if (name == "/fsscale0/lock/state_db")
-        hlog(HLOG_DEBUG, "LOCK STATE DB");
 
     struct itimerspec ts;
     bool locked, timed_out;
@@ -199,6 +158,9 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
             key = sThreadKeyMap[mName];
         }
 
+        hlog(HLOG_DEBUG, "sThreadKeyMap.size: %zu, lock: %s, threadkey use_count: %ld\n",
+             sThreadKeyMap.size(), mName.c_str(), key.use_count()); // use_count() is for DEBUG *only*
+
         if (sMutexMap.find(mName) == sMutexMap.end())
         {
             sMutexMap[mName] = make_shared<Mutex>();
@@ -206,7 +168,7 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
 
         mMutex = sMutexMap[mName];
 
-        hlog(HLOG_DEBUG, "sMutexMap.size: %zu, mName: %s, mutex use_count: %ld\n",
+        hlog(HLOG_DEBUG, "sMutexMap.size: %zu, lock: %s, mutex use_count: %ld\n",
              sMutexMap.size(), mName.c_str(), mMutex.use_count()); // use_count() is for DEBUG *only*
 
         // check to see if we already hold this cluster lock in this thread
@@ -302,9 +264,6 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
         }
     }
 
-    if (name == "/fsscale0/lock/state_db")
-        hlog(HLOG_DEBUG, "LOCKED STATE DB");
-
     // we got the lock, increment the refcount
     {
         AutoUnlockMutex lock(sMutex);
@@ -328,23 +287,12 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
             hlog(HLOG_DEBUG2, "threadkey %p shows %p", key.get(), key->Get());
         }
     }
-
-
-    //hlog(HLOG_DEBUG4, "ClusterLock: %u [ locked", mTimer.TimerID());
-//     //debug
-//     {
-//         CAutoUnlockMutex lock(s_counter_mutex);
-//         s_outstanding_locks++;
-//         hlog(HLOG_DEBUG4, "ClusterLock: %u [ locked, %i outstanding", m_counter, s_outstanding_locks);
-//     }
 }
 
 
 void ClusterLock::Unlock()
 {
     FTRACE2("name='%s'", mName.c_str());
-    if (mName == "/fsscale0/lock/state_db")
-        hlog(HLOG_DEBUG, "UNLOCKED STATE DB");
 
     if (!mName.empty())
     {
@@ -371,10 +319,13 @@ void ClusterLock::Unlock()
                     return;
                 }
             }
+
+            hlog(HLOG_DEBUG, "sThreadKeyMap.size: %zu, lock: %s, thread key use_count: %ld\n",
+                 sThreadKeyMap.size(), mName.c_str(), key.use_count()); // use_count() is for DEBUG *only*
         }
     }
 
-    hlog(HLOG_DEBUG, "sMutexMap.size: %zu, mName: %s, mutex use_count: %ld\n",
+    hlog(HLOG_DEBUG, "sMutexMap.size: %zu, lock: %s, mutex use_count: %ld\n",
          sMutexMap.size(), mName.c_str(), mMutex.use_count()); // use_count() is for DEBUG *only*
 
     // clear name
@@ -387,22 +338,10 @@ void ClusterLock::Unlock()
         mLock->Unlock();
         mLock.reset();
         mFD.Close();
-        //hlog(HLOG_DEBUG4, "ClusterLock: %u ] unlocked", mTimer.TimerID());
-//         //debug
-//         {
-//             CAutoUnlockMutex lock(s_counter_mutex);
-//             s_outstanding_locks--;
-//             hlog(HLOG_DEBUG4, "ClusterLock: %u ] unlocked, %i outstanding", m_counter, s_outstanding_locks);
-//         }
     }
-//     //debug
-//     else
-//     {
-//         hlog(HLOG_DEBUG4, "ClusterLock: unlock called on %i mFD is -1", m_counter);
-//     }
 
     // release mutex?
-    if ( mMutex )
+    if (mMutex)
     {
         mMutex->Unlock();
     }
