@@ -22,19 +22,17 @@ namespace Forte
 
     // general system call exceptions (move to Exception.h?)
     //EXCEPTION_SUBCLASS(Exception, ENotDir);
-    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemNotDir);
-    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemFault);
-    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemNoEnt);
+//    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemNotDir);
+//    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemFault);
+//    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemNoEnt);
 
     EXCEPTION_SUBCLASS(EFileSystem, EFileSystemCopy);
-    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemLink);
+//    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemLink);
     EXCEPTION_SUBCLASS(EFileSystem, EFileSystemMakeDir);
-    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemReadlink);
-    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemRename);
+//    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemReadlink);
+//    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemRename);
     EXCEPTION_SUBCLASS(EFileSystem, EFileSystemResolveSymLink);
-    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemSymLink);
-    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemTouch);
-    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemUnlink);
+//    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemUnlink);
 
 
     class FileSystem : public Object
@@ -119,11 +117,8 @@ namespace Forte
         virtual void Copy(const FString& from_path, const FString& to_path,
                           progress_callback_t progress_callback = NULL,
                           void *callback_data = NULL);
-
-
         // error messages
         virtual FString StrError(int err /*errno*/) const;
-
     protected:
         // helpers
 
