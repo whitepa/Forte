@@ -37,7 +37,6 @@ namespace Forte
         bool FileWasCopied(const FString& key);
 
 
-        bool FileExists(const Forte::FString& path);
         map<Forte::FString, bool> mFileExistsResultMap;
         void SetFileExistsResult(const Forte::FString& path, bool result);
 
