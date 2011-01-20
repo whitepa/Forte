@@ -69,36 +69,36 @@ TEST_F(MockFileSystemUnitTest, AddDirectoryPathToFileSystem)
 
 	vector<FString> namelist;
 
-	ASSERT_EQ(2, mockFS.ScanDir("/", &namelist, alphasort));
+	ASSERT_EQ(2, mockFS.ScanDir("/", &namelist));
 	namelist.clear();
-	ASSERT_EQ(1, mockFS.ScanDir("/foo", &namelist, alphasort));
+	ASSERT_EQ(1, mockFS.ScanDir("/foo", &namelist));
 	ASSERT_EQ("1",namelist[0]);
 
 	namelist.clear();
-	ASSERT_EQ(1, mockFS.ScanDir("/foo/1", &namelist, alphasort));
+	ASSERT_EQ(1, mockFS.ScanDir("/foo/1", &namelist));
 	ASSERT_EQ("2",namelist[0]);
 
 	namelist.clear();
-	ASSERT_EQ(1, mockFS.ScanDir("/foo/1/2", &namelist, alphasort));
+	ASSERT_EQ(1, mockFS.ScanDir("/foo/1/2", &namelist));
 	ASSERT_EQ("3",namelist[0]);
 
 	namelist.clear();
-	ASSERT_EQ(0, mockFS.ScanDir("/foo/1/2/3", &namelist, alphasort));
+	ASSERT_EQ(0, mockFS.ScanDir("/foo/1/2/3", &namelist));
 
 	namelist.clear();
-	ASSERT_EQ(1, mockFS.ScanDir("/bar", &namelist, alphasort));
+	ASSERT_EQ(1, mockFS.ScanDir("/bar", &namelist));
 	ASSERT_EQ("3",namelist[0]);
 
 	namelist.clear();
-	ASSERT_EQ(1, mockFS.ScanDir("/bar/3", &namelist, alphasort));
+	ASSERT_EQ(1, mockFS.ScanDir("/bar/3", &namelist));
 	ASSERT_EQ("4",namelist[0]);
 
 	namelist.clear();
-	ASSERT_EQ(1, mockFS.ScanDir("/bar/3/4", &namelist, alphasort));
+	ASSERT_EQ(1, mockFS.ScanDir("/bar/3/4", &namelist));
 	ASSERT_EQ("5",namelist[0]);
 
 	namelist.clear();
-	ASSERT_EQ(0, mockFS.ScanDir("/bar/3/4/5", &namelist, alphasort));
+	ASSERT_EQ(0, mockFS.ScanDir("/bar/3/4/5", &namelist));
 
 
 
