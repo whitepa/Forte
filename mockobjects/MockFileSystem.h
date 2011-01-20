@@ -39,6 +39,7 @@ namespace Forte
 
         map<Forte::FString, bool> mFileExistsResultMap;
         void SetFileExistsResult(const Forte::FString& path, bool result);
+        void setFileExistsResult(const FString& path, bool result);
 
         bool IsDir(const Forte::FString& path);
 		map<Forte::FString, bool> mIsDirResultMap;
@@ -54,8 +55,6 @@ namespace Forte
 
         bool file_exists(const FString& path);
         bool FileExists(const FString& path);
-        map<FString, bool> m_fileExistsResultMap;
-        void setFileExistsResult(const FString& path, bool result);
 
         void SymLink(const FString& from, const FString& to);
         bool SymLinkWasCreated(const FString& from, const FString& to);
