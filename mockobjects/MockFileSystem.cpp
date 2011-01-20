@@ -110,6 +110,11 @@ bool MockFileSystem::FileExists(const FString& path)
     return mFileExistsResultMap[path];
 }
 
+void MockFileSystem::setFileExistsResult(const FString& path, bool result)
+{
+    SetFileExistsResult(path, result);
+}
+
 void MockFileSystem::SetFileExistsResult(const FString& path, bool result)
 {
     mFileExistsResultMap[path] = result;
