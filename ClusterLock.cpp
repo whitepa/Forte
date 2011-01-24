@@ -158,7 +158,7 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
             key = sThreadKeyMap[mName];
         }
 
-        hlog(HLOG_DEBUG, "sThreadKeyMap.size: %zu, lock: %s, threadkey use_count: %ld\n",
+        hlog(HLOG_DEBUG, "sThreadKeyMap.size: %zu, lock: %s, threadkey use_count: %ld",
              sThreadKeyMap.size(), mName.c_str(), key.use_count()); // use_count() is for DEBUG *only*
 
         if (sMutexMap.find(mName) == sMutexMap.end())
@@ -168,7 +168,7 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
 
         mMutex = sMutexMap[mName];
 
-        hlog(HLOG_DEBUG, "sMutexMap.size: %zu, lock: %s, mutex use_count: %ld\n",
+        hlog(HLOG_DEBUG, "sMutexMap.size: %zu, lock: %s, mutex use_count: %ld",
              sMutexMap.size(), mName.c_str(), mMutex.use_count()); // use_count() is for DEBUG *only*
 
         // check to see if we already hold this cluster lock in this thread
