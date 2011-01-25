@@ -86,12 +86,7 @@ void * Forte::ReceiverThread::run(void)
 
         if (epollResult == 0)
         {
-            if (mThreadShutdown)
-                break;
-            else
-            {
                 continue;
-            }
         }
         else
         {
