@@ -12,6 +12,7 @@ namespace Forte
     EXCEPTION_SUBCLASS(EReceiverThread, EReceiverThreadNameInvalid);
     EXCEPTION_SUBCLASS2(EReceiverThread, EReceiverDispatcherInvalid, "Dispatcher is invalid");
     EXCEPTION_SUBCLASS2(EReceiverThread, ERecieverThreadSetPollAdd, "Failed to add descriptor to poll socket");
+    EXCEPTION_SUBCLASS(EReceiverThread,EReceiverThreadSetPollFailed);
     class ReceiverThread : public Thread
     {
     public:

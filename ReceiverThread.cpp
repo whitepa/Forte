@@ -82,15 +82,26 @@ void * Forte::ReceiverThread::run(void)
         int s;
         struct epoll_event events[32];
 
+        int epollResult = epoll_wait(efd,events,32,EPOLLTIMEOUT);
 
-
-        if (epoll_wait(efd,events,32,EPOLLTIMEOUT) == 0)
+        if (epollResult == 0)
         {
             if (mThreadShutdown)
                 break;
             else
             {
                 continue;
+            }
+        }
+        else
+        {
+            if (epollResult < 0 &&
+                    ((errno == EBADF ||
+                      errno == EFAULT ||
+                      errno == EINVAL) &&
+                     errno != EINTR))
+            {
+                throw EReceiverThreadSetPollFailed(strerror(errno));
             }
         }
 
