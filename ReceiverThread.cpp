@@ -80,9 +80,9 @@ void * Forte::ReceiverThread::run(void)
         struct sockaddr_in in_addr;
         socklen_t len;
         int s;
-        struct epoll_event events[32];
+        struct epoll_event events[1];
 
-        int epollResult = epoll_wait(efd,events,32,EPOLLTIMEOUT);
+        int epollResult = epoll_wait(efd,events,1,EPOLLTIMEOUT);
 
         if (epollResult == 0)
         {
