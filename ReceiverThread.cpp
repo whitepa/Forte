@@ -15,7 +15,7 @@
 #define EPOLLRDHUP 0x2000
 #endif
 
-#define EPOLLTIMEOUT 5000
+#define EPOLLTIMEOUT 500
 
 
 using namespace Forte;
