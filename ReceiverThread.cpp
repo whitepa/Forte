@@ -101,7 +101,7 @@ void * Forte::ReceiverThread::run(void)
         }
 
         if (mThreadShutdown)
-            break; // TODO: we've accepted here, should we really just close it?
+            break;
         else
             s = accept(m, (struct sockaddr *)&in_addr, &len);
 
