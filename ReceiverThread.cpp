@@ -70,8 +70,12 @@ void * Forte::ReceiverThread::run(void)
     struct epoll_event ev;
     ev.events = EPOLLIN | EPOLLERR | EPOLLRDHUP;
     AutoFD efd = epoll_create(2);
+
+    if (efd == -1)
+        throw EReceiverThreadPollCreate(strerror(errno));
+
     if (epoll_ctl(efd, EPOLL_CTL_ADD, m, &ev) < 0)
-                throw ERecieverThreadSetPollAdd(strerror(errno));
+                throw ERecieverThreadPollAdd(strerror(errno));
 
 
     // loop until shutdown
@@ -96,7 +100,7 @@ void * Forte::ReceiverThread::run(void)
                       errno == EINVAL) &&
                      errno != EINTR))
             {
-                throw EReceiverThreadSetPollFailed(strerror(errno));
+                throw EReceiverThreadPollFailed(strerror(errno));
             }
         }
 
