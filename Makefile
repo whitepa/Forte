@@ -15,7 +15,9 @@ LIB_INSTALL_PATH = $(PREFIX)/lib
 
 SUBDIRS = dbc
 
-INCLUDE = $(DB_INCLUDE) $(XML_INCLUDE) $(BOOST_INCLUDE) -I. $(MYSQL_INCLUDE)
+
+INCLUDE = $(DB_INCLUDE) $(XML_INCLUDE) $(BOOST_INCLUDE) $(SSH2_INCLUDE) -I. $(MYSQL_INCLUDE)
+
 CCARGS += -Wall -DFORTE_FUNCTION_TRACING
 SRCS =	\
 	Base64.cpp \
@@ -70,6 +72,7 @@ SRCS =	\
 	SecureString.cpp \
 	ServerMain.cpp \
 	ServiceConfig.cpp \
+	SSHRunner.cpp \
 	State.cpp \
 	StateMachine.cpp \
 	StateRegion.cpp \
@@ -134,6 +137,7 @@ HEADERS = \
 	Semaphore.h \
 	ServerMain.h \
 	ServiceConfig.h \
+	SSHRunner.h \
 	Thread.h \
 	ThreadKey.h \
 	Types.h \
