@@ -119,7 +119,7 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
     FTRACE2("name='%s' timeout=%u", name.c_str(), timeout);
 
     struct itimerspec ts;
-    bool locked, timed_out;
+    bool locked, timed_out = false;
     FString filename(name);
     int err;
 
@@ -317,6 +317,12 @@ void ClusterLock::Unlock()
                 if (refcount > 0)
                 {
                     return;
+                }
+                else if (refcount == 0)
+                {
+                    // delete the entry from the sThreadKeyMap and sMutexMap
+                    sThreadKeyMap.erase(mName);
+                    sMutexMap.erase(mName);
                 }
             }
 
