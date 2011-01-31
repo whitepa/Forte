@@ -38,6 +38,15 @@ public:
     void Lock(const Forte::FString& name, unsigned timeout, const Forte::FString& errorString = "");
 
     inline Forte::FString GetName() const { return mName; }
+
+    /**
+     * NumLocks indicates how many cluster locks in this process are
+     * in a locked state.
+     *
+     * @return unsigned integer number of locks held
+     */
+    static unsigned int NumLocks(void) { AutoUnlockMutex lock(sMutex); return sMutexMap.size(); }
+ 	 	 	 	 		 
     
     // constants
     static const char *LOCK_PATH;
@@ -60,7 +69,6 @@ protected:
 
     // statics
     static std::map<Forte::FString, boost::shared_ptr<Forte::Mutex> > sMutexMap;
-    static std::map<Forte::FString, boost::shared_ptr<Forte::ThreadKey> > sThreadKeyMap;
     static Forte::Mutex sMutex;
     static bool sSigactionInitialized;
 };
