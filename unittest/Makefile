@@ -42,7 +42,8 @@ BSRCS = ContextPredicateUnitTest.cpp \
 	PDUPeerUnitTest.cpp \
 	ProcFileSystemUnitTest.cpp \
 	StateMachineUnitTest.cpp \
-	StateMachineUnitTest1.cpp
+	StateMachineUnitTest1.cpp \
+	ClusterLockUnitTest.cpp
 
 GSRCS = FileSystemUtilUnitTest.cpp \
 	ProcessManagerUnitTest.cpp \
@@ -112,6 +113,17 @@ $(TARGETDIR)/PDUPeerUnitTest: PDUPeerUnitTest.cpp $(FORTE)
 	$(GTEST_LIB) \
 	$(FORTE_LIBS) \
 	$(FORTE_MOCK_LIBS) \
+
+$(TARGETDIR)/ClusterLockUnitTest: ClusterLockUnitTest.cpp $(FORTE)
+	echo "Building $@..."
+	$(CCC) ClusterLockUnitTest.cpp \
+	-o $@ \
+	$(INCLUDE) \
+	$(OS_LIBS) \
+	$(GTEST_LIB) \
+	$(FORTE_LIBS) \
+	$(FORTE_MOCK_LIBS) \
+	$(BOOST_FS_LIB) \
 
 # tail
 include $(BUILDROOT)/re/make/tail.mk
