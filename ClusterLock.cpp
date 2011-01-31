@@ -158,9 +158,6 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
 
         mMutex = sMutexMap[mName];
 
-        hlog(HLOG_DEBUG, "sMutexMap.size: %zu, lock: %s, mutex use_count: %ld",
-             sMutexMap.size(), mName.c_str(), mMutex.use_count()); // use_count() is for DEBUG *only*
-
     }
 
     // open file?
@@ -291,9 +288,6 @@ void ClusterLock::Unlock()
             }
         }
     }
-
-    hlog(HLOG_DEBUG, "sMutexMap.size: %zu, lock: %s, mutex use_count: %ld\n",
-         sMutexMap.size(), mName.c_str(), mMutex.use_count()); // use_count() is for DEBUG *only*
 
     mName.clear();
 }
