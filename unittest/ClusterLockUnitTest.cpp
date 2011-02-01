@@ -174,6 +174,7 @@ TEST_F(ClusterLockTest, StaticMutexesAreFreed)
 }
 // -----------------------------------------------------------------------------
 
+EXCEPTION_CLASS(ELockThreadTimeout);
 /**
  * LockThread is a thread which performs basic locking/unlocking
  * actions at the will of a control thread.  The Lock/Unlock methods
@@ -193,6 +194,7 @@ public:
           mHoldLock(mCompletionLock) {
         initialized();
     };
+    virtual ~LockThread() { FTRACE; deleting(); }
     /**
      * Lock() will notify this LockThread to attempt to obtain the
      * named clusterlock.
@@ -211,7 +213,11 @@ public:
      * Wait() call, but the LockThread will not continue processing
      * the next operation until Wait() has been called.
      */
-    void Wait(void) { FTRACE; mCompletionCond.Wait(); }
+    void Wait(void) {
+        FTRACE;
+        if (mCompletionCond.TimedWait(10))
+            throw ELockThreadTimeout();
+    }
 
     /**
      * HasLock() will return whether this LockThread currently holds
@@ -273,7 +279,7 @@ TEST_F(ClusterLockTest, MultiThreaded)
     ASSERT_EQ(false, t2.HasLock());
     ASSERT_EQ(0u, ClusterLock::NumLocks());
     t1.Lock();
-    t1.Wait();
+    ASSERT_NO_THROW(t1.Wait());
     t2.Lock();
     // there is currently no way to guarantee a wait until we know t2
     // is blocked on the Lock().  Let's wait a bit:
@@ -282,8 +288,8 @@ TEST_F(ClusterLockTest, MultiThreaded)
     ASSERT_EQ(false, t2.HasLock());
     ASSERT_EQ(1u, ClusterLock::NumLocks());
     t1.Unlock();
-    t1.Wait();
-    t2.Wait();
+    ASSERT_NO_THROW(t1.Wait());
+    ASSERT_NO_THROW(t2.Wait());
     ASSERT_EQ(false, t1.HasLock());
     ASSERT_EQ(true, t2.HasLock());
     ASSERT_EQ(1u, ClusterLock::NumLocks());
@@ -293,13 +299,13 @@ TEST_F(ClusterLockTest, MultiThreaded)
     ASSERT_EQ(true, t2.HasLock());
     ASSERT_EQ(1u, ClusterLock::NumLocks());
     t2.Unlock();
-    t2.Wait();
-    t1.Wait();
+    ASSERT_NO_THROW(t2.Wait());
+    ASSERT_NO_THROW(t1.Wait());
     ASSERT_EQ(true, t1.HasLock());
     ASSERT_EQ(false, t2.HasLock());
     ASSERT_EQ(1u, ClusterLock::NumLocks());
     t1.Unlock();
-    t1.Wait();
+    ASSERT_NO_THROW(t1.Wait());
     ASSERT_EQ(false, t1.HasLock());
     ASSERT_EQ(false, t2.HasLock());
     ASSERT_EQ(0u, ClusterLock::NumLocks());
