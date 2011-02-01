@@ -20,4 +20,6 @@ DispatcherThread::DispatcherThread(Dispatcher &dispatcher) :
     mDispatcher(dispatcher)
 {}
 DispatcherThread::~DispatcherThread()
-{}
+{
+    deleting();
+}

@@ -27,7 +27,9 @@ namespace Forte
                 // TODO: validate IP address
                 initialized();
             }
-//    virtual ~ReceiverThread();
+        virtual ~ReceiverThread() { 
+            deleting();
+        }
 
     protected:
         virtual void * run();
