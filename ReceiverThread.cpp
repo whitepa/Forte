@@ -69,6 +69,7 @@ void * Forte::ReceiverThread::run(void)
 
     struct epoll_event ev;
     ev.events = EPOLLIN | EPOLLERR | EPOLLRDHUP;
+    ev.data.ptr = NULL;
     AutoFD efd = epoll_create(2);
 
     if (efd == -1)
