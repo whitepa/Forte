@@ -247,20 +247,17 @@ void LogManager::InitGlobal(void)
 
 void LogManager::BeginLogging()
 {
-    sLogManager = this;
     BeginLogging("//stderr");
 }
 
 void LogManager::BeginLogging(const char *path)
 {
-    sLogManager = this;
     AutoUnlockMutex lock(mLogMutex);
     beginLogging(path, mLogMaskTemplate);
 }
 
 void LogManager::BeginLogging(const char *path, int mask)
 {
-    sLogManager = this;
     AutoUnlockMutex lock(mLogMutex);
     beginLogging(path, mask);
 }
@@ -268,6 +265,7 @@ void LogManager::BeginLogging(const char *path, int mask)
 void LogManager::beginLogging(const char *path, int mask)  // helper - no locking
 {
     Logfile *logfile;
+    sLogManager = this;
     if (!strcmp(path, "//stderr"))
         logfile = new Logfile(path, &cerr, mask);
     else if (!strcmp(path, "//stdout"))
