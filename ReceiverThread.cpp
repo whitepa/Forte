@@ -83,7 +83,7 @@ void * Forte::ReceiverThread::run(void)
     while (!mThreadShutdown)
     {
         struct sockaddr_in in_addr;
-        socklen_t len;
+        socklen_t len = sizeof(in_addr);
         int s;
         struct epoll_event events[1];
 
