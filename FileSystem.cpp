@@ -65,7 +65,7 @@ void FileSystem::Touch(const FString& file)
         SystemCallUtil::ThrowErrNoException(errno);
     }
 
-    memcpy(&(tv[0]), &(tv[1]), sizeof(tv[0]));
+    memcpy(&(tv[1]), &(tv[0]), sizeof(tv[0]));
 
     if (::futimes(fd, tv) == -1)
     {
