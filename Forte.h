@@ -13,7 +13,6 @@
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
-#include <ext/hash_map>
 #include <stdexcept>
 
 //using namespace std;
