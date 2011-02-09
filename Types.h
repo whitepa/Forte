@@ -12,7 +12,6 @@
 #include <list>
 #include <map>
 #include <set>
-#include <ext/hash_map>
 #include "FString.h"
 #include "Exception.h"
 #include "Foreach.h"
@@ -34,7 +33,6 @@ namespace Forte
 {
     typedef vector<unsigned> UIntVector;
     typedef set<unsigned> UIntSet;
-    typedef hash_map<FString, FString, hash<const char *>, eqstr> StringHashMap;
     typedef vector<FString> StrList;
     typedef map<FString, FString> StrStrMap;
     typedef map<FString, FString> FStringFStringMap;
