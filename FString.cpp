@@ -252,6 +252,57 @@ int FString::Explode(const char *delim, std::vector<FString> &components, bool t
     return components.size();
 }
 
+
+int FString::Tokenize(const char *delim, std::vector<FString> &components) const
+{
+    size_t start = 0, end = 0;
+    components.clear();
+
+    while (1)
+    {
+        start = find_first_not_of(delim, start);
+        if (std::string::npos == start)
+            break;
+        end = find_first_of(delim, start);
+        if (std::string::npos == end)
+        {
+            components.push_back(Mid(start));
+            break;
+        }
+
+        if (end - start > 0)
+            components.push_back(Mid(start, end - start));
+        start = end;
+    }
+
+    return components.size();
+}
+
+int FString::Tokenize(const char *delim, std::vector<std::string> &components) const
+{
+    size_t start = 0, end = 0;
+    components.clear();
+
+    while (1)
+    {
+        start = find_first_not_of(delim, start);
+        if (std::string::npos == start)
+            break;
+        end = find_first_of(delim, start);
+        if (std::string::npos == end)
+        {
+            components.push_back(Mid(start));
+            break;
+        }
+
+        if (end - start > 0)
+            components.push_back(Mid(start, end - start));
+        start = end;
+    }
+
+    return components.size();
+}
+
 FString& FString::Implode(const char *glue, const std::vector<FString> &components)
 {
     clear();

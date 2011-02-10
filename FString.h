@@ -100,6 +100,11 @@ namespace Forte
         int Explode(const char *delim, std::vector<std::string> &components, 
                     bool trim=false, const char* strip_chars = " \t\r\n") const;
 
+        //Similar to Explode, but does the actual tokenizing by skipping 
+        //contiguous delimiter characters. Also, unlike Explode, each character
+        //in delim can be a delimiter.
+        int Tokenize(const char *delim, std::vector<FString> &components) const;
+        int Tokenize(const char *delim, std::vector<std::string> &components) const;
 
         // TODO: make templated Implode functions
         /// Combine multiple components into a single string.  Glue will be used
