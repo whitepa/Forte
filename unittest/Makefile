@@ -50,7 +50,8 @@ BSRCS = ContextPredicateUnitTest.cpp \
 	StateMachineUnitTest5.cpp \
 	SCSIUtilUnitTest.cpp
 
-GSRCS = FileSystemUtilUnitTest.cpp \
+GSRCS = DbLiteConnectionUnitTest.cpp \
+	FileSystemUtilUnitTest.cpp \
 	ProcessManagerUnitTest.cpp
 
 GPROGS = $(GSRCS:%.cpp=$(TARGETDIR)/%)
@@ -99,6 +100,17 @@ $(TARGETDIR)/ProcessManagerUnitTest: ../$(TARGETDIR)/ProcessManager.o ProcessMan
 	$(INCLUDE) \
 	$(GTEST_LIB) \
 	$(LIBS)
+
+$(TARGETDIR)/DbLiteConnectionUnitTest: DbLiteConnectionUnitTest.cpp
+	echo "Building $@..."
+	$(CCC) DbLiteConnectionUnitTest.cpp \
+	-o $@ \
+	$(FORTE) \
+	$(INCLUDE) \
+	$(GTEST_LIB) \
+	$(LIBS) \
+	-lsqlite3
+
 
 # tail
 include $(BUILDROOT)/re/make/tail.mk
