@@ -234,11 +234,11 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
                 err = errno;
 
                 hlog(HLOG_WARN, "could not open lock file: %s", 
-                     mFileSystem.StrError(err).c_str());
+                     strerror(errno));
 
                 throw EClusterLockFile(
                     errorString.empty() ? "LOCK_FAIL|||" + filename 
-                    + "|||" + mFileSystem.StrError(err) : 
+                    + "|||" + FString(strerror(errno)) : 
                     errorString);
             }
 
@@ -270,7 +270,7 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
         {
             hlog(HLOG_WARN, "%u could not get lock on file, not timed out: %s", 
                  (unsigned int) pthread_self(),
-                 mFileSystem.StrError(err).c_str());
+                 strerror(errno));
         }
         mMutex = NULL;
     }
