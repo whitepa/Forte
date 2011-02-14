@@ -2,6 +2,7 @@
 #include "boost/test/unit_test.hpp"
 #include "LogManager.h"
 #include "FileSystem.h"
+#include "SystemCallUtil.h"
 
 using namespace boost::unit_test;
 using namespace Forte;
@@ -21,7 +22,7 @@ BOOST_AUTO_TEST_CASE(StatFSPathDoesNotExist)
     hlog(HLOG_INFO, "StatFSPathDoesNotExist");
     FileSystem f;
     struct statfs st;
-    BOOST_CHECK_THROW(f.StatFS("pathdoesnotexist", &st), EFileSystemNoEnt);
+    BOOST_CHECK_THROW(f.StatFS("pathdoesnotexist", &st), EErrNoENOENT);
 }
 
 

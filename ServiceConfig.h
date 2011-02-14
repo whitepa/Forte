@@ -27,6 +27,7 @@ namespace Forte
         {
             INI,
             INFO,
+            UNKNOWN,
         };
 
         ServiceConfig();
@@ -78,8 +79,24 @@ namespace Forte
                              const char *subkey,
                              FStringVector &vec);
 
+        /**
+         * Write the configuration back to the service config
+         * file that it read from
+         */
+        void WriteToConfigFile(void);
+
+        /**
+         * Write the configuration to a new config file
+         *
+         * @param newConfigFile the new config file to write.
+         */
+        void WriteToConfigFile(const char *newConfigFile);
+        
+
     protected:
 
+        ServiceConfigFileType mConfigFileType;
+        std::string mConfigFileName;
         Mutex mMutex;
         boost::property_tree::ptree mPTree;
     };

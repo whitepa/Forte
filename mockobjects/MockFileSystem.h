@@ -40,6 +40,16 @@ namespace Forte
         map<Forte::FString, bool> mFileExistsResultMap;
         void SetFileExistsResult(const Forte::FString& path, bool result);
 
+        void SymLink(const FString& from, const FString& to);
+        bool SymLinkWasCreated(const FString& from, const FString& to);
+        StrStrMap mSymLinksCreated;
+        
+        void Unlink(const FString& path, bool unlink_children = false,
+                    progress_callback_t progress_callback = NULL,
+                    void *callback_data = NULL);
+        map<FString, bool> mFilesUnlinked;
+        bool FileWasUnlinked(const FString& path);
+        void ClearFilesUnlinked();
 
     protected:
         StrStrMap mFiles;
