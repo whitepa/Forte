@@ -13,7 +13,7 @@ namespace Forte
     class DbLiteConnection : public DbConnection
     {
     public:
-        DbLiteConnection();
+        DbLiteConnection(int openFlags = SQLITE_OPEN_READWRITE);
         virtual ~DbLiteConnection();
 
         // initialization

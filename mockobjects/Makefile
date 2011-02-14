@@ -27,7 +27,7 @@ SRCS = \
 
 OBJS = $(SRCS:%.cpp=$(TARGETDIR)/%.o)
 
-LIBDEPS=$(FORTE)
+LIBDEPS=$(FORTE_LIB)
 
 ###  RULES  ###
 

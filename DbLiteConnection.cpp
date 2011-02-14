@@ -9,13 +9,13 @@
 
 using namespace Forte;
 
-DbLiteConnection::DbLiteConnection()
+DbLiteConnection::DbLiteConnection(int openFlags)
 :
-    DbConnection()
+    DbConnection(),
+    mFlags(openFlags)
 {
     mDBType = "sqlite";
     mDB = NULL;
-    mFlags = SQLITE_OPEN_READWRITE;
 }
 
 
