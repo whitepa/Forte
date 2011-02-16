@@ -165,7 +165,7 @@ Thread::~Thread()
     FTRACE;
     if (!mDeletingCalled)
     {
-        hlog(HLOG_ERR, "Software error: "
+        hlog(HLOG_CRIT, "Software error: "
              "dtor failed to call deleting()");
         deleting();
     }
