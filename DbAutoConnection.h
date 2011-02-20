@@ -12,14 +12,17 @@ namespace Forte
 {
     class DbAutoConnection : public Object {
     public:
-        DbAutoConnection(Forte::Context &ctxt, const char *poolname, bool autocommit = true)
+        DbAutoConnection(const Forte::Context &ctxt,
+                         const char *poolname,
+                         bool autocommit = true)
             : mPoolPtr(ctxt.Get<DbConnectionPool>(poolname)), 
               mDbConnection(mPoolPtr->GetDbConnection())
             {
                 // set autocommit appropriately
                 AutoCommit(autocommit);
             }
-        DbAutoConnection(shared_ptr<DbConnectionPool> poolPtr, bool autocommit = true)
+        DbAutoConnection(shared_ptr<DbConnectionPool> poolPtr,
+                         bool autocommit = true)
             : mPoolPtr(poolPtr), 
               mDbConnection(mPoolPtr->GetDbConnection())
             {
