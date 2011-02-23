@@ -74,7 +74,7 @@ void FileSystem::Touch(const FString& file)
 }
 
 
-bool FileSystem::FileExists(const FString& filename)
+bool FileSystem::FileExists(const FString& filename) const
 {
     hlog(HLOG_DEBUG4, "FileSystem::%s(%s)", __FUNCTION__, filename.c_str());
     struct stat st;
@@ -87,7 +87,7 @@ bool FileSystem::FileExists(const FString& filename)
     return (stat(filename, &st) == 0);
 }
 
-bool FileSystem::IsDir(const FString& path)
+bool FileSystem::IsDir(const FString& path) const
 {
     hlog(HLOG_DEBUG4, "FileSystem::%s(%s)", __FUNCTION__, path.c_str());
     struct stat st;
@@ -147,6 +147,49 @@ int FileSystem::FStatAt(int dir_fd, const FString& path, struct stat *st, int fl
 {
     hlog(HLOG_DEBUG4, "FileSystem::%s(%d, %s)", __FUNCTION__, dir_fd, path.c_str());
     return ::fstatat(dir_fd, path.c_str(), st, flags);
+}
+
+void FileSystem::GetChildren(const FString& path, 
+                             std::vector<Forte::FString> &children,
+                             bool recurse) const
+{
+
+    AutoFD dir = opendir(path);
+    if (errno != 0)
+    {
+        SystemCallUtil::ThrowErrNoException(errno);
+    }
+
+    int err_number = 0;
+    FString stmp;
+    struct dirent *result;
+    struct dirent entry;
+
+    while ((err_number = readdir_r(dir, &entry, &result)) == 0
+           && result != NULL)
+    {
+        stmp = entry.d_name;
+        
+        if (stmp != "." && stmp != "..")
+        {
+            if (IsDir(path + "/" + stmp))
+            {
+                if (recurse)
+                {
+                    GetChildren(path + "/" + stmp, children, recurse);
+                }
+                else
+                {
+                    hlog(HLOG_DEBUG, "Skipping %s (not recursing)", 
+                         stmp.c_str());
+                }
+            }
+            else
+            {
+                children.push_back(path + "/" + stmp);
+            }
+        }
+    }    
 }
 
 
