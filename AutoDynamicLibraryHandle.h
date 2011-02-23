@@ -21,7 +21,7 @@ namespace Forte
             FTRACE2("%s", path.c_str());
         }
 
-        void Load() {
+        virtual void Load() {
             mHandle = dlopen (mPath.c_str(), RTLD_LAZY);
             if (!mHandle) 
             {
@@ -74,8 +74,8 @@ namespace Forte
     {
     public:
         AutoDynamicLibraryHandleFactory() {}
-        ~AutoDynamicLibraryHandleFactory() {}
-        AutoDynamicLibraryHandlePtr Get(const Forte::FString& path) const {
+        virtual ~AutoDynamicLibraryHandleFactory() {}
+        virtual AutoDynamicLibraryHandlePtr Get(const Forte::FString& path) const {
             FTRACE2("%s", path.c_str());
             AutoDynamicLibraryHandlePtr autoHandle(
                 new AutoDynamicLibraryHandle(path));

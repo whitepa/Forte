@@ -35,7 +35,7 @@ namespace Forte
     {
     public:
         MockAutoDynamicLibraryHandleFactory() {}
-        ~MockAutoDynamicLibraryHandleFactory() {}
+        virtual ~MockAutoDynamicLibraryHandleFactory() {}
         AutoDynamicLibraryHandlePtr Get(const Forte::FString& path) const {
             FTRACE2("%s", path.c_str());
             MockAutoDynamicLibraryHandlePtr autoHandle(
