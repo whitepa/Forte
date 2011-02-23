@@ -38,6 +38,15 @@ public:
     void Lock(const Forte::FString& name, unsigned timeout, const Forte::FString& errorString = "");
 
     inline Forte::FString GetName() const { return mName; }
+
+    /**
+     * NumLocks indicates how many cluster locks in this process are
+     * in a locked state.
+     *
+     * @return unsigned integer number of locks held
+     */
+    static unsigned int NumLocks(void) { AutoUnlockMutex lock(sMutex); return sMutexMap.size(); }
+ 	 	 	 	 		 
     
     // constants
     static const char *LOCK_PATH;
@@ -50,27 +59,18 @@ protected:
     Forte::AutoFD mFD;
     std::auto_ptr<Forte::AdvisoryLock> mLock;
     Forte::PosixTimer mTimer;
-    Forte::Mutex* mMutex;
+    boost::shared_ptr<Forte::Mutex> mMutex;
 
     Forte::FileSystem  mFileSystem;
 
     // helpers
     void init();
-    void fini();
     static void sig_action(int sig, siginfo_t *info, void *context);
 
     // statics
-    static std::map<Forte::FString, Forte::Mutex> sMutexMap;
-    static std::map<Forte::FString, boost::shared_ptr<Forte::ThreadKey> > sThreadKeyMap;
+    static std::map<Forte::FString, boost::shared_ptr<Forte::Mutex> > sMutexMap;
     static Forte::Mutex sMutex;
     static bool sSigactionInitialized;
-
-/*     // debugging  */
-/*     static CMutex s_counter_mutex; */
-/*     static int s_counter; */
-/*     static int s_outstanding_locks; */
-/*     static int s_outstanding_timers; */
-/*     unsigned int m_counter; */
 };
 
 }; /* namespace Forte{} */

@@ -39,6 +39,19 @@ namespace Forte
         bool FileExists(const Forte::FString& path);
         map<Forte::FString, bool> mFileExistsResultMap;
         void SetFileExistsResult(const Forte::FString& path, bool result);
+        void setFileExistsResult(const FString& path, bool result);
+
+        bool IsDir(const Forte::FString& path);
+		map<Forte::FString, bool> mIsDirResultMap;
+		void SetIsDirResult(const Forte::FString& path, bool result);
+
+
+        int ScanDir(const FString& path, vector<FString> *namelist);
+        map<Forte::FString, vector<FString> > m_scanDirResultsMap;
+        void AddScanDirResult(const FString& path, FString name);
+
+        void AddDirectoryPathToFileSystem(const FString& path);
+        void AddFileToFileSystem(const FString& path, bool createPath);
 
         void SymLink(const FString& from, const FString& to);
         bool SymLinkWasCreated(const FString& from, const FString& to);
@@ -50,6 +63,7 @@ namespace Forte
         map<FString, bool> mFilesUnlinked;
         bool FileWasUnlinked(const FString& path);
         void ClearFilesUnlinked();
+
 
     protected:
         StrStrMap mFiles;

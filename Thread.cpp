@@ -83,6 +83,16 @@ void Thread::initialized()
     mNotifyCond.Broadcast();
 }
 
+void Thread::deleting()
+{
+    // tell the thread to shut down
+    Shutdown();
+    // Join the pthread
+    // (this will block until the thread exits)
+    pthread_join(mThread, NULL);
+    mDeletingCalled = true;
+}
+
 void Thread::WaitForShutdown()
 {
     AutoUnlockMutex lock(mShutdownCompleteLock);
@@ -153,13 +163,12 @@ void Thread::interruptibleSleep(const struct timespec &interval, bool throwOnShu
 Thread::~Thread()
 {
     FTRACE;
-
-    // tell the thread to shut down
-    Shutdown();
-
-    // Join the pthread
-    // (this will block until the thread exits)
-    pthread_join(mThread, NULL);
+    if (!mDeletingCalled)
+    {
+        hlog(HLOG_CRIT, "Software error: "
+             "dtor failed to call deleting()");
+        deleting();
+    }
 }
 
 void Thread::Shutdown(void)

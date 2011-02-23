@@ -27,6 +27,7 @@ namespace Forte
     public:
         inline Thread(void) : 
             mInitialized(false),
+            mDeletingCalled(false),
             mThreadShutdown(false),
             mNotified(false),
             mNotifyCond(mNotifyLock),
@@ -69,7 +70,19 @@ namespace Forte
         FString mThreadName;
 
     protected:
+        /**
+         * initialized() must be called by the derived class
+         * constructor once the object has been fully initialized.
+         * This will trigger the creation of the thread itself.
+         */
         void initialized(void);
+        /**
+         * deleting() must be called by the derived class destructor.
+         * This will notify the thread to shutdown (via Shutdown())
+         * and will block until the thread has exited.
+         */
+        void deleting(void);
+
         virtual void *run(void) = 0;
 
         /**
@@ -87,7 +100,7 @@ namespace Forte
         unsigned int mThreadID;
 
         bool mInitialized;
-
+        bool mDeletingCalled;
     protected:
         bool mThreadShutdown;
 

@@ -181,7 +181,7 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
                 // process the request
                 try
                 {
-                    disp.mRequestHandler->Handler(event.get(), this);
+                    disp.mRequestHandler->Handler(event.get());
                 }
                 catch (std::exception &e)
                 {                

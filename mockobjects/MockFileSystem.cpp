@@ -39,6 +39,7 @@ StrStrMap* MockFileSystem::getFileMap()
 
 int MockFileSystem::Stat(const FString& path, struct stat *st)
 {
+
     hlog(HLOG_DEBUG4, "MockFileSystem::%s(%s, [stat])", __FUNCTION__, path.c_str());
     map<FString, struct stat>::iterator stat_it;
     stat_it = mStatMap.find(path);
@@ -53,6 +54,7 @@ int MockFileSystem::Stat(const FString& path, struct stat *st)
 
 void MockFileSystem::SetStatResult(const FString& path, struct stat st, int result)
 {
+
     mStatMap[path] = st;
     mStatResultMap[path] = result;
 }
@@ -103,10 +105,131 @@ bool MockFileSystem::FileExists(const FString& path)
     return mFileExistsResultMap[path];
 }
 
+void MockFileSystem::setFileExistsResult(const FString& path, bool result)
+{
+    SetFileExistsResult(path, result);
+}
+
 void MockFileSystem::SetFileExistsResult(const FString& path, bool result)
 {
     mFileExistsResultMap[path] = result;
 }
+
+bool MockFileSystem::IsDir(const FString& path)
+{
+    return mIsDirResultMap[path];
+}
+
+void MockFileSystem::SetIsDirResult(const FString& path, bool result)
+{
+    mIsDirResultMap[path] = result;
+}
+
+
+int MockFileSystem::ScanDir(const FString& path, vector<FString> *namelist)
+{
+
+
+
+	*namelist = m_scanDirResultsMap[path];
+
+	return (int)m_scanDirResultsMap[path].size();
+}
+
+
+void MockFileSystem::AddScanDirResult(const FString& path, FString name)
+{
+	hlog(HLOG_DEBUG4, "AddScanDirResult: %s", path.c_str());
+
+	m_scanDirResultsMap[path].push_back(name);
+
+	hlog(HLOG_DEBUG4, "AddScanDirResult resulting size: %d", (int)m_scanDirResultsMap[path].size());
+
+}
+
+
+void MockFileSystem::AddDirectoryPathToFileSystem(const FString& path)
+{
+
+
+	FString curPath = "";
+
+	hlog(HLOG_DEBUG4, "MockFileSystem::%s(%s)", __FUNCTION__, path.c_str());
+
+	vector<FString> pathsplit = path.split("/");
+	int curindex = 0;
+	foreach(FString curSplit, pathsplit)
+	{
+		hlog(HLOG_DEBUG4, "curPath: %s", curPath.c_str());
+		hlog(HLOG_DEBUG4, "curSplit: %s", curSplit.c_str());
+		if (curPath == "" || curPath.substr(curPath.size() -1 ,1) != "/")
+		{
+			curPath.append("/");
+		}
+		curPath.append(curSplit);
+
+		if (curindex < ((int)pathsplit.size() - 1))
+		{
+
+			AddScanDirResult(curPath, pathsplit[curindex+1]);
+
+			curindex++;
+
+
+		}
+
+		//setup filexists
+		SetFileExistsResult(curPath,true);
+
+		//setup stat
+		struct stat newst;
+		newst.st_ino = mStatMap.size() + 1223;
+		newst.st_nlink = 1;
+
+		SetStatResult(curPath,newst,true);
+		SetIsDirResult(curPath,true);
+
+
+
+	}
+
+}
+void MockFileSystem::AddFileToFileSystem(const FString& path, bool createPath)
+{
+	//do a foreach on the split of the path
+	FString curPath;
+	hlog(HLOG_DEBUG4, "MockFileSystem::%s(%s)", __FUNCTION__, path.c_str());
+
+	foreach(FString curSplit, path.split("/"))
+	{
+		if (curSplit != "")
+		{
+
+
+			curPath.append("/");
+			curPath.append(curSplit.c_str());
+
+			hlog(HLOG_DEBUG4, "curPath: %s", curPath.c_str());
+			hlog(HLOG_DEBUG4, "curSplit: %s", curSplit.c_str());
+			//setup filexists
+			SetFileExistsResult(curPath,true);
+
+			//setup stat
+
+			//setup scan dir
+
+		}
+
+	}
+
+
+
+
+
+
+
+}
+
 
 void MockFileSystem::SymLink(const FString& from, const FString& to)
 {
@@ -150,3 +273,4 @@ bool MockFileSystem::FileWasUnlinked(const FString& path)
 
     return (mFilesUnlinked.find(path) != mFilesUnlinked.end());
 }
+

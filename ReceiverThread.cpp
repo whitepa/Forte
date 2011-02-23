@@ -2,12 +2,21 @@
 #include "LogManager.h"
 #include "ReceiverThread.h"
 #include <fcntl.h>
+#include <sys/epoll.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <boost/make_shared.hpp>
 //#include <netinet/ip.h>
+
+// \TODO remove this once EPOLLRDHUP makes it into sys/epoll.h
+#ifndef EPOLLRDHUP
+#define EPOLLRDHUP 0x2000
+#endif
+
+#define EPOLLTIMEOUT 500
+
 
 using namespace Forte;
 
@@ -58,14 +67,49 @@ void * Forte::ReceiverThread::run(void)
     fcntl(m, F_SETFD, (long)(flags | FD_CLOEXEC));
 
 
+    struct epoll_event ev;
+    ev.events = EPOLLIN | EPOLLERR | EPOLLRDHUP;
+    ev.data.ptr = NULL;
+    AutoFD efd = epoll_create(2);
+
+    if (efd == -1)
+        throw EReceiverThreadPollCreate(strerror(errno));
+
+    if (epoll_ctl(efd, EPOLL_CTL_ADD, m, &ev) < 0)
+                throw ERecieverThreadPollAdd(strerror(errno));
+
+
     // loop until shutdown
     while (!mThreadShutdown)
     {
         struct sockaddr_in in_addr;
-        socklen_t len;
-        int s = accept(m, (struct sockaddr *)&in_addr, &len);
+        socklen_t len = sizeof(in_addr);
+        int s;
+        struct epoll_event events[1];
+
+        int epollResult = epoll_wait(efd,events,1,EPOLLTIMEOUT);
+
+        if (epollResult == 0)
+        {
+                continue;
+        }
+        else
+        {
+            if (epollResult < 0 &&
+                    ((errno == EBADF ||
+                      errno == EFAULT ||
+                      errno == EINVAL) &&
+                     errno != EINTR))
+            {
+                throw EReceiverThreadPollFailed(strerror(errno));
+            }
+        }
+
         if (mThreadShutdown)
-            break; // TODO: we've accepted here, should we really just close it?
+            break;
+        else
+            s = accept(m, (struct sockaddr *)&in_addr, &len);
+
 
         if (s == -1)
         {

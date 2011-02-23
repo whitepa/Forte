@@ -54,8 +54,7 @@ Forte::ProcessManager::~ProcessManager()
     // \TODO abandon processes
     
     // shut down the thread
-    Shutdown();
-    WaitForShutdown();
+    deleting();
 }
 
 boost::shared_ptr<Process> 
