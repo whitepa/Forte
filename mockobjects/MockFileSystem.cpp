@@ -104,17 +104,12 @@ bool MockFileSystem::FileExists(const FString& path) const
 {
     map<FString, bool>::const_iterator i;
 
-    if ((i = m_fileExistsResultMap.find(path)) != m_fileExistsResultMap.end())
+    if ((i = mFileExistsResultMap.find(path)) != mFileExistsResultMap.end())
     {
         return i->second;
     }
 
     return false;
-}
-
-void MockFileSystem::setFileExistsResult(const FString& path, bool result)
-{
-    SetFileExistsResult(path, result);
 }
 
 void MockFileSystem::SetFileExistsResult(const FString& path, bool result)
