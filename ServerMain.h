@@ -51,7 +51,6 @@ namespace Forte
         Context mContext;
         Mutex mCallbackMutex;
         sigset_t mSigmask;
-	
 
     protected:
         void initHostname();

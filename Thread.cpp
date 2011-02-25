@@ -106,7 +106,7 @@ void Thread::WaitForInitialize()
     AutoUnlockMutex lock(mNotifyLock);
     while (!mInitialized)
     {
-	mNotifyCond.Wait();
+        mNotifyCond.Wait();
     }
 }
 

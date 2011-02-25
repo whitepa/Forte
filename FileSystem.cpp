@@ -372,8 +372,8 @@ void FileSystem::MakeDir(const FString& path, mode_t mode, bool make_parents)
             if (err == 0)
             {
                 throw EFileSystemMakeDir(FStringFC(), 
-                                     "FORTE_MAKEDIR_SUBSEQUENTLY_DELETED|||%s",
-                                     path.c_str());
+                                         "FORTE_MAKEDIR_SUBSEQUENTLY_DELETED|||%s",
+                                         path.c_str());
             }
 
             SystemCallUtil::ThrowErrNoException(err);
@@ -383,18 +383,18 @@ void FileSystem::MakeDir(const FString& path, mode_t mode, bool make_parents)
 
 int FileSystem::ScanDir(const FString& path, std::vector<FString> &namelist)
 {
-	if (boostfs::exists(path))
-	{
-		namelist.clear();
-		boostfs::directory_iterator end_itr; // default construction yields past-the-end
-		  for (boostfs::directory_iterator itr(path);itr != end_itr; ++itr )
-		  {
+    if (boostfs::exists(path))
+    {
+        namelist.clear();
+        boostfs::directory_iterator end_itr; // default construction yields past-the-end
+        for (boostfs::directory_iterator itr(path);itr != end_itr; ++itr )
+        {
 
-		    namelist.push_back(itr->path().filename());
-		  }
+            namelist.push_back(itr->path().filename());
+        }
 
-	}
-	return (int)namelist.size();
+    }
+    return (int)namelist.size();
 }
 
 void FileSystem::MakeDirAt(int dir_fd, const FString& path, mode_t mode)

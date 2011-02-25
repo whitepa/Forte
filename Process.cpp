@@ -408,9 +408,9 @@ FString Forte::Process::GetOutputString()
         FString stmp;
         ifstream in(mOutputFilename, ios::in | ios::binary);
         char buf[4096];
-		
+  
         mOutputString.clear();
-		
+  
         while (in.good())
         {
             in.read(buf, sizeof(buf));

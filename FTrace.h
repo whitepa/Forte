@@ -13,7 +13,7 @@ namespace Forte
     class FProfileData {
     public:
         FProfileData(void *fn, const struct timeval &spent, const struct timeval &totalSpent) 
-            __attribute__ ((no_instrument_function));
+        __attribute__ ((no_instrument_function));
         void AddCall(const struct timeval &spent, const struct timeval &totalSpent) 
             __attribute__ ((no_instrument_function));
 
@@ -59,7 +59,7 @@ namespace Forte
         static FString & formatStack(const std::list<void *> &stack, FString &out) __attribute__ ((no_instrument_function));
 
         static unsigned int sInitialized;
-     protected:
+    protected:
         static FTraceThreadInfo* getThreadInfo(void) __attribute__ ((no_instrument_function));
         static ThreadKey sTraceKey;
         static FTrace *sInstance;
@@ -87,8 +87,8 @@ namespace Forte
         }
     protected:
         FString mFN;
-	FString mFile;
-	int mLine;
+        FString mFile;
+        int mLine;
     };
 };
 

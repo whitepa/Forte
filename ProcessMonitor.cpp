@@ -308,7 +308,7 @@ void Forte::ProcessMonitor::startProcess(void)
             argv[i] = const_cast<char*>(strings[i].c_str());
         }
         argv[num_args] = 0;
-	
+ 
         // change current working directory
         if (!mCWD.empty() && chdir(mCWD))
         {
@@ -340,7 +340,7 @@ void Forte::ProcessMonitor::startProcess(void)
 //     // set up environment? \TODO do we need this?
 //     if (!mEnvironment.empty()) {
 //         StrStrMap::const_iterator mi;
-			
+   
 //         for (mi = mEnvironment.begin(); mi != mEnvironment.end(); ++mi) 
 //         {
 //             if (mi->second.empty()) unsetenv(mi->first);

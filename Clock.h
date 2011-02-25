@@ -19,16 +19,16 @@ namespace Forte
     class Timespec : public Object
     {
     public:
-      /**
-       *Sets the Timespec object to zero.
-       **/
+        /**
+         *Sets the Timespec object to zero.
+         **/
         Timespec() { 
             Clear();
         };
 
-	/**
-	 *Makes a copy of a Timespec object for you.
-	 **/
+        /**
+         *Makes a copy of a Timespec object for you.
+         **/
         Timespec(const struct timespec &ts) {
             mTimespec.tv_sec = ts.tv_sec;
             mTimespec.tv_nsec = ts.tv_nsec;
@@ -36,18 +36,18 @@ namespace Forte
 
         virtual ~Timespec() {};
 
-	/**
-	 *Assigns one Timespec object to another.
-	 **/
+        /**
+         *Assigns one Timespec object to another.
+         **/
         Timespec operator=(const struct timespec &ts) {
             mTimespec.tv_sec = ts.tv_sec;
             mTimespec.tv_nsec = ts.tv_nsec;
             return *this;
         }
 
-	/**
-	 *Adds two Timespec objects together for you.
-	 **/
+        /**
+         *Adds two Timespec objects together for you.
+         **/
         Timespec operator+(const Timespec &other) const {
             Timespec result;
             result.mTimespec.tv_sec = mTimespec.tv_sec + other.mTimespec.tv_sec;
@@ -60,21 +60,21 @@ namespace Forte
             return result;
         }
 
-	/**
-	 *Returns the current value of your Timespec object. 
-	 **/    
-	operator const struct timespec () const { return mTimespec; }
+        /**
+         *Returns the current value of your Timespec object. 
+         **/    
+        operator const struct timespec () const { return mTimespec; }
 
-	/**
-	 *Returns the time in milliseconds.
-	 **/
+        /**
+         *Returns the time in milliseconds.
+         **/
         long long AsMillisec(void) const {
             return (mTimespec.tv_sec * 1000) + (mTimespec.tv_nsec / 1000000);
         }
 
-	/**
-	 *Takes milliseconds and converts them to a Timespec object which is returned to you.
-	 **/
+        /**
+         *Takes milliseconds and converts them to a Timespec object which is returned to you.
+         **/
         static Timespec FromMillisec(unsigned int ms) {
             Timespec ts;
             ts.mTimespec.tv_sec = ms / 1000;
@@ -82,9 +82,9 @@ namespace Forte
             return ts;
         }
 
-	/**
-	 *Takes seconds and converts them to a Timespec object which is returned to you.
-	 **/
+        /**
+         *Takes seconds and converts them to a Timespec object which is returned to you.
+         **/
         static Timespec FromSeconds(unsigned int sec) {
             Timespec ts;
             ts.mTimespec.tv_sec = sec;
@@ -92,32 +92,32 @@ namespace Forte
             return ts;
         }
 
-	/**
-	 *Returns the time in seconds.
-	 **/
+        /**
+         *Returns the time in seconds.
+         **/
         long AsSeconds(void) const {
             return mTimespec.tv_sec;
         }
 
-	/**
-	 *If your Timespec object is representing a time interval, this method returns whether or not
-	 *the interval is zero.
-	 **/
+        /**
+         *If your Timespec object is representing a time interval, this method returns whether or not
+         *the interval is zero.
+         **/
         bool IsZero(void) const {
             return (mTimespec.tv_sec == 0 && mTimespec.tv_nsec == 0);
         }
 
-	/**
-	 *If your Timespec object is representing a time interval, this method returns whether or not
-	 *it is a positive time interval.
-	 **/
+        /**
+         *If your Timespec object is representing a time interval, this method returns whether or not
+         *it is a positive time interval.
+         **/
         bool IsPositive(void) const {
             return (mTimespec.tv_sec > 0 || (mTimespec.tv_sec == 0 && mTimespec.tv_nsec > 0));
         }
 
-	/**
-	 *Sets the Timespec object to zero.
-	 **/
+        /**
+         *Sets the Timespec object to zero.
+         **/
         void Clear(void) {
             mTimespec.tv_sec = 0;
             mTimespec.tv_nsec = 0;
@@ -136,15 +136,15 @@ namespace Forte
         Clock() {};
         virtual ~Clock() {};
         
-	/**
-	 *This is a pure virtual function that fills in the Timespec object with the current time dependent
-	 *upon the derived class (MonotonicClock or RealtimeClock).
-	 **/
+        /**
+         *This is a pure virtual function that fills in the Timespec object with the current time dependent
+         *upon the derived class (MonotonicClock or RealtimeClock).
+         **/
         virtual void GetTime(struct timespec &ts) const = 0;
 
-	/**
-	 *Returns the time as a Timespec object.
-	 **/
+        /**
+         *Returns the time as a Timespec object.
+         **/
         Timespec GetTime(void) const { 
             struct timespec ts;
             GetTime(ts);
@@ -164,9 +164,9 @@ namespace Forte
         MonotonicClock() {};
         virtual ~MonotonicClock() {};
 
-	/**
-	 *This is a virtual function that fills in the Timespec object with the current monotonic time.
-	 **/
+        /**
+         *This is a virtual function that fills in the Timespec object with the current monotonic time.
+         **/
         virtual void GetTime(struct timespec &ts) const;
         Timespec GetTime(void) const { 
             return Clock::GetTime();
@@ -184,10 +184,10 @@ namespace Forte
         RealtimeClock() {};
         virtual ~RealtimeClock() {};
 
-	/**
-	 *This is a virtual function that fills in the Timespec object with the current time on the system
-	 *clock.
-	 **/
+        /**
+         *This is a virtual function that fills in the Timespec object with the current time on the system
+         *clock.
+         **/
         virtual void GetTime(struct timespec &ts) const;
         Timespec GetTime(void) const { 
             return Clock::GetTime();

@@ -39,12 +39,12 @@ ServerMain::ServerMain(int argc, char * const argv[],
             logMask = HLOG_ALL;
             break;
             /*default:
-            if (!strchr(getoptstr, c))
-            {
-                Usage();
-                exit(1);
-                break;
-            }*/
+              if (!strchr(getoptstr, c))
+              {
+              Usage();
+              exit(1);
+              break;
+              }*/
         }
     }
 
@@ -272,34 +272,34 @@ void ServerMain::MainLoop()
     while (!quit && !mShutdown)
     {
 //        sigwait(&mSigmask, &sig);
-	if (sigtimedwait(&mSigmask, &siginfo, &timeout) >= 0)
-	{
-	    sig = siginfo.si_signo;
-	    switch(sig)
-	    {
-	    case SIGINT:
-	    case SIGTERM:
-	    case SIGQUIT:
-		hlog(HLOG_INFO,"Quitting due to signal %d.", sig);
-		quit = 1;
-		break;
-	    case SIGHUP:
-		// log rotation has occurred XXX need to lock logging system
-		hlog(HLOG_INFO, "reopening log files");
-		mLogManager.Reopen();
-		hlog(HLOG_INFO, "log file reopened");
-		break;
-	    default:
-		hlog(HLOG_ERR,"Unhandled signal %d received.", sig);
-	    }
-	}
-	else if (errno != EAGAIN) // EAGAIN when timeout occurs
-	{
-	    // should only be EINTR (interrupted with a signal not in sig mask)
-	    //                EINVAL (invalid timeout)
-	    hlog(HLOG_ERR, "Error while calling sigtimedwait (%s)", 
-		 strerror(errno));
-	    
-	}
+        if (sigtimedwait(&mSigmask, &siginfo, &timeout) >= 0)
+        {
+            sig = siginfo.si_signo;
+            switch(sig)
+            {
+            case SIGINT:
+            case SIGTERM:
+            case SIGQUIT:
+                hlog(HLOG_INFO,"Quitting due to signal %d.", sig);
+                quit = 1;
+                break;
+            case SIGHUP:
+                // log rotation has occurred XXX need to lock logging system
+                hlog(HLOG_INFO, "reopening log files");
+                mLogManager.Reopen();
+                hlog(HLOG_INFO, "log file reopened");
+                break;
+            default:
+                hlog(HLOG_ERR,"Unhandled signal %d received.", sig);
+            }
+        }
+        else if (errno != EAGAIN) // EAGAIN when timeout occurs
+        {
+            // should only be EINTR (interrupted with a signal not in sig mask)
+            //                EINVAL (invalid timeout)
+            hlog(HLOG_ERR, "Error while calling sigtimedwait (%s)", 
+                 strerror(errno));
+     
+        }
     } 
- }
+}
