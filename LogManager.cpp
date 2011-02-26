@@ -1,3 +1,6 @@
+#include <errno.h>
+#include <string.h>
+
 #include "Foreach.h"
 #include "FTrace.h"
 #include "LogManager.h"
@@ -244,20 +247,17 @@ void LogManager::InitGlobal(void)
 
 void LogManager::BeginLogging()
 {
-    sLogManager = this;
     BeginLogging("//stderr");
 }
 
 void LogManager::BeginLogging(const char *path)
 {
-    sLogManager = this;
     AutoUnlockMutex lock(mLogMutex);
     beginLogging(path, mLogMaskTemplate);
 }
 
 void LogManager::BeginLogging(const char *path, int mask)
 {
-    sLogManager = this;
     AutoUnlockMutex lock(mLogMutex);
     beginLogging(path, mask);
 }
@@ -265,6 +265,7 @@ void LogManager::BeginLogging(const char *path, int mask)
 void LogManager::beginLogging(const char *path, int mask)  // helper - no locking
 {
     Logfile *logfile;
+    sLogManager = this;
     if (!strcmp(path, "//stderr"))
         logfile = new Logfile(path, &cerr, mask);
     else if (!strcmp(path, "//stdout"))
@@ -544,6 +545,16 @@ void _hlog(const char *func, const char * file, int line, int level, const char 
     {
     }
     va_end(ap);
+}
+
+void _hlog_errno(const char* func, const char* file, int line, int level)
+{
+    char  err_buf[HLOG_ERRNO_BUF_LEN];
+
+    memset(err_buf, 0, HLOG_ERRNO_BUF_LEN);
+    strerror_r(errno, err_buf, HLOG_ERRNO_BUF_LEN-1);
+
+    _hlog(func, file, line, level, "strerror: %s", err_buf);
 }
 
 static const char *levelstr[] = 

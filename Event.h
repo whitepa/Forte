@@ -28,7 +28,7 @@ namespace Forte
     public:
         RequestEvent() {};
         virtual ~RequestEvent() {}
-        int mFd;
+        int mFD;
         struct in_addr mClient;
         struct timeval mTime;
     };

@@ -39,11 +39,15 @@ BSRCS = ContextPredicateUnitTest.cpp \
 	ContextUnitTest.cpp \
 	ExpDecayingAvgUnitTest.cpp \
 	FileSystemUnitTest.cpp \
+	PDUPeerUnitTest.cpp \
 	ProcFileSystemUnitTest.cpp \
 	StateMachineUnitTest.cpp \
 	StateMachineUnitTest1.cpp \
-	SCSIUtilUnitTest.cpp
-GSRCS = FileSystemUtilUnitTest.cpp
+	ClusterLockUnitTest.cpp
+
+GSRCS = FileSystemUtilUnitTest.cpp \
+	ProcessManagerUnitTest.cpp \
+	ExceptionUnitTest.cpp
 
 GPROGS = $(GSRCS:%.cpp=$(TARGETDIR)/%)
 BPROGS = $(BSRCS:%.cpp=$(TARGETDIR)/%)
@@ -64,12 +68,21 @@ $(BPROGS): $(TARGETDIR)/%: $(FORTE) $(FORTE_MOCK) %.cpp $(TARGETDIR)/%.o
 	@echo "Building $@ ..."
 	@$(CCC) -o $@ $@.o $(LIBS)
 
+# the dependencies in this rule are wrong:
 $(TARGETDIR)/FileSystemUtilUnitTest: ../$(TARGETDIR)/FileSystemUtil.o FileSystemUtilUnitTest.cpp
 	echo "Building $@..."
 	$(CCC) FileSystemUtilUnitTest.cpp \
 	-o $@ \
 	../$(TARGETDIR)/FileSystemUtil.o \
 	../$(TARGETDIR)/FileSystem.o \
+	$(INCLUDE) \
+	$(GTEST_LIB) \
+	$(LIBS)
+
+$(TARGETDIR)/ExceptionUnitTest: ../$(TARGETDIR)/Exception.o ExceptionUnitTest.cpp
+	echo "Building $@..."
+	$(CCC) ExceptionUnitTest.cpp \
+	-o $@ \
 	$(INCLUDE) \
 	$(GTEST_LIB) \
 	$(LIBS)
@@ -82,6 +95,36 @@ $(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp
 	$(INCLUDE) \
 	$(GTEST_LIB) \
 	$(LIBS)
+
+$(TARGETDIR)/ProcessManagerUnitTest: ProcessManagerUnitTest.cpp $(FORTE)
+	echo "Building $@..."
+	$(CCC) ProcessManagerUnitTest.cpp \
+	-o $@ \
+	$(INCLUDE) \
+	$(GTEST_LIB) \
+	$(LIBS)
+
+$(TARGETDIR)/PDUPeerUnitTest: PDUPeerUnitTest.cpp $(FORTE)
+	echo "Building $@..."
+	$(CCC) PDUPeerUnitTest.cpp \
+	-o $@ \
+	$(INCLUDE) \
+	$(OS_LIBS) \
+	$(GTEST_LIB) \
+	$(FORTE_LIBS) \
+	$(FORTE_MOCK_LIBS) \
+
+$(TARGETDIR)/ClusterLockUnitTest: ClusterLockUnitTest.cpp $(FORTE)
+	echo "Building $@..."
+	$(CCC) ClusterLockUnitTest.cpp \
+	-o $@ \
+	$(INCLUDE) \
+	$(OS_LIBS) \
+	$(GTEST_LIB) \
+	$(FORTE_LIBS) \
+	$(FORTE_MOCK_LIBS) \
+	$(BOOST_FS_LIB) \
+
 # tail
 include $(BUILDROOT)/re/make/tail.mk
 

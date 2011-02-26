@@ -1,6 +1,8 @@
 #ifndef _RequestHandler_h
 #define _RequestHandler_h
 
+#include "Thread.h"
+
 namespace Forte
 {
 // base class for a user-defined request handler

@@ -2,21 +2,34 @@
 #define __ThreadKey_h_
 
 #include <pthread.h>
+#include "Exception.h"
 
-namespace Forte
-{
+namespace Forte{
+
+EXCEPTION_CLASS(EThreadKey);
+// -----------------------------------------------------------------------------
+
     class ThreadKey {
     public:
-        inline ThreadKey(void (*destructor)(void *) = NULL)
-            { pthread_key_create(&mKey, destructor); }
-        inline ~ThreadKey()
-            { pthread_key_delete(mKey); }
+        ThreadKey(void (*destructor)(void *) = NULL)
+        { pthread_key_create(&mKey, destructor); }
+        virtual ~ThreadKey()
+        { pthread_key_delete(mKey); }
 
         void *Get(void)  __attribute__ ((no_instrument_function));
         void Set(const void *value) __attribute__ ((no_instrument_function));
 
-     protected:
+    protected:
         pthread_key_t mKey;
+
+    private:
+        ThreadKey(const ThreadKey &other)
+            { throw EThreadKey(); }
+        const ThreadKey &operator=(const ThreadKey &rhs)
+            { throw EThreadKey(); return *this; }
     };
-};
+
+}; /* namespace Forte{} */
+// -----------------------------------------------------------------------------
+
 #endif

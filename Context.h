@@ -10,7 +10,7 @@
 
 // Macro to allow easy scoping of objects out of the context
 #define CGET(key, type, name)                                   \
-    shared_ptr<type> name ## _Ptr = mContext.Get<type>(key);        \
+    shared_ptr<type> name ## _Ptr = mContext.Get<type>(key);    \
     type &name(* name ## _Ptr)
 
 //#define CGET_TMP(key, type) mContext.Get<type>(key)
@@ -35,7 +35,12 @@ namespace Forte
      * mechanism for objects contained in the context.  Contexts may
      * also be copied, at which time setting an object in the copy
      * will not affect the original context.
-     **/
+     *
+     * \code
+     Forte::Context context;
+     context.Detach("key");
+     \endcode
+    **/
     class Context : public Object
     {
     public:

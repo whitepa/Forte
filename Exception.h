@@ -6,7 +6,7 @@
 #include <cstdarg>
 #include <list>
 #include <vector>
-
+#include <exception>
 
 #define EXCEPTION_CLASS(NAME)                                           \
     class NAME : public Forte::Exception                                \
@@ -81,7 +81,7 @@
 
 namespace Forte
 {
-    class Exception : public Object
+    class Exception : public Object, public std::exception
     {
     public:
         Exception();
@@ -89,9 +89,14 @@ namespace Forte
         Exception(const FStringFC &fc, const char *format, ...)  __attribute__((format(printf,3,4)));
         Exception(const Exception& other);
         virtual ~Exception() throw();
-        inline std::string &GetDescription() { return mDescription; };
-        inline std::string &What() { return mDescription; };
-        inline std::string &what() { return mDescription; };
+        const std::string &GetDescription() const throw() { 
+            return mDescription; 
+        }
+
+        virtual const char *what() const throw() { 
+            return mDescription; 
+        }
+
         std::string ExtendedDescription();
         FString mDescription;
         std::list<void *> mStack;

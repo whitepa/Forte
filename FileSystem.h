@@ -69,7 +69,7 @@ namespace Forte
                               int dir_to_fd, const FString& to);
         virtual void MakeDir(const FString& path, mode_t mode = 0777, bool make_parents = false);
         virtual void MakeDirAt(int dir_fd, const FString& path, mode_t mode = 0777);
-
+        virtual int ScanDir(const FString& path, std::vector<FString> &namelist);
         inline void MakeFullPath(const FString& path, mode_t mode = 0777) 
         { 
             MakeDir(path, mode, true); 
@@ -97,7 +97,8 @@ namespace Forte
 
         virtual FString FileGetContents(const FString& filename);
         virtual void FilePutContents(const FString& filename, 
-                                     const FString& data);
+                                     const FString& data,
+                                     bool append=false);
 
         /// deep_copy copies a directory tree from 'source' to 'dest'.
         virtual void DeepCopy(const FString& source, const FString& dest, 
@@ -108,7 +109,8 @@ namespace Forte
         virtual void Copy(const FString& from_path, const FString& to_path,
                           progress_callback_t progress_callback = NULL,
                           void *callback_data = NULL);
-
+        // error messages
+        virtual FString StrError(int err /*errno*/) const;
     protected:
         // helpers
 

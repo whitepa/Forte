@@ -1,0 +1,103 @@
+PROCESS MANAGER
+
+The ProcessManager class allows the creation and management of child
+processes in an asynchronous manner.  Processes may be created with
+custom environments and redirected input and/or output.  Timeouts may
+be set on running processes, and cancellation may occur in a number of
+different ways (either triggered by timeout, or manually).  Supported
+cancellation modes include abandonment (process continues to run in
+the background, and will utilize no resources upon final exit),
+signalling followed by abandonment, signalling followed by waiting for
+exit, or guaranteed completion (with no cancellation).
+
+RATIONALE
+
+A purely asynchronous process manager was required for the Forte State
+Machine implementation.  The ability to create a process in a
+non-blocking manner from a single thread, and periodically check on
+its progress (from the same thread) was required.  Additionally, the
+ability to abandon, or detach from a spawned process was needed.  The
+ability to later re-attach, and control those abandoned processes was
+also desired, and although currently not implemented, is supported by
+this design.
+
+ASYNCHRONOUSITY
+
+The APIs for the Process Manager are designed to allow for a purely
+asynchronous interface.  Processes may be created, and the calling
+thread may continue processing and periodically check back on the
+status of the running process.  The running process may also be
+cancelled asynchronously.  Conversely, the Wait() call may be used if
+synchronous semantics are desired.  Wait() will block until the
+process enters a terminal state.
+
+USAGE
+
+The ProcessManager class is responsible for the creation of Process
+objects.  These objects contain the API calls needed by the caller to
+manage the desired process.  The external interface to the
+ProcessManager class is only used to create Process objects.
+
+CONFIGURATION
+
+The process manager needs the following configuration keys defined:
+socket path - path to the management sockets
+
+LIMITATIONS
+
+The process manager design requires a monitor process for each spawned
+process.  Each monitor process occupies a file descriptor as well,
+which means the number of spawned process is limited by the number of
+available file descriptors.
+
+IMPLEMENTATION
+
+When ProcessManager::CreateProcess() is called, assuming all inputs
+are valid and the given command is believed to be executable, a
+Process object is created and returned.  This handle object allows the
+caller to manipulate the child process.  Under the hood, a new
+management process for that command is created, and a socket exists
+between the main process and the management process.  This socket
+allows commands, error codes, and/or I/O to travel back and forth.
+
+All Process objects must contain the following data, to allow it to be
+referenced by the forked management process: 
+- Origin Process Name
+- Origin PID
+- Command Line to run
+
+SOCKET PROTOCOL
+
+Each Process object maintains an open socket with its associated
+management process.  Communication on these sockets follows a PDU
+based protocol, which is implemented with Forte PDUPeers.
+
+CHANGES FROM FIRST REVISION
+ - modified to communicate with sub-process via PDUPeer
+ - renamed ProcessHandle class as simply Process
+ - protected several interfaces between Process and ProcessManager classes
+
+OBSOLETES
+
+The Forte::ProcRunner class is obsoleted by the ProcessManager.
+ProcRunner shall be removed during the Forte 2.x lifetime, and no new
+development should be done using the ProcRunner.
+
+The two primary uses of ProcRunner have been Run() and RunBackground().  Run() is a synchronous interface which can be emulated by the ProcessManager in the following way:
+
+  // assuming 'pm' is a shared_ptr to a ProcessManager
+  shared_ptr<Process> p = pm->CreateProcess("<command>");
+  p->Run();
+  p->Wait();
+
+ProcRunner::RunBackground() can be emulated in the following way:
+
+  // assuming 'pm' is a shared_ptr to a ProcessManager
+  shared_ptr<Process> p = pm->CreateProcess("<command>");
+  p->Run();
+  p->Abandon();
+
+TODO
+
+ - Implement named UNIX sockets allowing connection from command line
+clients, and querying info/status about the running command.

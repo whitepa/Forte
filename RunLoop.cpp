@@ -11,6 +11,7 @@ Forte::RunLoop::RunLoop()
 Forte::RunLoop::~RunLoop()
 {
     FTRACE;
+    deleting();
 }
 
 void Forte::RunLoop::AddTimer(shared_ptr<Timer> &timer)

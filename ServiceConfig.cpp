@@ -14,9 +14,9 @@ ServiceConfig::ServiceConfig(
     ServiceConfig::ServiceConfigFileType type) :
     mConfigFileType (type),
     mConfigFileName (configFile)
-{
-    ReadConfigFile(configFile, type);
-}
+    {
+        ReadConfigFile(configFile, type);
+    }
 
 void ServiceConfig::ReadConfigFile(
     const char *configFile, 

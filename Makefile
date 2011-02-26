@@ -21,6 +21,8 @@ INCLUDE = $(DB_INCLUDE) $(XML_INCLUDE) $(BOOST_INCLUDE) $(SSH2_INCLUDE) -I. $(MY
 CCARGS += -Wall -DFORTE_FUNCTION_TRACING
 SRCS =	\
 	Base64.cpp \
+	AdvisoryLock.cpp \
+	ClusterLock.cpp \
 	CheckedValue.cpp \
 	Clock.cpp \
 	Collector.cpp \
@@ -53,17 +55,25 @@ SRCS =	\
 	FTime.cpp \
 	FTrace.cpp \
 	GUID.cpp \
+	GUIDGenerator.cpp \
 	LogManager.cpp \
 	LogTimer.cpp \
 	MD5.cpp \
 	Murmur.cpp \
 	OnDemandDispatcher.cpp \
 	OpenSSLInitializer.cpp \
+	PDUPeer.cpp \
+	PDUPeerSet.cpp \
 	PidFile.cpp \
+	PDUPeer.cpp \
+	PDUPeerSet.cpp \
 	PosixTimer.cpp \
 	ProcFileSystem.cpp \
 	ProcRunner.cpp \
+	Process.cpp \
+	ProcessManager.cpp \
 	Random.cpp \
+	RandomGenerator.cpp \
 	ReceiverThread.cpp \
 	RunLoop.cpp \
 	RWLock.cpp \
@@ -91,6 +101,7 @@ SRCS =	\
 HEADERS = \
 	AnyPtr.h \
 	AutoMutex.h \
+	AutoDoUndo.h \
 	AutoDynamicLibraryHandle.h \
 	Base64.h \
 	Clock.h \
@@ -123,14 +134,21 @@ HEADERS = \
 	FTime.h \
 	FTrace.h \
 	GUID.h \
+	GUIDGenerator.h \
 	LogManager.h \
 	LogTimer.h \
 	Murmur.h \
 	OpenSSLInitializer.h \
+	PDU.h \
+	PDUPeer.h \
+	PDUPeerSet.h \
 	ProcRunner.h \
+	ProcessHandle.h \
+	ProcessManager.h \
 	PropertyObject.h \
 	PidFile.h \
 	Random.h \
+	RandomGenerator.h \
 	RequestHandler.h \
 	RWLock.h \
 	SecureEnvelope.h \
@@ -168,8 +186,11 @@ TLIBS = -L$(TARGETDIR) -lforte -lpthread
 
 INSTALL = $(if $(RPM), @install $(1) $< $@, @install $(1) $(2) $< $@)
 
-all: $(LIB)
+all: $(LIB) $(TARGETDIR)/procmon
 	$(MAKE_SUBDIRS)
+
+$(TARGETDIR)/procmon: $(TARGETDIR)/procmon.o $(TARGETDIR)/ProcessMonitor.o $(LIB)
+	$(CCC) -o $@ $< $(TARGETDIR)/ProcessMonitor.o -L$(TARGETDIR) -lforte -lpthread
 
 utiltest: $(TPROG)
 

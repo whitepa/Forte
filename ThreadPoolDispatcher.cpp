@@ -183,11 +183,6 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
                 {
                     disp.mRequestHandler->Handler(event.get());
                 }
-                catch (Exception &e)
-                {
-                    hlog(HLOG_ERR, "exception thrown in event handler: %s",
-                         e.GetDescription().c_str());
-                }
                 catch (std::exception &e)
                 {                
                     hlog(HLOG_ERR, "exception thrown in event handler: %s",

@@ -10,33 +10,47 @@ namespace Forte
     public:
         void StatFS(const FString& path, struct statfs *st);
 
-        FString FileGetContents(const FString& filename);
-        void FilePutContents(const FString& filename, 
-                             const FString& data, 
+        Forte::FString FileGetContents(const Forte::FString& filename);
+        void FilePutContents(const Forte::FString& filename, 
+                             const Forte::FString& data, 
                              bool append=false);
 
         void clearFileMap();
         StrStrMap* getFileMap();
 
-        int stat(const FString& path, struct stat *st);
-        map<FString, int> m_statResultMap;
-        map<FString, struct stat> m_statMap;
-        void setStatResult(const FString& path, struct stat st, int result);
+        int Stat(const Forte::FString& path, struct stat *st);
+        map<Forte::FString, int> mStatResultMap;
+        map<Forte::FString, struct stat> mStatMap;
+        void SetStatResult(const Forte::FString& path, struct stat st, int result);
 
-        void mkdir(const FString& path, mode_t mode = 0777, bool make_parents = false);
-        vector<FString> m_dirsCreated;
-        vector<FString> getDirsCreated();
-        bool dirWasCreated(const FString& path);
+        void MakeDir(const Forte::FString& path, mode_t mode = 0777, bool make_parents = false);
+        vector<Forte::FString> mDirsCreated;
+        void ClearDirsCreated();
+        vector<Forte::FString> GetDirsCreated();
+        bool DirWasCreated(const Forte::FString& path);
 
-        void file_copy(const FString& from, const FString& to, mode_t mode = 0777);
-        void clearCopiedFileMap();
-        StrStrMap* getCopiedFileMap();
-        StrStrMap m_copiedFiles; //from -> to
+        void FileCopy(ProcRunner &pr, const Forte::FString& from, 
+                      const Forte::FString& to, mode_t mode = 0777);
+        void ClearCopiedFileMap();
+        StrStrMap* GetCopiedFileMap();
+        StrStrMap mCopiedFiles; //from -> to
+        bool FileWasCopied(const FString& key);
 
-        bool file_exists(const FString& path);
-        bool FileExists(const FString& path) const;
-        map<FString, bool> m_fileExistsResultMap;
-        void setFileExistsResult(const FString& path, bool result);
+        bool FileExists(const Forte::FString& path) const;
+        map<Forte::FString, bool> mFileExistsResultMap;
+        void SetFileExistsResult(const Forte::FString& path, bool result);
+
+        bool IsDir(const Forte::FString& path);
+		map<Forte::FString, bool> mIsDirResultMap;
+		void SetIsDirResult(const Forte::FString& path, bool result);
+
+
+        int ScanDir(const FString& path, vector<FString> *namelist);
+        map<Forte::FString, vector<FString> > m_scanDirResultsMap;
+        void AddScanDirResult(const FString& path, FString name);
+
+        void AddDirectoryPathToFileSystem(const FString& path);
+        void AddFileToFileSystem(const FString& path, bool createPath);
 
         void SymLink(const FString& from, const FString& to);
         bool SymLinkWasCreated(const FString& from, const FString& to);
@@ -57,9 +71,8 @@ namespace Forte
                          std::vector<Forte::FString> &children,
                          bool recurse = false) const;
         
-
     protected:
-        StrStrMap m_files;
+        StrStrMap mFiles;
     };
 }
 

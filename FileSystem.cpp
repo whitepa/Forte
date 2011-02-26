@@ -2,6 +2,7 @@
 
 #include "FileSystem.h"
 #include "LogManager.h"
+#include <boost/filesystem.hpp>
 #include <fstream>
 #include <vector>
 #include <cstring>
@@ -9,6 +10,7 @@
 #include "SystemCallUtil.h"
 
 using namespace Forte;
+namespace boostfs = boost::filesystem;
 
 // constants
 const unsigned MAX_RESOLVE = 1000;
@@ -22,6 +24,18 @@ FileSystem::FileSystem()
 FileSystem::~FileSystem()
 {
 }
+
+// helpers
+FString FileSystem::StrError(int err) const
+{
+    char buf[256], *str;
+    FString ret;
+    str = strerror_r(err, buf, sizeof(buf));
+    buf[sizeof(buf) - 1] = 0;
+    ret = str;
+    return ret;
+}
+
 
 // interface
 FString FileSystem::GetCWD()
@@ -51,7 +65,7 @@ void FileSystem::Touch(const FString& file)
         SystemCallUtil::ThrowErrNoException(errno);
     }
 
-    memcpy(&(tv[0]), &(tv[1]), sizeof(tv[0]));
+    memcpy(&(tv[1]), &(tv[0]), sizeof(tv[0]));
 
     if (::futimes(fd, tv) == -1)
     {
@@ -358,8 +372,8 @@ void FileSystem::MakeDir(const FString& path, mode_t mode, bool make_parents)
             if (err == 0)
             {
                 throw EFileSystemMakeDir(FStringFC(), 
-                                     "FORTE_MAKEDIR_SUBSEQUENTLY_DELETED|||%s",
-                                     path.c_str());
+                                         "FORTE_MAKEDIR_SUBSEQUENTLY_DELETED|||%s",
+                                         path.c_str());
             }
 
             SystemCallUtil::ThrowErrNoException(err);
@@ -367,6 +381,21 @@ void FileSystem::MakeDir(const FString& path, mode_t mode, bool make_parents)
     }
 }
 
+int FileSystem::ScanDir(const FString& path, std::vector<FString> &namelist)
+{
+    if (boostfs::exists(path))
+    {
+        namelist.clear();
+        boostfs::directory_iterator end_itr; // default construction yields past-the-end
+        for (boostfs::directory_iterator itr(path);itr != end_itr; ++itr )
+        {
+
+            namelist.push_back(itr->path().filename());
+        }
+
+    }
+    return (int)namelist.size();
+}
 
 void FileSystem::MakeDirAt(int dir_fd, const FString& path, mode_t mode)
 {
@@ -736,10 +765,17 @@ FString FileSystem::FileGetContents(const FString& filename)
 }
 
 
-void FileSystem::FilePutContents(const FString& filename, const FString& data)
+void FileSystem::FilePutContents(const FString& filename, const FString& data, bool append)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::file_get_contents(%s, [data])", filename.c_str());
-    ofstream out(filename, ios::out | ios::binary);
+    hlog(HLOG_DEBUG4, "FileSystem::file_put_contents(%s, [data])", 
+         filename.c_str());
+    ios_base::openmode mode=ios::out | ios::binary;
+
+    if (append) {
+        mode=mode | ios::app;
+    }
+
+    ofstream out(filename, mode);
     if (out.good()) out.write(data.c_str(), data.size());
 }
 
