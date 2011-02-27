@@ -47,6 +47,7 @@ BSRCS = ContextPredicateUnitTest.cpp \
 
 GSRCS = FileSystemUtilUnitTest.cpp \
 	ProcessManagerUnitTest.cpp \
+	FStringUnitTest.cpp \
 	ExceptionUnitTest.cpp
 
 GPROGS = $(GSRCS:%.cpp=$(TARGETDIR)/%)
@@ -86,6 +87,15 @@ $(TARGETDIR)/ExceptionUnitTest: ../$(TARGETDIR)/Exception.o ExceptionUnitTest.cp
 	$(INCLUDE) \
 	$(GTEST_LIB) \
 	$(LIBS)
+
+$(TARGETDIR)/FStringUnitTest: ../$(TARGETDIR)/FString.o FStringUnitTest.cpp
+	echo "Building $@..."
+	$(CCC) FStringUnitTest.cpp \
+	-o $@ \
+	$(INCLUDE) \
+	$(GTEST_LIB) \
+	$(LIBS)
+
 
 $(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp
 	echo "Building $@..."
