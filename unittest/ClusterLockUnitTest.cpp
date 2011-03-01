@@ -209,12 +209,6 @@ TEST_F(ClusterLockTest, LockFileCouldNotOpen)
     ClusterLock theSameLock(name, 1);
 
     verifyFileHasEntryInProcLocks(theFile);
-
-    // remove the dir we created
-    if (fs.FileExists(dir))
-    {
-        fs.Unlink(dir, true);        
-    }
 }
 
 EXCEPTION_CLASS(ELockThreadTimeout);
