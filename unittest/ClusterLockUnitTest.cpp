@@ -174,6 +174,37 @@ TEST_F(ClusterLockTest, StaticMutexesAreFreed)
 }
 // -----------------------------------------------------------------------------
 
+TEST_F(ClusterLockTest, LockFileCouldNotOpen)
+{
+    const char *dirToMake = "dirToMake";
+    FString name(FStringFC(),
+                 "%s/%s",
+                 dirToMake,
+                 "LockFileCouldNotOpen");
+
+    FString theFile(FStringFC(),
+                    "%s/%s",
+                    ClusterLock::LOCK_PATH,
+                    name.c_str());
+    
+    hlog(HLOG_INFO, "attempting to lock %s", name.c_str());
+
+    ASSERT_THROW(ClusterLock theLock(name, 1),
+                 EClusterLockFile);
+    
+    // create the dir
+    FileSystem fs;
+    FString dir(FStringFC(),
+                "%s/%s",
+                ClusterLock::LOCK_PATH,
+                dirToMake);
+    fs.MakeDir(dir);
+    
+    ClusterLock theSameLock(name, 1);
+
+    verifyFileHasEntryInProcLocks(theFile);
+}
+
 EXCEPTION_CLASS(ELockThreadTimeout);
 /**
  * LockThread is a thread which performs basic locking/unlocking

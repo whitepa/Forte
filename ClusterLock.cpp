@@ -174,24 +174,28 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
         {
             // mName = filename;
             mFD = open(mName, O_RDWR | O_CREAT | O_NOATIME, 0600);
-
+                
             if (mFD == -1)
             {
                 err = errno;
-
+                    
                 hlog(HLOG_WARN, "could not open lock file: %s", 
                      strerror(errno));
 
+                // release the mutex
+                mMutex->Unlock();
+                mMutex.reset();
+                    
                 throw EClusterLockFile(
                     errorString.empty() ? "LOCK_FAIL|||" + mName
                     + "|||" + mFileSystem.StrError(err) : 
                     errorString);
             }
-
+                
             ftruncate(mFD, 1);
             mLock.reset(new AdvisoryLock(mFD, 0, 1));
         }
-
+            
         // acquire lock?
         if (!(locked = mLock->ExclusiveLock(true)))
         {
@@ -221,6 +225,7 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
 
         mMutex.reset();
     }
+
 
     // stop timer
     memset(&ts, 0, sizeof(ts));
