@@ -68,7 +68,6 @@ void ClusterLock::sig_action(int sig, siginfo_t *info, void *context)
     // cout << pthread_self() << "  caught signal " << sig << endl;
 }
 
-
 void ClusterLock::init()
 {
     struct sigaction sa;
@@ -114,6 +113,30 @@ void ClusterLock::init()
     }
 }
 
+void ClusterLock::checkAndClearFromMutexMap(const Forte::FString& name)
+{
+    AutoUnlockMutex lock(sMutex);
+    std::map<FString, shared_ptr<Mutex> >::const_iterator i =
+        sMutexMap.find(name);
+    if (i == sMutexMap.end())
+        hlog(HLOG_ERR, "could not find mutex while unlocking '%s'",
+             name.c_str());
+    else
+    {
+        const shared_ptr<Mutex> &mp(i->second);
+        if (mp.unique())
+        {
+            hlog(HLOG_DEBUG4, "lock %s no longer in use; freeing mutex",
+                 name.c_str());
+            sMutexMap.erase(name);
+        }
+        else
+        {
+            hlog(HLOG_DEBUG4, "lock %s still in use; will not free mutex",
+                 name.c_str());                
+        }
+    }    
+}
 
 // lock/unlock
 void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& errorString)
@@ -185,6 +208,7 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
                 // release the mutex
                 mMutex->Unlock();
                 mMutex.reset();
+                checkAndClearFromMutexMap(mName);
                     
                 throw EClusterLockFile(
                     errorString.empty() ? "LOCK_FAIL|||" + mName
@@ -202,6 +226,7 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
             // release mutex
             mMutex->Unlock();
             mMutex.reset();
+            checkAndClearFromMutexMap(mName);
         }
 
         // did the lock timeout?
@@ -270,28 +295,7 @@ void ClusterLock::Unlock()
     {
         mMutex->Unlock();
         mMutex.reset();
-        
-        AutoUnlockMutex lock(sMutex);
-        std::map<FString, shared_ptr<Mutex> >::const_iterator i =
-            sMutexMap.find(mName);
-        if (i == sMutexMap.end())
-            hlog(HLOG_ERR, "could not find mutex while unlocking '%s'",
-                 mName.c_str());
-        else
-        {
-            const shared_ptr<Mutex> &mp(i->second);
-            if (mp.unique())
-            {
-                hlog(HLOG_DEBUG4, "lock %s no longer in use; freeing mutex",
-                     mName.c_str());
-                sMutexMap.erase(mName);
-            }
-            else
-            {
-                hlog(HLOG_DEBUG4, "lock %s still in use; will not free mutex",
-                     mName.c_str());                
-            }
-        }
+        checkAndClearFromMutexMap(mName);
     }
 
     mName.clear();

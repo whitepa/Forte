@@ -186,6 +186,17 @@ TEST_F(ClusterLockTest, LockFileCouldNotOpen)
                     "%s/%s",
                     ClusterLock::LOCK_PATH,
                     name.c_str());
+    FileSystem fs;
+    FString dir(FStringFC(),
+                "%s/%s",
+                ClusterLock::LOCK_PATH,
+                dirToMake);
+
+    // delete the dir if it exists first
+    if (fs.FileExists(dir))
+    {
+        fs.Unlink(dir, true);        
+    }    
     
     hlog(HLOG_INFO, "attempting to lock %s", name.c_str());
 
@@ -193,16 +204,17 @@ TEST_F(ClusterLockTest, LockFileCouldNotOpen)
                  EClusterLockFile);
     
     // create the dir
-    FileSystem fs;
-    FString dir(FStringFC(),
-                "%s/%s",
-                ClusterLock::LOCK_PATH,
-                dirToMake);
     fs.MakeDir(dir);
     
     ClusterLock theSameLock(name, 1);
 
     verifyFileHasEntryInProcLocks(theFile);
+
+    // remove the dir we created
+    if (fs.FileExists(dir))
+    {
+        fs.Unlink(dir, true);        
+    }
 }
 
 EXCEPTION_CLASS(ELockThreadTimeout);
