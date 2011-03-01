@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
     }
     catch (Exception &e)
     {
-        printf("Exception thrown: %s\n", e.what().c_str());
+        printf("Exception thrown: %s\n", e.what());
         exit(1);
     }
 }

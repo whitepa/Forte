@@ -1,6 +1,6 @@
 // GUID.h
-#ifndef __forte_guid_generator_h__
-#define __forte_guid_generator_h__
+#ifndef __forte_guidgenerator_h__
+#define __forte_guidgenerator_h__
 
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>

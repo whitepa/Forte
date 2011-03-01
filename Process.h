@@ -135,7 +135,7 @@ namespace Forte
          * @return ProcessCompleteCallback object
          */
         ProcessCompleteCallback GetProcessCompleteCallback() { return mProcessCompleteCallback; }
-		
+  
         /**
          * SetCurrentWorkingDirectory() sets the current working
          * directory the child process should use. This can only be
@@ -239,7 +239,7 @@ namespace Forte
          * @return pid_t holding the child process id
          */
         pid_t GetProcessPID() { return mProcessPid; }
-		
+  
         /**
          * GetStatusCode() returns the status code from the terminated
          * process.  If the process was terminated abnormally via
@@ -250,7 +250,7 @@ namespace Forte
          * @return unisgned int holding the child status code
          */
         unsigned int GetStatusCode();
-		
+  
         /**
          * GetProcessTerminationType() returns the way the child process was terminated:
          *   ProcessExited
@@ -294,7 +294,7 @@ namespace Forte
          * @param running is the child process still running
          */
         void setIsRunning(bool running);
-		
+  
         /**
          * NotifyWaiters() broadcasts for anyone waiting on the process to finish
          */

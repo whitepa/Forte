@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     catch (Forte::Exception &e)
     {
         // unhandled exception
-        fprintf(stderr, "PROCMON: %s\n", e.what().c_str());
+        fprintf(stderr, "PROCMON: %s\n", e.what());
         return 1;
     }
     catch (...)

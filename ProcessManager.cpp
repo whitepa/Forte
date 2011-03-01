@@ -54,8 +54,7 @@ Forte::ProcessManager::~ProcessManager()
     // \TODO abandon processes
     
     // shut down the thread
-    Shutdown();
-    WaitForShutdown();
+    deleting();
 }
 
 boost::shared_ptr<Process> 
@@ -142,7 +141,7 @@ void* Forte::ProcessManager::run(void)
         }
         catch (Exception &e)
         {
-            hlog(HLOG_ERR, "caught exception: %s", e.what().c_str());
+            hlog(HLOG_ERR, "caught exception: %s", e.what());
             sleep(1); // prevent tight loops
         }
     }

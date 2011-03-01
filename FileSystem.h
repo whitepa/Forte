@@ -19,22 +19,9 @@ namespace Forte
 {
     // typed exceptions
     EXCEPTION_SUBCLASS(Exception, EFileSystem);
-
-    // general system call exceptions (move to Exception.h?)
-    //EXCEPTION_SUBCLASS(Exception, ENotDir);
-    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemNotDir);
-    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemFault);
-    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemNoEnt);
-
     EXCEPTION_SUBCLASS(EFileSystem, EFileSystemCopy);
-    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemLink);
     EXCEPTION_SUBCLASS(EFileSystem, EFileSystemMakeDir);
-    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemReadlink);
-    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemRename);
     EXCEPTION_SUBCLASS(EFileSystem, EFileSystemResolveSymLink);
-    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemSymLink);
-    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemTouch);
-    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemUnlink);
 
 
     class FileSystem : public Object
@@ -50,12 +37,15 @@ namespace Forte
         // interface
         virtual FString GetCWD();
         virtual void Touch(const FString& file);
-        virtual bool FileExists(const FString& filename);
+        virtual bool FileExists(const FString& filename) const;
 
         virtual void StatFS(const FString& path, struct statfs *st);
 
         virtual int Stat(const FString& path, struct stat *st);
-        virtual bool IsDir(const FString& path);
+        virtual bool IsDir(const FString& path) const;
+        virtual void GetChildren(const FString& path, 
+                                 std::vector<Forte::FString> &children,
+                                 bool recurse = false) const;
         virtual int LStat(const FString& path, struct stat *st);
         virtual int StatAt(int dir_fd, const FString& path, struct stat *st);
         virtual int LStatAt(int dir_fd, const FString& path, struct stat *st);
@@ -79,7 +69,7 @@ namespace Forte
                               int dir_to_fd, const FString& to);
         virtual void MakeDir(const FString& path, mode_t mode = 0777, bool make_parents = false);
         virtual void MakeDirAt(int dir_fd, const FString& path, mode_t mode = 0777);
-
+        virtual int ScanDir(const FString& path, std::vector<FString> &namelist);
         inline void MakeFullPath(const FString& path, mode_t mode = 0777) 
         { 
             MakeDir(path, mode, true); 
@@ -107,7 +97,8 @@ namespace Forte
 
         virtual FString FileGetContents(const FString& filename);
         virtual void FilePutContents(const FString& filename, 
-                                     const FString& data);
+                                     const FString& data,
+                                     bool append=false);
 
         /// deep_copy copies a directory tree from 'source' to 'dest'.
         virtual void DeepCopy(const FString& source, const FString& dest, 
@@ -118,11 +109,8 @@ namespace Forte
         virtual void Copy(const FString& from_path, const FString& to_path,
                           progress_callback_t progress_callback = NULL,
                           void *callback_data = NULL);
-
-
         // error messages
         virtual FString StrError(int err /*errno*/) const;
-
     protected:
         // helpers
 

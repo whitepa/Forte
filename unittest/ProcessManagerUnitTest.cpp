@@ -37,7 +37,7 @@ TEST(ProcessManager, RunProcess)
     }
     catch (Exception &e)
     {
-        hlog(HLOG_ERR, "exception: %s", e.what().c_str());
+        hlog(HLOG_ERR, "exception: %s", e.what());
         FAIL();
     }
 }
@@ -78,7 +78,7 @@ TEST(ProcessManager, Exceptions)
     }
     catch (Exception &e)
     {
-        hlog(HLOG_ERR, "Exception: %s", e.what().c_str());
+        hlog(HLOG_ERR, "Exception: %s", e.what());
         FAIL();
     }
     catch (std::exception &e)
@@ -106,7 +106,7 @@ TEST(ProcessManager, CancelProcess)
     }
     catch (Exception &e)
     {
-        hlog(HLOG_ERR, "Exception: %s", e.what().c_str());
+        hlog(HLOG_ERR, "Exception: %s", e.what());
         FAIL();
     }
     catch (std::exception &e)
@@ -133,7 +133,7 @@ TEST(ProcessManager, AbandonProcess)
     }
     catch (Exception &e)
     {
-        hlog(HLOG_ERR, "Exception: %s", e.what().c_str());
+        hlog(HLOG_ERR, "Exception: %s", e.what());
         FAIL();
     }
     catch (std::exception &e)
@@ -181,7 +181,7 @@ TEST(ProcessManager, FileIO)
     }
     catch (Exception &e)
     {
-        hlog(HLOG_ERR, "Exception: %s", e.what().c_str());
+        hlog(HLOG_ERR, "Exception: %s", e.what());
         FAIL();
     }
     catch (std::exception &e)
@@ -214,7 +214,7 @@ TEST(ProcessManager, Callbacks)
     }
     catch (Exception &e)
     {
-        hlog(HLOG_ERR, "Exception: %s", e.what().c_str());
+        hlog(HLOG_ERR, "Exception: %s", e.what());
         FAIL();
     }
     catch (std::exception &e)

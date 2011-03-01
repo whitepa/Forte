@@ -75,26 +75,26 @@ static unsigned char PADDING[64] = {
 /* FF, GG, HH, and II transformations for rounds 1, 2, 3, and 4.
    Rotation is separate from addition to prevent recomputation.
 */
-#define FF(a, b, c, d, x, s, ac) { \
- (a) += F ((b), (c), (d)) + (x) + (UINT4)(ac); \
- (a) = ROTATE_LEFT ((a), (s)); \
- (a) += (b); \
-  }
-#define GG(a, b, c, d, x, s, ac) { \
- (a) += G ((b), (c), (d)) + (x) + (UINT4)(ac); \
- (a) = ROTATE_LEFT ((a), (s)); \
- (a) += (b); \
-  }
-#define HH(a, b, c, d, x, s, ac) { \
- (a) += H ((b), (c), (d)) + (x) + (UINT4)(ac); \
- (a) = ROTATE_LEFT ((a), (s)); \
- (a) += (b); \
-  }
-#define II(a, b, c, d, x, s, ac) { \
- (a) += I ((b), (c), (d)) + (x) + (UINT4)(ac); \
- (a) = ROTATE_LEFT ((a), (s)); \
- (a) += (b); \
-  }
+#define FF(a, b, c, d, x, s, ac) {                      \
+        (a) += F ((b), (c), (d)) + (x) + (UINT4)(ac);   \
+        (a) = ROTATE_LEFT ((a), (s));                   \
+        (a) += (b);                                     \
+    }
+#define GG(a, b, c, d, x, s, ac) {                      \
+        (a) += G ((b), (c), (d)) + (x) + (UINT4)(ac);   \
+        (a) = ROTATE_LEFT ((a), (s));                   \
+        (a) += (b);                                     \
+    }
+#define HH(a, b, c, d, x, s, ac) {                      \
+        (a) += H ((b), (c), (d)) + (x) + (UINT4)(ac);   \
+        (a) = ROTATE_LEFT ((a), (s));                   \
+        (a) += (b);                                     \
+    }
+#define II(a, b, c, d, x, s, ac) {                      \
+        (a) += I ((b), (c), (d)) + (x) + (UINT4)(ac);   \
+        (a) = ROTATE_LEFT ((a), (s));                   \
+        (a) += (b);                                     \
+    }
 
 /* MD5 initialization. Begins an MD5 operation, writing a new context.
  */
@@ -266,7 +266,7 @@ static void MD5Transform (UINT4 state[4], unsigned char block[64])
 
     /* Zeroize sensitive information.
 
-    */
+     */
     MD5_memset ((POINTER)x, 0, sizeof (x));
 }
 
@@ -278,10 +278,10 @@ static void Encode (unsigned char *output, UINT4 *input, unsigned int len)
     unsigned int i, j;
 
     for (i = 0, j = 0; j < len; i++, j += 4) {
-	output[j] = (unsigned char)(input[i] & 0xff);
-	output[j+1] = (unsigned char)((input[i] >> 8) & 0xff);
-	output[j+2] = (unsigned char)((input[i] >> 16) & 0xff);
-	output[j+3] = (unsigned char)((input[i] >> 24) & 0xff);
+        output[j] = (unsigned char)(input[i] & 0xff);
+        output[j+1] = (unsigned char)((input[i] >> 8) & 0xff);
+        output[j+2] = (unsigned char)((input[i] >> 16) & 0xff);
+        output[j+3] = (unsigned char)((input[i] >> 24) & 0xff);
     }
 }
 
@@ -351,7 +351,7 @@ MD5 MD5::AtoMD5(const FString &str)
     MD5 md5;
 
     if (str.length() < 32) return md5;
-	
+ 
     for (i=0; i<16; i++)
     {
         // get first nibble

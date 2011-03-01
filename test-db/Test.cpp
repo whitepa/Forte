@@ -187,14 +187,14 @@ void run_tests()
     }
     catch (CDbException exp)
     {
-        hlog(HLOG_DEBUG, "CDbException: [%u] %s", exp.mDbErrno, exp.what().c_str());
+        hlog(HLOG_DEBUG, "CDbException: [%u] %s", exp.mDbErrno, exp.what());
         hlog(HLOG_DEBUG, "SQL: %s", sql.c_str());
         hlog(HLOG_DEBUG, "Error: %s", ec ? ec->m_error.c_str() : "[no connection]");
         g_ret++;
     }
     catch (CException exp)
     {
-        hlog(HLOG_DEBUG, "CException: %s", exp.what().c_str());
+        hlog(HLOG_DEBUG, "CException: %s", exp.what());
         hlog(HLOG_DEBUG, "SQL: %s", sql.c_str());
         hlog(HLOG_DEBUG, "Error: %s", ec ? ec->m_error.c_str() : "[no connection]");
         g_ret++;
@@ -257,14 +257,14 @@ void autoconnection_test()
     }
     catch (CDbException exp)
     {
-        hlog(HLOG_DEBUG, "CDbException: [%u] %s", exp.mDbErrno, exp.what().c_str());
+        hlog(HLOG_DEBUG, "CDbException: [%u] %s", exp.mDbErrno, exp.what());
         hlog(HLOG_DEBUG, "SQL: %s", sql.c_str());
         hlog(HLOG_DEBUG, "Error: %s", ec ? ec->m_error.c_str() : "[no connection]");
         g_ret++;
     }
     catch (CException exp)
     {
-        hlog(HLOG_DEBUG, "CException: %s", exp.what().c_str());
+        hlog(HLOG_DEBUG, "CException: %s", exp.what());
         hlog(HLOG_DEBUG, "SQL: %s", sql.c_str());
         hlog(HLOG_DEBUG, "Error: %s", ec ? ec->m_error.c_str() : "[no connection]");
         g_ret++;

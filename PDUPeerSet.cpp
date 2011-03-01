@@ -59,7 +59,7 @@ void Forte::PDUPeerSet::SendAll(const PDU &pdu) const
         }
         catch (EPeerSendFailed &e)
         {
-            hlog(HLOG_WARN, "%s", e.what().c_str());
+            hlog(HLOG_WARN, "%s", e.what());
         }
     }
 }

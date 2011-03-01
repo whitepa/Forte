@@ -4,22 +4,46 @@
 
 using namespace Forte;
 
-ServiceConfig::ServiceConfig() {
+ServiceConfig::ServiceConfig() :
+    mConfigFileType (ServiceConfig::UNKNOWN),
+    mConfigFileName ("")
+{
 }
-ServiceConfig::ServiceConfig(const char *configFile) {
-    ReadConfigFile(configFile);
-}
+ServiceConfig::ServiceConfig(
+    const char *configFile,
+    ServiceConfig::ServiceConfigFileType type) :
+    mConfigFileType (type),
+    mConfigFileName (configFile)
+    {
+        ReadConfigFile(configFile, type);
+    }
 
-void ServiceConfig::ReadConfigFile(const char *configFile) {
+void ServiceConfig::ReadConfigFile(
+    const char *configFile, 
+    ServiceConfig::ServiceConfigFileType type) {
     AutoUnlockMutex lock(mMutex);
+    mConfigFileType = type;
+    mConfigFileName = configFile;
     // load the file (INFO format)
     try
     {
-        boost::property_tree::read_info(configFile, mPTree);
+        switch (type)
+        {
+        case ServiceConfig::INI:
+            boost::property_tree::read_ini(configFile, mPTree);
+            break;
+        case ServiceConfig::INFO:
+            boost::property_tree::read_info(configFile, mPTree);
+            break;
+        default:
+            throw EServiceConfig("invalid config file type specified");
+        }
     }
     catch (boost::property_tree::ptree_error &e)
     {
-        throw EServiceConfig("could not load file");
+        FString stmp;
+        stmp.Format("could not load file %s", mConfigFileName.c_str());
+        throw EServiceConfig(stmp);
     }    
 
 }
@@ -75,3 +99,33 @@ int ServiceConfig::GetInteger(const char *key)
     return mPTree.get<int>(key, 0);
 }
 
+void ServiceConfig::WriteToConfigFile(void)
+{
+    WriteToConfigFile(mConfigFileName.c_str());
+}
+
+void ServiceConfig::WriteToConfigFile(const char *newConfigFile)
+{
+    AutoUnlockMutex lock(mMutex);
+    
+    try
+    {
+        switch (mConfigFileType)
+        {
+        case ServiceConfig::INI:
+            boost::property_tree::write_ini(newConfigFile, mPTree);
+            break;
+        case ServiceConfig::INFO:
+            boost::property_tree::write_info(newConfigFile, mPTree);
+            break;
+        default:
+            throw EServiceConfig("invalid config file type specified");
+        }
+    }
+    catch (boost::property_tree::ptree_error &e)
+    {
+        FString stmp;
+        stmp.Format("could not write to config file : %s", newConfigFile);
+        throw EServiceConfig(stmp);
+    }
+}

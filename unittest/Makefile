@@ -35,7 +35,8 @@ LIBS = \
 	$(BOOST_UNIT_TEST_LIB_STATIC) \
 
 
-BSRCS = ContextPredicateUnitTest.cpp \
+BSRCS = ClusterLockUnitTest.cpp \
+	ContextPredicateUnitTest.cpp \
 	ContextUnitTest.cpp \
 	ExpDecayingAvgUnitTest.cpp \
 	FileSystemUnitTest.cpp \
@@ -52,7 +53,9 @@ BSRCS = ContextPredicateUnitTest.cpp \
 
 GSRCS = DbLiteConnectionUnitTest.cpp \
 	FileSystemUtilUnitTest.cpp \
-	ProcessManagerUnitTest.cpp
+	ProcessManagerUnitTest.cpp \
+	FStringUnitTest.cpp \
+	ExceptionUnitTest.cpp
 
 GPROGS = $(GSRCS:%.cpp=$(TARGETDIR)/%)
 BPROGS = $(BSRCS:%.cpp=$(TARGETDIR)/%)
@@ -84,22 +87,16 @@ $(TARGETDIR)/FileSystemUtilUnitTest: ../$(TARGETDIR)/FileSystemUtil.o FileSystem
 	$(GTEST_LIB) \
 	$(LIBS)
 
-$(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp
-	echo "Building $@..."
-	$(CCC) SCSIUtilUnitTest.cpp \
-	-o $(TARGETDIR)/SCSIUtilUnitTest \
-	$(INCLUDE) \
-	$(GTEST_LIB) \
-	$(LIBS)
 
-$(TARGETDIR)/ProcessManagerUnitTest: ../$(TARGETDIR)/ProcessManager.o ProcessManagerUnitTest.cpp
+$(TARGETDIR)/ExceptionUnitTest: ../$(TARGETDIR)/Exception.o ExceptionUnitTest.cpp
 	echo "Building $@..."
-	$(CCC) ProcessManagerUnitTest.cpp \
+	$(CCC) ExceptionUnitTest.cpp \
 	-o $@ \
 	$(FORTE) \
 	$(INCLUDE) \
 	$(GTEST_LIB) \
 	$(LIBS)
+
 
 $(TARGETDIR)/DbLiteConnectionUnitTest: DbLiteConnectionUnitTest.cpp
 	echo "Building $@..."
@@ -111,6 +108,51 @@ $(TARGETDIR)/DbLiteConnectionUnitTest: DbLiteConnectionUnitTest.cpp
 	$(LIBS) \
 	-lsqlite3
 
+$(TARGETDIR)/FStringUnitTest: ../$(TARGETDIR)/FString.o FStringUnitTest.cpp
+	echo "Building $@..."
+	$(CCC) FStringUnitTest.cpp \
+	-o $@ \
+	$(INCLUDE) \
+	$(GTEST_LIB) \
+	$(LIBS)
+
+$(TARGETDIR)/ProcessManagerUnitTest: ../$(TARGETDIR)/ProcessManager.o ProcessManagerUnitTest.cpp $(FORTE)
+	echo "Building $@..."
+	$(CCC) ProcessManagerUnitTest.cpp \
+	-o $@ \
+	$(INCLUDE) \
+	$(GTEST_LIB) \
+	$(LIBS)
+
+$(TARGETDIR)/PDUPeerUnitTest: PDUPeerUnitTest.cpp $(FORTE)
+	echo "Building $@..."
+	$(CCC) PDUPeerUnitTest.cpp \
+	-o $@ \
+	$(INCLUDE) \
+	$(OS_LIBS) \
+	$(GTEST_LIB) \
+	$(FORTE_LIBS) \
+	$(FORTE_MOCK_LIBS) \
+
+$(TARGETDIR)/ClusterLockUnitTest: ClusterLockUnitTest.cpp $(FORTE)
+	echo "Building $@..."
+	$(CCC) ClusterLockUnitTest.cpp \
+	-o $@ \
+	$(INCLUDE) \
+	$(OS_LIBS) \
+	$(GTEST_LIB) \
+	$(FORTE_LIBS) \
+	$(FORTE_MOCK_LIBS) \
+	$(BOOST_FS_LIB) \
+
+$(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp
+	echo "Building $@..."
+	$(CCC) SCSIUtilUnitTest.cpp \
+	-o $(TARGETDIR)/SCSIUtilUnitTest \
+	$(SCALE_SERVICE_CLIENT_LIBS)  \
+	$(INCLUDE) \
+	$(GTEST_LIB) \
+	$(LIBS)
 
 # tail
 include $(BUILDROOT)/re/make/tail.mk

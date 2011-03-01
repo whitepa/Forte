@@ -11,7 +11,9 @@ namespace Forte
     EXCEPTION_CLASS(EReceiverThread);
     EXCEPTION_SUBCLASS(EReceiverThread, EReceiverThreadNameInvalid);
     EXCEPTION_SUBCLASS2(EReceiverThread, EReceiverDispatcherInvalid, "Dispatcher is invalid");
-
+    EXCEPTION_SUBCLASS2(EReceiverThread, ERecieverThreadPollAdd, "Failed to add descriptor to poll socket");
+    EXCEPTION_SUBCLASS2(EReceiverThread, EReceiverThreadPollCreate, "Failed to create poll socket");
+    EXCEPTION_SUBCLASS(EReceiverThread,EReceiverThreadPollFailed);
     class ReceiverThread : public Thread
     {
     public:
@@ -25,7 +27,9 @@ namespace Forte
                 // TODO: validate IP address
                 initialized();
             }
-//    virtual ~ReceiverThread();
+        virtual ~ReceiverThread() { 
+            deleting();
+        }
 
     protected:
         virtual void * run();

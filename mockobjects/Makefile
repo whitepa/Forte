@@ -22,8 +22,10 @@ LIB=$(TARGETDIR)/libfortemock.a
 
 SRCS = \
 	MockCurl.cpp \
+	MockSSHRunner.cpp \
 	MockProcRunner.cpp \
 	MockFileSystem.cpp \
+	MockNetworkConnection.cpp
 
 OBJS = $(SRCS:%.cpp=$(TARGETDIR)/%.o)
 

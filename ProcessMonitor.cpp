@@ -65,7 +65,7 @@ void Forte::ProcessMonitor::Run()
         catch (EPDUPeerSetPollFailed &e)
         {
             // this is a fatal error, so we must send the error PDU
-            hlog(HLOG_ERR, "exception in Poll(): %s", e.what().c_str());
+            hlog(HLOG_ERR, "exception in Poll(): %s", e.what());
             // \TODO send error PDU
             throw;
         }
@@ -164,7 +164,7 @@ void Forte::ProcessMonitor::handleControlReq(const PDUPeer &peer, const PDU &pdu
     }
     catch (EProcessMonitor &e)
     {
-        sendControlRes(peer, ProcessUnknownError, e.what().c_str());
+        sendControlRes(peer, ProcessUnknownError, e.what());
     }
 }
 
@@ -308,7 +308,7 @@ void Forte::ProcessMonitor::startProcess(void)
             argv[i] = const_cast<char*>(strings[i].c_str());
         }
         argv[num_args] = 0;
-	
+ 
         // change current working directory
         if (!mCWD.empty() && chdir(mCWD))
         {
@@ -340,7 +340,7 @@ void Forte::ProcessMonitor::startProcess(void)
 //     // set up environment? \TODO do we need this?
 //     if (!mEnvironment.empty()) {
 //         StrStrMap::const_iterator mi;
-			
+   
 //         for (mi = mEnvironment.begin(); mi != mEnvironment.end(); ++mi) 
 //         {
 //             if (mi->second.empty()) unsetenv(mi->first);

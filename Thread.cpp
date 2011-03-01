@@ -54,11 +54,6 @@ void * Thread::startThread(void *obj)
     {
         // normal condition from here on out
     }
-    catch (Exception &e)
-    {
-        hlog(HLOG_ERR, "exception in thread run(): %s",
-             e.GetDescription().c_str());
-    }
     catch (std::exception &e)
     {
         hlog(HLOG_ERR, "exception in thread run(): %s",
@@ -88,6 +83,16 @@ void Thread::initialized()
     mNotifyCond.Broadcast();
 }
 
+void Thread::deleting()
+{
+    // tell the thread to shut down
+    Shutdown();
+    // Join the pthread
+    // (this will block until the thread exits)
+    pthread_join(mThread, NULL);
+    mDeletingCalled = true;
+}
+
 void Thread::WaitForShutdown()
 {
     AutoUnlockMutex lock(mShutdownCompleteLock);
@@ -101,7 +106,7 @@ void Thread::WaitForInitialize()
     AutoUnlockMutex lock(mNotifyLock);
     while (!mInitialized)
     {
-	mNotifyCond.Wait();
+        mNotifyCond.Wait();
     }
 }
 
@@ -158,13 +163,12 @@ void Thread::interruptibleSleep(const struct timespec &interval, bool throwOnShu
 Thread::~Thread()
 {
     FTRACE;
-
-    // tell the thread to shut down
-    Shutdown();
-
-    // Join the pthread
-    // (this will block until the thread exits)
-    pthread_join(mThread, NULL);
+    if (!mDeletingCalled)
+    {
+        hlog(HLOG_CRIT, "Software error: "
+             "dtor failed to call deleting()");
+        deleting();
+    }
 }
 
 void Thread::Shutdown(void)
