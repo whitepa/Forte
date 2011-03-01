@@ -45,6 +45,19 @@ void MockSSHRunner::QueueCommandResponse(const FString& response, int response_c
     mMockProcRunner.QueueCommandResponse(response, response_code);
 }
 
+void MockSSHRunner::QueueCommandResponse(const FString& expectedCommand,
+                                         const FString& response,
+                                         int response_code)
+{
+    mMockProcRunner.QueueCommandResponse(expectedCommand, response,
+                                        response_code);
+}
+
+void MockSSHRunner::ClearCommandResponseQueue()
+{
+    mMockProcRunner.ClearCommandResponseQueue();
+}
+
 bool MockSSHRunner::CommandWasRun(const FString& command)
 {
     return mMockProcRunner.CommandWasRun(command);

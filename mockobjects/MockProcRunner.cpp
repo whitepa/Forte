@@ -10,7 +10,7 @@ int MockProcRunner::Run(const FString& command,
                         const FString &infile)
 {
     StrStrMap::iterator it;
-    std::list<FString>::iterator i;
+    std::list<ExpectedCommandResponse>::iterator i;
     m_command_list.push_back(command);
 
     FString stmp;
@@ -38,13 +38,20 @@ int MockProcRunner::Run(const FString& command,
     }
     else if ((i = m_response_queue.begin()) != m_response_queue.end())
     {
-        if (output != NULL)
+        ExpectedCommandResponse &cmd = *i;
+        if ((cmd.mCommand != "") && (command != cmd.mCommand))
         {
-            *output = *i;            
+            throw EUnexpectedCommand(FStringFC(),
+                                     "\nExpected command: '%s'\n"
+                                       "Got      command: '%s'",
+                                     cmd.mCommand.c_str(), command.c_str());
         }
-        int response_code = *(m_response_code_queue.begin());
+        if (output)
+            *output = cmd.mResponse;
+
+        int response_code = cmd.mResponseCode;
+
         m_response_queue.pop_front();
-        m_response_code_queue.pop_front();
         return response_code;
     }
     else
@@ -78,15 +85,32 @@ void MockProcRunner::SetCommandResponse(const FString& command, const FString& r
 }
 void MockProcRunner::QueueCommandResponse(const FString& response, int response_code)
 {
-    m_response_queue.push_back(response);
-    m_response_code_queue.push_back(response_code);
+    QueueCommandResponse("", response, response_code);
+}
+
+void MockProcRunner::QueueCommandResponse(const FString& expectedCommand,
+                                          const FString& response,
+                                          int response_code)
+{
+    ExpectedCommandResponse cmd;
+
+    cmd.mCommand = expectedCommand;
+    cmd.mResponse = response;
+    cmd.mResponseCode = response_code;
+
+    m_response_queue.push_back(cmd);
+}
+
+void MockProcRunner::ClearCommandResponseQueue()
+{
+    m_response_queue.clear();
 }
 
 bool MockProcRunner::CommandWasRun(const FString& command)
 {
-    StrStrMap::iterator it;
+    StrList::iterator it;
 
-    it = m_command_response_map.find(command);
-    return (it == m_command_response_map.end());
+    it = find(m_command_list.begin(), m_command_list.end(), command);
+    return (it != m_command_list.end());
 
 }
