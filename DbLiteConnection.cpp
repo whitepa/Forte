@@ -221,5 +221,39 @@ FString DbLiteConnection::Escape(const char *str)
     return ret;
 }
 
+void DbLiteConnection::BackupDatabase(const FString &targetPath)
+{
+    // @TODO this function is a prototype
+    // See: http://www.sqlite.org/backup.html
+    DbLiteConnection dbTarget(SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
+    dbTarget.Init(targetPath);
+
+    /* Open the sqlite3_backup object used to accomplish the transfer */
+    sqlite3_backup *pBackup;
+    pBackup = sqlite3_backup_init(dbTarget.mDB, "main", mDB, "main");
+    if (!pBackup)
+        throw EDbLiteBackupFailed();
+
+    /* Each iteration of this loop copies 5 database pages from database
+    ** pDb to the backup database. If the return value of backup_step()
+    ** indicates that there are still further pages to copy, sleep for
+    ** 250 ms before repeating. */
+    int rc;
+    do {
+        rc = sqlite3_backup_step(pBackup, 5);
+        // xProgress(
+        //     sqlite3_backup_remaining(pBackup),
+        //     sqlite3_backup_pagecount(pBackup)
+        //     );
+        // if( rc==SQLITE_OK || rc==SQLITE_BUSY || rc==SQLITE_LOCKED ){
+        //     sqlite3_sleep(250);
+        // }
+    } while( rc==SQLITE_OK || rc==SQLITE_BUSY || rc==SQLITE_LOCKED );
+
+    /* Release resources allocated by backup_init(). */
+    (void)sqlite3_backup_finish(pBackup);
+}
+
+
 #endif
 #endif

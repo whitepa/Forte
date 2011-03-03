@@ -7,9 +7,13 @@
 #include <sqlite3.h>
 #include "FString.h"
 #include "DbConnection.h"
+#include "DbException.h"
+
 
 namespace Forte
 {
+    EXCEPTION_SUBCLASS(DbException, EDbLiteBackupFailed);
+
     class DbLiteConnection : public DbConnection
     {
     public:
@@ -46,6 +50,9 @@ namespace Forte
         virtual uint64_t InsertID() { return sqlite3_last_insert_rowid(mDB); }
         virtual uint64_t AffectedRows() { return sqlite3_changes(mDB); }
         virtual FString Escape(const char *str);
+
+        // SQLite specific backup functionality
+        virtual void BackupDatabase(const FString &targetPath);
 
     private:
         void setError();
