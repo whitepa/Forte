@@ -27,10 +27,10 @@ namespace Forte
                           const FString& pass,
                           const FString& host = "localhost", 
                           const FString& socket = "",
-                          unsigned int retries = 3);
+                          unsigned int retries = 0);
 
         bool Init(const FString& dbPath, 
-                  unsigned int retries = 3);
+                  unsigned int retries = 0);
 
         bool Init(struct sqlite3 *db);
 
