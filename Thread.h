@@ -83,6 +83,8 @@ namespace Forte
          */
         void deleting(void);
 
+        void setThreadName(const FString &name) { mThreadName = name; }
+
         virtual void *run(void) = 0;
 
         /**
