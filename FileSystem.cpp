@@ -153,12 +153,13 @@ void FileSystem::GetChildren(const FString& path,
                              std::vector<Forte::FString> &children,
                              bool recurse) const
 {
+    hlog(HLOG_DEBUG4, "FileSystem::%s(%s, %s)", __FUNCTION__,
+         path.c_str(), (recurse ? "true" : "false"));
 
-    AutoFD dir(opendir(path));
-    if (errno != 0)
-    {
+    DIR *d = ::opendir(path);
+    if (!d)
         SystemCallUtil::ThrowErrNoException(errno);
-    }
+    AutoFD dir(d);
 
     int err_number = 0;
     FString stmp;
