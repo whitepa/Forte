@@ -65,6 +65,7 @@ namespace Forte{
 
         // helpers
         void init();
+        void checkAndClearFromMutexMap(const Forte::FString& name);
         static void sig_action(int sig, siginfo_t *info, void *context);
 
         // statics
