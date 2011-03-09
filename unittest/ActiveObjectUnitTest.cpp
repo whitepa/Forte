@@ -41,6 +41,9 @@ public:
     shared_ptr<Future<int> > PerformOneSecondOperationNullary(void) {
         return invokeAsync<int>(boost::bind(&ActiveTester::OneSecondOperationNullary, this));
     };
+    shared_ptr<Future<int> > PerformAddTwoNumbersVerySlowly(int a, int b) {
+        return invokeAsync<int>(boost::bind(&ActiveTester::AddTwoNumbersVerySlowly, this, a, b));
+    };
     shared_ptr<Future<void> > PerformThrowingOperation(void) {
         return invokeAsync<void>(boost::bind(&ActiveTester::ThrowingOperation, this));
     };
@@ -50,6 +53,7 @@ public:
 
 protected:
     int OneSecondOperationNullary(void) { sleep(1); return 1; }
+    int AddTwoNumbersVerySlowly(int a, int b) { sleep(1); return a + b; }
     void ThrowingOperation(void) { boost::throw_exception(EActiveTesterCorrectException()); }
     void ThrowIncorrectly(void) { throw EActiveTesterCorrectException(); }
 };
@@ -92,4 +96,10 @@ TEST_F(ActiveObjectTest, GetResultThrowsUnknownException)
     ActiveTester a;
     shared_ptr<Future<void> > future = a.PerformThrowIncorrectly();
     ASSERT_THROW(future->GetResult(), EFutureExceptionUnknown);
+};
+TEST_F(ActiveObjectTest, SimpleParameters)
+{
+    ActiveTester a;
+    shared_ptr<Future<int> > future = a.PerformAddTwoNumbersVerySlowly(1,2);
+    ASSERT_EQ(3, future->GetResult());
 };

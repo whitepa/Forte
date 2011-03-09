@@ -8,6 +8,7 @@ using namespace Forte;
 ActiveObjectThread::ActiveObjectThread() :
     mQueue(MAX_QUEUED_CALLS)
 {
+    setThreadName("active");
     initialized();
 }
 ActiveObjectThread::~ActiveObjectThread()
