@@ -35,27 +35,28 @@ LIBS = \
 	$(BOOST_UNIT_TEST_LIB_STATIC) \
 
 
-BSRCS = ClusterLockUnitTest.cpp \
-	ContextPredicateUnitTest.cpp \
+BSRCS = ContextPredicateUnitTest.cpp \
 	ContextUnitTest.cpp \
 	ExpDecayingAvgUnitTest.cpp \
 	FileSystemUnitTest.cpp \
 	GUIDGeneratorUnitTest.cpp \
-	PDUPeerUnitTest.cpp \
-	ProcessManagerUnitTest.cpp \
 	ProcFileSystemUnitTest.cpp \
 	StateMachineUnitTest1.cpp \
 	StateMachineUnitTest2.cpp \
 	StateMachineUnitTest3.cpp \
 	StateMachineUnitTest4.cpp \
-	StateMachineUnitTest5.cpp \
-	SCSIUtilUnitTest.cpp
+	StateMachineUnitTest5.cpp
 
-GSRCS = DbLiteConnectionUnitTest.cpp \
+GSRCS = ActiveObjectUnitTest.cpp \
+	ClusterLockUnitTest.cpp \
+	DbLiteConnectionUnitTest.cpp \
 	FileSystemUtilUnitTest.cpp \
+	PDUPeerUnitTest.cpp \
 	ProcessManagerUnitTest.cpp \
 	FStringUnitTest.cpp \
-	ExceptionUnitTest.cpp
+	ExceptionUnitTest.cpp \
+	SCSIUtilUnitTest.cpp
+
 
 GPROGS = $(GSRCS:%.cpp=$(TARGETDIR)/%)
 BPROGS = $(BSRCS:%.cpp=$(TARGETDIR)/%)
@@ -137,6 +138,17 @@ $(TARGETDIR)/PDUPeerUnitTest: PDUPeerUnitTest.cpp $(FORTE)
 $(TARGETDIR)/ClusterLockUnitTest: ClusterLockUnitTest.cpp $(FORTE)
 	echo "Building $@..."
 	$(CCC) ClusterLockUnitTest.cpp \
+	-o $@ \
+	$(INCLUDE) \
+	$(OS_LIBS) \
+	$(GTEST_LIB) \
+	$(FORTE_LIBS) \
+	$(FORTE_MOCK_LIBS) \
+	$(BOOST_FS_LIB) \
+
+$(TARGETDIR)/ActiveObjectUnitTest: ActiveObjectUnitTest.cpp $(FORTE)
+	echo "Building $@..."
+	$(CCC) ActiveObjectUnitTest.cpp \
 	-o $@ \
 	$(INCLUDE) \
 	$(OS_LIBS) \

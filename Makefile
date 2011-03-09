@@ -20,6 +20,7 @@ INCLUDE = $(DB_INCLUDE) $(XML_INCLUDE) $(BOOST_INCLUDE) $(SSH2_INCLUDE) -I. $(MY
 
 CCARGS += -Wall -DFORTE_FUNCTION_TRACING
 SRCS =	\
+	ActiveObjectThread.cpp \
 	Base64.cpp \
 	AdvisoryLock.cpp \
 	ClusterLock.cpp \
@@ -184,7 +185,7 @@ TLIBS = -L$(TARGETDIR) -lforte -lpthread
 
 INSTALL = $(if $(RPM), @install $(1) $< $@, @install $(1) $(2) $< $@)
 
-all: $(LIB) $(TARGETDIR)/procmon
+all: ccargs_echo $(LIB) $(TARGETDIR)/procmon
 	$(MAKE_SUBDIRS)
 
 $(TARGETDIR)/procmon: $(TARGETDIR)/procmon.o $(TARGETDIR)/ProcessMonitor.o $(LIB)

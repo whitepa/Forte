@@ -7,6 +7,16 @@
 #include <list>
 #include <vector>
 #include <exception>
+#include <boost/exception/all.hpp>
+
+/**
+ * @TODO figure out how to add the format attributes back into the
+ * Format constructors.  Since the addition of the dual virtual
+ * inheritance, the additional implicit vtable pointer parameters seem
+ * to have broken the attribute.
+ *
+ */
+        //            __attribute__((format(printf,3,4)))               
 
 #define EXCEPTION_CLASS(NAME)                                           \
     class NAME : public Forte::Exception                                \
@@ -16,7 +26,6 @@
         inline NAME(const char *description) :                          \
             Exception(description) {}                                   \
         inline NAME(const Forte::FStringFC &fc, const char *format, ...) \
-            __attribute__((format(printf,3,4)))                         \
         {                                                               \
             va_list ap;                                                 \
             int size;                                                   \
@@ -37,7 +46,6 @@
         inline NAME() {}                                                \
         inline NAME(const char *description) : PARENT(description) {}   \
         inline NAME(const Forte::FStringFC &fc, const char *format, ...) \
-            __attribute__((format(printf,3,4)))                         \
         {                                                               \
             va_list ap;                                                 \
             int size;                                                   \
@@ -60,8 +68,7 @@
             PARENT(Forte::FStringFC(), "%s: %s", DESC, description) {}  \
         inline NAME(const Forte::FStringFC &fc,                         \
                     const char *format, ...)                            \
-            __attribute__((format(printf,3,4))) :                       \
-            PARENT(DESC)                                                \
+            :  PARENT(DESC)                                             \
         {                                                               \
             va_list ap;                                                 \
             int size;                                                   \
@@ -81,12 +88,14 @@
 
 namespace Forte
 {
-    class Exception : public Object, public std::exception
+    class Exception : public Object, 
+                      public virtual std::exception,
+                      public virtual boost::exception
     {
     public:
         Exception();
         Exception(const char *description);
-        Exception(const FStringFC &fc, const char *format, ...)  __attribute__((format(printf,3,4)));
+        Exception(const FStringFC &fc, const char *format, ...);//  __attribute__((format(printf,5,6)));
         Exception(const Exception& other);
         virtual ~Exception() throw();
         const std::string &GetDescription() const throw() { 
