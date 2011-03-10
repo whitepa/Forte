@@ -7,7 +7,15 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(Exception, EMockProcRunner);
+    EXCEPTION_CLASS(EMockProcRunner);
+    EXCEPTION_SUBCLASS(EMockProcRunner, EUnexpectedCommand);
+
+    struct ExpectedCommandResponse
+    {
+        FString mCommand;
+        FString mResponse;
+        int mResponseCode;
+    };
 
     class MockProcRunner : public ProcRunner
     {
@@ -32,13 +40,17 @@ namespace Forte
             );
 
         void QueueCommandResponse(const FString& response, int response_code=0);
+        void QueueCommandResponse(const FString& expectedCommand,
+                                  const FString& response, int response_code=0);
+
+        void ClearCommandResponseQueue();
 
         bool CommandWasRun(const FString& command);
 
     protected:
         StrList m_command_list;
-        std::list<FString> m_response_queue;
-        std::list<int> m_response_code_queue;
+        std::list<ExpectedCommandResponse> m_response_queue;
+
         StrStrMap m_command_response_map;
         StrIntMap m_command_response_code_map;
 
