@@ -5,6 +5,10 @@
 # To add a new test, create a new .cpp file in this directory.  It
 # will be compiled as a standalone executable.
 
+# TODO: This makefile does not appear to handle dependencies
+# correctly.  If library headers change, it does not recompile the
+# individual tests.
+
 BUILDROOT:=$(shell echo 'while [ ! -d re ]; do cd ..; done; pwd' | sh)
 
 include $(BUILDROOT)/re/make/head.mk
