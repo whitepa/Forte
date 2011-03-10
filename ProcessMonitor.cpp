@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <linux/limits.h>
 #include <fcntl.h>
 #include <boost/bind.hpp>
 #include <boost/algorithm/string.hpp>
