@@ -110,7 +110,6 @@ namespace Forte
         bool mResultReady;
         boost::exception_ptr mException;
     };
-
 };
 
 #endif
