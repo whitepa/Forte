@@ -58,7 +58,7 @@ namespace Forte
          * given key will no longer reference the orginal object, but
          * instead a separate local instance.
          **/
-        void Detach(const char *key) { throw EUnimplemented(); }
+        void Detach(const char *key) { throw_exception(EUnimplemented()); }
 
         /**
          * Get() retrieves a reference counted pointer to an object
@@ -77,11 +77,11 @@ namespace Forte
             ObjectMap::const_iterator i;
             Forte::AutoUnlockMutex lock(mLock);
             if ((i = mObjectMap.find(key)) == mObjectMap.end())
-                throw EInvalidKey(key);
+                throw_exception(EInvalidKey(key));
             boost::shared_ptr<ValueType> ptr(
                 boost::dynamic_pointer_cast<ValueType>((*i).second));
             if (!ptr)
-                throw EContextTypeMismatch(); // TODO: include types in error message
+                throw_exception(EContextTypeMismatch()); // TODO: include types in error message
             return ptr;
         }
 
