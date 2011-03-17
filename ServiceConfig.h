@@ -27,7 +27,7 @@ namespace Forte
         {
             INI,
             INFO,
-            UNKNOWN,
+            UNKNOWN
         };
 
         ServiceConfig();

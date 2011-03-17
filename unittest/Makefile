@@ -61,7 +61,6 @@ GSRCS = ActiveObjectUnitTest.cpp \
 	ExceptionUnitTest.cpp \
 	SCSIUtilUnitTest.cpp
 
-
 GPROGS = $(GSRCS:%.cpp=$(TARGETDIR)/%)
 BPROGS = $(BSRCS:%.cpp=$(TARGETDIR)/%)
 PROGS=$(GPROGS) $(BPROGS)
@@ -91,7 +90,6 @@ $(TARGETDIR)/FileSystemUtilUnitTest: ../$(TARGETDIR)/FileSystemUtil.o FileSystem
 	$(INCLUDE) \
 	$(GTEST_LIB) \
 	$(LIBS)
-
 
 $(TARGETDIR)/ExceptionUnitTest: ../$(TARGETDIR)/Exception.o ExceptionUnitTest.cpp
 	echo "Building $@..."

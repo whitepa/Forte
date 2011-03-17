@@ -9,9 +9,8 @@ ServiceConfig::ServiceConfig() :
     mConfigFileName ("")
 {
 }
-ServiceConfig::ServiceConfig(
-    const char *configFile,
-    ServiceConfig::ServiceConfigFileType type) :
+ServiceConfig::ServiceConfig(const char *configFile,
+                             ServiceConfig::ServiceConfigFileType type) :
     mConfigFileType (type),
     mConfigFileName (configFile)
 {
