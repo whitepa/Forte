@@ -14,7 +14,7 @@ Forte::RunLoop::~RunLoop()
     deleting();
 }
 
-void Forte::RunLoop::AddTimer(shared_ptr<Timer> &timer)
+void Forte::RunLoop::AddTimer(const shared_ptr<Timer> &timer)
 {
     FTRACE;
     if (!timer) throw ERunLoopTimerInvalid();
