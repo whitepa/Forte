@@ -589,7 +589,7 @@ void TableLookup::generateCPP(const Table &t, FILE *h, FILE *c)
     fprintf(c, "    Forte::DbResult res = Forte::DbUtil::DbStore(db, sql);\n");
     fprintf(c, "    Forte::DbResultRow row;\n");
     fprintf(c, "    if (!res.FetchRow(row))\n");
-    fprintf(c, "        throw Forte::DbException(\"Unable to lookup '%s'\");\n", mName.c_str());
+    fprintf(c, "        boost::throw_exception(Forte::DbException(\"Unable to lookup '%s'\"));\n", mName.c_str());
     fprintf(c, "    return %s(row, 0);\n", retcol.cGetter().c_str());
     fprintf(c, "}\n");
 }
@@ -932,7 +932,7 @@ void Table::genPrimaryCtor(FILE *h, FILE *c) const
             mClassname.c_str(), paramStr.c_str());
     fprintf(c, "    Forte::DbResultRow row;\n");
     fprintf(c, "    if (!res.FetchRow(row))\n");
-    fprintf(c, "        throw Forte::DbException(\"invalid %s\");\n", paramStr.c_str());
+    fprintf(c, "        boost::throw_exception(Forte::DbException(\"invalid %s\"));\n", paramStr.c_str());
     fprintf(c, "    Set(row);\n");
     fprintf(c, "}\n");
 }
@@ -1390,7 +1390,7 @@ void Table::genRefresh(FILE *h, FILE *c, bool where) const
     fprintf(c, "    Forte::DbResult res = Select(db, sql);\n");
     fprintf(c, "    Forte::DbResultRow row;\n");
     fprintf(c, "    if (!res.FetchRow(row))\n");
-    fprintf(c, "        throw Forte::DbException(\"unable to refresh object\");\n");
+    fprintf(c, "        boost::throw_exception(Forte::DbException(\"unable to refresh object\"));\n");
     fprintf(c, "    Set(row);\n");
     fprintf(c, "}\n");
     fprintf(c, "\n");
@@ -1461,7 +1461,7 @@ void Table::genFKRestrict(FILE *h, FILE *c) const
         fprintf(c, "               %s);\n", formatParams.c_str());
         fprintf(c, "    Forte::DbResult res = Forte::DbUtil::DbStore(db, sql);\n");
         fprintf(c, "    if (res.GetNumRows() != 0)\n");
-        fprintf(c, "        throw Forte::DbException(\"Foreign key restriction\");\n");
+        fprintf(c, "        boost::throw_exception(Forte::DbException(\"Foreign key restriction\"));\n");
         fprintf(c, "}\n");
     }
 }
