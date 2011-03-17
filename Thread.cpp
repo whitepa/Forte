@@ -110,6 +110,13 @@ void Thread::WaitForInitialize()
         mNotifyCond.Wait();
     }
 }
+void Thread::InterruptibleSleep(const struct timespec &interval,
+                                bool throwOnShutdown)
+{
+    // (static version)
+    Thread *thr = MyThread();
+    thr->interruptibleSleep(interval, throwOnShutdown);
+}
 
 void Thread::interruptibleSleep(const struct timespec &interval, bool throwOnShutdown)
 {
