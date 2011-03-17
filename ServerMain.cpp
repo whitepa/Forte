@@ -125,29 +125,9 @@ void ServerMain::initLogging()
 
     // if we are not running as a daemon, use the log level
     // the conf file
-    FString stmp, logMask;
-    if ((stmp = sc.Get("logfile.level")) != "")
-    {
-        //TODO: move this logic into the log manager
-        if (stmp.MakeUpper() == "ALL")
-        {
-            mLogManager.SetGlobalLogMask(HLOG_ALL);
-        }
-        else if (stmp.MakeUpper() == "NODEBUG")
-        {
-            mLogManager.SetGlobalLogMask(HLOG_NODEBUG);
-        }
-        else if (stmp.MakeUpper() == "MOST")
-        {
-            mLogManager.SetGlobalLogMask(HLOG_ALL ^ HLOG_DEBUG4);
-            hlog(HLOG_INFO, "most (all xor DEBUG4)");
-        }
-        else
-        {
-            mLogManager.SetGlobalLogMask(strtoul(stmp, NULL, 0));
-        }
-    }
-
+    FString logMask = sc.Get("logfile.level");
+    if (!logMask.empty())
+        mLogManager.SetGlobalLogMask(mLogManager.ComputeLogMaskFromString(logMask));
     if (!mDaemon)
     {
         // log to stderr if running interactively, use logmask as set
@@ -168,6 +148,22 @@ void ServerMain::initLogging()
         }
     }
 
+    // set up specialized log levels for specified source code files
+    FStringVector filenames;
+    FStringVector levels;
+    sc.GetVectorSubKey("logfile.special_levels", "filenames", filenames);
+    sc.GetVectorSubKey("logfile.special_levels", "level", levels);
+    if (filenames.size() != levels.size())
+        throw EServerMainLogFileConfiguration("source level configuration invalid");
+    for (unsigned int i = 0; i < filenames.size(); ++i)
+    {
+        FStringVector files;
+        filenames[i].Explode(",", files, true);
+        foreach (const FString &file, files)
+        {
+            mLogManager.SetSourceFileLogMask(file, mLogManager.ComputeLogMaskFromString(levels[i]));
+        }
+    }
     VersionManager::LogVersions();
 }
 
@@ -206,14 +202,14 @@ void ServerMain::WritePidFile()
                     char cmdbuf[100];
                     fgets(cmdbuf, sizeof(cmdbuf), file);
                     fclose(file);
-                    // XXX fix this
+                    // @TODO fix this
                     if (strstr(cmdbuf, "forte_process"))
                     {
                         // process is running
                         FString err;
                         err.Format("forte process already running on pid %u\n",
                                    old_pid);
-                        throw EForteServerMain(err);
+                        throw EServerMain(err);
                     }
                 }
             }
@@ -226,7 +222,7 @@ void ServerMain::WritePidFile()
     {
         FString err;
         err.Format("Unable to write to pid file %s\n", mPidFile.c_str());
-        throw EForteServerMain(err);
+        throw EServerMain(err);
     }
     else
     {

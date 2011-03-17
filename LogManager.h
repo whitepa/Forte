@@ -43,7 +43,8 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(Exception, ELog);
+    EXCEPTION_CLASS(ELog);
+    EXCEPTION_SUBCLASS2(ELog, ELogLevelStringUnknown, "Log level string is unknown");
 
     class LogMsg : public Object {
     public:
@@ -384,6 +385,23 @@ namespace Forte
 
         static FString LogMaskStr(int mask);
 
+        /**
+         * ComputeLogMaskFromString will take the given string and
+         * return an integer log mask.  Bitwise OR of the log levels
+         * is supported, for example, supplying the string
+         * 'INFO | ERR | WARN' will return the appropriate log mask to see
+         * log messages of type INFO, ERR, and WARN.
+         */
+        int ComputeLogMaskFromString(const FString &str) const;
+
+        /**
+         * GetSingleLevelFromString will return the value of the
+         * single log level represented by the given string. If the
+         * string is invalid, ELogLevelStringUnknown will be thrown.
+         * Special log levels of "ALL", "NODEBUG", and "MOST" are also
+         * supported.
+         */
+        int GetSingleLevelFromString(const FString &str) const;
     protected:
         friend class Mutex;
         std::vector<Logfile*> mLogfiles;
