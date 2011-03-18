@@ -45,6 +45,8 @@ namespace Forte
         // mockSSHRunner
         MockProcRunner mMockProcRunner;
     };
+
+    typedef boost::shared_ptr<MockSSHRunner> MockSSHRunnerPtr;
 }
 
 #endif
