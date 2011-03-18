@@ -44,6 +44,16 @@ namespace Forte
             const char *ipAddress,
             int portNumber);
 
+        /*
+         * Constructor for public key authentication
+         */
+        SSHRunner(const char *username,
+                  const char *publicKeyFilePath,
+                  const char *privateKeyFilePath,
+                  const char *passphrase,
+                  const char *ipAddress,
+                  int portNumber);
+
         /**
          * Destructor will destroy the ssh session
          */
@@ -70,7 +80,7 @@ namespace Forte
             const char *ipAddress, int portNumber);
 
         int waitSocket(int socket_fd, LIBSSH2_SESSION *session);
-        
+        FString getErrorString(int errNumber);
     };
 
     typedef boost::shared_ptr<SSHRunner> SSHRunnerPtr;
