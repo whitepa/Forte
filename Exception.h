@@ -22,7 +22,7 @@
     class NAME : public Forte::Exception                                \
     {                                                                   \
     public:                                                             \
-        inline NAME() {}                                                \
+        inline NAME() : Exception(#NAME) {}                             \
         inline NAME(const char *description) :                          \
             Exception(description) {}                                   \
         inline NAME(const Forte::FStringFC &fc, const char *format, ...) \
@@ -43,7 +43,7 @@
     class NAME : public PARENT                                          \
     {                                                                   \
     public:                                                             \
-        inline NAME() {}                                                \
+        inline NAME() : PARENT(#NAME) {}                                \
         inline NAME(const char *description) : PARENT(description) {}   \
         inline NAME(const Forte::FStringFC &fc, const char *format, ...) \
         {                                                               \

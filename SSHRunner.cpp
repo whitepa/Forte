@@ -16,23 +16,27 @@ SSHRunner::SSHRunner(
     mSession (NULL),
     mSocket (createSocketAndConnect(ipAddress, portNumber))
 {
+    int err;
+
     if (mSocket > 0)
     {
         mSession = libssh2_session_init();
-        if (libssh2_session_startup(mSession, mSocket))
+        if ((err=libssh2_session_startup(mSession, mSocket)))
         {
             libssh2_session_free(mSession);
             close(mSocket);
-            hlog(HLOG_ERR, "Could not startup the ssh session");
+            hlog(HLOG_ERR, "Could not startup the ssh session (%s)", 
+                 getErrorString(err).c_str());
             throw ESessionError("Could not startup the ssh session");
         }
 
-        if(libssh2_userauth_password(mSession, username, password))
+        if ((err=libssh2_userauth_password(mSession, username, password)))
         {
             libssh2_session_disconnect(mSession, "Goodbye");
             libssh2_session_free(mSession);
             close(mSocket);
-            hlog(HLOG_ERR, "Could not get authenticated");
+            hlog(HLOG_ERR, "Could not get authenticated (%s)",
+                 getErrorString(err).c_str());
             throw ESessionError("Could not get authenticated");
         }
     }
@@ -41,6 +45,52 @@ SSHRunner::SSHRunner(
         hlog(HLOG_ERR, "No Socket for creating ssh session");
         throw ESessionError("No Socket for creating ssh session");
     }
+}
+
+SSHRunner::SSHRunner(const char *username,
+                     const char *publicKeyFilePath,
+                     const char *privateKeyFilePath,
+                     const char *passphrase,
+                     const char *ipAddress,
+                     int portNumber) :
+    mSession (NULL),
+    mSocket (createSocketAndConnect(ipAddress, portNumber))
+{
+    int err;
+
+    if (mSocket > 0)
+    {
+        mSession = libssh2_session_init();
+        if ((err=libssh2_session_startup(mSession, mSocket)))
+        {
+            libssh2_session_free(mSession);
+            close(mSocket);
+            hlog(HLOG_ERR, "Could not startup the ssh session (%s)",
+                 getErrorString(err).c_str());
+            throw ESessionError("Could not startup the ssh session");
+        }
+
+        if ((err=libssh2_userauth_publickey_fromfile_ex(mSession, username, 
+                                                        strlen(username),
+                                                        publicKeyFilePath,
+                                                        privateKeyFilePath,
+                                                        passphrase)))
+            {
+                libssh2_session_disconnect(mSession, "Goodbye");
+                libssh2_session_free(mSession);
+                close(mSocket);
+                hlog(HLOG_ERR, "Could not get authenticated via public key (%s)",
+                     getErrorString(err).c_str());
+                throw ESessionError("Could not get authenticated via public key");
+            }
+    }
+    else
+    {
+        hlog(HLOG_ERR, "No Socket for creating ssh session");
+        throw ESessionError("No Socket for creating ssh session");
+    }
+
+
 }
 
 SSHRunner::SSHRunner() :
@@ -64,6 +114,7 @@ int SSHRunner::Run(
     FString *output,
     FString *errorOutput)
 {
+    int err;
     // Try to open a channel to be used for executing the command.
     LIBSSH2_CHANNEL* channel = libssh2_channel_open_session(mSession);
     if( NULL == channel )
@@ -75,9 +126,10 @@ int SSHRunner::Run(
     }
 
     //  Execute the command.
-    if (libssh2_channel_exec(channel, command.c_str()) != 0)
+    if ((err=libssh2_channel_exec(channel, command.c_str()) != 0))
     {
-        hlog(HLOG_ERR, "Failed to run command");
+        hlog(HLOG_ERR, "Failed to run command [%s] (%s)", command.c_str(),
+            getErrorString(err).c_str());
         throw ERunError("Failed to run command");
     }
 
@@ -196,3 +248,143 @@ unsigned int SSHRunner::createSocketAndConnect(
 
     return sock;
 }
+
+FString SSHRunner::getErrorString(int errNumber)
+{
+    FString errString;
+    switch (errNumber)
+    {
+    case LIBSSH2_ERROR_SOCKET_NONE:
+        errString="LIBSSH2_ERROR_SOCKET_NONE";
+        break;
+    case LIBSSH2_ERROR_BANNER_NONE:
+        errString="LIBSSH2_ERROR_BANNER_NONE";
+        break;
+    case LIBSSH2_ERROR_BANNER_SEND:
+        errString="LIBSSH2_ERROR_BANNER_SEND";
+        break;
+    case LIBSSH2_ERROR_INVALID_MAC:
+        errString="LIBSSH2_ERROR_INVALID_MAC";
+        break;
+    case LIBSSH2_ERROR_KEX_FAILURE:
+        errString="LIBSSH2_ERROR_KEX_FAILURE";
+        break;
+    case LIBSSH2_ERROR_ALLOC:
+        errString="An internal memory allocation call failed.";
+        break;
+    case LIBSSH2_ERROR_SOCKET_SEND:
+        errString="Unable to send data on socket.";
+        break;
+    case LIBSSH2_ERROR_KEY_EXCHANGE_FAILURE:
+        errString="LIBSSH2_ERROR_KEY_EXCHANGE_FAILURE";
+        break;
+    case LIBSSH2_ERROR_TIMEOUT:
+        errString="LIBSSH2_ERROR_TIMEOUT";
+        break;
+    case LIBSSH2_ERROR_HOSTKEY_INIT:
+        errString="LIBSSH2_ERROR_HOSTKEY_INIT";
+        break;
+    case LIBSSH2_ERROR_HOSTKEY_SIGN:
+        errString="LIBSSH2_ERROR_HOSTKEY_SIGN";
+        break;
+    case LIBSSH2_ERROR_DECRYPT:
+        errString="LIBSSH2_ERROR_DECRYPT";
+        break;
+    case LIBSSH2_ERROR_SOCKET_DISCONNECT:
+        errString="LIBSSH2_ERROR_SOCKET_DISCONNECT";
+        break;
+    case LIBSSH2_ERROR_PROTO:
+        errString="LIBSSH2_ERROR_PROTO";
+        break;
+    case LIBSSH2_ERROR_PASSWORD_EXPIRED:
+        errString="LIBSSH2_ERROR_PASSWORD_EXPIRED";
+        break;
+    case LIBSSH2_ERROR_FILE:
+        errString="LIBSSH2_ERROR_FILE";
+        break;
+    case LIBSSH2_ERROR_METHOD_NONE:
+        errString="LIBSSH2_ERROR_METHOD_NONE";
+        break;
+    case LIBSSH2_ERROR_AUTHENTICATION_FAILED:
+        errString="Authentication using the supplied password or public key was not accepted.";
+        break;
+    case LIBSSH2_ERROR_PUBLICKEY_UNVERIFIED:
+        errString="The username/public key combination was invalid.";
+        break;
+    case LIBSSH2_ERROR_CHANNEL_OUTOFORDER:
+        errString="LIBSSH2_ERROR_CHANNEL_OUTOFORDER";
+        break;
+    case LIBSSH2_ERROR_CHANNEL_FAILURE:
+        errString="LIBSSH2_ERROR_CHANNEL_FAILURE";
+        break;
+    case LIBSSH2_ERROR_CHANNEL_REQUEST_DENIED:
+        errString="LIBSSH2_ERROR_CHANNEL_REQUEST_DENIED";
+        break;
+    case LIBSSH2_ERROR_CHANNEL_UNKNOWN:
+        errString="LIBSSH2_ERROR_CHANNEL_UNKNOWN";
+        break;
+    case LIBSSH2_ERROR_CHANNEL_WINDOW_EXCEEDED:
+        errString="LIBSSH2_ERROR_CHANNEL_WINDOW_EXCEEDED";
+        break;
+    case LIBSSH2_ERROR_CHANNEL_PACKET_EXCEEDED:
+        errString="LIBSSH2_ERROR_CHANNEL_PACKET_EXCEEDED";
+        break;
+    case LIBSSH2_ERROR_CHANNEL_CLOSED:
+        errString="LIBSSH2_ERROR_CHANNEL_CLOSED";
+        break;
+    case LIBSSH2_ERROR_CHANNEL_EOF_SENT:
+        errString="LIBSSH2_ERROR_CHANNEL_EOF_SENT";
+        break;
+    case LIBSSH2_ERROR_SCP_PROTOCOL:
+        errString="LIBSSH2_ERROR_SCP_PROTOCOL";
+        break;
+    case LIBSSH2_ERROR_ZLIB:
+        errString="LIBSSH2_ERROR_ZLIB";
+        break;
+    case LIBSSH2_ERROR_SOCKET_TIMEOUT:
+        errString="Socket timeout";
+        break;
+    case LIBSSH2_ERROR_SFTP_PROTOCOL:
+        errString="LIBSSH2_ERROR_SFTP_PROTOCOL";
+        break;
+    case LIBSSH2_ERROR_REQUEST_DENIED:
+        errString="LIBSSH2_ERROR_REQUEST_DENIED";
+        break;
+    case LIBSSH2_ERROR_METHOD_NOT_SUPPORTED:
+        errString="LIBSSH2_ERROR_METHOD_NOT_SUPPORTED";
+        break;
+    case LIBSSH2_ERROR_INVAL:
+        errString="LIBSSH2_ERROR_INVAL";
+        break;
+    case LIBSSH2_ERROR_INVALID_POLL_TYPE:
+        errString="LIBSSH2_ERROR_INVALID_POLL_TYPE";
+        break;
+    case LIBSSH2_ERROR_PUBLICKEY_PROTOCOL:
+        errString="LIBSSH2_ERROR_PUBLICKEY_PROTOCOL";
+        break;
+    case LIBSSH2_ERROR_EAGAIN:
+        errString="LIBSSH2_ERROR_EAGAIN";
+        break;
+    case LIBSSH2_ERROR_BUFFER_TOO_SMALL:
+        errString="LIBSSH2_ERROR_BUFFER_TOO_SMALL";
+        break;
+    case LIBSSH2_ERROR_BAD_USE:
+        errString="LIBSSH2_ERROR_BAD_USE";
+        break;
+    case LIBSSH2_ERROR_COMPRESS:
+        errString="LIBSSH2_ERROR_COMPRESS";
+        break;
+    case LIBSSH2_ERROR_OUT_OF_BOUNDARY:
+        errString="LIBSSH2_ERROR_OUT_OF_BOUNDARY";
+        break;
+    case LIBSSH2_ERROR_AGENT_PROTOCOL:
+        errString="LIBSSH2_ERROR_AGENT_PROTOCOL";
+        break;
+    default:
+        errString="Unknown Error";
+        break;
+    }
+
+    return errString;
+}
+

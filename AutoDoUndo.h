@@ -23,7 +23,18 @@ namespace Forte
         }
         virtual ~AutoDoUndo() 
         {
-            Undo();
+            try
+            {
+                Undo();
+            }
+            catch (std::exception& e)
+            {
+                hlog(HLOG_ERR, "Got exception %s", e.what());
+            }
+            catch(...)
+            {
+                hlog(HLOG_ERR, "Got unknown exception");
+            }
         }
 
         boost::function<T1()> Do;

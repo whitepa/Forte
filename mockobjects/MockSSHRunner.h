@@ -32,6 +32,10 @@ namespace Forte
             );
 
         void QueueCommandResponse(const FString& response, int response_code=0);
+        void QueueCommandResponse(const FString& expectedCommand,
+                                  const FString& response, int response_code=0);
+
+        void ClearCommandResponseQueue();
 
         bool CommandWasRun(const FString& command);
 
@@ -41,6 +45,8 @@ namespace Forte
         // mockSSHRunner
         MockProcRunner mMockProcRunner;
     };
+
+    typedef boost::shared_ptr<MockSSHRunner> MockSSHRunnerPtr;
 }
 
 #endif
