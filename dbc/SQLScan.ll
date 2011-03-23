@@ -33,6 +33,7 @@ typedef boost::shared_ptr<AnyPtr> YYSTYPE;
 
 ALL           { return ALL; }
 AUTO_INCREMENT { return AUTO_INCREMENT; }
+AUTOINCREMENT { return AUTO_INCREMENT; }
 BIGINT        { return BIGINT; }
 BINARY        { return BINARY; }
 BLOB          { return BLOB; }
@@ -54,6 +55,7 @@ IDENTIFIED    { return IDENTIFIED; }
 IF            { return IF; }
 INSERT        { return INSERT; }
 INT           { return INT; }
+INTEGER       { return INT; }
 INTO          { return INTO; }
 KEY           { return KEY; }
 LONGTEXT      { return LONGTEXT; }
