@@ -260,6 +260,8 @@ column_type:
             {$$ = NEWOBJ(CharType(TC(IntNum,$3).asInt()));}
       | INT '(' INTNUM ')'
             {$$ = NEWOBJ(IntType(TC(IntNum,$3).asInt()));}
+      | INT
+            {$$ = NEWOBJ(IntType(10));}
       | TINYINT '(' INTNUM ')'
             {$$ = NEWOBJ(TinyIntType(TC(IntNum,$3).asInt()));}
       | UNSIGNED INT '(' INTNUM ')'
