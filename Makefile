@@ -185,7 +185,7 @@ TLIBS = -L$(TARGETDIR) -lforte -lpthread
 
 INSTALL = $(if $(RPM), @install $(1) $< $@, @install $(1) $(2) $< $@)
 
-all: ccargs_echo $(LIB) $(TARGETDIR)/procmon
+all: $(LIB) $(TARGETDIR)/procmon
 	$(MAKE_SUBDIRS)
 
 $(TARGETDIR)/procmon: $(TARGETDIR)/procmon.o $(TARGETDIR)/ProcessMonitor.o $(LIB)
