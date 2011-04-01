@@ -3,6 +3,7 @@
 
 #ifndef FORTE_NO_DB
 
+#include "Context.h"
 #include "DbConnection.h"
 #include "DbConnectionPool.h"
 #include "LogManager.h"
