@@ -11,6 +11,8 @@ namespace Forte
     EXCEPTION_CLASS(EActiveObjectThread);
     EXCEPTION_SUBCLASS2(EActiveObjectThread, EActiveObjectThreadReceivedInvalidEvent,
                         "Active Object Thread received incorrect event type");
+    EXCEPTION_SUBCLASS2(EActiveObjectThread, EActiveObjectNoCurrentInvocation,
+                        "Active Object has no current invocation");
     
     class ActiveObjectThread : public Forte::Thread
     {
@@ -22,8 +24,12 @@ namespace Forte
 
         virtual void Enqueue(const boost::shared_ptr<AsyncInvocation> &ai);
 
+        virtual bool IsCancelled(void);
+
     private:
         Forte::EventQueue mQueue;
+        Forte::Mutex mLock;
+        shared_ptr<Forte::AsyncInvocation> mCurrentAsyncInvocation;
     };
     
 };

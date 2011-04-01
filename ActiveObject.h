@@ -27,7 +27,9 @@ namespace Forte
                 make_shared<ConcreteInvocation<ResultType> >(future, callback));
             return future;
         }
-
+        bool isCancelled(void) {
+            return mActiveObjectThread.IsCancelled();
+        }
     private:
         Forte::ActiveObjectThread mActiveObjectThread;
     };

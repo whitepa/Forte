@@ -20,10 +20,11 @@ namespace Forte
     {
         friend class AsyncInvocation;
     public:
-        Future() : mCondition(mLock), mResultReady(false) {};
+        Future() : mCondition(mLock), mCancelled(false), mResultReady(false) {};
         virtual ~Future() {};
 
-        virtual void Cancel() { throw EUnimplemented(__FUNCTION__); }
+        virtual void Cancel() { AutoUnlockMutex lock(mLock); mCancelled = true; }
+        virtual bool IsCancelled() const { AutoUnlockMutex lock(mLock); return mCancelled; }
         virtual bool IsReady() const { return mResultReady; }
 
         virtual ResultType GetResult() {
@@ -57,8 +58,9 @@ namespace Forte
             mCondition.Broadcast();
         }
     private:
-        Forte::Mutex mLock;
+        mutable Forte::Mutex mLock;
         Forte::ThreadCondition mCondition;
+        bool mCancelled;
         bool mResultReady;
         ResultType mResult;
         boost::exception_ptr mException;
@@ -69,10 +71,11 @@ namespace Forte
     {
         friend class AsyncInvocation;
     public:
-        Future() : mCondition(mLock), mResultReady(false) {};
+        Future() : mCondition(mLock), mCancelled(false), mResultReady(false) {};
         virtual ~Future() {};
 
-        virtual void Cancel() { throw EUnimplemented(__FUNCTION__); }
+        virtual void Cancel() { AutoUnlockMutex lock(mLock); mCancelled = true; }
+        virtual bool IsCancelled() const { AutoUnlockMutex lock(mLock); return mCancelled; }
         virtual bool IsReady() const { return mResultReady; }
 
         virtual void GetResult() {
@@ -105,8 +108,9 @@ namespace Forte
             mCondition.Broadcast();
         }
     private:
-        Forte::Mutex mLock;
+        mutable Forte::Mutex mLock;
         Forte::ThreadCondition mCondition;
+        bool mCancelled;
         bool mResultReady;
         boost::exception_ptr mException;
     };

@@ -31,6 +31,7 @@ protected:
 
 EXCEPTION_CLASS(EActiveTester);
 EXCEPTION_CLASS(EActiveTesterCorrectException);
+EXCEPTION_CLASS(EActiveTesterCancelled);
 
 class ActiveTester : public ActiveObject
 {
@@ -44,6 +45,9 @@ public:
     shared_ptr<Future<int> > PerformAddTwoNumbersVerySlowly(int a, int b) {
         return invokeAsync<int>(boost::bind(&ActiveTester::AddTwoNumbersVerySlowly, this, a, b));
     };
+    shared_ptr<Future<int> > PerformAddTwoNumbersVerySlowlyCancellable(int a, int b) {
+        return invokeAsync<int>(boost::bind(&ActiveTester::AddTwoNumbersVerySlowlyCancellable, this, a, b));
+    };
     shared_ptr<Future<void> > PerformThrowingOperation(void) {
         return invokeAsync<void>(boost::bind(&ActiveTester::ThrowingOperation, this));
     };
@@ -54,6 +58,15 @@ public:
 protected:
     int OneSecondOperationNullary(void) { sleep(1); return 1; }
     int AddTwoNumbersVerySlowly(int a, int b) { sleep(1); return a + b; }
+    int AddTwoNumbersVerySlowlyCancellable(int a, int b) { 
+        int i = 0; 
+        while (i++ < 10)
+        {
+            if (isCancelled()) boost::throw_exception(EActiveTesterCancelled());
+            usleep(100000);
+        }
+        return a + b;
+    }
     void ThrowingOperation(void) { boost::throw_exception(EActiveTesterCorrectException()); }
     void ThrowIncorrectly(void) { throw EActiveTesterCorrectException(); }
 };
@@ -103,3 +116,14 @@ TEST_F(ActiveObjectTest, SimpleParameters)
     shared_ptr<Future<int> > future = a.PerformAddTwoNumbersVerySlowly(1,2);
     ASSERT_EQ(3, future->GetResult());
 };
+TEST_F(ActiveObjectTest, Cancellation)
+{
+    ActiveTester a;
+    shared_ptr<Future<int> > future = a.PerformAddTwoNumbersVerySlowlyCancellable(1,2);
+    ASSERT_EQ(false, future->IsReady());
+    ASSERT_EQ(3, future->GetResult());
+    future = a.PerformAddTwoNumbersVerySlowlyCancellable(1,2);
+    ASSERT_EQ(false, future->IsReady());
+    future->Cancel();
+    ASSERT_THROW(future->GetResult(), EActiveTesterCancelled);
+}

@@ -22,6 +22,15 @@ void ActiveObjectThread::Enqueue(const boost::shared_ptr<AsyncInvocation> &ai)
     Notify();
 }
 
+bool ActiveObjectThread::IsCancelled(void)
+{
+    AutoUnlockMutex lock(mLock);
+    if (!mCurrentAsyncInvocation)
+        throw EActiveObjectNoCurrentInvocation();
+    else
+        return mCurrentAsyncInvocation->IsCancelled();
+}
+
 void * ActiveObjectThread::run(void)
 {
     shared_ptr<Event> event;
@@ -29,12 +38,17 @@ void * ActiveObjectThread::run(void)
     {
         while((event = mQueue.Get()))
         {
-            shared_ptr<AsyncInvocation> ai =
+            AutoUnlockMutex lock(mLock);
+            mCurrentAsyncInvocation =
                 dynamic_pointer_cast<AsyncInvocation>(event);
             event.reset();
-            if (!ai)
+            if (!mCurrentAsyncInvocation)
                 throw EActiveObjectThreadReceivedInvalidEvent();
-            ai->Execute();
+            {
+                AutoLockMutex unlock(mLock);
+                mCurrentAsyncInvocation->Execute();
+            }
+            mCurrentAsyncInvocation.reset();
         }
         // @TODO this is racy... we may sleep when there is an event waiting.
         interruptibleSleep(Timespec::FromSeconds(1));
