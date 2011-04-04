@@ -13,13 +13,16 @@
     shared_ptr<type> name ## _Ptr = mContext.Get<type>(key);    \
     type &name(* name ## _Ptr)
 
-//#define CGET_TMP(key, type) mContext.Get<type>(key)
+#define CNEW(key, type, args...)                                \
+    mContext.Set(key, shared_ptr<type>(new type( args )))
+
+#define CGETNEW(key, type, name, args...)               \
+    shared_ptr<type> name ## _Ptr(new type( args ));    \
+    mContext.Set(key, name ## _Ptr);                    \
+    type &name(* name ## _Ptr)
 
 #define CSET(key, type, obj)                    \
     mContext.Set(key, shared_ptr<type>( obj ))
-
-#define CNEW(key, type, args...)                                \
-    mContext.Set(key, shared_ptr<type>(new type( args )))
 
 namespace Forte
 {
