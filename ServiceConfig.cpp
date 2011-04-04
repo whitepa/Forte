@@ -65,6 +65,18 @@ void ServiceConfig::Set(const char *key, const char *value)
         throw EServiceConfig("unknown error");
     }
 }
+void ServiceConfig::Add(const char *key, const char *value)
+{
+    AutoUnlockMutex lock(mMutex);
+    try
+    {
+        mPTree.add(key, value);
+    }
+    catch (boost::property_tree::ptree_error &e)
+    {
+        throw EServiceConfig("unknown error");
+    }
+}
 
 FString ServiceConfig::Get(const char *key)
 {

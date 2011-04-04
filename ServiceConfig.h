@@ -62,6 +62,17 @@ namespace Forte
          */
         void Set(const char *key, const char *value);
 
+        /** 
+         * Set a given key to the given value.  If previous
+         * information exists at the key, a sibling key is created.
+         *
+         * @throws EServiceConfig on any error.
+         * 
+         * @param key 
+         * @param value 
+         */
+        void Add(const char *key, const char *value);
+
         
         FString Get(const char *key);
         int GetInteger(const char *key);
