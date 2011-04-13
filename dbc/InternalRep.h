@@ -218,7 +218,17 @@ namespace DBC {
     class TableColumn : public Object {
     public:
         TableColumn(const char *name, YYSTYPE type, int options) : 
-            Object(name), mType(type) { addOptions(options); }
+            Object(name), mType(type) { 
+            addOptions(options);
+
+            // This hack is to allow OPT_UNSIGNED options set on the
+            // type object to be copied to this object.  This makes
+            // the grammar much easier to deal with.
+            if (type->GetType() == typeid(IntType))
+                addOptions(TC(IntType,type).mOptions);
+            else if (type->GetType() == typeid(BigIntType))
+                addOptions(TC(BigIntType,type).mOptions);
+        }
 
         // given a varchar column called instance_guid, the following methods return:
 
