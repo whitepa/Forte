@@ -74,12 +74,12 @@ all: $(PROGS)
 
 # progs
 $(BPROGS): $(TARGETDIR)/%: $(FORTE) $(FORTE_MOCK) %.cpp $(TARGETDIR)/%.o
-	@echo "Building $@ ..."
+	@echo "Linking $@ ..."
 	@$(CCC) -o $@ $@.o $(LIBS)
 
 # the dependencies in this rule are wrong:
 $(TARGETDIR)/FileSystemUtilUnitTest: ../$(TARGETDIR)/FileSystemUtil.o FileSystemUtilUnitTest.cpp
-	echo "Building $@..."
+	@echo "Compiling $@..."
 	$(QUIET)$(CCC) FileSystemUtilUnitTest.cpp \
 	-o $@ \
 	../$(TARGETDIR)/FileSystemUtil.o \
@@ -89,7 +89,7 @@ $(TARGETDIR)/FileSystemUtilUnitTest: ../$(TARGETDIR)/FileSystemUtil.o FileSystem
 	$(LIBS)
 
 $(TARGETDIR)/ExceptionUnitTest: ../$(TARGETDIR)/Exception.o ExceptionUnitTest.cpp
-	echo "Building $@..."
+	@echo "Compiling $@..."
 	$(QUIET)$(CCC) ExceptionUnitTest.cpp \
 	-o $@ \
 	$(FORTE) \
@@ -99,7 +99,7 @@ $(TARGETDIR)/ExceptionUnitTest: ../$(TARGETDIR)/Exception.o ExceptionUnitTest.cp
 
 
 $(TARGETDIR)/DbLiteConnectionUnitTest: DbLiteConnectionUnitTest.cpp
-	echo "Building $@..."
+	@echo "Compiling $@..."
 	$(QUIET)$(CCC) DbLiteConnectionUnitTest.cpp \
 	-o $@ \
 	$(FORTE) \
@@ -109,7 +109,7 @@ $(TARGETDIR)/DbLiteConnectionUnitTest: DbLiteConnectionUnitTest.cpp
 	-lsqlite3
 
 $(TARGETDIR)/FStringUnitTest: ../$(TARGETDIR)/FString.o FStringUnitTest.cpp
-	echo "Building $@..."
+	@echo "Compiling $@..."
 	$(QUIET)$(CCC) FStringUnitTest.cpp \
 	-o $@ \
 	$(INCLUDE) \
@@ -117,7 +117,7 @@ $(TARGETDIR)/FStringUnitTest: ../$(TARGETDIR)/FString.o FStringUnitTest.cpp
 	$(LIBS)
 
 $(TARGETDIR)/ProcessManagerUnitTest: ../$(TARGETDIR)/ProcessManager.o ProcessManagerUnitTest.cpp $(FORTE)
-	echo "Building $@..."
+	@echo "Compiling $@..."
 	$(QUIET)$(CCC) ProcessManagerUnitTest.cpp \
 	-o $@ \
 	$(INCLUDE) \
@@ -125,7 +125,7 @@ $(TARGETDIR)/ProcessManagerUnitTest: ../$(TARGETDIR)/ProcessManager.o ProcessMan
 	$(LIBS)
 
 $(TARGETDIR)/PDUPeerUnitTest: PDUPeerUnitTest.cpp $(FORTE)
-	echo "Building $@..."
+	@echo "Compiling $@..."
 	$(QUIET)$(CCC) PDUPeerUnitTest.cpp \
 	-o $@ \
 	$(INCLUDE) \
@@ -135,7 +135,7 @@ $(TARGETDIR)/PDUPeerUnitTest: PDUPeerUnitTest.cpp $(FORTE)
 	$(FORTE_MOCK_LIBS) \
 
 $(TARGETDIR)/ClusterLockUnitTest: ClusterLockUnitTest.cpp $(FORTE)
-	echo "Building $@..."
+	@echo "Compiling $@..."
 	$(QUIET)$(CCC) ClusterLockUnitTest.cpp \
 	-o $@ \
 	$(INCLUDE) \
@@ -146,7 +146,7 @@ $(TARGETDIR)/ClusterLockUnitTest: ClusterLockUnitTest.cpp $(FORTE)
 	$(BOOST_FS_LIB) \
 
 $(TARGETDIR)/ActiveObjectUnitTest: ActiveObjectUnitTest.cpp $(FORTE)
-	echo "Building $@..."
+	@echo "Compiling $@..."
 	$(QUIET)$(CCC) ActiveObjectUnitTest.cpp \
 	-o $@ \
 	$(INCLUDE) \
@@ -157,7 +157,7 @@ $(TARGETDIR)/ActiveObjectUnitTest: ActiveObjectUnitTest.cpp $(FORTE)
 	$(BOOST_FS_LIB) \
 
 $(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp
-	echo "Building $@..."
+	@echo "Compiling $@..."
 	$(QUIET)$(CCC) SCSIUtilUnitTest.cpp \
 	-o $(TARGETDIR)/SCSIUtilUnitTest \
 	$(SCALE_SERVICE_CLIENT_LIBS)  \
