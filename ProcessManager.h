@@ -14,7 +14,7 @@
 
 namespace Forte
 {
-    class Process;
+    class ProcessFuture;
 
     EXCEPTION_CLASS(EProcessManager);
     EXCEPTION_SUBCLASS2(EProcessManager, EProcessManagerUnableToFork,
@@ -30,7 +30,7 @@ namespace Forte
      */
     class ProcessManager : public Thread
     {
-        friend class Forte::Process;
+        friend class Forte::ProcessFuture;
     protected:
  
     public:
@@ -38,7 +38,7 @@ namespace Forte
         static const int MAX_RUNNING_PROCS;
         static const int PDU_BUFFER_SIZE;
 
-        typedef std::map<int, boost::shared_ptr<Process> > ProcessMap;
+        typedef std::map<int, boost::weak_ptr<ProcessFuture> > ProcessMap;
 
         ProcessManager();
 
@@ -71,7 +71,7 @@ namespace Forte
         /**
          * CreateProcess() is the factory function to create a
          * Process object representing a child process. The
-         * Process returned is in a non-running state. Once you
+         * Process returned is in running state. Once you
          * have created the Process with the ProcessManager
          * factory method, you manage the child through the
          * Process.
@@ -92,14 +92,28 @@ namespace Forte
          *
          * @return a shared pointer holding a Process object.
          */
-        virtual boost::shared_ptr<Process> CreateProcess(
+        virtual boost::shared_ptr<ProcessFuture> CreateProcess(
             const FString &command,
             const FString &currentWorkingDirectory = "/",
             const FString &outputFilename = "/dev/null",
             const FString &inputFilename = "/dev/null",
             const StrStrMap *environment = NULL);
 
+        virtual boost::shared_ptr<ProcessFuture> CreateProcessDontRun(
+            const FString &command,
+            const FString &currentWorkingDirectory = "/",
+            const FString &outputFilename = "/dev/null",
+            const FString &inputFilename = "/dev/null",
+            const StrStrMap *environment = NULL);
+
+        void RunProcess(boost::shared_ptr<ProcessFuture> ph);
+
         virtual const FString & GetProcmonPath(void) { return mProcmonPath; }
+
+        virtual bool IsProcessMapEmpty(void) 
+        { 
+            return (mProcesses.size() == 0);
+        }
 
     private:
 
