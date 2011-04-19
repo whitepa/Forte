@@ -263,7 +263,7 @@ void Forte::Process::startMonitor()
         setsid();
         FString childfdStr(childfd);
         char **vargs = new char* [3];
-        vargs[0] = "(procmon)"; // \TODO include the name of the monitored process
+        vargs[0] = const_cast<char *>("(procmon)"); // \TODO include the name of the monitored process
         vargs[1] = const_cast<char *>(childfdStr.c_str());
         vargs[2] = 0;
 //        fprintf(stderr, "procmon child, exec '%s' '%s'\n", mProcmonPath.c_str(), vargs[1]);
