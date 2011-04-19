@@ -29,14 +29,12 @@ using namespace boost;
 using namespace Forte;
 
 Forte::ProcessFuture::ProcessFuture(const boost::shared_ptr<ProcessManager> &mgr,
-                        const FString &procmon,
                         const FString &command, 
                         const FString &currentWorkingDirectory, 
                         const FString &outputFilename, 
                         const FString &inputFilename, 
                         const StrStrMap *environment) : 
     mProcessManagerPtr(mgr),
-    mProcmonPath(procmon),
     mCommand(command), 
     mCurrentWorkingDirectory(currentWorkingDirectory),
     mOutputFilename(outputFilename),
@@ -294,55 +292,6 @@ void Forte::ProcessFuture::setState(int state)
 
     AutoUnlockMutex lock(mWaitLock);
     mWaitCond.Broadcast();
-}
-
-void Forte::ProcessFuture::startMonitor()
-{
-    int fds[2];
-    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) < 0)
-        throw EProcessFutureUnableToCreateSocket(FStringFC(), "%s", strerror(errno));
-    AutoFD parentfd(fds[0]);
-    AutoFD childfd(fds[1]);
-
-    pid_t childPid = fork();
-    if(childPid < 0) 
-        throw EProcessFutureUnableToFork(FStringFC(), "%s", strerror(errno));
-    else if(childPid == 0)
-    {
-        fprintf(stderr, "procmon child, childfd=%d\n", childfd.GetFD());
-        // child
-        // close all file descriptors, except the PDU channel
-        while (close(parentfd) == -1 && errno == EINTR);
-        for (int n = 0; n < 1024; ++n)
-            if (n != childfd)
-                while (close(n) == -1 && errno == EINTR);
-        // clear sig mask
-        sigset_t set;
-        sigemptyset(&set);
-        pthread_sigmask(SIG_SETMASK, &set, NULL);
-
-        // create a new process group / session
-        daemon(1, 0);
-        setsid();
-        FString childfdStr(childfd);
-        char **vargs = new char* [3];
-        vargs[0] = const_cast<char *>("(procmon)"); // \TODO include the name of the monitored process
-        vargs[1] = const_cast<char *>(childfdStr.c_str());
-        vargs[2] = 0;
-//        fprintf(stderr, "procmon child, exec '%s' '%s'\n", mProcmonPath.c_str(), vargs[1]);
-        execv(mProcmonPath, vargs);
-//        fprintf(stderr, "procmon child, exec failed: %d %s\n", errno, strerror(errno));
-        exit(-1);
-    }
-    else
-    {
-        // parent
-        childfd.Close();
-        // add a PDUPeer to the PeerSet owned by the ProcessManager
-        shared_ptr<ProcessManager> pm(mProcessManagerPtr.lock());
-        mManagementChannel = pm->addPeer(parentfd);
-        parentfd.Release();
-    }
 }
 
 void Forte::ProcessFuture::GetResult()

@@ -94,7 +94,6 @@ namespace Forte
          * ProcessFuture.
          *
          * @param mgr The process manager which will be managing this process.
-         * @param procmon Path to the procmon executable.
          * @param command The command you want to run
          * @param processCompleteCallback The callback to call when the process has completed
          * @param currentWorkingDirectory The directory that should be used as the current working
@@ -103,7 +102,6 @@ namespace Forte
          * @param inputFilename name of the file to use for input.
          */
         ProcessFuture(const boost::shared_ptr<Forte::ProcessManager> &mgr,
-                const FString &procmon,
                 const FString &command,
                 const FString &currentWorkingDirectory = "/",
                 const FString &outputFilename = "/dev/null", 
@@ -299,15 +297,6 @@ namespace Forte
         void abandon();
 
         /** 
-         * startMonitor is called by the ProcessManager after the
-         * ProcessFuture object is created.  A child process will be forked,
-         * and an open socket will be established and linked via
-         * PDUPeer objects.
-         * 
-         */
-        void startMonitor(void); 
-
-        /** 
          * Set the internal state of the process handle.  This will
          * wake up anyone waiting for a state change.
          * 
@@ -381,8 +370,6 @@ namespace Forte
 
     private:
         boost::weak_ptr<ProcessManager> mProcessManagerPtr;
-
-        FString mProcmonPath;
 
         boost::shared_ptr<PDUPeer> mManagementChannel;
         

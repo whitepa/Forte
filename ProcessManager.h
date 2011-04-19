@@ -23,6 +23,8 @@ namespace Forte
                         "Received message from an invalid peer");
     EXCEPTION_SUBCLASS2(EProcessManager, EProcessManagerNoSharedPtr,
                         "No shared pointer exists to this process manager");
+    EXCEPTION_SUBCLASS2(EProcessManager, EProcessManagerUnableToCreateSocket,
+                        "Unable to create a socketpair");
 
     /**
      * ProcessManager provides for the creation and management of
@@ -115,7 +117,7 @@ namespace Forte
             return (mProcesses.size() == 0);
         }
 
-    private:
+    protected:
 
         /**
          * helper function called by Process objects to notify
@@ -124,6 +126,8 @@ namespace Forte
          * @param fd file descriptor connected to the process being abandoned
          */
         virtual void abandonProcess(const int fd);
+
+        virtual void startMonitor(boost::shared_ptr<Forte::ProcessFuture> ph);
 
         /**
          * the main runloop for the ProcessManager thread monitoring
