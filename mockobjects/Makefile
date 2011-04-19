@@ -25,7 +25,8 @@ SRCS = \
 	MockSSHRunner.cpp \
 	MockProcRunner.cpp \
 	MockFileSystem.cpp \
-	MockNetworkConnection.cpp
+	MockNetworkConnection.cpp \
+	MockProcessManager.cpp
 
 OBJS = $(SRCS:%.cpp=$(TARGETDIR)/%.o)
 

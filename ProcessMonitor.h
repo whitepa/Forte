@@ -4,11 +4,11 @@
 #include "FString.h"
 #include "LogManager.h"
 #include "PDUPeerSet.h"
-#include "Process.h"
+#include "ProcessFuture.h"
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(EProcess, EProcessMonitor);
+    EXCEPTION_SUBCLASS(EProcessFuture, EProcessMonitor);
     EXCEPTION_SUBCLASS2(EProcessMonitor, EProcessMonitorArguments,
                         "Incorrect command line arguments");
     EXCEPTION_SUBCLASS2(EProcessMonitor, EProcessMonitorUnableToOpenInputFile,

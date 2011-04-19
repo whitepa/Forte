@@ -108,7 +108,7 @@ namespace Forte
             const FString &inputFilename = "/dev/null",
             const StrStrMap *environment = NULL);
 
-        void RunProcess(boost::shared_ptr<ProcessFuture> ph);
+        virtual void RunProcess(boost::shared_ptr<ProcessFuture> ph);
 
         virtual const FString & GetProcmonPath(void) { return mProcmonPath; }
 

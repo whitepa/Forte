@@ -385,7 +385,7 @@ void Forte::ProcessMonitor::signalProcess(int signal)
          mState != STATE_STOPPED) &&
         mPID != 0 &&
         kill(mPID, signal) == -1)
-        throw EProcessSignalFailed();
+        throw EProcessFutureSignalFailed();
 }
 
 Forte::FString Forte::ProcessMonitor::shellEscape(const FString& arg) 

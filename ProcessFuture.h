@@ -266,6 +266,13 @@ namespace Forte
          * @return the pid of the monitor process
          */
         pid_t GetMonitorPID() { return mMonitorPid; }
+
+        void SetManagementChannel(boost::shared_ptr<PDUPeer> managementChannel)
+        {
+            mManagementChannel = managementChannel;
+        }
+
+        FString GetCommand() { return mCommand; }
                 
     protected:
 
