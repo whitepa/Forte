@@ -7,7 +7,7 @@
 #include "AnyPtr.h"
 
 int yylex(void);
-void yyerror(char *s);
+void yyerror(const char *s);
 
 #define YYSTYPE_IS_DECLARED
 typedef boost::shared_ptr<AnyPtr> YYSTYPE;

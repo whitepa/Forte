@@ -6,7 +6,7 @@
 #include "AnyPtr.h"
 
 int lineno = 1;
-    void yyerror(char *s);
+    void yyerror(const char *s);
         int yyparse(void);
 
 using namespace DBC;
@@ -136,7 +136,7 @@ INCLUDE       { return INCLUDE; }
 
 %%
 
-void yyerror(char *s)
+void yyerror(const char *s)
 {
         printf("Line %d: %s at %s\n", lineno, s, yytext);
 }
