@@ -151,8 +151,21 @@ void ServerMain::initLogging()
     // set up specialized log levels for specified source code files
     FStringVector filenames;
     FStringVector levels;
-    sc.GetVectorSubKey("logfile.special_levels", "filenames", filenames);
-    sc.GetVectorSubKey("logfile.special_levels", "level", levels);
+    try
+    {
+        sc.GetVectorSubKey("logfile.special_levels", "filenames", filenames);
+        sc.GetVectorSubKey("logfile.special_levels", "level", levels);
+    }
+    catch (EServiceConfigNoKey& e)
+    {
+        hlog(HLOG_WARN, "No special levels in config file: %s", e.what());
+    }
+    catch (...)
+    {
+        hlog(HLOG_ERR, "Caught unknown error");
+        throw;
+    }
+
     if (filenames.size() != levels.size())
         throw EServerMainLogFileConfiguration("source level configuration invalid");
     for (unsigned int i = 0; i < filenames.size(); ++i)
