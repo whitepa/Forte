@@ -80,7 +80,7 @@ TEST_F(MockProcessManagerTest, MultipleProcesses)
     mpm->SetCommandResponse("/bin/sleep 6", "", 0, 6000);
     
     boost::shared_ptr<ProcessFuture> ph1 = mpm->CreateProcess("/bin/sleep 3");
-    boost::shared_ptr<ProcessFuture> ph2 = mpm->CreateProcess("/bin/sleep 3");
+    boost::shared_ptr<ProcessFuture> ph2 = mpm->CreateProcess("/bin/sleep 6");
 
     ASSERT_NO_THROW(ph1->GetResult());
     ASSERT_TRUE(!ph1->IsRunning());

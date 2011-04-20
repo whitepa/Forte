@@ -88,8 +88,7 @@ namespace Forte
     protected:
         /**
          * Construct a ProcessFuture object. Instantiating the object does
-         * not automatically cause the command to run. You must call
-         * Run to kick off the execution.  ProcessManager (a friend of
+         * not automatically cause the command to run. ProcessManager (a friend of
          * ProcessFuture) is the only class which should instantiate a
          * ProcessFuture.
          *
