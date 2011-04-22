@@ -14,6 +14,8 @@ namespace Forte
                         "Future result is already set");
     EXCEPTION_SUBCLASS2(EFuture, EFutureExceptionUnknown,
                         "An unknown exception was thrown during async invocation");
+    EXCEPTION_SUBCLASS2(EFuture, EFutureTimeoutWaitingForResult,
+                        "Timed out waiting for result to be set");
 
     template<typename ResultType>
     class Future : public Forte::Object
@@ -27,10 +29,22 @@ namespace Forte
         virtual bool IsCancelled() const { AutoUnlockMutex lock(mLock); return mCancelled; }
         virtual bool IsReady() const { return mResultReady; }
 
-        virtual ResultType GetResult() {
+        virtual ResultType GetResultTimed(const int seconds) {
             AutoUnlockMutex lock(mLock);
             if (!mResultReady)
-                mCondition.Wait();
+            {
+                if (seconds < 0)
+                {
+                    mCondition.Wait();
+                }
+                else
+                {
+                    mCondition.TimedWait(seconds);
+                    if (!mResultReady)
+                        throw EFutureTimeoutWaitingForResult();
+                }
+            }
+
             if (mException)
             {
                 try
@@ -43,6 +57,10 @@ namespace Forte
                 }
             }
             return mResult;
+        }
+
+        virtual ResultType GetResult() {
+            return GetResultTimed(-1);
         }
         
         virtual void SetResult(const ResultType &result) {
@@ -78,10 +96,22 @@ namespace Forte
         virtual bool IsCancelled() const { AutoUnlockMutex lock(mLock); return mCancelled; }
         virtual bool IsReady() const { return mResultReady; }
 
-        virtual void GetResult() {
+        virtual void GetResultTimed(const int seconds) {
             AutoUnlockMutex lock(mLock);
             if (!mResultReady)
-                mCondition.Wait();
+            {
+                if (seconds < 0)
+                {
+                    mCondition.Wait();
+                }
+                else
+                {
+                    mCondition.TimedWait(seconds);
+                    if (!mResultReady)
+                        throw EFutureTimeoutWaitingForResult();
+                }
+            }
+
             if (mException)
             {
                 try
@@ -93,6 +123,10 @@ namespace Forte
                     throw EFutureExceptionUnknown();
                 }
             }
+        }
+
+        virtual void GetResult() {
+            GetResultTimed(-1);
         }
         
         virtual void SetResult(void) {

@@ -370,3 +370,27 @@ TEST_F(ProcessManagerTest, ProcmonRunning)
         FAIL();
     }
 }
+
+TEST_F(ProcessManagerTest, ProcessTimeout)
+{
+    try
+    {
+        hlog(HLOG_INFO, "CancelProcess");
+        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        boost::shared_ptr<ProcessFuture> ph = pm->CreateProcess("/bin/sleep 10");
+        ASSERT_TRUE(ph->IsRunning());
+        ASSERT_THROW(ph->GetResultTimed(5), EFutureTimeoutWaitingForResult);
+        ASSERT_NO_THROW(ph->GetResult());
+        ASSERT_TRUE(!ph->IsRunning());
+    }
+    catch (Exception &e)
+    {
+        hlog(HLOG_ERR, "Exception: %s", e.what());
+        FAIL();
+    }
+    catch (std::exception &e)
+    {
+        hlog(HLOG_ERR, "std::exception: %s", e.what());
+        FAIL();
+    }    
+}

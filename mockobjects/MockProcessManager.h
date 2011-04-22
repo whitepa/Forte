@@ -40,6 +40,7 @@ namespace Forte
         void handleControlReq(const PDUPeer &peer, const PDU &pdu);
         void sendControlRes(const PDUPeer &peer, int resultCode, const char *desc = "");
         void mockStartProcess(void);
+        void mockRunProcess(void);
 
         Forte::LogManager mLogManager;
         PDUPeerSet mPeerSet;
@@ -49,7 +50,7 @@ namespace Forte
         FString mCWD;
         FString mInputFilename;
         FString mOutputFilename;
-
+        bool mShutdown;
     };
     
     class MockProcessManager : public ProcessManager
@@ -65,6 +66,10 @@ namespace Forte
             int responseCode = 0,
             int commandExecutionTime = 0
             );
+
+        void ClearCommandResponse() {
+            mCommandResponseMap.clear();
+        };
 
     protected:
         virtual void startMonitor(boost::shared_ptr<Forte::ProcessFuture> ph);

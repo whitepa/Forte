@@ -17,7 +17,8 @@ using namespace Forte;
 Forte::MockProcessHandler::MockProcessHandler(
     int fd,
     const ExpectedCommandResponsePtr& expectedResponse) :
-    mExpectedCommandResponse (expectedResponse)
+    mExpectedCommandResponse (expectedResponse),
+    mShutdown (false)
 {
     mLogManager.BeginLogging("/tmp/mockprochandler.log"); // \TODO
     mPeerSet.PeerCreate(fd);
@@ -33,7 +34,7 @@ void Forte::MockProcessHandler::Run()
     mPeerSet.SetProcessPDUCallback(
         boost::bind(&MockProcessHandler::pduCallback, this, _1));
 
-    while (mPeerSet.GetSize() > 0)
+    while (mPeerSet.GetSize() > 0 && !mShutdown)
     {
         try
         {
@@ -127,6 +128,9 @@ void Forte::MockProcessHandler::handleControlReq(const PDUPeer &peer, const PDU 
             break;
         }
         sendControlRes(peer, ProcessSuccess);
+
+        // mock the actual running of process
+        mockRunProcess();
     }
     catch (EMockProcessManagerUnableToOpenInputFile &e)
     {
@@ -157,6 +161,7 @@ void Forte::MockProcessHandler::handleControlReq(const PDUPeer &peer, const PDU 
     hlog(HLOG_DEBUG, "child exited (status %d)", status->statusCode);
     status->type = ProcessStatusExited;
     mPeerSet.SendAll(p);
+    mShutdown = true;
 }
 
 void Forte::MockProcessHandler::sendControlRes(const PDUPeer &peer, int result, const char *desc)
@@ -199,6 +204,23 @@ void Forte::MockProcessHandler::mockStartProcess(void)
     }
     while (outputfd == -1 && errno == EINTR);
 
+}
+
+void Forte::MockProcessHandler::mockRunProcess(void)
+{
+    // open the input and output files
+    // these will throw if they are unable to open the files
+    // and keep looping if they are interrupted during the open
+    AutoFD outputfd;
+
+    do
+    {
+        outputfd = open(mOutputFilename, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR);
+        if(outputfd == -1 && errno != EINTR)
+            throw EMockProcessManagerUnableToOpenOutputFile(FStringFC(), "%s", strerror(errno));
+    }
+    while (outputfd == -1 && errno == EINTR);
+
     // now sleep for the expected amount of time
     if (mExpectedCommandResponse->mCommandExecutionTime > 0)
     {
@@ -223,7 +245,6 @@ void Forte::MockProcessHandler::mockStartProcess(void)
             throw EMockProcessManagerUnableToExec();
         }
     }
-
 }
 
 Forte::MockProcessManager::MockProcessManager() :

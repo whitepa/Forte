@@ -43,15 +43,16 @@ TEST_F(MockProcessManagerTest, ProcessTimeout)
     mpm->SetCommandResponse("/bin/sleep 3", outputString, 0, 3000);
     MonotonicClock clock;
     
-    Timespec start = clock.GetTime();
     boost::shared_ptr<ProcessFuture> ph = mpm->CreateProcess("/bin/sleep 3",
                                                              "./",
                                                              "sleepOutput.out");
+    Timespec start = clock.GetTime();
     ASSERT_NO_THROW(ph->GetResult());
     Timespec stop = clock.GetTime();
     ASSERT_TRUE(!ph->IsRunning());
     ASSERT_TRUE(ph->GetOutputString() == outputString);
-    ASSERT_TRUE((stop.AsMillisec() - start.AsMillisec()) > 3000);
+    hlog(HLOG_INFO, "time elapsed: %d", (stop.AsMillisec() - start.AsMillisec()));
+    ASSERT_TRUE((stop.AsMillisec() - start.AsMillisec()) >= 3000);
 }
 
 TEST_F(MockProcessManagerTest, CommandNotSet)
