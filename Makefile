@@ -13,7 +13,7 @@ PREFIX ?= $(INSTALL_ROOT)/usr/local
 HEADER_INSTALL_PATH = $(PREFIX)/include
 LIB_INSTALL_PATH = $(PREFIX)/lib
 
-SUBDIRS = dbc mockobjects
+SUBDIRS = dbc mockobjects unittest
 
 
 INCLUDE = $(DB_INCLUDE) $(XML_INCLUDE) $(BOOST_INCLUDE) $(SSH2_INCLUDE) -I. $(MYSQL_INCLUDE)
