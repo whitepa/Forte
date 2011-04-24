@@ -124,6 +124,19 @@ boost::property_tree::ptree& ServiceConfig::GetChildTree(
     }
 }
 
+void ServiceConfig::GetVectorKeys(
+    const char *key,
+    FStringVector &vec /*OUT*/)
+{
+    vec.clear();
+    boost::property_tree::ptree& childTree = GetChildTree(key);
+
+    foreach (const boost::property_tree::ptree::value_type &v, childTree)
+    {
+        vec.push_back(v.first);
+    }
+}
+
 void ServiceConfig::WriteToConfigFile(void)
 {
     WriteToConfigFile(mConfigFileName.c_str());

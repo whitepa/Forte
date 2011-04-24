@@ -8,6 +8,9 @@ namespace Forte
     class MockFileSystem : public FileSystem
     {
     public:
+        void SetStatFSResponse(const FString& path, struct statfs *st);
+        void ClearStatFSReponse(const FString& path);
+        void ClearStatFSResponseAll(void);
         void StatFS(const FString& path, struct statfs *st);
 
         Forte::FString FileGetContents(const Forte::FString& filename);
@@ -73,6 +76,7 @@ namespace Forte
         
     protected:
         StrStrMap mFiles;
+        std::map<FString, struct statfs> mStatFSResponseMap;
     };
 }
 

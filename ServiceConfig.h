@@ -81,6 +81,16 @@ namespace Forte
         void Display(void);
         void Clear();
 
+        /**
+         * GetVectorKeys will retrieve a vector of subkeys for a given key
+         * 
+         * @param key the config key which contains subtrees
+         * @param vec the output vector of the subkeys under key
+         */
+        void GetVectorKeys(
+            const char *key,
+            FStringVector &vec /*OUT*/);
+
         /** 
          * GetVectorSubKey will retrieve a vector of values from the configuration.
          * 
