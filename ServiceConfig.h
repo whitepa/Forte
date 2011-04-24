@@ -76,6 +76,8 @@ namespace Forte
         
         FString Get(const char *key);
         int GetInteger(const char *key);
+        boost::property_tree::ptree& GetChildTree(
+            const char *key);
         void Display(void);
         void Clear();
 
@@ -111,5 +113,6 @@ namespace Forte
         Mutex mMutex;
         boost::property_tree::ptree mPTree;
     };
+    typedef boost::shared_ptr<ServiceConfig> ServiceConfigPtr;
 };
 #endif

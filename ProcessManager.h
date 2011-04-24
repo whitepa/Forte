@@ -181,5 +181,6 @@ namespace Forte
 
         FString mProcmonPath;
     };
+    typedef boost::shared_ptr<ProcessManager> ProcessManagerPtr;
 };
 #endif

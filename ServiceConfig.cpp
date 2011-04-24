@@ -110,6 +110,20 @@ int ServiceConfig::GetInteger(const char *key)
     return mPTree.get<int>(key, 0);
 }
 
+boost::property_tree::ptree& ServiceConfig::GetChildTree(
+    const char *key)
+{
+    AutoUnlockMutex lock(mMutex);
+    try
+    {
+        return mPTree.get_child(key);
+    }    
+    catch (boost::property_tree::ptree_error &e)
+    {
+        boost::throw_exception(EServiceConfigNoKey(key));
+    }
+}
+
 void ServiceConfig::WriteToConfigFile(void)
 {
     WriteToConfigFile(mConfigFileName.c_str());
