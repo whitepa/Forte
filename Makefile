@@ -25,6 +25,7 @@ SRCS =	\
 	AdvisoryLock.cpp \
 	ClusterLock.cpp \
 	CheckedValue.cpp \
+	CheckedValueStore.cpp \
 	Clock.cpp \
 	Collector.cpp \
 	CollectorPollThread.cpp \
@@ -96,7 +97,7 @@ SRCS =	\
 	XMLBlob.cpp \
 	XMLDoc.cpp \
 	XMLNode.cpp \
-	XMLTextNode.cpp
+	XMLTextNode.cpp 
 
 HEADERS = \
 	AnyPtr.h \

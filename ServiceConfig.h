@@ -76,8 +76,30 @@ namespace Forte
         
         FString Get(const char *key);
         int GetInteger(const char *key);
-        boost::property_tree::ptree& GetChildTree(
-            const char *key);
+
+        /**
+         * Get() this is templated, and also throws an exception
+         * if the key does not exist
+         *
+         * @params key the key to find which is of type ptree::path_type
+         * @return the value of the key
+         * @throws EServiceConfigNoKey if key doesnot exist or error 
+         *         converting the value to ValueType
+         */
+        template <typename ValueType>
+        ValueType Get(const boost::property_tree::ptree::path_type &key)
+        {
+            AutoUnlockMutex lock(mMutex);
+            try
+            {
+                return mPTree.get<ValueType>(key);
+            }
+            catch (boost::property_tree::ptree_error &e)
+            {
+                boost::throw_exception(EServiceConfigNoKey());
+            }
+        }
+
         void Display(void);
         void Clear();
 

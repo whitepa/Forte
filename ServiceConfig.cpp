@@ -110,28 +110,13 @@ int ServiceConfig::GetInteger(const char *key)
     return mPTree.get<int>(key, 0);
 }
 
-boost::property_tree::ptree& ServiceConfig::GetChildTree(
-    const char *key)
-{
-    AutoUnlockMutex lock(mMutex);
-    try
-    {
-        return mPTree.get_child(key);
-    }    
-    catch (boost::property_tree::ptree_error &e)
-    {
-        boost::throw_exception(EServiceConfigNoKey(key));
-    }
-}
-
 void ServiceConfig::GetVectorKeys(
     const char *key,
     FStringVector &vec /*OUT*/)
 {
     vec.clear();
-    boost::property_tree::ptree& childTree = GetChildTree(key);
 
-    foreach (const boost::property_tree::ptree::value_type &v, childTree)
+    foreach (const boost::property_tree::ptree::value_type &v, mPTree.get_child(key))
     {
         vec.push_back(v.first);
     }
