@@ -174,6 +174,12 @@ void Forte::ProcessManager::startMonitor(
         //shared_ptr<ProcessManager> pm(mProcessManagerPtr.lock());
         ph->mManagementChannel = addPeer(parentfd);
         parentfd.Release();
+
+        // wait for process to deamonise 
+        // if we don't do this we will leave 
+        // behind zombie processes 
+        int child_status;
+        waitpid(-1, &child_status, WNOHANG);
     }
 }
 
