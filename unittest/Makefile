@@ -60,7 +60,8 @@ GSRCS = ActiveObjectUnitTest.cpp \
 	ProcessManagerUnitTest.cpp \
 	FStringUnitTest.cpp \
 	ExceptionUnitTest.cpp \
-	SCSIUtilUnitTest.cpp
+	SCSIUtilUnitTest.cpp \
+	CheckedValueStoreUnitTest.cpp 
 
 GPROGS = $(GSRCS:%.cpp=$(TARGETDIR)/%)
 BPROGS = $(BSRCS:%.cpp=$(TARGETDIR)/%)
@@ -162,6 +163,14 @@ $(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp
 	$(QUIET)$(CCC) SCSIUtilUnitTest.cpp \
 	-o $(TARGETDIR)/SCSIUtilUnitTest \
 	$(SCALE_SERVICE_CLIENT_LIBS)  \
+	$(INCLUDE) \
+	$(GTEST_LIB) \
+	$(LIBS)
+
+$(TARGETDIR)/CheckedValueStoreUnitTest: ../$(TARGETDIR)/CheckedValueStore.o CheckedValueStoreUnitTest.cpp
+	echo "Building $@..."
+	$(QUIET)$(CCC) CheckedValueStoreUnitTest.cpp \
+	-o $(TARGETDIR)/CheckedValueStoreUnitTest \
 	$(INCLUDE) \
 	$(GTEST_LIB) \
 	$(LIBS)

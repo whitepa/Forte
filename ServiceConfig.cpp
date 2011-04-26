@@ -90,6 +90,7 @@ void ServiceConfig::GetVectorSubKey(const char *key,     // nodes
 {
     FTRACE;
     vec.clear();
+    AutoUnlockMutex lock(mMutex);
     try
     {
         foreach(const boost::property_tree::ptree::value_type &v, mPTree.get_child(key))
@@ -116,6 +117,7 @@ void ServiceConfig::GetVectorKeys(
 {
     vec.clear();
 
+    AutoUnlockMutex lock(mMutex);
     foreach (const boost::property_tree::ptree::value_type &v, mPTree.get_child(key))
     {
         vec.push_back(v.first);
