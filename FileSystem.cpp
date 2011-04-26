@@ -383,14 +383,14 @@ void FileSystem::MakeDir(const FString& path, mode_t mode, bool make_parents)
 
 int FileSystem::ScanDir(const FString& path, std::vector<FString> &namelist)
 {
-    if (boostfs::exists(path))
+    if (boostfs::exists(path.c_str()))
     {
         namelist.clear();
         boostfs::directory_iterator end_itr; // default construction yields past-the-end
-        for (boostfs::directory_iterator itr(path);itr != end_itr; ++itr )
+        for (boostfs::directory_iterator itr(path.c_str());
+             itr != end_itr; ++itr )
         {
-
-            namelist.push_back(itr->path().filename());
+            namelist.push_back(itr->path().filename().string());
         }
 
     }
