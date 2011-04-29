@@ -54,22 +54,32 @@ void FileSystem::Touch(const FString& file)
 {
     AutoFD fd;
     struct timeval tv[2];
+    struct stat st;
 
-    if ((fd = ::open(file, O_WRONLY | O_CREAT, 0666)) == AutoFD::NONE)
-    {
-        SystemCallUtil::ThrowErrNoException(errno);
-    }
+    /*
+     * If the file doesn't exist, then create it using open  which 
+     * should automatically set ctime, mtime & atime to be the same.
+     * Otherwise, just update the mtime & atime via utimes()
+     */
+    if (stat(file, &st) < 0) {
+        if (errno != ENOENT) {
+	    SystemCallUtil::ThrowErrNoException(errno);
+	}
+	if ((fd = ::open(file, O_WRONLY | O_CREAT, 0666)) == AutoFD::NONE) {
+	    SystemCallUtil::ThrowErrNoException(errno);
+	}
+    } else {
+        time_t timeInSecondsSinceEpoch = time(NULL);
 
-    if (gettimeofday(&(tv[0]), NULL) == -1)
-    {
-        SystemCallUtil::ThrowErrNoException(errno);
-    }
+	tv[0].tv_sec = timeInSecondsSinceEpoch;
+	tv[0].tv_usec = 0;
 
-    memcpy(&(tv[1]), &(tv[0]), sizeof(tv[0]));
+	tv[1].tv_sec = timeInSecondsSinceEpoch;
+	tv[1].tv_usec = 0;
 
-    if (::futimes(fd, tv) == -1)
-    {
-        SystemCallUtil::ThrowErrNoException(errno);
+	if (::utimes(file, tv) == -1) {
+	    SystemCallUtil::ThrowErrNoException(errno);
+	}
     }
 }
 
