@@ -4,8 +4,8 @@ using namespace Forte;
 
 #define EVQ_MAX_DEPTH 65536
 
-EventQueue::EventQueue() :
-    mMode(QUEUE_MODE_BLOCKING),
+EventQueue::EventQueue(QueueMode mode) :
+    mMode(mode),
     mShutdown(false),
     mMaxDepth(EVQ_MAX_DEPTH),
     mEmptyCondition(mMutex),
@@ -13,8 +13,8 @@ EventQueue::EventQueue() :
 {
 }
 
-EventQueue::EventQueue(int maxdepth) :
-    mMode(QUEUE_MODE_BLOCKING),
+EventQueue::EventQueue(int maxdepth, QueueMode mode) :
+    mMode(mode),
     mShutdown(false),
     mMaxDepth((maxdepth <= EVQ_MAX_DEPTH) ? maxdepth : EVQ_MAX_DEPTH),
     mEmptyCondition(mMutex),
@@ -22,8 +22,8 @@ EventQueue::EventQueue(int maxdepth) :
 {
 }
 
-EventQueue::EventQueue(int maxdepth, ThreadCondition *notifier) :
-    mMode(QUEUE_MODE_BLOCKING),
+EventQueue::EventQueue(int maxdepth, ThreadCondition *notifier, QueueMode mode) :
+    mMode(mode),
     mShutdown(false),
     mMaxDepth((maxdepth <= EVQ_MAX_DEPTH) ? maxdepth : EVQ_MAX_DEPTH),
     mEmptyCondition(mMutex),

@@ -19,9 +19,16 @@ namespace Forte
     class EventQueue : public Object
     {
     public:
-        EventQueue();
-        EventQueue(int maxdepth);
-        EventQueue(int maxdepth, ThreadCondition *notifier);
+        enum QueueMode 
+        {
+            QUEUE_MODE_BLOCKING = 0,
+            QUEUE_MODE_DROP_OLDEST,
+            QUEUE_MODE_THROW
+        };
+
+        EventQueue(QueueMode mode = QUEUE_MODE_BLOCKING);
+        EventQueue(int maxdepth, QueueMode mode = QUEUE_MODE_BLOCKING);
+        EventQueue(int maxdepth, ThreadCondition *notifier, QueueMode mode = QUEUE_MODE_BLOCKING);
         virtual ~EventQueue();
 
         void Add(shared_ptr<Event> e);
@@ -30,7 +37,7 @@ namespace Forte
         inline bool Accepting(void) { return (!mShutdown && ((mMaxDepth.GetValue() > 0) ? true : false));}
         inline int Depth(void) {AutoUnlockMutex lock(mMutex); return mQueue.size();};
 
-        inline void SetMode(int mode) { mMode = mode; };
+        inline void SetMode(QueueMode mode) { mMode = mode; };
 
         /// shutdown prevents the queue from accepting any more events via Add().
         /// This operation is (currently) not reversible.
@@ -56,14 +63,8 @@ namespace Forte
         int mDeepThresh;
         int mLastDepth;
 
-        enum {
-            QUEUE_MODE_BLOCKING = 0,
-            QUEUE_MODE_DROP_OLDEST,
-            QUEUE_MODE_THROW
-        };
-
     protected:
-        int mMode;
+        QueueMode mMode;
         bool mShutdown;
         std::list<shared_ptr<Event> > mQueue;
         Semaphore mMaxDepth;
