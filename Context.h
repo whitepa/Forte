@@ -109,6 +109,12 @@ namespace Forte
          **/
         void Clear(void);
 
+        /**
+         * Merge() will merge all keys from the 'other' Context into
+         * this one.  Duplicate keys will be replaced with those from 'other'.
+         **/
+        void Merge(const Context &other);
+
     protected:
         mutable Forte::Mutex mLock;
         ObjectMap mObjectMap;

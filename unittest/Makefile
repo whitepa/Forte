@@ -49,7 +49,8 @@ BSRCS = ContextPredicateUnitTest.cpp \
 	StateMachineUnitTest2.cpp \
 	StateMachineUnitTest3.cpp \
 	StateMachineUnitTest4.cpp \
-	StateMachineUnitTest5.cpp
+	StateMachineUnitTest5.cpp \
+	StateMachineUnitTest6.cpp
 
 GSRCS = ActiveObjectUnitTest.cpp \
 	ClusterLockUnitTest.cpp \

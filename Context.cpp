@@ -97,3 +97,12 @@ void Forte::Context::Clear(void)
     }
 }
 
+void Forte::Context::Merge(const Context &other)
+{
+    AutoUnlockMutex lock(mLock);
+    AutoUnlockMutex otherLock(other.mLock);
+    foreach (const ObjectPair &pair, other.mObjectMap)
+    {
+        mObjectMap[pair.first] = pair.second;
+    }
+}
