@@ -17,6 +17,8 @@ SSHRunner::SSHRunner(
     mSocket (createSocketAndConnect(ipAddress, portNumber))
 {
     int err;
+    
+    hlog(HLOG_INFO, "Starting ssh session for %s:%d", ipAddress, portNumber);
 
     if (mSocket > 0)
     {
@@ -214,21 +216,16 @@ unsigned int SSHRunner::createSocketAndConnect(
     const char *ipAddress, int portNumber)
 {
     int sock = -1;
-    in_addr_t data;
-    data = inet_addr(ipAddress);
-    struct hostent* hp = gethostbyaddr(&data, 4, AF_INET);
-    if(!hp)
-    {
-        FString stmp;
-        stmp.Format("could not get hostbyname for %s", ipAddress);
-        hlog(HLOG_ERR, "%s (%i: %s)", stmp.c_str(), h_errno, 
-             hstrerror(h_errno));
-        throw ESocketError(stmp);
-    }
 
     struct sockaddr_in s;
-    s.sin_addr = *(struct in_addr *)hp->h_addr_list[0];
-    s.sin_family = hp->h_addrtype;
+    if (1 != inet_pton(AF_INET, ipAddress, &(s.sin_addr)))
+    {
+        FString stmp(FStringFC(), 
+                    "unable to get the in_addr for ip : %s", ipAddress);
+        hlog(HLOG_ERR, "%s", stmp.c_str());
+        throw ESocketError(stmp);
+    }
+    s.sin_family = AF_INET;
     s.sin_port = htons(portNumber);
     sock = socket(AF_INET, SOCK_STREAM, 0);
     if(sock < 0)
