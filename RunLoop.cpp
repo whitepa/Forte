@@ -85,7 +85,15 @@ void * Forte::RunLoop::run(void)
             // fire the timer in an unlocked scope
             {
                 AutoLockMutex unlock(mLock);
-                timer->Fire();
+                try
+                {
+                    timer->Fire();
+                }
+                catch (std::exception &e)
+                {
+                    hlog(HLOG_ERR, "exception in timer callback: %s",
+                         e.what());
+                }
             }
 
             if (timer->Repeats())
