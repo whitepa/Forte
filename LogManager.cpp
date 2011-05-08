@@ -626,6 +626,8 @@ int LogManager::GetSingleLevelFromString(const FString &str) const
     tmp.MakeUpper();
     if (tmp == "ALL")
         return HLOG_ALL;
+    else if (tmp == "NONE")
+        return HLOG_NONE;
     else if (tmp == "NODEBUG")
         return HLOG_NODEBUG;
     else if (tmp == "MOST")

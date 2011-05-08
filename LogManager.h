@@ -17,6 +17,7 @@
 #include <syslog.h>
 #include <stdarg.h>
 
+#define HLOG_NONE        0x00000000
 #define HLOG_TRACE       0x00000800
 #define HLOG_DEBUG4      0x00001000
 #define HLOG_DEBUG3      0x00002000
