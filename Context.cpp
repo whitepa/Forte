@@ -95,7 +95,7 @@ void Forte::Context::Merge(const Context &other)
 void Forte::Context::Dump(void)
 {
     Forte::AutoUnlockMutex lock(mLock);
-    hlog(HLOG_INFO, "Context contains %lu objects:", Size());
+    hlog(HLOG_DEBUG, "Context contains %lu objects:", Size());
     foreach (const ObjectPair &p, mObjectMap)
     {
         const FString &name(p.first);
