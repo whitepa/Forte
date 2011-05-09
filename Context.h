@@ -51,7 +51,7 @@ namespace Forte
     {
     public:
         Context();
-        Context(const Context &other);
+
         virtual ~Context();
 
         /**
@@ -114,6 +114,9 @@ namespace Forte
          * this one.  Duplicate keys will be replaced with those from 'other'.
          **/
         void Merge(const Context &other);
+
+        size_t Size(void) { return mObjectMap.size(); }
+        void Dump(void);
 
     protected:
         mutable Forte::Mutex mLock;
