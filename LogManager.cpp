@@ -295,8 +295,6 @@ void LogManager::EndLogging()
     sLogManager = NULL;
     AutoUnlockMutex lock(mLogMutex);
     std::vector<Logfile*>::iterator i;
-    for (i = mLogfiles.begin(); i != mLogfiles.end(); i++)
-        delete *i;
     mLogfiles.clear();
 }
 
