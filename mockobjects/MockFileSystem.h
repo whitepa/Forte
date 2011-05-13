@@ -78,6 +78,7 @@ namespace Forte
         StrStrMap mFiles;
         std::map<FString, struct statfs> mStatFSResponseMap;
     };
+    typedef boost::shared_ptr<MockFileSystem> MockFileSystemPtr;
 }
 
 #endif

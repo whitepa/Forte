@@ -13,6 +13,9 @@
     shared_ptr<type> name ## _Ptr = mContext.Get<type>(key);    \
     type &name(* name ## _Ptr)
 
+#define CGETPTR(key, type, name)                                \
+    shared_ptr<type> name = mContext.Get<type>(key); 
+
 #define CNEW(key, type, args...)                                \
     mContext.Set(key, shared_ptr<type>(new type( args )))
 
@@ -20,6 +23,10 @@
     shared_ptr<type> name ## _Ptr(new type( args ));    \
     mContext.Set(key, name ## _Ptr);                    \
     type &name(* name ## _Ptr)
+
+#define CGETNEWPTR(key, type, name, args...)                    \
+    shared_ptr<type> name(new type( args ));                    \
+    mContext.Set(key, name);                            
 
 #define CSET(key, type, obj)                    \
     mContext.Set(key, shared_ptr<type>( obj ))
@@ -65,14 +72,14 @@ namespace Forte
 
         /**
          * Get() retrieves a reference counted pointer to an object
-         * from the Context.  If the object does not exists, one can
+         * from the Context.  If the object does not exist, one can
          * be automatically created using an appropriate factory.
          **/
         ObjectPtr Get(const char *key) const;
 
         /**
          * Get() retrieves a reference counted pointer to a typed object
-         * from the Context.  If the object does not exists, one can
+         * from the Context.  If the object does not exist, one can
          * be automatically created using an appropriate factory.
          **/
         template <typename ValueType>
