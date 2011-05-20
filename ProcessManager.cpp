@@ -29,7 +29,7 @@ const int Forte::ProcessManager::MAX_RUNNING_PROCS = 128;
 const int Forte::ProcessManager::PDU_BUFFER_SIZE = 4096;
 
 Forte::ProcessManager::ProcessManager() :
-    mProcmonPath("/usr/sbin/procmon")
+    mProcmonPath("/usr/libexec/procmon")
 {
     char *procmon = getenv("FORTE_PROCMON");
     if (procmon)
@@ -145,7 +145,7 @@ void Forte::ProcessManager::startMonitor(
         // child
         // close all file descriptors, except the PDU channel
         while (close(parentfd) == -1 && errno == EINTR);
-        for (int n = 0; n < 1024; ++n)
+        for (int n = 3; n < 1024; ++n)
             if (n != childfd)
                 while (close(n) == -1 && errno == EINTR);
         // clear sig mask
@@ -154,7 +154,7 @@ void Forte::ProcessManager::startMonitor(
         pthread_sigmask(SIG_SETMASK, &set, NULL);
 
         // create a new process group / session
-        daemon(1, 0);
+        daemon(1, 0); // (redirects 0,1,2 to /dev/null)
         setsid();
         FString childfdStr(childfd);
         char **vargs = new char* [3];
