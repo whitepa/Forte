@@ -128,6 +128,28 @@ TEST_F(ProcessManagerTest, RunProcess)
     }
 }
 
+TEST_F(ProcessManagerTest, ReturnCodeHandling)
+{
+    try
+    {
+        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        boost::shared_ptr<ProcessFuture> ph = pm->CreateProcess("/bin/false");
+        ASSERT_THROW(ph->GetResult(), EProcessFutureTerminatedWithNonZeroStatus);
+        ASSERT_TRUE(!ph->IsRunning());
+        hlog(HLOG_INFO, "Termination Type: %d", ph->GetProcessTerminationType());
+        hlog(HLOG_INFO, "StatusCode: %d", ph->GetStatusCode());
+        hlog(HLOG_INFO, "OutputString: %s", ph->GetOutputString().c_str());
+        ASSERT_EQ(ph->GetProcessTerminationType(), Forte::ProcessFuture::ProcessExited);
+        ASSERT_EQ(ph->GetStatusCode(), 1);
+    }
+    catch (Exception &e)
+    {
+        hlog(HLOG_ERR, "exception: %s", e.what());
+        FAIL();
+    }
+}
+
+
 TEST_F(ProcessManagerTest, RunMultipleProcess)
 {
     try
