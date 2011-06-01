@@ -7,29 +7,13 @@ Forte::Context::Context()
     FTRACE;
 }
 
-Forte::Context::Context(const Context &other)
-{
-    AutoUnlockMutex lock(mLock);
-    AutoUnlockMutex otherLock(other.mLock);
-    mObjectMap = other.mObjectMap;
-}
-
 Forte::Context::~Context()
 {
     FTRACE;
     if (!mObjectMap.empty())
     {
         hlog(HLOG_DEBUG, "Objects Remain in Context at deletion:");
-        foreach (const ObjectPair &p, mObjectMap)
-        {
-            const FString &name(p.first);
-            const ObjectPtr &ptr(p.second);
-            int count = (int) ptr.use_count();
-            // count > 0 will always be at least 2 due to the foreach
-            // subtract one to account for that.
-            if (count > 0) --count; 
-            hlog(HLOG_DEBUG, "[%d] %s", count, name.c_str());
-        }
+        Dump();
     }
     ObjectMap tmp;
     {
@@ -97,3 +81,29 @@ void Forte::Context::Clear(void)
     }
 }
 
+void Forte::Context::Merge(const Context &other)
+{
+    FTRACE;
+    if (&other == this) return;
+    AutoUnlockMutex lock(mLock);
+    AutoUnlockMutex otherLock(other.mLock);
+    foreach (const ObjectPair &pair, other.mObjectMap)
+    {
+        mObjectMap[pair.first] = pair.second;
+    }
+}
+void Forte::Context::Dump(void)
+{
+    Forte::AutoUnlockMutex lock(mLock);
+    hlog(HLOG_DEBUG, "Context contains %lu objects:", Size());
+    foreach (const ObjectPair &p, mObjectMap)
+    {
+        const FString &name(p.first);
+        const ObjectPtr &ptr(p.second);
+        int count = (int) ptr.use_count();
+        // count > 0 will always be at least 2 due to the foreach
+        // subtract one to account for that.
+        if (count > 0) --count; 
+        hlog(HLOG_DEBUG, "[%d] %s", count, name.c_str());
+    }    
+}

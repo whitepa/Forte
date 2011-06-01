@@ -1,20 +1,39 @@
 #include "MockFileSystem.h"
 #include "FTrace.h"
+#include "SystemCallUtil.h"
 
 using namespace Forte;
 
+void MockFileSystem::SetStatFSResponse(const FString& path, struct statfs *st)
+{
+    mStatFSResponseMap[path] = *st;
+}
+
+void MockFileSystem::ClearStatFSReponse(const FString& path)
+{
+    mStatFSResponseMap.erase(path);
+}
+
+void MockFileSystem::ClearStatFSResponseAll(void)
+{
+    mStatFSResponseMap.clear();
+}
+
 void MockFileSystem::StatFS(const FString& path, struct statfs *st)
 {
-    //TODO: make this settable and gettable
     if (st == NULL)
     {
         return;
     }
 
-    st->f_blocks = 100;
-    st->f_bfree = 50;
-}
+    if (mStatFSResponseMap.find(path) == mStatFSResponseMap.end())
+    {
+        // could not find the path, so return a SystemError
+        SystemCallUtil::ThrowErrNoException(ENOENT);
+    }
 
+    *st = mStatFSResponseMap[path];
+}
 
 FString MockFileSystem::FileGetContents(const FString& filename)
 {
@@ -223,13 +242,6 @@ void MockFileSystem::AddFileToFileSystem(const FString& path, bool createPath)
 		}
 
 	}
-
-
-
-
-
-
-
 }
 
 

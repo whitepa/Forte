@@ -32,6 +32,13 @@ unsigned int DbRow::GetUInt(const DbResultRow& row, int index)
     return strtoul(row[index], NULL, 10);
 }
 
+long long DbRow::GetLLInt(const DbResultRow& row, int index)
+{
+    CheckRange(row, index);
+    if (row[index] == NULL) return 0;
+    return strtoll(row[index], NULL, 10);
+}
+
 unsigned long long DbRow::GetULLInt(const DbResultRow& row, int index)
 {
     CheckRange(row, index);

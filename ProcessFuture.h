@@ -1,8 +1,9 @@
-#ifndef __Process_h
-#define __Process_h
+#ifndef __ProcessFuture_h
+#define __ProcessFuture_h
 
 #include "Types.h"
 #include "Object.h"
+#include "Future.h"
 #include "ThreadCondition.h"
 #include "ProcessManager.h"
 #include <boost/function.hpp>
@@ -14,61 +15,66 @@
 namespace Forte
 {
 
-    EXCEPTION_CLASS(EProcess);
-    EXCEPTION_SUBCLASS2(EProcess, EProcessUnableToOpenInputFile,
+    EXCEPTION_CLASS(EProcessFuture);
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureUnableToOpenInputFile,
                         "Unable to open the input file");
-    EXCEPTION_SUBCLASS2(EProcess, EProcessUnableToCloseInputFile,
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureUnableToCloseInputFile,
                         "Unable to close the input file");
-    EXCEPTION_SUBCLASS2(EProcess, EProcessUnableToOpenOutputFile,
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureUnableToOpenOutputFile,
                         "Unable to open the output file");
-    EXCEPTION_SUBCLASS2(EProcess, EProcessUnableToCloseOutputFile,
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureUnableToCloseOutputFile,
                         "Unable to close the output file");
-    EXCEPTION_SUBCLASS2(EProcess, EProcessUnableToCWD,
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureUnableToCWD,
                         "Unable to change to working directory");
-    EXCEPTION_SUBCLASS2(EProcess, EProcessUnableToFork,
-                        "Unable to Fork Child Process");
-    EXCEPTION_SUBCLASS2(EProcess, EProcessUnableToExec,
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureUnableToFork,
+                        "Unable to Fork Child ProcessFuture");
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureUnableToExec,
                         "Unable to Exec Child Process");
-    EXCEPTION_SUBCLASS2(EProcess, EProcessUnableToCreateSocket,
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureUnableToCreateSocket,
                         "Unable to create a socketpair");
-    EXCEPTION_SUBCLASS2(EProcess, EProcessNotRunning,
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureNotRunning,
                         "Wait called on a non-running process");
-    EXCEPTION_SUBCLASS2(EProcess, EProcessRunning,
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureRunning,
                         "method called on a running process");
-    EXCEPTION_SUBCLASS2(EProcess, EProcessStarted,
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureStarted,
                         "method called on a process that has already started");
-    EXCEPTION_SUBCLASS2(EProcess, EProcessNotStarted,
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureNotStarted,
                         "method called on a process that has not been started");
-    EXCEPTION_SUBCLASS2(EProcess, EProcessNotFinished,
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureNotFinished,
                         "method called on a process that is not finished yet");
-    EXCEPTION_SUBCLASS2(EProcess, EProcessNoExit,
-                        "Process did not exit");
-    EXCEPTION_SUBCLASS2(EProcess, EProcessAbandoned,
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureNoExit,
+                        "ProcessFuture did not exit");
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureAbandoned,
                         "Process has been abandoned");
-    EXCEPTION_SUBCLASS2(EProcess, EProcessUnableToDuplicateInputFD,
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureUnableToDuplicateInputFD,
                         "Unable to duplicate Input File Descriptor");
-    EXCEPTION_SUBCLASS2(EProcess, EProcessUnableToDuplicateOutputFD,
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureUnableToDuplicateOutputFD,
                         "Unable to duplicate Output File Descriptor");
-    EXCEPTION_SUBCLASS2(EProcess, EProcessUnableToDuplicateErrorFD,
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureUnableToDuplicateErrorFD,
                         "Unable to duplicate Error File Descriptor");
-    EXCEPTION_SUBCLASS2(EProcess, EProcessSignalFailed,
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureSignalFailed,
                         "Unable to signal process");
-    EXCEPTION_SUBCLASS2(EProcess, EProcessHandleInvalid,
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureHandleInvalid,
                         "Process handle is invalid");
-    EXCEPTION_SUBCLASS2(EProcess, EProcessManagementProcFailed,
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureManagementProcFailed,
                         "An error occurred in the management process");
-    EXCEPTION_SUBCLASS2(EProcess, EProcessUnknownState,
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureUnknownState,
                         "Process is in unknown state");
-    
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureTerminatedWithNonZeroStatus,
+                        "The process terminated with a non-zero status code");
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureKilled,
+                        "The process was killed");
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureTerminatedDueToUnknownReason,
+                        "The process terminated due to unknown reason");
 
     /**
      * A handle to a process managed by ProcessManager
      */
-    class Process : public Object 
+    class ProcessFuture : public Future<void>
     {
         friend class Forte::ProcessManager;
     public:
-        typedef boost::function<void (boost::shared_ptr<Process>)> ProcessCompleteCallback;
+        typedef boost::function<void (boost::shared_ptr<ProcessFuture>)> ProcessCompleteCallback;
         
         enum ProcessTerminationType
         {
@@ -81,14 +87,12 @@ namespace Forte
 
     protected:
         /**
-         * Construct a Process object. Instantiating the object does
-         * not automatically cause the command to run. You must call
-         * Run to kick off the execution.  ProcessManager (a friend of
-         * Process) is the only class which should instantiate a
-         * Process.
+         * Construct a ProcessFuture object. Instantiating the object does
+         * not automatically cause the command to run. ProcessManager (a friend of
+         * ProcessFuture) is the only class which should instantiate a
+         * ProcessFuture.
          *
          * @param mgr The process manager which will be managing this process.
-         * @param procmon Path to the procmon executable.
          * @param command The command you want to run
          * @param processCompleteCallback The callback to call when the process has completed
          * @param currentWorkingDirectory The directory that should be used as the current working
@@ -96,8 +100,7 @@ namespace Forte
          * @param environment a map of the environment to apply to the command
          * @param inputFilename name of the file to use for input.
          */
-        Process(const boost::shared_ptr<Forte::ProcessManager> &mgr,
-                const FString &procmon,
+        ProcessFuture(const boost::shared_ptr<Forte::ProcessManager> &mgr,
                 const FString &command,
                 const FString &currentWorkingDirectory = "/",
                 const FString &outputFilename = "/dev/null", 
@@ -106,9 +109,9 @@ namespace Forte
 
     public:
         /**
-         * destructor for a Process.
+         * destructor for a ProcessFuture.
          */
-        virtual ~Process();
+        virtual ~ProcessFuture();
 
         /** 
          * Get a shared pointer to the ProcessManager for this handle.
@@ -122,7 +125,7 @@ namespace Forte
          * set the callback function that should be executed when the
          * process is complete.
          *
-         * @throw EProcessStarted
+         * @throw EProcessFutureStarted
          *
          * @param processCompleteCallback a ProcessCompleteCallback function object
          */
@@ -141,7 +144,7 @@ namespace Forte
          * directory the child process should use. This can only be
          * called for Processs that have not already been run.
          *
-         * @throw EProcessStarted
+         * @throw EProcessFutureStarted
          *
          * @param cdw string containing the directory to use as the
          * current working directory
@@ -152,7 +155,7 @@ namespace Forte
          * set the enironment for the child process to use. This can only be called for
          * Processs that have not already been run.
          *
-         * @throw EProcessStarted
+         * @throw EProcessFutureStarted
          *
          * @param string-string map containing the environment variables to set
          */
@@ -162,7 +165,7 @@ namespace Forte
          * SetInputFilename() sets the input file to use. Can only be
          * called on a process not yet run.
          *
-         * @throw EProcessStarted
+         * @throw EProcessFutureStarted
          *
          * @param string containing the path to the input file to use
          */
@@ -173,39 +176,19 @@ namespace Forte
          * stdout and stderr are redirected here.  Can only be called
          * on a process not yet run.
          *
-         * @throw EProcessStarted
+         * @throw EProcessFutureStarted
          *
          * @param string containing the path to the output file to use
          */
         void SetOutputFilename(const FString &outfile);
-        
-        /**
-         * Run() kicks off the child process by forking and execing
-         * the command-line provided at construction.
-         *
-         * @throw EProcessStarted
-         * @throw EProcessUnableToOpenInputFile
-         * @throw EProcessUnableToOpenOutputFile
-         * @throw EProcessUnableToFork
-         * @throw EProcessUnableToDuplicateInputFD
-         * @throw EProcessUnableToDuplicateOutputFD
-         * @throw EProcessUnableToDuplicateErrorFD
-         * @throw EProcessExecvFailed
-         * @throw EProcessUnableToCloseInputFile
-         * @throw EProcessUnableToCloseOutputFile
-         *
-         * @return pid_t with the process ID of the child process
-         */
-        pid_t Run();
 
         /**
-         * Wait() block until the process has finished, or the process is abandoned.
+         * GetResult() block until the process has finished, or the process is abandoned.
          *
-         * @throw EProcessNotRunning
+         * @throw EProcessFutureNotRunning, or any other exception if status code is non-zero
          *
-         * @return unsigned int holding the exit value from the child process
          */
-        unsigned int Wait();
+        void GetResult();
 
 
         /**
@@ -213,18 +196,9 @@ namespace Forte
          *
          * @param signum signal to send
          *
-         * @throw EProcessNotRunning
+         * @throw EProcessFutureNotRunning
          */
         void Signal(int signum);
-
-        /**
-         * Abandon() tells the ProcessManager to stop monitoring this
-         * Process. The Process handle will no longer be valid
-         * following this call.
-         *
-         * @throw EProcessNotRunning
-         */
-        void Abandon();
 
         /**
          * IsRunning() returns whether the process is currently running.
@@ -245,7 +219,7 @@ namespace Forte
          * process.  If the process was terminated abnormally via
          * signal, this is the signal number.
          *
-         * @throw EProcessNotFinished
+         * @throw EProcessFutureNotFinished
          *
          * @return unisgned int holding the child status code
          */
@@ -260,7 +234,7 @@ namespace Forte
          * GetProcessTerminationType() will throw an exception if it is called before 
          * the child process is finished.
          *
-         * @throw EProcessNotFinished
+         * @throw EProcessFutureNotFinished
          *
          * @return ProcessTerminationType
          */
@@ -272,39 +246,61 @@ namespace Forte
          * want to be careful with this one. If you suspect the output might be large don't
          * use this function. Instead, directly access the output file yourself.
          *
-         * @throw EProcessNotFinished
+         * @throw EProcessFutureNotFinished
          *
          * @return string containing the output of the child process.
          */
         FString GetOutputString();
+
+        /**
+         * Cancel() sends signal 15 to the running process.
+         * 
+         * @throw EProcessFutureNotRunning
+         */
+        virtual void Cancel();
+
+        /**
+         * GetMonitorPID() returns the pid for the monitor
+         *
+         * @return the pid of the monitor process
+         */
+        pid_t GetMonitorPID() { return mMonitorPid; }
+
+        void SetManagementChannel(boost::shared_ptr<PDUPeer> managementChannel)
+        {
+            mManagementChannel = managementChannel;
+        }
+
+        FString GetCommand() { return mCommand; }
                 
     protected:
-        /** 
-         * startMonitor is called by the ProcessManager after the
-         * Process object is created.  A child process will be forked,
-         * and an open socket will be established and linked via
-         * PDUPeer objects.
-         * 
-         */
-        void startMonitor(void);
 
         /**
-         * SetIsRunning() is used by the ProcessManager to mark this Process as finished
+         * run() kicks off the child process by forking and execing
+         * the command-line provided at construction.
          *
-         * @param running is the child process still running
+         * @throw EProcessFutureStarted
+         * @throw EProcessFutureUnableToOpenInputFile
+         * @throw EProcessFutureUnableToOpenOutputFile
+         * @throw EProcessFutureUnableToFork
+         * @throw EProcessFutureUnableToDuplicateInputFD
+         * @throw EProcessFutureUnableToDuplicateOutputFD
+         * @throw EProcessFutureUnableToDuplicateErrorFD
+         * @throw EProcessFutureExecvFailed
+         * @throw EProcessFutureUnableToCloseInputFile
+         * @throw EProcessFutureUnableToCloseOutputFile
+         *
+         * @return pid_t with the process ID of the child process
          */
-        void setIsRunning(bool running);
-  
-        /**
-         * NotifyWaiters() broadcasts for anyone waiting on the process to finish
-         */
-        void notifyWaiters();
+        void run();
 
         /**
-         * SetStatusCode() is used by the ProcessManager to set the
-         * termination status code from the child process
+         * abandon() tells the ProcessFutureManager to stop monitoring this
+         * Process. The ProcessFuture handle will no longer be valid
+         * following this call.
+         *
          */
-        void setStatusCode(unsigned int code) { mStatusCode = code; }
+        void abandon();
 
         /** 
          * Set the internal state of the process handle.  This will
@@ -356,7 +352,7 @@ namespace Forte
          */
         int getManagementFD(void) {
             if (!mManagementChannel)
-                throw EProcess(); // \TODO more specific
+                throw EProcessFuture(); // \TODO more specific
             return mManagementChannel->GetFD();
         }
 
@@ -381,9 +377,8 @@ namespace Forte
     private:
         boost::weak_ptr<ProcessManager> mProcessManagerPtr;
 
-        FString mProcmonPath;
-
         boost::shared_ptr<PDUPeer> mManagementChannel;
+        
 
         FString mCommand;
         ProcessCompleteCallback mProcessCompleteCallback;

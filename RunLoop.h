@@ -29,7 +29,7 @@ namespace Forte
          * 
          * @param timer
          */
-        void AddTimer(shared_ptr<Timer> &timer);
+        void AddTimer(const shared_ptr<Timer> &timer);
 
         /**
          * IsEmpty() checks to see if there is anything scheduled to run
@@ -44,8 +44,8 @@ namespace Forte
         class RunLoopScheduleItem
         {
         public:
-            RunLoopScheduleItem(shared_ptr<Timer> &timer,
-                                Timespec absolute) :
+            RunLoopScheduleItem(const shared_ptr<Timer> &timer,
+                                const Timespec &absolute) :
                 mTimer(timer), mAbsolute(absolute) {}
             bool operator < (const RunLoopScheduleItem &other) const { 
                 return mAbsolute < other.mAbsolute;

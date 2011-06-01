@@ -291,7 +291,8 @@ void Forte::ProcessMonitor::startProcess(void)
     {
         // child
         sigset_t set;
-        char *argv[ARG_MAX];
+        char *argv[128]; // @TODO - don't hardcode a max # of args
+	// @TODO - guarantee # of bytes of args and environment is less than ARG_MAX
 
         // we need to split the command up
 
@@ -306,6 +307,7 @@ void Forte::ProcessMonitor::startProcess(void)
             // ugh - I hate this cast here, but as this process
             // is about to be blown away, it is harmless, and
             // much simpler than trying to avoid it
+	    // @TODO - fix this
             argv[i] = const_cast<char*>(strings[i].c_str());
         }
         argv[num_args] = 0;
@@ -384,7 +386,7 @@ void Forte::ProcessMonitor::signalProcess(int signal)
          mState != STATE_STOPPED) &&
         mPID != 0 &&
         kill(mPID, signal) == -1)
-        throw EProcessSignalFailed();
+        throw EProcessFutureSignalFailed();
 }
 
 Forte::FString Forte::ProcessMonitor::shellEscape(const FString& arg) 

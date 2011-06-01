@@ -295,8 +295,6 @@ void LogManager::EndLogging()
     sLogManager = NULL;
     AutoUnlockMutex lock(mLogMutex);
     std::vector<Logfile*>::iterator i;
-    for (i = mLogfiles.begin(); i != mLogfiles.end(); i++)
-        delete *i;
     mLogfiles.clear();
 }
 
@@ -609,4 +607,33 @@ FString LogManager::LogMaskStr(int mask)
         }
     }
     return FString::Join(levels, "|");
+}
+int LogManager::ComputeLogMaskFromString(const FString &str) const
+{
+    int result = 0;
+    std::vector<FString> levels;
+    str.Explode("|", levels, true);
+    foreach(const FString &level, levels)
+        result |= GetSingleLevelFromString(level);
+    return result;
+}
+
+int LogManager::GetSingleLevelFromString(const FString &str) const
+{
+    FString tmp(str);
+    tmp.MakeUpper();
+    if (tmp == "ALL")
+        return HLOG_ALL;
+    else if (tmp == "NONE")
+        return HLOG_NONE;
+    else if (tmp == "NODEBUG")
+        return HLOG_NODEBUG;
+    else if (tmp == "MOST")
+        return HLOG_ALL && ~HLOG_DEBUG4;
+    for (int i = 0; i < 32; i++)
+    {
+        if (!str.Compare(levelstr[i]))
+            return 1 << i;
+    }
+    throw ELogLevelStringUnknown(str);
 }

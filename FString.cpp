@@ -50,6 +50,17 @@ FString::FString(const std::set<unsigned int> &intset)
         first = false;
     }
 }
+FString::FString(const std::set<std::string> &strset)
+{
+    bool first = true;
+    std::set<std::string>::const_iterator i;
+    for (i = strset.begin(); i != strset.end(); ++i)
+    {
+        if (!first) append(",");
+        append(FString(*i));
+        first = false;
+    }
+}
 FString::FString(const std::vector<int> &intvec)
 {
     bool first = true;

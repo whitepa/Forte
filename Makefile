@@ -13,17 +13,19 @@ PREFIX ?= $(INSTALL_ROOT)/usr/local
 HEADER_INSTALL_PATH = $(PREFIX)/include
 LIB_INSTALL_PATH = $(PREFIX)/lib
 
-SUBDIRS = dbc
+SUBDIRS = dbc mockobjects unittest
 
 
 INCLUDE = $(DB_INCLUDE) $(XML_INCLUDE) $(BOOST_INCLUDE) $(SSH2_INCLUDE) -I. $(MYSQL_INCLUDE)
 
 CCARGS += -Wall -DFORTE_FUNCTION_TRACING
 SRCS =	\
+	ActiveObjectThread.cpp \
 	Base64.cpp \
 	AdvisoryLock.cpp \
 	ClusterLock.cpp \
 	CheckedValue.cpp \
+	CheckedValueStore.cpp \
 	Clock.cpp \
 	Collector.cpp \
 	CollectorPollThread.cpp \
@@ -54,7 +56,6 @@ SRCS =	\
 	FString.cpp \
 	FTime.cpp \
 	FTrace.cpp \
-	GUID.cpp \
 	GUIDGenerator.cpp \
 	LogManager.cpp \
 	LogTimer.cpp \
@@ -70,7 +71,7 @@ SRCS =	\
 	PosixTimer.cpp \
 	ProcFileSystem.cpp \
 	ProcRunner.cpp \
-	Process.cpp \
+	ProcessFuture.cpp \
 	ProcessManager.cpp \
 	Random.cpp \
 	RandomGenerator.cpp \
@@ -96,7 +97,7 @@ SRCS =	\
 	XMLBlob.cpp \
 	XMLDoc.cpp \
 	XMLNode.cpp \
-	XMLTextNode.cpp
+	XMLTextNode.cpp 
 
 HEADERS = \
 	AnyPtr.h \
@@ -133,7 +134,6 @@ HEADERS = \
 	FString.h \
 	FTime.h \
 	FTrace.h \
-	GUID.h \
 	GUIDGenerator.h \
 	LogManager.h \
 	LogTimer.h \

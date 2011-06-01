@@ -69,7 +69,8 @@ namespace Forte
         Semaphore mMaxDepth;
         Mutex mMutex;
         ThreadCondition mEmptyCondition;
-        ThreadCondition *mNotify;
+        ThreadCondition *mNotify; // @TODO this is broken, we would
+                                  // need the associated mutex.
     };
 };
 #endif

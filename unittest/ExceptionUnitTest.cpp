@@ -32,6 +32,9 @@ public:
     void throwForteException(const FString& description) {
         throw Exception(description);
     }
+    void boostThrowForteException(const FString& description) {
+        boost::throw_exception(Exception(description));
+    }
 };
 
 TEST_F(ExceptionTest, StdExceptionWhatIsOverriden)
@@ -40,7 +43,7 @@ TEST_F(ExceptionTest, StdExceptionWhatIsOverriden)
 
     try
     {
-        throw Exception("test");
+        boost::throw_exception(Exception("test"));
     }
     catch (Exception &e)
     {
@@ -55,7 +58,12 @@ TEST_F(ExceptionTest, ForteExceptionIsAStdException)
     ASSERT_THROW(d.throwForteException("test"), exception);
 }
 
-
+TEST_F(ExceptionTest, ForteExThrownByBoostIsAStdException)
+{
+    FTRACE;
+    Dummy d;
+    ASSERT_THROW(d.boostThrowForteException("test"), exception);
+}
 
 EXCEPTION_CLASS(EExceptionUnitTest);
 EXCEPTION_SUBCLASS(EExceptionUnitTest, EExceptionUnitTestSubClass);
@@ -162,4 +170,3 @@ TEST_F(ExceptionTest, ClassMacroTestSub2)
         ASSERT_STREQ(e.what(), "EExceptionUnitTestSubClass2 Description: Some text 10");
     }
 }
-

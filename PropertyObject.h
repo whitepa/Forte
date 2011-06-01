@@ -17,7 +17,15 @@ namespace Forte
     public:
         PropertyObject() {}
         virtual ~PropertyObject() {}
-        
+
+        PropertyObject(const PropertyObject &other) {
+            *this = other;
+        };
+        const PropertyObject & operator= (const PropertyObject &rhs) {
+            AutoUnlockMutex lock(rhs.mPropertyLock);
+            mProperties = rhs.mProperties;
+            return *this;
+        };
         void SetProperty(const FString &key, const FString &value) {
             AutoUnlockMutex lock(mPropertyLock);
             mProperties[key] = value;
@@ -30,7 +38,7 @@ namespace Forte
             return i->second;
         };
     private:
-        Mutex mPropertyLock;
+        mutable Mutex mPropertyLock;
         StrStrMap mProperties;
     };
 }

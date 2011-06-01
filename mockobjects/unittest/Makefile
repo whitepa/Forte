@@ -27,7 +27,7 @@ COMMON_LIBS = \
 	$(BOOST_FS_LIB) \
 	-lpthread -lrt
 
-PROGS=$(TARGETDIR)/MockFileSystemUnitTest \
+PROGS=$(TARGETDIR)/MockFileSystemUnitTest $(TARGETDIR)/MockProcessManagerUnitTest\
 
 #	$(TARGETDIR)/TestRunInstanceUnitTest \
 
@@ -47,6 +47,16 @@ $(TARGETDIR)/MockFileSystemUnitTest: ../$(TARGETDIR)/MockFileSystem.o MockFileSy
 	$(CCC) MockFileSystemUnitTest.cpp \
 	-o $(TARGETDIR)/MockFileSystemUnitTest \
 	../$(TARGETDIR)/MockFileSystem.o \
+	$(COMMON_INCLUDE) \
+	$(COMMON_LIBS) \
+	$(FORTE_MOCK_INCLUDE) \
+	$(FORTE_MOCK_LIBS) \
+
+$(TARGETDIR)/MockProcessManagerUnitTest: ../$(TARGETDIR)/MockProcessManager.o MockProcessManagerUnitTest.cpp
+	echo "Building $@..."
+	$(CCC) MockProcessManagerUnitTest.cpp \
+	-o $(TARGETDIR)/MockProcessManagerUnitTest \
+	../$(TARGETDIR)/MockProcessManager.o \
 	$(COMMON_INCLUDE) \
 	$(COMMON_LIBS) \
 	$(FORTE_MOCK_INCLUDE) \

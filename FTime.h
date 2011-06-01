@@ -1,9 +1,8 @@
 #ifndef __Time_h_
 #define __Time_h_
 
-#ifndef FORTE_NO_BOOST
-#ifdef FORTE_WITH_DATETIME
-
+#include "Exception.h"
+#include "AutoMutex.h"
 #include "boost/date_time/local_time/local_time.hpp"
 #include "boost/date_time/gregorian/gregorian.hpp"
 
@@ -13,38 +12,39 @@ using namespace boost::posix_time;
 
 #define TO_TIME_T(s, tz) FTime::f_to_time_t(__FILE__, __LINE__, # s, s, tz)
 
-EXCEPTION_SUBCLASS(Exception, ForteFTimeException);
+EXCEPTION_CLASS(EFTime);
 
-class FTime {
-public:
-    static void Init(const char *timezoneDatafile);
+namespace Forte
+{
+    class FTime : public Forte::Object
+    {
+    public:
+        FTime(const char *timezoneDatafile);
+        virtual ~FTime() {};
 
-    // time_t <==> string conversions
-    static time_t FToTimeT(const char *filename, int line, const char *arg, const ptime &pt, const char *tz);
-    static time_t FToTimeT(const char *filename, int line, const char *arg, const ptime &pt, const std::string &tz);
-    static time_t FToTimeT(const char *filename, int line, const char *arg, const std::string &timeStr, const char *tz);
-    static time_t FToTimeT(const char *filename, int line, const char *arg, const std::string &timeStr, const std::string &tz);
+        // time_t <==> string conversions
+        time_t f_to_time_t(const char *filename, int line, const char *arg, const ptime &pt, const char *tz);
+        time_t f_to_time_t(const char *filename, int line, const char *arg, const ptime &pt, const std::string &tz);
+        time_t f_to_time_t(const char *filename, int line, const char *arg, const std::string &timeStr, const char *tz);
+        time_t f_to_time_t(const char *filename, int line, const char *arg, const std::string &timeStr, const std::string &tz);
 
-    /// Convert a time to a string representation.
-    ///
-    static std::string to_str(const ptime &pt, const std::string &tz, const char *format = NULL);
-    static std::string to_str(const time_t t, const std::string &tz, const char *format = NULL);
-    static std::string to_str(const ptime &pt, const char *tz, const char *format = NULL);
-    static std::string to_str(const time_t t, const char *tz, const char *format = NULL);
+        /// Convert a time to a string representation.
+        ///
+        std::string ToStr(const ptime &pt, const std::string &tz, const char *format = NULL);
+        std::string ToStr(const time_t t, const std::string &tz, const char *format = NULL);
+        std::string ToStr(const ptime &pt, const char *tz, const char *format = NULL);
+        std::string ToStr(const time_t t, const char *tz, const char *format = NULL);
 
-    // replacement for boost's broken FromTimeT()
-    static ptime FromTimeT(time_t t, const char *tz);
+        // replacement for boost's broken FromTimeT()
+        ptime FromTimeT(time_t t, const char *tz);
 
-    // get the day
-    static time_t Day(time_t t, const char *tz);
-    static time_t Day(const ptime pt, const char *tz);
-protected:
-    static Mutex sLock;
-    static tz_database sTimezoneDb;
-    static bool sInitialized;
+        // get the day
+        time_t Day(time_t t, const char *tz);
+        time_t Day(const ptime pt, const char *tz);
+    protected:
+        Forte::Mutex mLock;
+        tz_database mTimezoneDb;
+    };
 };
-
-#endif // FORTE_WITH_DATETIME
-#endif // FORTE_NO_BOOST
 
 #endif // __Time_h_

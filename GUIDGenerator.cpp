@@ -12,9 +12,10 @@ Forte::GUIDGenerator::GUIDGenerator() :
 {
 }
 
-FString & Forte::GUIDGenerator::GenerateGUID(FString &out, bool pathSafe)
+FString & Forte::GUIDGenerator::GenerateGUID(FString &out)
 {
     // generate a GUID
+    AutoUnlockMutex lock(mLock);
     boost::uuids::uuid u = mUUIDGen();
     std::stringstream ss;
     ss << u;

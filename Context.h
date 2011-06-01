@@ -13,10 +13,23 @@
     shared_ptr<type> name ## _Ptr = mContext.Get<type>(key);    \
     type &name(* name ## _Ptr)
 
-//#define CGET_TMP(key, type) mContext.Get<type>(key)
+#define CGETPTR(key, type, name)                                \
+    shared_ptr<type> name = mContext.Get<type>(key); 
 
-#define CSET(key, type, args...)                                \
+#define CNEW(key, type, args...)                                \
     mContext.Set(key, shared_ptr<type>(new type( args )))
+
+#define CGETNEW(key, type, name, args...)               \
+    shared_ptr<type> name ## _Ptr(new type( args ));    \
+    mContext.Set(key, name ## _Ptr);                    \
+    type &name(* name ## _Ptr)
+
+#define CGETNEWPTR(key, type, name, args...)                    \
+    shared_ptr<type> name(new type( args ));                    \
+    mContext.Set(key, name);                            
+
+#define CSET(key, type, obj)                    \
+    mContext.Set(key, shared_ptr<type>( obj ))
 
 namespace Forte
 {
@@ -45,7 +58,7 @@ namespace Forte
     {
     public:
         Context();
-        Context(const Context &other);
+
         virtual ~Context();
 
         /**
@@ -55,18 +68,18 @@ namespace Forte
          * given key will no longer reference the orginal object, but
          * instead a separate local instance.
          **/
-        void Detach(const char *key) { throw EUnimplemented(); }
+        void Detach(const char *key) { throw_exception(EUnimplemented()); }
 
         /**
          * Get() retrieves a reference counted pointer to an object
-         * from the Context.  If the object does not exists, one can
+         * from the Context.  If the object does not exist, one can
          * be automatically created using an appropriate factory.
          **/
         ObjectPtr Get(const char *key) const;
 
         /**
          * Get() retrieves a reference counted pointer to a typed object
-         * from the Context.  If the object does not exists, one can
+         * from the Context.  If the object does not exist, one can
          * be automatically created using an appropriate factory.
          **/
         template <typename ValueType>
@@ -74,11 +87,11 @@ namespace Forte
             ObjectMap::const_iterator i;
             Forte::AutoUnlockMutex lock(mLock);
             if ((i = mObjectMap.find(key)) == mObjectMap.end())
-                throw EInvalidKey(key);
+                throw_exception(EInvalidKey(key));
             boost::shared_ptr<ValueType> ptr(
                 boost::dynamic_pointer_cast<ValueType>((*i).second));
             if (!ptr)
-                throw EContextTypeMismatch(); // TODO: include types in error message
+                throw_exception(EContextTypeMismatch()); // TODO: include types in error message
             return ptr;
         }
 
@@ -102,6 +115,15 @@ namespace Forte
          * Clear() will remove all references from the Context.
          **/
         void Clear(void);
+
+        /**
+         * Merge() will merge all keys from the 'other' Context into
+         * this one.  Duplicate keys will be replaced with those from 'other'.
+         **/
+        void Merge(const Context &other);
+
+        size_t Size(void) { return mObjectMap.size(); }
+        void Dump(void);
 
     protected:
         mutable Forte::Mutex mLock;

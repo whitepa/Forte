@@ -67,6 +67,18 @@ namespace Forte
 
         unsigned int GetThreadID(void) { return mThreadID; }
 
+        /**
+         * InterruptibleSleep() is a static version of the same
+         * protected interruptibleSleep() functionality, with the
+         * exception that this version may be called from any type of
+         * object in any thread.  If called from a Forte::Thread, this
+         * will do a full interruptible sleep on that thread.  If
+         * called from any other thread, EUnknownThread will be
+         * thrown.
+         */
+        static void InterruptibleSleep(const struct timespec &interval,
+                                       bool throwOnShutdown = true);
+
         FString mThreadName;
 
     protected:
@@ -82,6 +94,8 @@ namespace Forte
          * and will block until the thread has exited.
          */
         void deleting(void);
+
+        void setThreadName(const FString &name) { mThreadName = name; }
 
         virtual void *run(void) = 0;
 

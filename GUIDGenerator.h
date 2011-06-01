@@ -5,6 +5,7 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include "AutoMutex.h"
 #include "FString.h"
 #include "RandomGenerator.h"
 
@@ -14,10 +15,12 @@ namespace Forte
     {
     public:
         GUIDGenerator();
+        virtual ~GUIDGenerator() {};
 
-        FString & GenerateGUID(FString &out, bool pathSafe = false);
+        FString & GenerateGUID(FString &out);
 
     private:
+        Mutex mLock;
         RandomGenerator mRG;
         // we override the default basic_random_generator with a
         // mt19937 random generator to avoid valgrind errors.

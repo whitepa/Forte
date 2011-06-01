@@ -5,6 +5,10 @@
 # To add a new test, create a new .cpp file in this directory.  It
 # will be compiled as a standalone executable.
 
+# TODO: This makefile does not appear to handle dependencies
+# correctly.  If library headers change, it does not recompile the
+# individual tests.
+
 BUILDROOT:=$(shell echo 'while [ ! -d re ]; do cd ..; done; pwd' | sh)
 
 include $(BUILDROOT)/re/make/head.mk
@@ -39,16 +43,25 @@ BSRCS = ContextPredicateUnitTest.cpp \
 	ContextUnitTest.cpp \
 	ExpDecayingAvgUnitTest.cpp \
 	FileSystemUnitTest.cpp \
-	PDUPeerUnitTest.cpp \
+	GUIDGeneratorUnitTest.cpp \
 	ProcFileSystemUnitTest.cpp \
-	StateMachineUnitTest.cpp \
 	StateMachineUnitTest1.cpp \
-	ClusterLockUnitTest.cpp
+	StateMachineUnitTest2.cpp \
+	StateMachineUnitTest3.cpp \
+	StateMachineUnitTest4.cpp \
+	StateMachineUnitTest5.cpp \
+	StateMachineUnitTest6.cpp
 
-GSRCS = FileSystemUtilUnitTest.cpp \
+GSRCS = ActiveObjectUnitTest.cpp \
+	ClusterLockUnitTest.cpp \
+	DbLiteConnectionUnitTest.cpp \
+	FileSystemUtilUnitTest.cpp \
+	PDUPeerUnitTest.cpp \
 	ProcessManagerUnitTest.cpp \
 	FStringUnitTest.cpp \
-	ExceptionUnitTest.cpp
+	ExceptionUnitTest.cpp \
+	SCSIUtilUnitTest.cpp \
+	CheckedValueStoreUnitTest.cpp 
 
 GPROGS = $(GSRCS:%.cpp=$(TARGETDIR)/%)
 BPROGS = $(BSRCS:%.cpp=$(TARGETDIR)/%)
@@ -59,20 +72,17 @@ LIBDIRS=$(FORTE_DIR)
 
 ###  RULES  ###
 
-all: parent $(PROGS) 
-
-parent: FORCE
-	$(MAKE) -C ../
+all: $(PROGS) 
 
 # progs
 $(BPROGS): $(TARGETDIR)/%: $(FORTE) $(FORTE_MOCK) %.cpp $(TARGETDIR)/%.o
-	@echo "Building $@ ..."
+	@echo "Linking $@ ..."
 	@$(CCC) -o $@ $@.o $(LIBS)
 
 # the dependencies in this rule are wrong:
 $(TARGETDIR)/FileSystemUtilUnitTest: ../$(TARGETDIR)/FileSystemUtil.o FileSystemUtilUnitTest.cpp
-	echo "Building $@..."
-	$(CCC) FileSystemUtilUnitTest.cpp \
+	@echo "Compiling $@..."
+	$(QUIET)$(CCC) FileSystemUtilUnitTest.cpp \
 	-o $@ \
 	../$(TARGETDIR)/FileSystemUtil.o \
 	../$(TARGETDIR)/FileSystem.o \
@@ -81,42 +91,44 @@ $(TARGETDIR)/FileSystemUtilUnitTest: ../$(TARGETDIR)/FileSystemUtil.o FileSystem
 	$(LIBS)
 
 $(TARGETDIR)/ExceptionUnitTest: ../$(TARGETDIR)/Exception.o ExceptionUnitTest.cpp
-	echo "Building $@..."
-	$(CCC) ExceptionUnitTest.cpp \
+	@echo "Compiling $@..."
+	$(QUIET)$(CCC) ExceptionUnitTest.cpp \
 	-o $@ \
+	$(FORTE) \
 	$(INCLUDE) \
 	$(GTEST_LIB) \
 	$(LIBS)
+
+
+$(TARGETDIR)/DbLiteConnectionUnitTest: DbLiteConnectionUnitTest.cpp
+	@echo "Compiling $@..."
+	$(QUIET)$(CCC) DbLiteConnectionUnitTest.cpp \
+	-o $@ \
+	$(FORTE) \
+	$(INCLUDE) \
+	$(GTEST_LIB) \
+	$(LIBS) \
+	-lsqlite3
 
 $(TARGETDIR)/FStringUnitTest: ../$(TARGETDIR)/FString.o FStringUnitTest.cpp
-	echo "Building $@..."
-	$(CCC) FStringUnitTest.cpp \
+	@echo "Compiling $@..."
+	$(QUIET)$(CCC) FStringUnitTest.cpp \
 	-o $@ \
 	$(INCLUDE) \
 	$(GTEST_LIB) \
 	$(LIBS)
 
-
-$(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp
-	echo "Building $@..."
-	$(CCC) SCSIUtilUnitTest.cpp \
-	-o $(TARGETDIR)/SCSIUtilUnitTest \
-	$(SCALE_SERVICE_CLIENT_LIBS)  \
-	$(INCLUDE) \
-	$(GTEST_LIB) \
-	$(LIBS)
-
-$(TARGETDIR)/ProcessManagerUnitTest: ProcessManagerUnitTest.cpp $(FORTE)
-	echo "Building $@..."
-	$(CCC) ProcessManagerUnitTest.cpp \
+$(TARGETDIR)/ProcessManagerUnitTest: ../$(TARGETDIR)/ProcessManager.o ProcessManagerUnitTest.cpp $(FORTE)
+	@echo "Compiling $@..."
+	$(QUIET)$(CCC) ProcessManagerUnitTest.cpp \
 	-o $@ \
 	$(INCLUDE) \
 	$(GTEST_LIB) \
 	$(LIBS)
 
 $(TARGETDIR)/PDUPeerUnitTest: PDUPeerUnitTest.cpp $(FORTE)
-	echo "Building $@..."
-	$(CCC) PDUPeerUnitTest.cpp \
+	@echo "Compiling $@..."
+	$(QUIET)$(CCC) PDUPeerUnitTest.cpp \
 	-o $@ \
 	$(INCLUDE) \
 	$(OS_LIBS) \
@@ -125,8 +137,8 @@ $(TARGETDIR)/PDUPeerUnitTest: PDUPeerUnitTest.cpp $(FORTE)
 	$(FORTE_MOCK_LIBS) \
 
 $(TARGETDIR)/ClusterLockUnitTest: ClusterLockUnitTest.cpp $(FORTE)
-	echo "Building $@..."
-	$(CCC) ClusterLockUnitTest.cpp \
+	@echo "Compiling $@..."
+	$(QUIET)$(CCC) ClusterLockUnitTest.cpp \
 	-o $@ \
 	$(INCLUDE) \
 	$(OS_LIBS) \
@@ -134,6 +146,34 @@ $(TARGETDIR)/ClusterLockUnitTest: ClusterLockUnitTest.cpp $(FORTE)
 	$(FORTE_LIBS) \
 	$(FORTE_MOCK_LIBS) \
 	$(BOOST_FS_LIB) \
+
+$(TARGETDIR)/ActiveObjectUnitTest: ActiveObjectUnitTest.cpp $(FORTE)
+	@echo "Compiling $@..."
+	$(QUIET)$(CCC) ActiveObjectUnitTest.cpp \
+	-o $@ \
+	$(INCLUDE) \
+	$(OS_LIBS) \
+	$(GTEST_LIB) \
+	$(FORTE_LIBS) \
+	$(FORTE_MOCK_LIBS) \
+	$(BOOST_FS_LIB) \
+
+$(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp
+	@echo "Compiling $@..."
+	$(QUIET)$(CCC) SCSIUtilUnitTest.cpp \
+	-o $(TARGETDIR)/SCSIUtilUnitTest \
+	$(SCALE_SERVICE_CLIENT_LIBS)  \
+	$(INCLUDE) \
+	$(GTEST_LIB) \
+	$(LIBS)
+
+$(TARGETDIR)/CheckedValueStoreUnitTest: ../$(TARGETDIR)/CheckedValueStore.o CheckedValueStoreUnitTest.cpp
+	echo "Building $@..."
+	$(QUIET)$(CCC) CheckedValueStoreUnitTest.cpp \
+	-o $(TARGETDIR)/CheckedValueStoreUnitTest \
+	$(INCLUDE) \
+	$(GTEST_LIB) \
+	$(LIBS)
 
 # tail
 include $(BUILDROOT)/re/make/tail.mk

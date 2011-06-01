@@ -129,6 +129,11 @@ namespace Forte
         FString(const std::set<int> &intset);
 
         /**
+         *Constructs an FString of items in the set delimited by a comma after each item.
+         **/
+        FString(const std::set<std::string> &strset);
+
+        /**
          *Constructs a string containing the IP address you are connected to in the sockaddr struct. 
          **/
         FString(const struct sockaddr *sa);

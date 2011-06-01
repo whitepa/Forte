@@ -41,7 +41,8 @@ void * Thread::startThread(void *obj)
     }
     // inform the log manager of this thread
     LogThreadInfo logThread(LogManager::GetInstance(), *thr);
-    thr->mThreadName.Format("unknown-%u", (unsigned)thr->mThread);
+    if (thr->mThreadName.empty())
+        thr->mThreadName.Format("unknown-%u", (unsigned)thr->mThread);
     if (!thr->mThreadShutdown)
         hlog(HLOG_DEBUG, "thread initialized");
     
@@ -108,6 +109,13 @@ void Thread::WaitForInitialize()
     {
         mNotifyCond.Wait();
     }
+}
+void Thread::InterruptibleSleep(const struct timespec &interval,
+                                bool throwOnShutdown)
+{
+    // (static version)
+    Thread *thr = MyThread();
+    thr->interruptibleSleep(interval, throwOnShutdown);
 }
 
 void Thread::interruptibleSleep(const struct timespec &interval, bool throwOnShutdown)

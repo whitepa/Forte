@@ -25,11 +25,13 @@ SRCS = \
 	MockSSHRunner.cpp \
 	MockProcRunner.cpp \
 	MockFileSystem.cpp \
-	MockNetworkConnection.cpp
+	MockNetworkConnection.cpp \
+	MockProcessManager.cpp \
+	MockCheckedValueStore.cpp
 
 OBJS = $(SRCS:%.cpp=$(TARGETDIR)/%.o)
 
-LIBDEPS=$(FORTE)
+LIBDEPS=$(FORTE_LIB)
 
 ###  RULES  ###
 

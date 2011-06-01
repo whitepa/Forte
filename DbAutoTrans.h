@@ -16,7 +16,9 @@ namespace Forte
     class DbAutoTrans {
     public:
         DbAutoTrans(DbConnection &db_in) :
-            db(db_in)
+            db(db_in),
+            file(NULL),
+            line(0)
             {
                 if (db.HasPendingQueries())
                 {
@@ -29,8 +31,11 @@ namespace Forte
             try {
                 if (db.HasPendingQueries())
                 {
-                    hlog(HLOG_DEBUG, "~DbAutoTrans(): Rolling back transaction started at %s:%u",
-                         file, line);
+                    if (file != NULL)
+                        hlog(HLOG_DEBUG, "~DbAutoTrans(): Rolling back transaction started at %s:%u",
+                             file, line);
+                    else
+                        hlog(HLOG_DEBUG, "~DbAutoTrans(): Rolling back transaction");
                     db.Rollback();
                 }
             } catch (...) {

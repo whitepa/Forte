@@ -18,21 +18,27 @@ COMMON_INCLUDE = \
 COMMON_LIBS = \
 	$(GTEST_LIB) \
 	$(FORTE_LIBS) \
+	$(LIBSCALE_LIBS) \
 	$(OS_LIBS) \
 	$(SSH2_LIBS) \
 	-lpthread -lrt
 
-PROGS=$(TARGETDIR)/SSHRunnerUnitTest
+PROGS=$(TARGETDIR)/SCSIUtilUnitTest $(TARGETDIR)/SSHRunnerUnitTest
 
 # define LIBDIRS for distclean
 LIBDIRS=$(FORTE_DIR)
 
 ###  RULES  ###
 
-all: parent $(GTEST) $(PROGS) 
+all: $(GTEST) $(PROGS) 
 
-parent: FORCE
-	$(MAKE) -C ../
+$(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp
+	echo "Building $@..."
+	$(CCC) SCSIUtilUnitTest.cpp \
+	-o $(TARGETDIR)/SCSIUtilUnitTest \
+	$(SCALE_SERVICE_CLIENT_LIBS)  \
+	$(COMMON_INCLUDE) \
+	$(COMMON_LIBS)
 
 $(TARGETDIR)/SSHRunnerUnitTest: SSHRunnerUnitTest.cpp
 	echo "Building $@..."

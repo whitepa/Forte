@@ -9,14 +9,13 @@ ServiceConfig::ServiceConfig() :
     mConfigFileName ("")
 {
 }
-ServiceConfig::ServiceConfig(
-    const char *configFile,
-    ServiceConfig::ServiceConfigFileType type) :
+ServiceConfig::ServiceConfig(const char *configFile,
+                             ServiceConfig::ServiceConfigFileType type) :
     mConfigFileType (type),
     mConfigFileName (configFile)
-    {
-        ReadConfigFile(configFile, type);
-    }
+{
+    ReadConfigFile(configFile, type);
+}
 
 void ServiceConfig::ReadConfigFile(
     const char *configFile, 
@@ -66,6 +65,18 @@ void ServiceConfig::Set(const char *key, const char *value)
         throw EServiceConfig("unknown error");
     }
 }
+void ServiceConfig::Add(const char *key, const char *value)
+{
+    AutoUnlockMutex lock(mMutex);
+    try
+    {
+        mPTree.add(key, value);
+    }
+    catch (boost::property_tree::ptree_error &e)
+    {
+        throw EServiceConfig("unknown error");
+    }
+}
 
 FString ServiceConfig::Get(const char *key)
 {
@@ -79,24 +90,38 @@ void ServiceConfig::GetVectorSubKey(const char *key,     // nodes
 {
     FTRACE;
     vec.clear();
-    boost::property_tree::ptree subtree = mPTree.get_child(key);
-    foreach(const boost::property_tree::ptree::value_type &v, subtree)
+    AutoUnlockMutex lock(mMutex);
+    try
     {
-//        FString s1(v.first);
-//        hlog(HLOG_DEBUG, "found tree %s", s1.c_str());
-        // iterate keys in v.second
-//        foreach(const boost::property_tree::ptree::value_type &v2, v.second)
-//        {
-//            FString s(v2.first);
-//            hlog(HLOG_DEBUG, "   found subkey %s", s.c_str());
-//        }
-        vec.push_back(v.second.get<FString>(subkey));
+        foreach(const boost::property_tree::ptree::value_type &v, mPTree.get_child(key))
+        {
+            FString s1(v.first);
+            hlog(HLOG_DEBUG, "found %s", s1.c_str());
+            vec.push_back(v.second.get<FString>(subkey));
+        }
+    }
+    catch (boost::property_tree::ptree_error &e)
+    {
+        boost::throw_exception(EServiceConfigNoKey(key));
     }
 }
 
 int ServiceConfig::GetInteger(const char *key)
 {
     return mPTree.get<int>(key, 0);
+}
+
+void ServiceConfig::GetVectorKeys(
+    const char *key,
+    FStringVector &vec /*OUT*/)
+{
+    vec.clear();
+
+    AutoUnlockMutex lock(mMutex);
+    foreach (const boost::property_tree::ptree::value_type &v, mPTree.get_child(key))
+    {
+        vec.push_back(v.first);
+    }
 }
 
 void ServiceConfig::WriteToConfigFile(void)

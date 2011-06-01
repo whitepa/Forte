@@ -14,7 +14,7 @@ Forte::RunLoop::~RunLoop()
     deleting();
 }
 
-void Forte::RunLoop::AddTimer(shared_ptr<Timer> &timer)
+void Forte::RunLoop::AddTimer(const shared_ptr<Timer> &timer)
 {
     FTRACE;
     if (!timer) throw ERunLoopTimerInvalid();
@@ -85,7 +85,15 @@ void * Forte::RunLoop::run(void)
             // fire the timer in an unlocked scope
             {
                 AutoLockMutex unlock(mLock);
-                timer->Fire();
+                try
+                {
+                    timer->Fire();
+                }
+                catch (std::exception &e)
+                {
+                    hlog(HLOG_ERR, "exception in timer callback: %s",
+                         e.what());
+                }
             }
 
             if (timer->Repeats())

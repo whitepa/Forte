@@ -10,7 +10,9 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(Exception, EForteServerMain);
+    EXCEPTION_CLASS(EServerMain);
+    EXCEPTION_SUBCLASS2(EServerMain, EServerMainLogFileConfiguration,
+                        "Logfile configuration is invalid");
 
     class ServerMain : public Object
     {
