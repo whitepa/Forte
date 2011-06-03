@@ -55,17 +55,8 @@ namespace Forte
         /**
          *Adds two Timespec objects together for you.
          **/
-        Timespec operator+(const Timespec &other) const {
-            Timespec result;
-            result.mTimespec.tv_sec = mTimespec.tv_sec + other.mTimespec.tv_sec;
-            result.mTimespec.tv_nsec = mTimespec.tv_nsec + other.mTimespec.tv_nsec;
-            if (result.mTimespec.tv_nsec >= 1000000000)
-            {
-                result.mTimespec.tv_nsec -= 1000000000;
-                result.mTimespec.tv_sec += 1;
-            }
-            return result;
-        }
+        Timespec operator+(const Timespec &other) const;
+        Timespec operator-(const Timespec &other) const;
 
         /**
          *Returns the current value of your Timespec object. 
