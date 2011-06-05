@@ -46,6 +46,7 @@ namespace Forte
 {
     EXCEPTION_CLASS(ELog);
     EXCEPTION_SUBCLASS2(ELog, ELogLevelStringUnknown, "Log level string is unknown");
+    EXCEPTION_SUBCLASS2(ELog, EGlobalLogManagerSet, "A global log manager is already selected");
 
     class LogMsg : public Object {
     public:
@@ -220,8 +221,6 @@ namespace Forte
         inline static LogManager & GetInstance() { 
             if (sLogManager) return *sLogManager; else throw EEmptyReference("no log manager instance");
         }
-
-        void InitGlobal(void);
 
         /**
          *BeginLogging() permits you to start logging error messages to //stderr.
@@ -403,6 +402,13 @@ namespace Forte
          * supported.
          */
         int GetSingleLevelFromString(const FString &str) const;
+
+        /**
+         * Get a reference to the log mutex to allow external locking
+         * of the LogManager.
+         */
+        Mutex& GetMutex(void) { return mLogMutex; }
+
     protected:
         friend class Mutex;
         std::vector<Logfile*> mLogfiles;

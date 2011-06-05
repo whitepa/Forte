@@ -42,7 +42,6 @@ namespace Forte
         void mockStartProcess(void);
         void mockRunProcess(void);
 
-        Forte::LogManager mLogManager;
         PDUPeerSet mPeerSet;
         ExpectedCommandResponsePtr mExpectedCommandResponse;
 

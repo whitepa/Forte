@@ -22,7 +22,7 @@ bool DaemonUtil::ForkDaemon(void)
     pid_t pid;
 
     // Fork off the parent process
-    pid = fork();
+    pid = ForkSafely();
     if (pid < 0) {
         throw EDaemonForkFailedException();
     }
@@ -58,4 +58,17 @@ bool DaemonUtil::ForkDaemon(void)
     setsid();
     
     return true;
+}
+
+pid_t DaemonUtil::ForkSafely(void)
+{
+    try
+    {
+        AutoUnlockMutex logLock(LogManager::GetInstance().GetMutex());
+        return fork();
+    }
+    catch (EEmptyReference &e)
+    {
+    }
+    return fork();
 }

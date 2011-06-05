@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <boost/bind.hpp>
 #include <boost/algorithm/string.hpp>
+#include "DaemonUtil.h"
 #include "LogManager.h"
 #include "ProcessMonitor.h"
 #include "ProcessManagerPDU.h"
@@ -287,7 +288,7 @@ void Forte::ProcessMonitor::startProcess(void)
     while (outputfd == -1 && errno == EINTR);
 
     pid_t pid;
-    if ((pid = fork()) == 0)
+    if ((pid = DaemonUtil::ForkSafely()) == 0)
     {
         // child
         sigset_t set;

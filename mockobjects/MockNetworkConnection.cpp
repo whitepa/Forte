@@ -1,4 +1,4 @@
-
+#include "DaemonUtil.h"
 #include "MockNetworkConnection.h"
 #include <sys/wait.h>
 
@@ -24,7 +24,7 @@ void MockNetworkConnection::RunMockNetwork()
     int parentfd = fds[0];
     int childfd = fds[1];
 
-    pid_t childPid = fork();
+    pid_t childPid = DaemonUtil::ForkSafely();
     if (childPid < 0)
     {
         close(parentfd);

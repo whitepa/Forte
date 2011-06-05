@@ -31,6 +31,15 @@ namespace Forte
         /// Returns false in the parent (original) process, and true in
         /// the new daemon process.
         static bool ForkDaemon(void);
+
+        /**
+         * ForkSafely() will correctly handle the various needed
+         * semantics when forking with certain Forte objects.
+         *
+         * Currently:
+         *  - the LogManager singleton must be locked during the fork
+         */
+        static pid_t ForkSafely(void);
     };
 };
 #endif

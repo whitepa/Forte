@@ -3,6 +3,7 @@
 #include "ProcessFuture.h"
 #include "ProcessManager.h"
 #include "AutoMutex.h"
+#include "Clock.h"
 #include "Exception.h"
 #include "LogManager.h"
 #include "LogTimer.h"
@@ -57,6 +58,10 @@ Forte::ProcessFuture::~ProcessFuture()
     try
     {
         abandon();
+    }
+    catch (EProcessFutureHandleInvalid &e)
+    {
+        // ProcessManager has been destroyed
     }
     catch (Exception &e)
     {
@@ -186,7 +191,7 @@ void Forte::ProcessFuture::run()
     // wait for the process to change state
     AutoUnlockMutex lock(mWaitLock);
     while (mState == STATE_STARTING)
-        mWaitCond.TimedWait(1);
+        mWaitCond.TimedWait(Timespec::FromMillisec(100));
 
 }
 

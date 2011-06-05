@@ -231,18 +231,23 @@ LogThreadInfo::~LogThreadInfo()
 // LogManager
 LogManager::LogManager() {
     mLogMaskTemplate = HLOG_ALL;
-}
 
-LogManager::~LogManager() {
-    Log(HLOG_INFO, "logging halted");
-    EndLogging();
-}
+    // LogManager is a singleton. There is much much here which will
+    // break horribly if you declare a second LogManager object in a
+    // process.  If you need a second log file, add it with a second
+    // BeginLogging() call.
 
-void LogManager::InitGlobal(void)
-{
     if (!sLogManager) {
         sLogManager = this;
     }
+    else
+        throw EGlobalLogManagerSet();
+}
+ 
+LogManager::~LogManager() {
+    Log(HLOG_INFO, "logging halted");
+    EndLogging();
+    sLogManager = NULL;
 }
 
 void LogManager::BeginLogging()
@@ -265,7 +270,6 @@ void LogManager::BeginLogging(const char *path, int mask)
 void LogManager::beginLogging(const char *path, int mask)  // helper - no locking
 {
     Logfile *logfile;
-    sLogManager = this;
     if (!strcmp(path, "//stderr"))
         logfile = new Logfile(path, &cerr, mask);
     else if (!strcmp(path, "//stdout"))
@@ -285,14 +289,12 @@ void LogManager::beginLogging(const char *path, int mask)  // helper - no lockin
 
 void LogManager::BeginLogging(Logfile *logfile)
 {
-    sLogManager = this;
     AutoUnlockMutex lock(mLogMutex);
     mLogfiles.push_back(logfile);
 }
 
 void LogManager::EndLogging()
 {
-    sLogManager = NULL;
     AutoUnlockMutex lock(mLogMutex);
     std::vector<Logfile*>::iterator i;
     mLogfiles.clear();
@@ -317,7 +319,6 @@ void LogManager::endLogging(const char *path)  // helper - no locking
             break;
         }
     }
-    if (mLogfiles.empty()) sLogManager = NULL;
 }
 
 void LogManager::Reopen()  // re-open all log files

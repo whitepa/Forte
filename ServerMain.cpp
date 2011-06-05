@@ -67,8 +67,6 @@ ServerMain::ServerMain(const FString& defaultConfig,
 void ServerMain::init(const FString& defaultConfig,
                       int logMask)
 {
-    mLogManager.InitGlobal();
-
     // setup the config
     CNEW("forte.ServiceConfig", ServiceConfig);
 

@@ -1,4 +1,5 @@
 // ProcessManager.cpp
+#include "DaemonUtil.h"
 #include "ProcessManager.h"
 #include "ProcessFuture.h"
 #include "AutoMutex.h"
@@ -136,7 +137,7 @@ void Forte::ProcessManager::startMonitor(
     AutoFD parentfd(fds[0]);
     AutoFD childfd(fds[1]);
 
-    pid_t childPid = fork();
+    pid_t childPid = DaemonUtil::ForkSafely();
     if(childPid < 0) 
         throw EProcessManagerUnableToFork(FStringFC(), "%s", strerror(errno));
     else if(childPid == 0)

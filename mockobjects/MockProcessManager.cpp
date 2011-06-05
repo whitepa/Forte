@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <boost/bind.hpp>
+#include "DaemonUtil.h"
 #include "MockProcessManager.h"
 #include "ProcessFuture.h"
 #include "LogManager.h"
@@ -20,7 +21,6 @@ Forte::MockProcessHandler::MockProcessHandler(
     mExpectedCommandResponse (expectedResponse),
     mShutdown (false)
 {
-    mLogManager.BeginLogging("/tmp/mockprochandler.log"); // \TODO
     mPeerSet.PeerCreate(fd);
 }
 
@@ -298,7 +298,7 @@ void Forte::MockProcessManager::startMonitor(boost::shared_ptr<Forte::ProcessFut
     AutoFD parentfd(fds[0]);
     AutoFD childfd(fds[1]);
 
-    pid_t childPid = fork();
+    pid_t childPid = DaemonUtil::ForkSafely();
     if(childPid < 0) 
         throw EProcessManagerUnableToFork(FStringFC(), "%s", strerror(errno));
     else if(childPid == 0)

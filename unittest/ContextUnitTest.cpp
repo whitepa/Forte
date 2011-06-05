@@ -13,8 +13,6 @@ using namespace boost;
 using namespace boost::unit_test;
 using namespace Forte;
 
-LogManager logManager;
-
 class TestClass : public Forte::Object {
 public:
     TestClass() { ++sCount; }
