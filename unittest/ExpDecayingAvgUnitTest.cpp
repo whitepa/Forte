@@ -17,11 +17,9 @@ BOOST_AUTO_TEST_CASE(CheckDeadLock)
 {
     logManager.BeginLogging();
 
-     // setup
-    Context mContext;
-    mContext.Set("forte.RunLoop", make_shared<RunLoop>());
+    // setup
+    RunLoop rl;
     sleep(2);    
-    CGET("forte.RunLoop", RunLoop, rl);
     BOOST_CHECK(rl.IsEmpty());
 }
 
@@ -29,11 +27,8 @@ BOOST_AUTO_TEST_CASE(Test1)
 {
     logManager.BeginLogging();
     // setup
-    Context c;
-    c.Set("forte.RunLoop", make_shared<RunLoop>());
-    
     {
-        ExpDecayingAvg a(c, EDA_VALUE, 10000);
+        ExpDecayingAvg a(make_shared<RunLoop>(), EDA_VALUE, 10000);
 
         for (int x = 0; x < 30; x++)
         {

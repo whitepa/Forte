@@ -7,17 +7,17 @@
 
 using namespace Forte;
 
-ExpDecayingAvg::ExpDecayingAvg(Context &context, int mode, int dampingTime) :
-    mContext(context), mMode(mode), mDampingTime(dampingTime)
+ExpDecayingAvg::ExpDecayingAvg(const boost::shared_ptr<Forte::RunLoop> &rl,
+                               int mode, int dampingTime) :
+    mRunLoopPtr(rl), mMode(mode), mDampingTime(dampingTime)
 {
     FTRACE;
     mDataPtr.reset(new ExpDecayingAvgData(mMode, mDampingTime));
-    Timer::Callback callback = boost::bind(&ExpDecayingAvgData::update, mDataPtr.get());
-    CGET("forte.RunLoop", RunLoop, rl);
-    mTimerPtr.reset(new Timer(rl_Ptr, mDataPtr, callback,
+    Timer::Callback callback = boost::bind(&ExpDecayingAvgData::update, mDataPtr);
+    mTimerPtr.reset(new Timer(mRunLoopPtr, mDataPtr, callback,
                               Timespec::FromMillisec(UPDATE_DELAY),
                               true));
-    rl.AddTimer(mTimerPtr);
+    mRunLoopPtr->AddTimer(mTimerPtr);
 }
 ExpDecayingAvg::~ExpDecayingAvg()
 {

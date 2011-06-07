@@ -63,7 +63,7 @@ namespace Forte
          * 
          * @return 
          */
-        ExpDecayingAvg(Forte::Context &context,
+        ExpDecayingAvg(const boost::shared_ptr<Forte::RunLoop> &rl,
                        int mode, int dampingTime);
         virtual ~ExpDecayingAvg();
     
@@ -82,7 +82,7 @@ namespace Forte
         // update the average using the current input value
         void update(void);
         
-        Forte::Context &mContext;
+        shared_ptr<Forte::RunLoop> mRunLoopPtr;
         int mMode;
         int mDampingTime;
         shared_ptr<ExpDecayingAvgData> mDataPtr;
