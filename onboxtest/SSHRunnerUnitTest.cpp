@@ -22,7 +22,7 @@ protected:
     }
 };
 
-
+/*
 TEST_F(SSHRunnerTest, AuthenticateUsingPublicKey)
 {
     SSHRunner ssh("root", "/opt/scale/lib/qa/.ssh/scale_computing_id_dsa.pub",
@@ -34,10 +34,11 @@ TEST_F(SSHRunnerTest, AuthenticateUsingPublicKey)
     hlog(HLOG_DEBUG, "out is '%s'", out.c_str());
     ASSERT_TRUE(FString("hi") == out.Trim());
 }
+*/
 
 TEST_F(SSHRunnerTest, AuthenticateUsingUsernamePassword)
 {
-    SSHRunner ssh("root", "scale", "127.0.0.1", 22);
+    SSHRunner ssh("root", "storage", "127.0.0.1", 22);
     FString out;
     FString errOut;
     ssh.Run("echo hi", &out, &errOut);

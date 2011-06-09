@@ -5,6 +5,7 @@
 #include "LogManager.h"
 #include <netdb.h>
 #include <sys/socket.h>
+#include "FTrace.h"
 
 using namespace Forte;
 
@@ -58,6 +59,8 @@ SSHRunner::SSHRunner(const char *username,
     mSession (NULL),
     mSocket (createSocketAndConnect(ipAddress, portNumber))
 {
+    FTRACE2("%s, %s, %s, %s, %s, %i", username, publicKeyFilePath, 
+            privateKeyFilePath, passphrase, ipAddress, portNumber);
     int err;
 
     if (mSocket > 0)
