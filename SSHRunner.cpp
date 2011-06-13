@@ -38,8 +38,8 @@ SSHRunner::SSHRunner(
             libssh2_session_disconnect(mSession, "Goodbye");
             libssh2_session_free(mSession);
             close(mSocket);
-            hlog(HLOG_ERR, "Could not get authenticated (%s)",
-                 getErrorString(err).c_str());
+            hlog(HLOG_ERR, "Could not get authenticated using '%s/%s' (%s)",
+                 username, password, getErrorString(err).c_str());
             throw ESessionError("Could not get authenticated");
         }
     }
