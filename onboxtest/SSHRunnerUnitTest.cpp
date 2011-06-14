@@ -36,6 +36,7 @@ TEST_F(SSHRunnerTest, AuthenticateUsingPublicKey)
 }
 */
 
+// TODO: move this test out of forte
 TEST_F(SSHRunnerTest, AuthenticateUsingUsernamePassword)
 {
     SSHRunner ssh("root", "storage", "127.0.0.1", 22);
