@@ -170,3 +170,18 @@ TEST_F(ExceptionTest, ClassMacroTestSub2)
         ASSERT_STREQ(e.what(), "EExceptionUnitTestSubClass2 Description: Some text 10");
     }
 }
+
+TEST_F(ExceptionTest, hlogAndThrow)
+{
+    FTRACE;
+    try
+    {
+        hlog_and_throw(HLOG_INFO, EExceptionUnitTest());
+        FAIL() << "hlog_and_throw failed to throw";
+    }
+    catch (EExceptionUnitTest& e)
+    {
+        hlog(HLOG_INFO, "Exception is %s", e.what());
+        ASSERT_STREQ(e.what(), "EExceptionUnitTest");
+    }
+}

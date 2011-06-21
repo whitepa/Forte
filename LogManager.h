@@ -16,6 +16,7 @@
 #include "ThreadKey.h"
 #include <syslog.h>
 #include <stdarg.h>
+#include <boost/throw_exception.hpp>
 
 #define HLOG_NONE        0x00000000
 #define HLOG_TRACE       0x00000800
@@ -435,5 +436,14 @@ void _hlog(const char *func, const char *file, int line, int level, const char *
 
 void _hlog_errno(const char* func, const char* file, int line, int level);
 #define hlog_errno(level)  _hlog_errno(__FUNCTION__, __FILE__, __LINE__, level)
+
+#define hlog_and_throw(level, exception_decl)                          \
+{                                                                      \
+    const std::exception &exception_instance = exception_decl;         \
+    hlog(level, "EXCEPTION %s thrown (%s)",                            \
+            typeid(exception_instance).name(),                         \
+            exception_decl.what());                                    \
+    boost::throw_exception(exception_decl);                            \
+}
 
 #endif
