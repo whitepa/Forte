@@ -23,7 +23,7 @@ COMMON_LIBS = \
 	$(SSH2_LIBS) \
 	-lpthread -lrt
 
-PROGS=$(TARGETDIR)/SCSIUtilUnitTest $(TARGETDIR)/SSHRunnerUnitTest
+PROGS=$(TARGETDIR)/SCSIUtilUnitTest
 
 # define LIBDIRS for distclean
 LIBDIRS=$(FORTE_DIR)
@@ -39,13 +39,6 @@ $(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp
 	$(SCALE_SERVICE_CLIENT_LIBS)  \
 	$(COMMON_INCLUDE) \
 	$(COMMON_LIBS)
-
-$(TARGETDIR)/SSHRunnerUnitTest: SSHRunnerUnitTest.cpp
-	echo "Building $@..."
-	$(CCC) SSHRunnerUnitTest.cpp \
-	-o $@ \
-	$(COMMON_INCLUDE) \
-	$(COMMON_LIBS) 
 
 install: 
 # $(PROGS)
