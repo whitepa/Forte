@@ -37,4 +37,14 @@ DbTempErrorException::~DbTempErrorException() throw()
 {
 }
 
+DbLookupFailedException::DbLookupFailedException(const char* description, unsigned int dbErrno,
+                                             const char *sql) :
+    DbException((description!=NULL)?description:"Lookup Failed Exception", dbErrno, sql)
+{
+}
+
+DbLookupFailedException::~DbLookupFailedException() throw()
+{
+}
+
 #endif

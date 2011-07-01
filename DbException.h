@@ -27,6 +27,15 @@ namespace Forte
         DbTempErrorException(const DbException& other);
         virtual ~DbTempErrorException() throw();
     };
+
+    class DbLookupFailedException : public DbException
+    {
+    public:
+        DbLookupFailedException(const char* description=NULL, unsigned int dbErrno = 0,
+                              const char *sql=NULL);
+        DbLookupFailedException(const DbException& other);
+        virtual ~DbLookupFailedException() throw();
+    };
 };
 #endif
 #endif
