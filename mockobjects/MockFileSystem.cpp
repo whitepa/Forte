@@ -47,6 +47,20 @@ void MockFileSystem::FilePutContents(const FString& filename,
     mFiles[filename] = data;
 }
 
+void MockFileSystem::FileAppend(const FString& from, const FString& to)
+{
+    FString stmp;
+    StrStrMap::iterator fromIterator = mFiles.find(from);
+
+    if (fromIterator != mFiles.end())
+        mFiles[to].append(fromIterator->second);
+    else
+    {
+        stmp.Format("FORTE_CONCATONATE_FAIL|||%s|||%s", from.c_str(), to.c_str());
+        throw EFileSystemAppend(stmp);
+    }
+}
+
 void MockFileSystem::clearFileMap()
 {
     mFiles.clear();
@@ -102,7 +116,7 @@ bool MockFileSystem::DirWasCreated(const FString& path)
     return true;
 }
 
-void MockFileSystem::FileCopy(ProcRunner &pr, const FString& from, const FString& to, mode_t mode)
+void MockFileSystem::FileCopy(const FString& from, const FString& to, mode_t mode)
 {
     mCopiedFiles[from] = to;
 }

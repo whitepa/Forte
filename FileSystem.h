@@ -20,6 +20,7 @@ namespace Forte
     // typed exceptions
     EXCEPTION_SUBCLASS(Exception, EFileSystem);
     EXCEPTION_SUBCLASS(EFileSystem, EFileSystemCopy);
+    EXCEPTION_SUBCLASS(EFileSystem, EFileSystemAppend);
     EXCEPTION_SUBCLASS(EFileSystem, EFileSystemMakeDir);
     EXCEPTION_SUBCLASS(EFileSystem, EFileSystemResolveSymLink);
 
@@ -90,8 +91,7 @@ namespace Forte
         virtual FString ResolveRelativePath(const FString& base, 
                                             const FString& path);
 
-        virtual void FileCopy(ProcRunner &pr,
-                              const FString& from, 
+        virtual void FileCopy(const FString& from,
                               const FString& to, 
                               mode_t mode = 0777);
 
@@ -99,6 +99,8 @@ namespace Forte
         virtual void FilePutContents(const FString& filename, 
                                      const FString& data,
                                      bool append=false);
+
+        virtual void FileAppend(const FString& from, const FString& to);
 
         /// deep_copy copies a directory tree from 'source' to 'dest'.
         virtual void DeepCopy(const FString& source, const FString& dest, 

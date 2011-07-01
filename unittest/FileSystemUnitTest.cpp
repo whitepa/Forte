@@ -1,15 +1,23 @@
 
-#include "boost/test/unit_test.hpp"
+#include <gtest/gtest.h>
 #include "LogManager.h"
 #include "FileSystem.h"
 #include "SystemCallUtil.h"
 
-using namespace boost::unit_test;
 using namespace Forte;
 
 LogManager logManager;
 
-BOOST_AUTO_TEST_CASE(StatFS)
+class FileSystemUnitTest : public ::testing::Test
+{
+protected:
+    static void SetUpTestCase() {
+        logManager.SetLogMask("//stdout", HLOG_ALL);
+        logManager.BeginLogging("//stdout");
+        hlog(HLOG_DEBUG, "Starting test...");
+    }
+};
+TEST_F(FileSystemUnitTest, StatFS)
 {
     hlog(HLOG_INFO, "StatFS");
     FileSystem f;
@@ -17,25 +25,25 @@ BOOST_AUTO_TEST_CASE(StatFS)
     f.StatFS("/", &st);
 }
 
-BOOST_AUTO_TEST_CASE(StatFSPathDoesNotExist)
+TEST_F(FileSystemUnitTest, StatFSPathDoesNotExist)
 {
     hlog(HLOG_INFO, "StatFSPathDoesNotExist");
     FileSystem f;
     struct statfs st;
-    BOOST_CHECK_THROW(f.StatFS("pathdoesnotexist", &st), EErrNoENOENT);
+    ASSERT_THROW(f.StatFS("pathdoesnotexist", &st), EErrNoENOENT);
 }
 
-BOOST_AUTO_TEST_CASE(ScanDirReplacement)
+TEST_F(FileSystemUnitTest, ScanDirReplacement)
 {
     hlog(HLOG_INFO, "ScanDirReplacement");
     FileSystem f;
 
     vector<FString> names;
     f.ScanDir("/",names);
-    BOOST_CHECK(names.size() != 0);
+    ASSERT_NE(names.size(), 0);
 }
 
-BOOST_AUTO_TEST_CASE(TouchFileAndTestTimes)
+TEST_F(FileSystemUnitTest, TouchFileAndTestTimes)
 {
     hlog(HLOG_INFO, "TouchFileAndTestTimes");
     FileSystem f;
@@ -53,22 +61,57 @@ BOOST_AUTO_TEST_CASE(TouchFileAndTestTimes)
     {
         hlog(HLOG_INFO, "currTime=%lld aTime=%lld mTime=%lld", currTime,
                  (long long int)st.st_atime, (long long int)st.st_mtime);
-        BOOST_CHECK(abs(st.st_atime - currTime) < 2);
-        BOOST_CHECK(abs(st.st_mtime - currTime) < 2);
+        ASSERT_LT(abs(st.st_atime - currTime), 2);
+        ASSERT_LT(abs(st.st_mtime - currTime), 2);
     }
 }
 
-
-
-////Boost Unit init function ///////////////////////////////////////////////////
-test_suite*
-init_unit_test_suite(int argc, char* argv[])
+TEST_F(FileSystemUnitTest, TestFileCopy)
 {
-    logManager.SetLogMask("//stdout", HLOG_ALL);
-    logManager.BeginLogging("//stdout");
+    hlog(HLOG_INFO, "TestFileCopy");
+    FileSystem f;
 
-    // initialize everything here
+    FString fileName1 = "/tmp/TestFileCopy_unittest_file1";
+    FString fileName2 = "/tmp/TestFileCopy_unittest_file2";
 
-    return 0;
+    FString contents1 = "contents1\n";
+
+    f.FilePutContents(fileName1, contents1);
+
+    f.FileCopy(fileName1, fileName2);
+
+
+    FString contents2 = f.FileGetContents(fileName2);
+
+    f.Unlink(fileName1);
+    f.Unlink(fileName2);
+
+    hlog(HLOG_INFO, "File Contents %s", contents2.c_str());
+    ASSERT_EQ(contents1, contents2);
+
 }
-////////////////////////////////////////////////////////////////////////////////
+
+TEST_F(FileSystemUnitTest, TestFileAppend)
+{
+    hlog(HLOG_INFO, "TestFileAppend");
+
+    FileSystem f;
+    FString fileName1 = "/tmp/TestFileConcatonation_unittest_file1";
+    FString fileName2 = "/tmp/TestFileConcatonation_unittest_file2";
+
+    FString contents1 = "contents1\nsecondline(contents1)\n";
+    FString contents2 = "contents2\nsecondline(contents2)\n";
+
+    f.FilePutContents(fileName1, contents1);
+    f.FilePutContents(fileName2, contents2);
+
+    f.FileAppend(fileName2, fileName1);
+
+    FString contents3 = f.FileGetContents(fileName1);
+
+    f.Unlink(fileName1);
+    f.Unlink(fileName2);
+    hlog(HLOG_INFO, "File Contents %s", contents3.c_str());
+    ASSERT_EQ(contents3, (contents1 + contents2));
+}
+

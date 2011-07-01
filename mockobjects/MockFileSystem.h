@@ -18,6 +18,8 @@ namespace Forte
                              const Forte::FString& data, 
                              bool append=false);
 
+        void FileAppend(const FString& from, const FString& to);
+
         void clearFileMap();
         StrStrMap* getFileMap();
 
@@ -32,7 +34,7 @@ namespace Forte
         vector<Forte::FString> GetDirsCreated();
         bool DirWasCreated(const Forte::FString& path);
 
-        void FileCopy(ProcRunner &pr, const Forte::FString& from, 
+        void FileCopy(const Forte::FString& from,
                       const Forte::FString& to, mode_t mode = 0777);
         void ClearCopiedFileMap();
         StrStrMap* GetCopiedFileMap();

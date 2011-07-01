@@ -42,7 +42,6 @@ LIBS = \
 BSRCS = ContextPredicateUnitTest.cpp \
 	ContextUnitTest.cpp \
 	ExpDecayingAvgUnitTest.cpp \
-	FileSystemUnitTest.cpp \
 	GUIDGeneratorUnitTest.cpp \
 	ProcFileSystemUnitTest.cpp \
 	StateMachineUnitTest1.cpp \
@@ -55,6 +54,7 @@ BSRCS = ContextPredicateUnitTest.cpp \
 GSRCS = ActiveObjectUnitTest.cpp \
 	ClusterLockUnitTest.cpp \
 	DbLiteConnectionUnitTest.cpp \
+	FileSystemUnitTest.cpp \
 	FileSystemUtilUnitTest.cpp \
 	PDUPeerUnitTest.cpp \
 	ProcessManagerUnitTest.cpp \
@@ -80,6 +80,15 @@ $(BPROGS): $(TARGETDIR)/%: $(FORTE) $(FORTE_MOCK) %.cpp $(TARGETDIR)/%.o
 	@$(CCC) -o $@ $@.o $(LIBS)
 
 # the dependencies in this rule are wrong:
+$(TARGETDIR)/FileSystemUnitTest: ../$(TARGETDIR)/FileSystem.o FileSystemUnitTest.cpp
+	@echo "Compiling $@..."
+	$(QUIET)$(CCC) FileSystemUnitTest.cpp \
+	-o $@ \
+	../$(TARGETDIR)/FileSystem.o \
+	$(INCLUDE) \
+	$(GTEST_LIB) \
+	$(LIBS)
+
 $(TARGETDIR)/FileSystemUtilUnitTest: ../$(TARGETDIR)/FileSystemUtil.o FileSystemUtilUnitTest.cpp
 	@echo "Compiling $@..."
 	$(QUIET)$(CCC) FileSystemUtilUnitTest.cpp \

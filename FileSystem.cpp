@@ -735,7 +735,7 @@ FString FileSystem::ResolveRelativePath(const FString& base,
 }
 
 
-void FileSystem::FileCopy(ProcRunner &pr, const FString& from, const FString& to, mode_t mode)
+void FileSystem::FileCopy(const FString& from, const FString& to, mode_t mode)
 {
     hlog(HLOG_DEBUG4, "FileSystem::file_copy(%s, %s, %4o)",
          from.c_str(), to.c_str(), mode);
@@ -745,15 +745,17 @@ void FileSystem::FileCopy(ProcRunner &pr, const FString& from, const FString& to
     to_dir = to.Left(to.rfind('/'));
     MakeDir(to_dir, mode, true);
 
-    // copy file
-    command.Format("/bin/cp -f %s %s",
-                   pr.ShellEscape(from).c_str(),
-                   pr.ShellEscape(to).c_str());
-
-    if (pr.Run(command, "", 0, PROC_RUNNER_NO_TIMEOUT) != 0)
+    try
     {
-        stmp.Format("FORTE_COPY_FAIL|||%s|||%s", from.c_str(), to.c_str());
-        throw EFileSystemCopy(stmp);
+        boostfs::copy_file(static_cast<const string&>(from),
+                static_cast<const string&>(to),
+                boostfs::copy_option::overwrite_if_exists);
+    }
+    catch (boostfs::filesystem_error &e)
+    {
+        stmp.Format("FORTE_COPY_FAIL|||%s|||%s|||%s", from.c_str(), to.c_str(),
+                e.what());
+                throw EFileSystemCopy(stmp);
     }
 }
 
@@ -790,6 +792,22 @@ void FileSystem::FilePutContents(const FString& filename, const FString& data, b
     if (out.good()) out.write(data.c_str(), data.size());
 }
 
+void FileSystem::FileAppend(const FString& from, const FString& to)
+{
+    hlog(HLOG_DEBUG4, "FileSystem::file_append(%s, %s)",
+         from.c_str(), to.c_str());
+    FString to_dir, stmp;
+
+    ifstream in(from, ios::in | ios::binary);
+    ofstream out(to,  ios::out | ios::binary | ios::app);
+    if (out.good() && in.good())
+        out << in.rdbuf();
+    else
+    {
+        stmp.Format("FORTE_FILE_APPEND_FAIL|||%s|||%s", from.c_str(), to.c_str());
+        throw EFileSystemAppend(stmp);
+    }
+}
 
 void FileSystem::DeepCopy(const FString& source, const FString& dest, 
                           progress_callback_t progress_callback,
