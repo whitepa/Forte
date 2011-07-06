@@ -4,6 +4,7 @@
 #include "AutoMutex.h"
 #include "FString.h"
 #include "Exception.h"
+#include "LogManager.h"
 #include "Object.h"
 #include "Types.h"
 
@@ -37,6 +38,18 @@ namespace Forte
                 throw EPropertyObjectNoKey(key);
             return i->second;
         };
+        void ClearAllProperties(void) {
+            AutoUnlockMutex lock(mPropertyLock);
+            mProperties.clear();
+        };
+        void DebugPrintAllProperties(void) {
+            AutoUnlockMutex lock(mPropertyLock);
+            typedef pair<FString, FString> PropertyPair;
+            foreach(PropertyPair i, mProperties)
+            {
+                hlog(HLOG_DEBUG, "%s : %s", i.first.c_str(), i.second.c_str());
+            }
+        }
     private:
         mutable Mutex mPropertyLock;
         StrStrMap mProperties;
