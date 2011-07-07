@@ -107,7 +107,6 @@ HEADERS = \
 	Base64.h \
 	Clock.h \
 	Condition.h \
-	ControlFile.h \
 	Curl.h \
 	DaemonUtil.h \
 	DbAutoConnection.h \

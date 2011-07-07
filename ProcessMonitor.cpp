@@ -5,8 +5,6 @@
 #include <linux/limits.h>
 #include <fcntl.h>
 #include <boost/bind.hpp>
-#include <boost/tokenizer.hpp>
-#include <boost/algorithm/string.hpp>
 #include "DaemonUtil.h"
 #include "LogManager.h"
 #include "ProcessMonitor.h"
@@ -301,14 +299,9 @@ void Forte::ProcessMonitor::startProcess(void)
         // \TODO we should probably run it as /bin/bash -c cmdline
         // until we have a complete command line parser
         std::vector<std::string> strings;
-
-        boost::escaped_list_separator<char> sep("\\", " \t", "\"\'");
-        boost::tokenizer<boost::escaped_list_separator<char> > tok(mCmdline, sep);
-        for(boost::tokenizer<boost::escaped_list_separator<char> >::iterator beg=tok.begin();
-                beg!=tok.end(); ++beg)
-        {
-            strings.push_back(*beg);
-        }
+        strings.push_back("/bin/bash");
+        strings.push_back("-c");
+        strings.push_back(mCmdline);
 
         unsigned int num_args = strings.size();
         for(unsigned int i = 0; i < num_args; ++i) 
@@ -352,8 +345,8 @@ void Forte::ProcessMonitor::startProcess(void)
 //     // set up environment? \TODO do we need this?
 //     if (!mEnvironment.empty()) {
 //         StrStrMap::const_iterator mi;
-   
-//         for (mi = mEnvironment.begin(); mi != mEnvironment.end(); ++mi) 
+
+//         for (mi = mEnvironment.begin(); mi != mEnvironment.end(); ++mi)
 //         {
 //             if (mi->second.empty()) unsetenv(mi->first);
 //             else setenv(mi->first, mi->second, 1);
