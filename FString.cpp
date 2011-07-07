@@ -264,9 +264,10 @@ int FString::Explode(const char *delim, std::vector<FString> &components, bool t
 }
 
 
-int FString::Tokenize(const char *delim, std::vector<FString> &components) const
+int FString::Tokenize(const char *delim, std::vector<FString> &components, size_t max_parts) const
 {
     size_t start = 0, end = 0;
+    size_t i = 0;
     components.clear();
 
     while (1)
@@ -280,18 +281,28 @@ int FString::Tokenize(const char *delim, std::vector<FString> &components) const
             components.push_back(Mid(start));
             break;
         }
+
+        if (++i == max_parts) break;
 
         if (end - start > 0)
             components.push_back(Mid(start, end - start));
         start = end;
     }
 
+    if (max_parts != 0 &&
+        i == max_parts)
+    {
+        // we reached the max parts and breaked
+        components.push_back(Mid(start));
+    }
+
     return components.size();
 }
 
-int FString::Tokenize(const char *delim, std::vector<std::string> &components) const
+int FString::Tokenize(const char *delim, std::vector<std::string> &components, size_t max_parts) const
 {
     size_t start = 0, end = 0;
+    size_t i = 0;
     components.clear();
 
     while (1)
@@ -306,9 +317,18 @@ int FString::Tokenize(const char *delim, std::vector<std::string> &components) c
             break;
         }
 
+        if (++i == max_parts) break;
+
         if (end - start > 0)
             components.push_back(Mid(start, end - start));
         start = end;
+    }
+
+    if (max_parts != 0 &&
+        i == max_parts)
+    {
+        // we reached the max parts and breaked
+        components.push_back(Mid(start));
     }
 
     return components.size();
