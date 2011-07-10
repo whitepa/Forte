@@ -207,7 +207,7 @@ int ProcessManager::CreateProcessAndGetResult(const FString& command,
     guidGen.GenerateGUID(randomSuffix);
     FString outputFilename(FStringFC(), "/tmp/sc_commandoutput_%s.tmp", 
                           randomSuffix.c_str());
-    hlog(HLOG_INFO, "command = %s, timeout=%ld, output=%s",
+    hlog(HLOG_DEBUG, "command = %s, timeout=%ld, output=%s",
          command.c_str(), timeout.AsSeconds(), outputFilename.c_str());
     boost::shared_ptr<ProcessFuture> future = 
         CreateProcess(command, "/", outputFilename, inputFilename, environment);
@@ -232,7 +232,7 @@ int ProcessManager::CreateProcessAndGetResult(const FString& command,
         {
             hlog(HLOG_WARN, "Failed to unlink temporary file %s", strerror(errno));
         }
-        throw e;
+        throw;
     }
 }
 
