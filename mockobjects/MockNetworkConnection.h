@@ -9,6 +9,7 @@ namespace Forte
     EXCEPTION_CLASS(EMockNetworkConnection);
     EXCEPTION_SUBCLASS(EMockNetworkConnection, EUnableToCreateSocketPair);
     EXCEPTION_SUBCLASS(EMockNetworkConnection, EUnableToForkNetworkNode);
+    EXCEPTION_SUBCLASS(EMockNetworkConnection, ENodeHasException);
 
 /**
  * This class helps us create a two node mock network for unit testing

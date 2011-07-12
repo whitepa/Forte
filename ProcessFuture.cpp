@@ -223,7 +223,8 @@ void Forte::ProcessFuture::setState(int state)
                     // throw a boost::throw with non-zero status code
                     boost::throw_exception(
                         EProcessFutureTerminatedWithNonZeroStatus(
-                            FStringFC(), "%u", mStatusCode)
+                            FStringFC(), "[%s] %u", mCommand.c_str(), 
+                            mStatusCode)
                         );
                 }
                 break;
