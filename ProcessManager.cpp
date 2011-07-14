@@ -226,8 +226,22 @@ int ProcessManager::CreateProcessAndGetResult(const FString& command,
         }
         return statusCode;
     }
+    catch (EProcessFutureTerminatedWithNonZeroStatus &e)
+    {
+        // in this case we can still get the 
+        // output
+        output = future->GetOutputString();
+        hlog(HLOG_DEBUG, "output = %s", output.c_str());
+        
+        if (unlink(outputFilename.c_str()))
+        {
+            hlog(HLOG_WARN, "Failed to unlink temporary file %s", strerror(errno));
+        }
+        throw;
+    }
     catch (Exception& e)
     {
+        hlog(HLOG_DEBUG, "exception throw : %s", e.what());
         if (unlink(outputFilename.c_str()))
         {
             hlog(HLOG_WARN, "Failed to unlink temporary file %s", strerror(errno));
