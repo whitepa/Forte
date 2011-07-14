@@ -15,6 +15,7 @@ namespace Forte
     EXCEPTION_SUBCLASS(ESSHRunner, ESocketError);
     EXCEPTION_SUBCLASS(ESSHRunner, ESessionError);
     EXCEPTION_SUBCLASS(ESSHRunner, ERunError);
+    EXCEPTION_SUBCLASS(ESSHRunner, ESCPError);
     
     /**
      * Class to ssh into a box and run commands.
@@ -72,15 +73,18 @@ namespace Forte
                         FString *output,
                         FString *errorOutput);
 
+        virtual void GetFile(const FString &remotePath, 
+                             const FString &loclPath);
+
     protected:
         LIBSSH2_SESSION *mSession;
-        unsigned int mSocket;
+        int mSocket;
+        char mIPAddress[256];
+        int mPort;
 
-        unsigned int createSocketAndConnect(
-            const char *ipAddress, int portNumber);
-
+        int createSocketAndConnect(const char *ipAddress, int portNumber); 
         int waitSocket(int socket_fd, LIBSSH2_SESSION *session);
-        FString getErrorString(int errNumber);
+        FString getErrorString();
     };
 
     typedef boost::shared_ptr<SSHRunner> SSHRunnerPtr;

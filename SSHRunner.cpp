@@ -1,52 +1,61 @@
 /* Copyright (c) 2008-2010 Scale Computing, Inc.  All Rights Reserved.
    Proprietary and Confidential */
 
-#include "SSHRunner.h"
-#include "LogManager.h"
 #include <netdb.h>
 #include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "FTrace.h"
+#include "SSHRunner.h"
+#include "LogManager.h"
+#include "AutoFD.h"
 
 using namespace Forte;
 
-SSHRunner::SSHRunner(
-    const char *username,
-    const char *password,
-    const char *ipAddress,
-    int portNumber) :
+SSHRunner::SSHRunner(const char *username,
+                     const char *password,
+                     const char *ipAddress,
+                     int portNumber) :
     mSession (NULL),
-    mSocket (createSocketAndConnect(ipAddress, portNumber))
+    mSocket (-1)
 {
-    int err;
-    
-    hlog(HLOG_INFO, "Starting ssh session for %s:%d", ipAddress, portNumber);
-
+    FTRACE2("Starting ssh session for %s:%d", ipAddress, portNumber);
+    mSocket = createSocketAndConnect(ipAddress, portNumber);
     if (mSocket > 0)
     {
         mSession = libssh2_session_init();
-        if ((err=libssh2_session_startup(mSession, mSocket)))
+        if (libssh2_session_startup(mSession, mSocket) < 0)
         {
             libssh2_session_free(mSession);
             close(mSocket);
-            hlog(HLOG_ERR, "Could not startup the ssh session (%s)", 
-                 getErrorString(err).c_str());
-            throw ESessionError("Could not startup the ssh session");
+            FString stmp(FStringFC(), 
+                         "Could not startup the ssh session to %s:%d (err=%s)",
+                         ipAddress, portNumber, getErrorString().c_str());
+            hlog(HLOG_ERR, "%s", stmp.c_str());
+            throw ESessionError(stmp);
         }
 
-        if ((err=libssh2_userauth_password(mSession, username, password)))
+        if (libssh2_userauth_password(mSession, username, password) < 0)
         {
             libssh2_session_disconnect(mSession, "Goodbye");
             libssh2_session_free(mSession);
             close(mSocket);
-            hlog(HLOG_ERR, "Could not get authenticated using '%s/%s' (%s)",
-                 username, password, getErrorString(err).c_str());
-            throw ESessionError("Could not get authenticated");
+            FString stmp(FStringFC(), 
+                  "Could not get authenticated using %s/%s to %s:%d (err=%s)",
+                   username, password, 
+                   ipAddress, portNumber, getErrorString().c_str());
+            hlog(HLOG_ERR, "%s", stmp.c_str());
+            throw ESessionError(stmp);
         }
     }
     else
     {
-        hlog(HLOG_ERR, "No Socket for creating ssh session");
-        throw ESessionError("No Socket for creating ssh session");
+        FString stmp(FStringFC(), 
+                     "No socket for creating ssh session to %s:%d ",
+                     ipAddress, portNumber);
+        hlog(HLOG_ERR, "%s", stmp.c_str());
+        throw ESessionError(stmp);
     }
 }
 
@@ -57,45 +66,52 @@ SSHRunner::SSHRunner(const char *username,
                      const char *ipAddress,
                      int portNumber) :
     mSession (NULL),
-    mSocket (createSocketAndConnect(ipAddress, portNumber))
+    mSocket (-1),
+    mPort(-1)
 {
     FTRACE2("%s, %s, %s, %s, %s, %i", username, publicKeyFilePath, 
             privateKeyFilePath, passphrase, ipAddress, portNumber);
-    int err;
-
+    mSocket = createSocketAndConnect(ipAddress, portNumber);
     if (mSocket > 0)
     {
         mSession = libssh2_session_init();
-        if ((err=libssh2_session_startup(mSession, mSocket)))
+        if (libssh2_session_startup(mSession, mSocket) < 0)
         {
             libssh2_session_free(mSession);
             close(mSocket);
-            hlog(HLOG_ERR, "Could not startup the ssh session (%s)",
-                 getErrorString(err).c_str());
-            throw ESessionError("Could not startup the ssh session");
+            FString stmp(FStringFC(), 
+                        "Could not startup the ssh session to %s:%d (err=%s)",
+                        ipAddress, portNumber, getErrorString().c_str());
+            hlog(HLOG_ERR, "%s", stmp.c_str());
+            throw ESessionError(stmp);
         }
 
-        if ((err=libssh2_userauth_publickey_fromfile_ex(mSession, username, 
-                                                        strlen(username),
-                                                        publicKeyFilePath,
-                                                        privateKeyFilePath,
-                                                        passphrase)))
+        if (libssh2_userauth_publickey_fromfile_ex(mSession, username, 
+                                                   strlen(username),
+                                                   publicKeyFilePath,
+                                                   privateKeyFilePath,
+                                                   passphrase) < 0)
             {
                 libssh2_session_disconnect(mSession, "Goodbye");
                 libssh2_session_free(mSession);
                 close(mSocket);
-                hlog(HLOG_ERR, "Could not get authenticated via public key (%s)",
-                     getErrorString(err).c_str());
-                throw ESessionError("Could not get authenticated via public key");
+                FString stmp(FStringFC(), 
+                             "Could not get authenticated using (%s)(%s)(%s) "
+                             "to %s:%d (err=%s)", 
+                             username, publicKeyFilePath, privateKeyFilePath, 
+                             ipAddress, portNumber, getErrorString().c_str());
+                hlog(HLOG_ERR, "%s", stmp.c_str());
+                throw ESessionError(stmp);
             }
     }
     else
     {
-        hlog(HLOG_ERR, "No Socket for creating ssh session");
-        throw ESessionError("No Socket for creating ssh session");
+        FString stmp(FStringFC(), 
+                     "No socket for creating ssh session to %s:%d ", 
+                     ipAddress, portNumber);
+        hlog(HLOG_ERR, "%s", stmp.c_str());
+        throw ESessionError(stmp);
     }
-
-
 }
 
 SSHRunner::SSHRunner() :
@@ -119,23 +135,28 @@ int SSHRunner::Run(
     FString *output,
     FString *errorOutput)
 {
-    int err;
     // Try to open a channel to be used for executing the command.
     LIBSSH2_CHANNEL* channel = libssh2_channel_open_session(mSession);
     if( NULL == channel )
     {
-        hlog(HLOG_ERR, "Could not open communication channel for "
-             "executing remote command.");
-        throw ERunError("Could not open communication channel for "
-                        "executing remote command.");
+        FString stmp(FStringFC(), 
+                     "Could not open communication channel for executing "
+                     "remote command [%s] on %s:%d.", 
+                     command.c_str(), mIPAddress, mPort);
+        hlog(HLOG_ERR, "%s", stmp.c_str());
+        throw ERunError(stmp);
     }
 
     //  Execute the command.
-    if ((err=libssh2_channel_exec(channel, command.c_str()) != 0))
+    if (libssh2_channel_exec(channel, command.c_str()) < 0)
     {
-        hlog(HLOG_ERR, "Failed to run command [%s] (%s)", command.c_str(),
-            getErrorString(err).c_str());
-        throw ERunError("Failed to run command");
+        FString stmp(FStringFC(), 
+                     "Failed to run command [%s] on %s:%d (err=%s)", 
+                     command.c_str(), mIPAddress, mPort, 
+                     getErrorString().c_str());
+        hlog(HLOG_ERR, "%s", stmp.c_str());
+        libssh2_channel_free(channel);
+        throw ERunError(stmp);
     }
 
     // Read the output
@@ -177,11 +198,107 @@ int SSHRunner::Run(
     {
         exitcode = libssh2_channel_get_exit_status(channel);
     }
-
+  
     // Free resources.
     libssh2_channel_free(channel);
 
     return exitcode;
+}
+
+void SSHRunner::GetFile(const FString &remotePath, const FString &localPath)
+{
+    //open the localfile to be written with scp data from remote file
+    AutoFD fd(::open(localPath.c_str(), O_RDWR|O_CREAT|O_TRUNC|O_APPEND, 0644));
+    if (AutoFD::NONE == fd)
+    {
+        char errorBuffer[256]; int errorBufSize = sizeof(errorBuffer);
+        FString err(FStringFC(), "Failed to open local file %s for scp: %s",
+                    localPath.c_str(),
+                    strerror_r(errno, errorBuffer, errorBufSize));
+        hlog(HLOG_ERR, "%s", err.c_str());
+        throw ESCPError(err);
+    }
+    
+    // Try to open a channel to be used for executing the command.
+    struct stat statBuffer;
+    memset(&statBuffer, 0, sizeof(statBuffer));
+    LIBSSH2_CHANNEL* channel = libssh2_scp_recv(mSession, remotePath.c_str(), &statBuffer);
+    if (NULL == channel)
+    {
+        FString stmp(FStringFC(), 
+                     "Could not open communication channel for SCP of file "
+                     "[%s] on %s:%d.", remotePath.c_str(), mIPAddress, mPort);
+        hlog(HLOG_ERR, "%s", stmp.c_str());
+        fd.Close();
+        ::unlink(localPath.c_str());
+        throw ESCPError(stmp);
+    }
+
+    //loop { read 8kB (or what is remaining) at a time from SSH peer and write it into 
+    //       local file } until we are done
+    ssize_t got = 0;
+    char readBuffer[8192];
+    int readSize = sizeof(readBuffer);
+
+    while (got < statBuffer.st_size) 
+    {
+        if ((statBuffer.st_size - got) < readSize) 
+        {
+            readSize = statBuffer.st_size - got;
+        }
+        int rc = libssh2_channel_read(channel, readBuffer, readSize);
+        if (rc > 0) 
+        {
+            ssize_t written = 0;
+            while (written < rc)
+            {
+                ssize_t wsz = ::write(fd, readBuffer+written, rc-written);
+                if (wsz < 0)
+                {
+                    char errorBuffer[256]; int errorBufSize = sizeof(errorBuffer);
+                    FString err(FStringFC(), 
+                            "Failed to write local file %s for scp: %s",
+                            localPath.c_str(), 
+                            strerror_r(errno, errorBuffer, errorBufSize));
+                    hlog(HLOG_ERR, "%s", err.c_str());
+                    fd.Close();
+                    ::unlink(localPath.c_str());
+                    libssh2_channel_free(channel);
+                    channel = NULL;
+                    throw ESCPError(err);
+                }
+                written += wsz;
+            }
+        } 
+        else if (rc < 0) 
+        {
+            if (LIBSSH2_ERROR_EAGAIN != rc)
+            {
+                FString err(FStringFC(), 
+                            "Failed to SCP read file [%s] from %s/%d (err=%s)", 
+                             remotePath.c_str(), mIPAddress, mPort, 
+                             getErrorString().c_str());
+                hlog(HLOG_ERR, "%s", err.c_str());
+                fd.Close();
+                ::unlink(localPath.c_str());
+                libssh2_channel_free(channel);
+                channel = NULL;
+                throw ESCPError(err);
+            }
+            else
+            {
+                hlog(HLOG_WARN, "Got LIBSSH2_ERROR_EAGAIN during read of [%s] from %s/%d", 
+                                 remotePath.c_str(), mIPAddress, mPort);
+                rc = 0;
+            }
+        }
+        //ignore (0 == rc), which is not error
+        got += rc;
+    }
+
+    //cleanup
+    libssh2_channel_free(channel);
+    channel = NULL;
 }
 
 int SSHRunner::waitSocket(int socket_fd, LIBSSH2_SESSION *session)
@@ -215,7 +332,7 @@ int SSHRunner::waitSocket(int socket_fd, LIBSSH2_SESSION *session)
     return rc;
 }
 
-unsigned int SSHRunner::createSocketAndConnect(
+int SSHRunner::createSocketAndConnect(
     const char *ipAddress, int portNumber)
 {
     int sock = -1;
@@ -233,158 +350,36 @@ unsigned int SSHRunner::createSocketAndConnect(
     sock = socket(AF_INET, SOCK_STREAM, 0);
     if(sock < 0)
     {
-        hlog(HLOG_ERR, "Failed to create socket");
-        throw ESocketError("Failed to create socket");
+        FString stmp(FStringFC(), "Failed to create socket when connecting to %s:%d", ipAddress, portNumber);
+        hlog(HLOG_ERR, "%s", stmp.c_str());
+        throw ESocketError(stmp);
     }
 
     if(connect(sock, (struct sockaddr *)&s, sizeof(s)) < 0)
     {
         close(sock);
         FString stmp;
-        stmp.Format("Failed to connect with sock : %d", sock);
+        stmp.Format("Failed to connect with sock : %s/%d", ipAddress, portNumber);
         hlog(HLOG_ERR, "%s", stmp.c_str());
         throw ESocketError(stmp);
     }
 
+    strncpy(mIPAddress, ipAddress, strlen(ipAddress));
+    mPort = portNumber;
+
     return sock;
 }
 
-FString SSHRunner::getErrorString(int errNumber)
+FString SSHRunner::getErrorString()
 {
-    FString errString;
-    switch (errNumber)
+    FString errString("none");
+    char* errMsg = NULL;
+    int errNumber = libssh2_session_last_error(mSession, &errMsg, NULL, 1);
+    if (errMsg)
     {
-    case LIBSSH2_ERROR_SOCKET_NONE:
-        errString="LIBSSH2_ERROR_SOCKET_NONE";
-        break;
-    case LIBSSH2_ERROR_BANNER_NONE:
-        errString="LIBSSH2_ERROR_BANNER_NONE";
-        break;
-    case LIBSSH2_ERROR_BANNER_SEND:
-        errString="LIBSSH2_ERROR_BANNER_SEND";
-        break;
-    case LIBSSH2_ERROR_INVALID_MAC:
-        errString="LIBSSH2_ERROR_INVALID_MAC";
-        break;
-    case LIBSSH2_ERROR_KEX_FAILURE:
-        errString="LIBSSH2_ERROR_KEX_FAILURE";
-        break;
-    case LIBSSH2_ERROR_ALLOC:
-        errString="An internal memory allocation call failed.";
-        break;
-    case LIBSSH2_ERROR_SOCKET_SEND:
-        errString="Unable to send data on socket.";
-        break;
-    case LIBSSH2_ERROR_KEY_EXCHANGE_FAILURE:
-        errString="LIBSSH2_ERROR_KEY_EXCHANGE_FAILURE";
-        break;
-    case LIBSSH2_ERROR_TIMEOUT:
-        errString="LIBSSH2_ERROR_TIMEOUT";
-        break;
-    case LIBSSH2_ERROR_HOSTKEY_INIT:
-        errString="LIBSSH2_ERROR_HOSTKEY_INIT";
-        break;
-    case LIBSSH2_ERROR_HOSTKEY_SIGN:
-        errString="LIBSSH2_ERROR_HOSTKEY_SIGN";
-        break;
-    case LIBSSH2_ERROR_DECRYPT:
-        errString="LIBSSH2_ERROR_DECRYPT";
-        break;
-    case LIBSSH2_ERROR_SOCKET_DISCONNECT:
-        errString="LIBSSH2_ERROR_SOCKET_DISCONNECT";
-        break;
-    case LIBSSH2_ERROR_PROTO:
-        errString="LIBSSH2_ERROR_PROTO";
-        break;
-    case LIBSSH2_ERROR_PASSWORD_EXPIRED:
-        errString="LIBSSH2_ERROR_PASSWORD_EXPIRED";
-        break;
-    case LIBSSH2_ERROR_FILE:
-        errString="LIBSSH2_ERROR_FILE";
-        break;
-    case LIBSSH2_ERROR_METHOD_NONE:
-        errString="LIBSSH2_ERROR_METHOD_NONE";
-        break;
-    case LIBSSH2_ERROR_AUTHENTICATION_FAILED:
-        errString="Authentication using the supplied password or public key was not accepted.";
-        break;
-    case LIBSSH2_ERROR_PUBLICKEY_UNVERIFIED:
-        errString="The username/public key combination was invalid.";
-        break;
-    case LIBSSH2_ERROR_CHANNEL_OUTOFORDER:
-        errString="LIBSSH2_ERROR_CHANNEL_OUTOFORDER";
-        break;
-    case LIBSSH2_ERROR_CHANNEL_FAILURE:
-        errString="LIBSSH2_ERROR_CHANNEL_FAILURE";
-        break;
-    case LIBSSH2_ERROR_CHANNEL_REQUEST_DENIED:
-        errString="LIBSSH2_ERROR_CHANNEL_REQUEST_DENIED";
-        break;
-    case LIBSSH2_ERROR_CHANNEL_UNKNOWN:
-        errString="LIBSSH2_ERROR_CHANNEL_UNKNOWN";
-        break;
-    case LIBSSH2_ERROR_CHANNEL_WINDOW_EXCEEDED:
-        errString="LIBSSH2_ERROR_CHANNEL_WINDOW_EXCEEDED";
-        break;
-    case LIBSSH2_ERROR_CHANNEL_PACKET_EXCEEDED:
-        errString="LIBSSH2_ERROR_CHANNEL_PACKET_EXCEEDED";
-        break;
-    case LIBSSH2_ERROR_CHANNEL_CLOSED:
-        errString="LIBSSH2_ERROR_CHANNEL_CLOSED";
-        break;
-    case LIBSSH2_ERROR_CHANNEL_EOF_SENT:
-        errString="LIBSSH2_ERROR_CHANNEL_EOF_SENT";
-        break;
-    case LIBSSH2_ERROR_SCP_PROTOCOL:
-        errString="LIBSSH2_ERROR_SCP_PROTOCOL";
-        break;
-    case LIBSSH2_ERROR_ZLIB:
-        errString="LIBSSH2_ERROR_ZLIB";
-        break;
-    case LIBSSH2_ERROR_SOCKET_TIMEOUT:
-        errString="Socket timeout";
-        break;
-    case LIBSSH2_ERROR_SFTP_PROTOCOL:
-        errString="LIBSSH2_ERROR_SFTP_PROTOCOL";
-        break;
-    case LIBSSH2_ERROR_REQUEST_DENIED:
-        errString="LIBSSH2_ERROR_REQUEST_DENIED";
-        break;
-    case LIBSSH2_ERROR_METHOD_NOT_SUPPORTED:
-        errString="LIBSSH2_ERROR_METHOD_NOT_SUPPORTED";
-        break;
-    case LIBSSH2_ERROR_INVAL:
-        errString="LIBSSH2_ERROR_INVAL";
-        break;
-    case LIBSSH2_ERROR_INVALID_POLL_TYPE:
-        errString="LIBSSH2_ERROR_INVALID_POLL_TYPE";
-        break;
-    case LIBSSH2_ERROR_PUBLICKEY_PROTOCOL:
-        errString="LIBSSH2_ERROR_PUBLICKEY_PROTOCOL";
-        break;
-    case LIBSSH2_ERROR_EAGAIN:
-        errString="LIBSSH2_ERROR_EAGAIN";
-        break;
-    case LIBSSH2_ERROR_BUFFER_TOO_SMALL:
-        errString="LIBSSH2_ERROR_BUFFER_TOO_SMALL";
-        break;
-    case LIBSSH2_ERROR_BAD_USE:
-        errString="LIBSSH2_ERROR_BAD_USE";
-        break;
-    case LIBSSH2_ERROR_COMPRESS:
-        errString="LIBSSH2_ERROR_COMPRESS";
-        break;
-    case LIBSSH2_ERROR_OUT_OF_BOUNDARY:
-        errString="LIBSSH2_ERROR_OUT_OF_BOUNDARY";
-        break;
-    case LIBSSH2_ERROR_AGENT_PROTOCOL:
-        errString="LIBSSH2_ERROR_AGENT_PROTOCOL";
-        break;
-    default:
-        errString="Unknown Error";
-        break;
+        errString.Format("%d:%s", errNumber, errMsg);
+        free(errMsg);
     }
-
     return errString;
 }
 
