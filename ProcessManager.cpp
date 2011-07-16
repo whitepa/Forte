@@ -10,6 +10,8 @@
 #include "ServerMain.h"
 #include "Util.h"
 #include "FTrace.h"
+#include "GUIDGenerator.h"
+#include "FileSystem.h"
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
@@ -193,6 +195,46 @@ boost::shared_ptr<Forte::PDUPeer> Forte::ProcessManager::addPeer(int fd)
     return mPeerSet.PeerCreate(fd);
 }
 
+int ProcessManager::CreateProcessAndGetResult(const FString& command, 
+                                              FString& output, 
+                                              const int timeoutSeconds)
+{
+    FTRACE;
+    FString randomSuffix;
+    GUIDGenerator guidGen;
+    guidGen.GenerateGUID(randomSuffix);
+    FString outputFilename(FStringFC(), "/tmp/sc_commandoutput_%s.tmp", 
+                          randomSuffix.c_str());
+    hlog(HLOG_INFO, "command = %s, timeout=%d, output=%s", 
+         command.c_str(), timeoutSeconds, outputFilename.c_str());   
+    boost::shared_ptr<ProcessFuture> future = 
+        CreateProcess(command, "/", outputFilename);
+
+    try
+    {
+        future->GetResultTimed(timeoutSeconds);
+        output = future->GetOutputString();
+        hlog(HLOG_INFO, "output = %s", output.c_str());
+        int statusCode = future->GetStatusCode();
+        hlog(HLOG_INFO, "status = %d", statusCode);
+
+        if (unlink(outputFilename.c_str()))
+        {
+            hlog(HLOG_WARN, "Failed to unlink temporary file %s", strerror(errno));
+        }
+        return statusCode;
+    }
+    catch (Exception& e)
+    {
+        if (unlink(outputFilename.c_str()))
+        {
+            hlog(HLOG_WARN, "Failed to unlink temporary file %s", strerror(errno));
+        }
+        throw e;
+    }
+}
+
+
 void Forte::ProcessManager::pduCallback(PDUPeer &peer)
 {
     FTRACE;
@@ -283,3 +325,5 @@ void* Forte::ProcessManager::run(void)
     }
     return NULL;
 }
+
+

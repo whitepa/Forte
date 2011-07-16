@@ -204,7 +204,7 @@ namespace Forte
          *Compares two strings using strcmp. ( strcmp(c_str(), str); )
          **/ 
         inline int Compare(const char *str) const { return strcmp(c_str(), str); }
-
+        inline int ComparePrefix(const char *str, int prefixLen) const { return strncmp(c_str(), str, prefixLen); }
         /**
          *Compares two strings using strcasecmp. ( strcasecmp(c_str(), str); )
          **/
@@ -212,6 +212,11 @@ namespace Forte
             return strcasecmp(c_str(), str);
         }
 
+        /**
+         *Returns a shell escape'd FString for the object.
+         **/
+        FString ShellEscape() const;
+        
         /**
          *Returns the FString as a double. 
          **/
@@ -314,25 +319,25 @@ namespace Forte
          *Takes a vector of FStrings and generates a new FString using the provided delimiter. 
          *The new FString overwrites the pre-existing value of the FString specified. 
          **/
-        FString& Implode(const char *glue, const std::vector<FString> &components);
+        FString& Implode(const char *glue, const std::vector<FString> &components, bool quotes = false);
 
         /**
          *Takes a vector of strings and generates a new FString using the provided delimiter. 
          *The new FString overwrites the pre-existing value of the FString specified. 
          **/
-        FString& Implode(const char *glue, const std::vector<std::string> &components);
+        FString& Implode(const char *glue, const std::vector<std::string> &components, bool quotes = false);
         
         /**
          *Takes a set of FStrings and generates a new FString using the provided delimiter. 
          *The new FString overwrites the pre-existing value of the FString specified. 
          **/
-        FString& Implode(const char *glue, const std::set<FString> &components);
+        FString& Implode(const char *glue, const std::set<FString> &components, bool quotes = false);
 
         /**
          *Takes a list of FStrings and generates a new FString using the provided delimiter. 
          *The new FString overwrites the pre-existing value of the FString specified. 
          **/
-        FString& Implode(const char *glue, const std::list<FString> &components);
+        FString& Implode(const char *glue, const std::list<FString> &components, bool quotes = false);
 
         /// Scale Computing's split() and Join(), similar to the above Implode() and Explode()
         std::vector<FString> split(const char *separator, size_t max_parts = 0) const;

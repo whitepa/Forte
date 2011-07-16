@@ -117,6 +117,9 @@ namespace Forte
             return (mProcesses.size() == 0);
         }
 
+        virtual int CreateProcessAndGetResult(const Forte::FString& command, 
+                                              Forte::FString& output, 
+                                              const int timeoutSeconds);
     protected:
 
         /**

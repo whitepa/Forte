@@ -70,6 +70,10 @@ namespace Forte
             mCommandResponseMap.clear();
         };
 
+        virtual int CreateProcessAndGetResult(const Forte::FString& command, 
+                                              Forte::FString& output, 
+                                              const int timeoutSeconds);
+
     protected:
         virtual void startMonitor(boost::shared_ptr<Forte::ProcessFuture> ph);
 

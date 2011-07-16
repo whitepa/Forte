@@ -334,3 +334,24 @@ void Forte::MockProcessManager::startMonitor(boost::shared_ptr<Forte::ProcessFut
         parentfd.Release();
     }
 }
+
+
+int MockProcessManager::CreateProcessAndGetResult(const FString& command, 
+                                                  FString& output, 
+                                                  const int timeoutSeconds)
+{
+    ExpectedCommandResponsePtr expectedResponse;
+    
+    if (mCommandResponseMap.find(command) != mCommandResponseMap.end())
+    {
+        expectedResponse = mCommandResponseMap[command];
+    }
+    else
+    {
+        throw EMockProcessManagerUnexpectedCommand();
+    }
+   
+    output = expectedResponse->mResponse;
+    return expectedResponse->mResponseCode;
+}
+

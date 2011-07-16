@@ -314,7 +314,7 @@ int FString::Tokenize(const char *delim, std::vector<std::string> &components) c
     return components.size();
 }
 
-FString& FString::Implode(const char *glue, const std::vector<FString> &components)
+FString& FString::Implode(const char *glue, const std::vector<FString> &components, bool quotes)
 {
     clear();
     std::vector<FString>::const_iterator i;
@@ -322,13 +322,15 @@ FString& FString::Implode(const char *glue, const std::vector<FString> &componen
     for (i = components.begin(); i != components.end(); ++i)
     {
         if (!first) append(glue);
+        if (quotes) append("'");
         append(*i);
+        if (quotes) append("'");
         first = false;
     }
     return *this;
 }
 
-FString& FString::Implode(const char *glue, const std::vector<std::string> &components)
+FString& FString::Implode(const char *glue, const std::vector<std::string> &components, bool quotes)
 {
     clear();
     std::vector<std::string>::const_iterator i;
@@ -336,14 +338,16 @@ FString& FString::Implode(const char *glue, const std::vector<std::string> &comp
     for (i = components.begin(); i != components.end(); ++i)
     {
         if (!first) append(glue);
+        if (quotes) append("'");
         append(*i);
+        if (quotes) append("'");
         first = false;
     }
     return *this;
 }
 
 
-FString& FString::Implode(const char *glue, const std::set<FString> &components)
+FString& FString::Implode(const char *glue, const std::set<FString> &components, bool quotes)
 {
     clear();
     std::set<FString>::const_iterator i;
@@ -351,13 +355,15 @@ FString& FString::Implode(const char *glue, const std::set<FString> &components)
     for (i = components.begin(); i != components.end(); ++i)
     {
         if (!first) append(glue);
+        if (quotes) append("'");
         append(*i);
+        if (quotes) append("'");
         first = false;
     }
     return *this;
 }
 
-FString& FString::Implode(const char *glue, const std::list<FString> &components)
+FString& FString::Implode(const char *glue, const std::list<FString> &components, bool quotes)
 {
     clear();
     std::list<FString>::const_iterator i;
@@ -365,7 +371,9 @@ FString& FString::Implode(const char *glue, const std::list<FString> &components
     for (i = components.begin(); i != components.end(); ++i)
     {
         if (!first) append(glue);
+        if (quotes) append("'");
         append(*i);
+        if (quotes) append("'");
         first = false;
     }
     return *this;
@@ -490,4 +498,11 @@ void FString::SaveFile(const char *filename, const FString &in)
                        "failed to write to file '%s': %s", 
                        filename, strerror(err));
     }
+}
+
+FString FString::ShellEscape() const
+{
+    FString ret(*this);
+    ret.Replace("'", "'\\''");
+    return "'" + ret + "'";
 }
