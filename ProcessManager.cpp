@@ -111,7 +111,7 @@ void Forte::ProcessManager::RunProcess(
     ph->run();
 }
 
-void Forte::ProcessManager::abandonProcess(const int fd)
+void Forte::ProcessManager::abandonProcess(const boost::shared_ptr<Forte::PDUPeer> &peer)
 {
     // don't allow the object to be destroyed while the lock is held,
     // as the Process destructor also will attempt to abandon itself
@@ -119,13 +119,16 @@ void Forte::ProcessManager::abandonProcess(const int fd)
 
     // order of declarations is important!
     // boost::shared_ptr<ProcessFuture> processPtr;
-    AutoUnlockMutex lock(mProcessesLock);
-    ProcessMap::iterator i = mProcesses.find(fd);
-    if (i == mProcesses.end()) return;
-    //processPtr = (*i).second.lock();
-    mProcesses.erase(fd);
-    // lock is unlocked
-    // object is destroyed
+    {
+        AutoUnlockMutex lock(mProcessesLock);
+        ProcessMap::iterator i = mProcesses.find(peer->GetFD());
+        if (i == mProcesses.end()) return;
+        //processPtr = (*i).second.lock();
+        mProcesses.erase(i);
+        // lock is unlocked
+        // object is destroyed
+    }
+    mPeerSet.PeerDelete(peer);
 }
 
 void Forte::ProcessManager::startMonitor(

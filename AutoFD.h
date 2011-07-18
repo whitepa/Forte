@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <errno.h>
 
 
 namespace Forte
@@ -17,8 +18,8 @@ namespace Forte
         AutoFD(DIR *dir) : mDir(dir) { if (mDir != NULL) mFD = dirfd(dir); }
         ~AutoFD() { Close(); }
         inline void Close() {
-            if (mDir != NULL) { closedir(mDir); mDir = NULL; mFD = NONE; }
-            if (mFD != NONE) { ::close(mFD); mFD = NONE; }
+            if (mDir != NULL) { while(closedir(mDir) == -1 && errno == EINTR); mDir = NULL; mFD = NONE; }
+            if (mFD != NONE) { while(::close(mFD) == -1 && errno == EINTR); mFD = NONE; }
         }
         inline int Release() { int fd = mFD; mDir = NULL; mFD = NONE; return fd; }
         inline int Fd() const { return mFD; }

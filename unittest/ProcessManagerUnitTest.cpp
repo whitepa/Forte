@@ -9,6 +9,7 @@
 #include "Future.h"
 #include "AutoFD.h"
 #include "FileSystem.h"
+#include "ProcFileSystem.h"
 
 using namespace Forte;
 
@@ -95,6 +96,68 @@ TEST_F(ProcessManagerTest, MemLeak)
     {
         hlog(HLOG_ERR, "exception: %s", e.what());
         FAIL();        
+    }
+}
+
+TEST_F(ProcessManagerTest, FDLeak)
+{
+    try
+    {
+        hlog(HLOG_INFO, "new ProcessManager");
+
+        Context c;
+        // setup
+        boost::shared_ptr<FileSystem> fsptr(new FileSystem());
+        c.Set("forte.FileSystem", fsptr);
+
+        ProcFileSystem pfs(c);
+
+        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        hlog(HLOG_INFO, "CreateProcess");
+
+        unsigned int openDescriptors = pfs.CountOpenFileDescriptors();
+        hlog(HLOG_INFO, "Currently %u descriptors open", openDescriptors);
+        sleep(1); // causes a race condition where the next Process is
+        // added during the epoll_wait
+        {
+            hlog(HLOG_INFO, "Run Process");
+            hlog(HLOG_INFO, "Creating First Process");
+            boost::shared_ptr<ProcessFuture> ph1 = pm->CreateProcess("/bin/sleep 6");
+            ASSERT_EQ(openDescriptors + 1, pfs.CountOpenFileDescriptors());
+
+            hlog(HLOG_INFO, "Creating Second Process");
+            boost::shared_ptr<ProcessFuture> ph2 = pm->CreateProcess("/bin/sleep 1");
+            ASSERT_EQ(openDescriptors + 2, pfs.CountOpenFileDescriptors());
+
+            hlog(HLOG_INFO, "Creating Third Process");
+            boost::shared_ptr<ProcessFuture> ph3 = pm->CreateProcess("/bin/sleep 3");
+
+            ASSERT_EQ(openDescriptors + 3, pfs.CountOpenFileDescriptors());
+
+            ASSERT_NO_THROW(ph2->GetResult());
+            ASSERT_FALSE(ph2->IsRunning());
+            ph2.reset();
+            ASSERT_EQ(openDescriptors + 2, pfs.CountOpenFileDescriptors());
+
+            ASSERT_NO_THROW(ph3->GetResult());
+            ASSERT_FALSE(ph3->IsRunning());
+            ph3.reset();
+            ASSERT_EQ(openDescriptors + 1, pfs.CountOpenFileDescriptors());
+
+            ASSERT_NO_THROW(ph1->GetResult());
+            ASSERT_FALSE(ph1->IsRunning());
+            ph1.reset();
+            ASSERT_EQ(openDescriptors, pfs.CountOpenFileDescriptors());
+        }
+        ASSERT_TRUE(pm->IsProcessMapEmpty());
+
+        ASSERT_EQ(openDescriptors, pfs.CountOpenFileDescriptors());
+
+    }
+    catch (Exception& e)
+    {
+        hlog(HLOG_ERR, "exception: %s", e.what());
+        FAIL();
     }
 }
 

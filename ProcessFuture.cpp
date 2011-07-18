@@ -318,8 +318,7 @@ void Forte::ProcessFuture::abandon()
 
     if (mManagementChannel)
     {
-        GetProcessManager()->abandonProcess(mManagementChannel->GetFD());
-        while (close(mManagementChannel->GetFD()) == -1 && errno == EINTR);
+        GetProcessManager()->abandonProcess(mManagementChannel);
     }
     
     setState(STATE_ABANDONED);

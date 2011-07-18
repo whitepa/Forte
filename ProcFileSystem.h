@@ -41,12 +41,13 @@ namespace Forte
          **/
         virtual void UptimeRead(Uptime& uptime);
 
-
         /**
          * takes a map of string to double. fills in the details from
          * /proc/meminfo as name => double pairs
          **/
         virtual void MemoryInfoRead(Forte::StrDoubleMap& meminfo);
+
+        virtual unsigned int CountOpenFileDescriptors(pid_t pid = getpid() );
 
     protected:
         // TODO: need a context pointer

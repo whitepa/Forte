@@ -125,7 +125,7 @@ namespace Forte
          *
          * @param fd file descriptor connected to the process being abandoned
          */
-        virtual void abandonProcess(const int fd);
+        virtual void abandonProcess(const boost::shared_ptr<Forte::PDUPeer> &peer);
 
         virtual void startMonitor(boost::shared_ptr<Forte::ProcessFuture> ph);
 
@@ -146,7 +146,7 @@ namespace Forte
          */
         virtual boost::shared_ptr<Forte::PDUPeer> addPeer(int fd);
 
-        /** 
+        /**
          * This function gets called whenever a PDU is received on any
          * peer.
          * 

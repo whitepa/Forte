@@ -101,11 +101,15 @@ void ProcFileSystem::MemoryInfoRead(Forte::StrDoubleMap& meminfo)
     }
 }
 
+unsigned int ProcFileSystem::CountOpenFileDescriptors(pid_t pid)
+{
+    CGET("forte.FileSystem", FileSystem, fs);
 
+    Forte::FStringVector children;
+    fs.GetChildren("/proc/" + FString(pid) + "/fd", children);
 
-
-
-
+    return children.size();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // helpers
