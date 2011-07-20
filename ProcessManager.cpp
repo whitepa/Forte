@@ -214,9 +214,9 @@ int ProcessManager::CreateProcessAndGetResult(const FString& command,
     {
         future->GetResultTimed(timeout);
         output = future->GetOutputString();
-        hlog(HLOG_INFO, "output = %s", output.c_str());
+        hlog(HLOG_DEBUG, "output = %s", output.c_str());
         int statusCode = future->GetStatusCode();
-        hlog(HLOG_INFO, "status = %d", statusCode);
+        hlog(HLOG_DEBUG, "status = %d", statusCode);
 
         if (unlink(outputFilename.c_str()))
         {
