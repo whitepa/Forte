@@ -5,6 +5,7 @@
 #include <linux/limits.h>
 #include <fcntl.h>
 #include <boost/bind.hpp>
+#include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
 #include "DaemonUtil.h"
 #include "LogManager.h"
@@ -300,8 +301,15 @@ void Forte::ProcessMonitor::startProcess(void)
         // \TODO we should probably run it as /bin/bash -c cmdline
         // until we have a complete command line parser
         std::vector<std::string> strings;
-        FString scrubbedCommand = shellEscape(mCmdline);
-        boost::split(strings, scrubbedCommand, boost::is_any_of("\t "));
+
+        boost::escaped_list_separator<char> sep("\\", " \t", "\"\'");
+        boost::tokenizer<boost::escaped_list_separator<char> > tok(mCmdline, sep);
+        for(boost::tokenizer<boost::escaped_list_separator<char> >::iterator beg=tok.begin();
+                beg!=tok.end(); ++beg)
+        {
+            strings.push_back(*beg);
+        }
+
         unsigned int num_args = strings.size();
         for(unsigned int i = 0; i < num_args; ++i) 
         {

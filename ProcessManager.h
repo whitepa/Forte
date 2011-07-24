@@ -6,6 +6,7 @@
 #include "PDUPeerSet.h"
 #include "Object.h"
 #include "ProcessManagerPDU.h"
+#include "Clock.h"
 #include <boost/pointer_cast.hpp>
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
@@ -119,7 +120,7 @@ namespace Forte
 
         virtual int CreateProcessAndGetResult(const Forte::FString& command, 
                                               Forte::FString& output, 
-                                              const int timeoutSeconds);
+                                              const Timespec &timeout = Timespec::FromSeconds(-1));
     protected:
 
         /**

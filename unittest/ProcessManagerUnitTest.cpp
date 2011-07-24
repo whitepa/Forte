@@ -484,7 +484,7 @@ TEST_F(ProcessManagerTest, ProcessTimeout)
         boost::shared_ptr<ProcessManager> pm(new ProcessManager);
         boost::shared_ptr<ProcessFuture> ph = pm->CreateProcess("/bin/sleep 10");
         ASSERT_TRUE(ph->IsRunning());
-        ASSERT_THROW(ph->GetResultTimed(5), EFutureTimeoutWaitingForResult);
+        ASSERT_THROW(ph->GetResultTimed(Timespec::FromSeconds(5)), EFutureTimeoutWaitingForResult);
         ASSERT_NO_THROW(ph->GetResult());
         ASSERT_TRUE(!ph->IsRunning());
     }
@@ -498,4 +498,40 @@ TEST_F(ProcessManagerTest, ProcessTimeout)
         hlog(HLOG_ERR, "std::exception: %s", e.what());
         FAIL();
     }    
+}
+
+TEST_F(ProcessManagerTest, CommandLineEscape)
+{
+    try
+    {
+        hlog(HLOG_INFO, "Command Line Escapes");
+        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        FString result;
+        FString test("firstword secondword");
+        pm->CreateProcessAndGetResult("/bin/echo \"" + test + "\"", result);
+        result.Trim();
+        ASSERT_STREQ(result, test);
+
+        pm->CreateProcessAndGetResult("/bin/echo '" + test + "'", result);
+        result.Trim();
+        ASSERT_STREQ(result, test);
+
+        pm->CreateProcessAndGetResult("/bin/echo \\'" + test + "\\'", result);
+        result.Trim();
+        ASSERT_STREQ(result, "'" + test + "'");
+
+        pm->CreateProcessAndGetResult("/bin/echo \\\"" + test + "\\\"", result);
+        result.Trim();
+        ASSERT_STREQ(result, "\"" + test + "\"");
+    }
+    catch (Exception &e)
+    {
+        hlog(HLOG_ERR, "Exception: %s", e.what());
+        FAIL();
+    }
+    catch (std::exception &e)
+    {
+        hlog(HLOG_ERR, "std::exception: %s", e.what());
+        FAIL();
+    }
 }

@@ -5,6 +5,8 @@
 #include "Exception.h"
 #include "FTrace.h"
 #include "ThreadCondition.h"
+#include "Clock.h"
+#include "Util.h"
 #include <boost/exception_ptr.hpp>
 
 namespace Forte
@@ -29,22 +31,33 @@ namespace Forte
         virtual bool IsCancelled() const { AutoUnlockMutex lock(mLock); return mCancelled; }
         virtual bool IsReady() const { return mResultReady; }
 
-        virtual ResultType GetResultTimed(const int seconds) {
+        virtual ResultType GetResultTimed(const Timespec &timeout) {
             AutoUnlockMutex lock(mLock);
             if (!mResultReady)
             {
-                if (seconds < 0)
+                if (timeout.IsZero())
                 {
-                    mCondition.Wait();
+                    throw EFutureTimeoutWaitingForResult();
                 }
-                else
+                else if (timeout.IsPositive())
                 {
-                    mCondition.TimedWait(seconds);
+                    MonotonicClock mtc;
+                    RealtimeClock rtc;
+                    Timespec mtTimeout = mtc.GetTime() + timeout;
+                    while (!mResultReady && (mtc.GetTime() <= mtTimeout))
+                    {
+                        Timespec rtTimeout = rtc.GetTime()
+                                + (mtTimeout - mtc.GetTime());
+                        mCondition.TimedWait(rtTimeout);
+                    }
                     if (!mResultReady)
                         throw EFutureTimeoutWaitingForResult();
                 }
+                else
+                {
+                    mCondition.Wait();
+                }
             }
-
             if (mException)
             {
                 try
@@ -60,7 +73,7 @@ namespace Forte
         }
 
         virtual ResultType GetResult() {
-            return GetResultTimed(-1);
+            return GetResultTimed(Timespec::FromSeconds(-1));
         }
         
         virtual void SetResult(const ResultType &result) {
@@ -96,19 +109,31 @@ namespace Forte
         virtual bool IsCancelled() const { AutoUnlockMutex lock(mLock); return mCancelled; }
         virtual bool IsReady() const { return mResultReady; }
 
-        virtual void GetResultTimed(const int seconds) {
+        virtual void GetResultTimed(const Timespec &timeout) {
             AutoUnlockMutex lock(mLock);
             if (!mResultReady)
             {
-                if (seconds < 0)
+                if (timeout.IsZero())
                 {
-                    mCondition.Wait();
+                    throw EFutureTimeoutWaitingForResult();
+                }
+                else if (timeout.IsPositive())
+                {
+                    MonotonicClock mtc;
+                    RealtimeClock rtc;
+                    Timespec mtTimeout = mtc.GetTime() + timeout;
+                    while (!mResultReady && (mtc.GetTime() <= mtTimeout))
+                    {
+                        Timespec rtTimeout = rtc.GetTime()
+                                + (mtTimeout - mtc.GetTime());
+                        mCondition.TimedWait(rtTimeout);
+                    }
+                    if (!mResultReady)
+                        throw EFutureTimeoutWaitingForResult();
                 }
                 else
                 {
-                    mCondition.TimedWait(seconds);
-                    if (!mResultReady)
-                        throw EFutureTimeoutWaitingForResult();
+                    mCondition.Wait();
                 }
             }
 
@@ -126,7 +151,7 @@ namespace Forte
         }
 
         virtual void GetResult() {
-            GetResultTimed(-1);
+            GetResultTimed(Timespec::FromSeconds(-1));
         }
         
         virtual void SetResult(void) {

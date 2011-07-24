@@ -197,7 +197,7 @@ boost::shared_ptr<Forte::PDUPeer> Forte::ProcessManager::addPeer(int fd)
 
 int ProcessManager::CreateProcessAndGetResult(const FString& command, 
                                               FString& output, 
-                                              const int timeoutSeconds)
+                                              const Timespec &timeout)
 {
     FTRACE;
     FString randomSuffix;
@@ -205,14 +205,14 @@ int ProcessManager::CreateProcessAndGetResult(const FString& command,
     guidGen.GenerateGUID(randomSuffix);
     FString outputFilename(FStringFC(), "/tmp/sc_commandoutput_%s.tmp", 
                           randomSuffix.c_str());
-    hlog(HLOG_INFO, "command = %s, timeout=%d, output=%s", 
-         command.c_str(), timeoutSeconds, outputFilename.c_str());   
+    hlog(HLOG_INFO, "command = %s, timeout=%ld, output=%s",
+         command.c_str(), timeout.AsSeconds(), outputFilename.c_str());
     boost::shared_ptr<ProcessFuture> future = 
         CreateProcess(command, "/", outputFilename);
 
     try
     {
-        future->GetResultTimed(timeoutSeconds);
+        future->GetResultTimed(timeout);
         output = future->GetOutputString();
         hlog(HLOG_INFO, "output = %s", output.c_str());
         int statusCode = future->GetStatusCode();

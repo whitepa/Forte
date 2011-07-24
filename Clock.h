@@ -100,7 +100,7 @@ namespace Forte
         /**
          *Takes seconds and converts them to a Timespec object which is returned to you.
          **/
-        static Timespec FromSeconds(int sec) {
+        static Timespec FromSeconds(long long int sec) {
             Timespec ts;
             ts.mTimespec.tv_sec = sec;
             ts.mTimespec.tv_nsec = 0;
