@@ -20,7 +20,6 @@ Timer::Timer(shared_ptr<RunLoop> runloop,
     FTRACE;
     if (!runloop) throw ETimerRunLoopInvalid();
     if (!target) throw ETimerTargetInvalid();
-    if (interval.IsZero()) throw ETimerIntervalInvalid();
 }
 
 Timer::~Timer()

@@ -53,16 +53,17 @@ BSRCS = ContextPredicateUnitTest.cpp \
 	StateMachineUnitTest7.cpp
 
 GSRCS = ActiveObjectUnitTest.cpp \
+	CheckedValueStoreUnitTest.cpp \
 	ClusterLockUnitTest.cpp \
 	DbLiteConnectionUnitTest.cpp \
+	ExceptionUnitTest.cpp \
 	FileSystemUnitTest.cpp \
 	FileSystemUtilUnitTest.cpp \
+	FStringUnitTest.cpp \
 	PDUPeerUnitTest.cpp \
 	ProcessManagerUnitTest.cpp \
-	FStringUnitTest.cpp \
-	ExceptionUnitTest.cpp \
-	SCSIUtilUnitTest.cpp \
-	CheckedValueStoreUnitTest.cpp 
+	RunLoopUnitTest.cpp \
+	SCSIUtilUnitTest.cpp
 
 GPROGS = $(GSRCS:%.cpp=$(TARGETDIR)/%)
 BPROGS = $(BSRCS:%.cpp=$(TARGETDIR)/%)
@@ -167,6 +168,14 @@ $(TARGETDIR)/ActiveObjectUnitTest: ActiveObjectUnitTest.cpp $(FORTE)
 	$(FORTE_LIBS) \
 	$(FORTE_MOCK_LIBS) \
 	$(BOOST_FS_LIB) \
+
+$(TARGETDIR)/RunLoopUnitTest: RunLoopUnitTest.cpp $(FORTE)
+	echo "Building $@..."
+	$(QUIET)$(CCC) $< \
+	-o $@ \
+	$(INCLUDE) \
+	$(GTEST_LIB) \
+	$(LIBS)
 
 $(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp
 	@echo "Compiling $@..."

@@ -9,6 +9,9 @@ namespace Forte
     EXCEPTION_SUBCLASS(EClock, EClockInvalid);
     EXCEPTION_SUBCLASS(EClock, EClockPermission);
 
+    EXCEPTION_CLASS(ETimespec);
+    EXCEPTION_SUBCLASS2(ETimespec, ETimespecInvalid, "Invalid timespec");
+
     /**
      *The Timespec class is used to handle different representations of time. You use this class to 
      *convert from one representation of time to another, for example converting to time in seconds or 
@@ -35,6 +38,10 @@ namespace Forte
         Timespec(const struct timespec &ts) {
             *this = ts;
         };
+
+        Timespec(const long sec, const long nsec) {
+            Set(sec,nsec);
+        }
 
         virtual ~Timespec() {};
 
@@ -64,6 +71,16 @@ namespace Forte
         operator const struct timespec () const { return mTimespec; }
 
         /**
+         * Sets the values of sec and nsec
+         */
+        void Set(const long sec, const long nsec) {
+            if (nsec < 0 || nsec > 999999999)
+                throw ETimespecInvalid();
+            mTimespec.tv_sec = sec;
+            mTimespec.tv_nsec = nsec;
+        }
+
+        /**
          *Returns the time in milliseconds.
          **/
         long long AsMillisec(void) const {
@@ -73,7 +90,7 @@ namespace Forte
         /**
          *Takes milliseconds and converts them to a Timespec object which is returned to you.
          **/
-        static Timespec FromMillisec(unsigned int ms) {
+        static Timespec FromMillisec(int ms) {
             Timespec ts;
             ts.mTimespec.tv_sec = ms / 1000;
             ts.mTimespec.tv_nsec = (ms % 1000) * 1000000;
@@ -83,7 +100,7 @@ namespace Forte
         /**
          *Takes seconds and converts them to a Timespec object which is returned to you.
          **/
-        static Timespec FromSeconds(unsigned int sec) {
+        static Timespec FromSeconds(int sec) {
             Timespec ts;
             ts.mTimespec.tv_sec = sec;
             ts.mTimespec.tv_nsec = 0;
@@ -95,6 +112,10 @@ namespace Forte
          **/
         long AsSeconds(void) const {
             return mTimespec.tv_sec;
+        }
+
+        long GetNanosecs(void) const {
+            return mTimespec.tv_nsec;
         }
 
         /**

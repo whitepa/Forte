@@ -24,8 +24,9 @@ void Forte::RunLoop::AddTimer(const shared_ptr<Timer> &timer)
     // schedule it
     MonotonicClock mc;
     mSchedule.insert(RunLoopScheduleItem(timer, mc.GetTime() + timer->GetInterval()));
-    hlog(HLOG_DEBUG, "scheduled timer (now=%ld interval=%ld)", 
-         mc.GetTime().AsSeconds(), timer->GetInterval().AsSeconds());
+    hlog(HLOG_DEBUG, "scheduled timer (now=%ld interval=%ld.%llu)", 
+         mc.GetTime().AsSeconds(), timer->GetInterval().AsSeconds(), 
+         timer->GetInterval().AsMillisec() % 1000);
     // notify the run loop thread
     Notify();
 }
@@ -66,7 +67,14 @@ void * Forte::RunLoop::run(void)
         }
         else
         {
-            Timespec latency = now - fireTime;
+            Timespec fireLatency = now - fireTime;
+            Timespec schedLatency = now - i->GetScheduledTime();
+            Timespec latency;
+            if (fireLatency < schedLatency)
+                latency = fireLatency;
+            else
+                latency = schedLatency;
+            
             if (!warned && latency.AsMillisec() > 100)
             {
                 hlog(HLOG_WARN, "run loop has high latency (%lld ms)",

@@ -46,14 +46,18 @@ namespace Forte
         public:
             RunLoopScheduleItem(const shared_ptr<Timer> &timer,
                                 const Timespec &absolute) :
-                mTimer(timer), mAbsolute(absolute) {}
+                mTimer(timer), mAbsolute(absolute) {
+                mScheduledTime = Forte::MonotonicClock().GetTime();
+            }
             bool operator < (const RunLoopScheduleItem &other) const { 
                 return mAbsolute < other.mAbsolute;
             }
             shared_ptr<Timer>GetTimer(void) const { return mTimer.lock(); }
             const Timespec & GetAbsolute(void) const { return mAbsolute; }
+            const Timespec & GetScheduledTime(void) const { return mScheduledTime; }
             weak_ptr<Timer> mTimer;
             Timespec mAbsolute;
+            Timespec mScheduledTime;
         };
         std::multiset<RunLoopScheduleItem> mSchedule;
     };
