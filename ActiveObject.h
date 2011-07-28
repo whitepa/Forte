@@ -13,7 +13,7 @@ namespace Forte
      * Method calls on an ActiveObject return Futures, which can be
      * queried directly for status and/or results of the given method.
      */
-    class ActiveObject : public Forte::Object
+    class ActiveObject : virtual public Forte::Object
     {
     public:
         virtual ~ActiveObject() {};
