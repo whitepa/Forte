@@ -35,9 +35,18 @@ void MockFileSystem::StatFS(const FString& path, struct statfs *st)
     *st = mStatFSResponseMap[path];
 }
 
-FString MockFileSystem::FileGetContents(const FString& filename)
+FString MockFileSystem::FileGetContents(const FString& filename) const
 {
-    return mFiles[filename];
+    StrStrMap::const_iterator it = mFiles.find(filename);
+
+    if (it != mFiles.end())
+    {
+        return it->second;
+    }
+    else
+    {
+        return "";
+    }
 }
 
 void MockFileSystem::FilePutContents(const FString& filename, 

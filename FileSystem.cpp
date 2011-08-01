@@ -760,7 +760,7 @@ void FileSystem::FileCopy(const FString& from, const FString& to, mode_t mode)
 }
 
 
-FString FileSystem::FileGetContents(const FString& filename)
+FString FileSystem::FileGetContents(const FString& filename) const
 {
     hlog(HLOG_DEBUG4, "FileSystem::file_get_contents(%s)", filename.c_str());
     ifstream in(filename, ios::in | ios::binary);

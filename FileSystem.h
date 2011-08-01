@@ -95,7 +95,7 @@ namespace Forte
                               const FString& to, 
                               mode_t mode = 0777);
 
-        virtual FString FileGetContents(const FString& filename);
+        virtual FString FileGetContents(const FString& filename) const;
         virtual void FilePutContents(const FString& filename, 
                                      const FString& data,
                                      bool append=false);

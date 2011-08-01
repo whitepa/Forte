@@ -13,7 +13,7 @@ namespace Forte
         void ClearStatFSResponseAll(void);
         void StatFS(const FString& path, struct statfs *st);
 
-        Forte::FString FileGetContents(const Forte::FString& filename);
+        Forte::FString FileGetContents(const Forte::FString& filename) const;
         void FilePutContents(const Forte::FString& filename, 
                              const Forte::FString& data, 
                              bool append=false);
