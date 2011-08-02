@@ -19,7 +19,7 @@ Thread * Thread::MyThread(void)
 {
     Thread *thr = reinterpret_cast<Thread*>(pthread_getspecific(sThreadKey));
     if (thr == NULL)
-        throw EThread("Thread::myThread() called from unknown thread");
+        throw EThreadUnknown();
     return thr;
 }
 void * Thread::startThread(void *obj)
