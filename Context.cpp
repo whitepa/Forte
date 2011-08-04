@@ -32,7 +32,7 @@ Forte::ObjectPtr Forte::Context::Get(const char *key) const
         // explicitly created.  This avoids potential problems if
         // destructors decide to try to access context objects after
         // they have been removed.
-        throw EInvalidKey();
+        throw_exception(EContextInvalidKey(key));
     return (*i).second;
 }
 
@@ -41,7 +41,7 @@ void Forte::Context::Set(const char *key, ObjectPtr obj)
     if (!obj)
     {
         // disallow setting to an empty pointer
-        throw EEmptyPointer();
+        throw_exception(EContextEmptyPointer(key));
     }
     ObjectPtr replaced;
     {

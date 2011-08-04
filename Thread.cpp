@@ -40,7 +40,7 @@ void * Thread::startThread(void *obj)
             thr->mNotifyCond.Wait();
     }
     // inform the log manager of this thread
-    LogThreadInfo logThread(LogManager::GetInstance(), *thr);
+    LogThreadInfo logThread(*thr);
     if (thr->mThreadName.empty())
         thr->mThreadName.Format("unknown-%u", (unsigned)thr->mThread);
     if (!thr->mThreadShutdown)

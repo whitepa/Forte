@@ -121,36 +121,13 @@ namespace Forte
     };
 
     class LogManager;
-    class LogContext : public Object {
-    public:
-        LogContext(); // push onto the stack
-        virtual ~LogContext();        // pop from the stack
-    
-        inline void SetClient(struct in_addr client) { mClient = client; }
-        inline void SetPrefix(const FString &prefix) { mPrefix = prefix; }
-        void AppendPrefix(const FString &prefix) { mPrefix.append(prefix); }
-        struct in_addr mClient;
-        FString mPrefix;
-    protected:
-        LogManager *mLogMgrPtr;
-    };
-
-    class LogContextStack : public Object {
-    public:
-        LogContextStack() {};
-        ~LogContextStack() {};
-    
-        std::vector<LogContext*> mStack;
-    };
-
     class LogThreadInfo : public Object {
         friend class LogManager;
     public:
-        LogThreadInfo(LogManager &mgr, Thread &thr);
+        LogThreadInfo(Thread &thr);
         virtual ~LogThreadInfo();
     
     protected:
-        LogManager &mLogMgr;
         Thread &mThread;
     };
     /**
@@ -208,7 +185,6 @@ namespace Forte
      *HLOG_DEBUG0 - The same as HLOG_DEBUG.
      **/
     class LogManager : public Object {
-        friend class LogContext;
         friend class LogThreadInfo;
     public:
         /**
@@ -217,7 +193,10 @@ namespace Forte
          **/
         LogManager();
         virtual ~LogManager();
-    
+
+        /**
+         * NOTE: you MUST hold the sLogManagerMutex prior to calling these!
+         */
         inline static LogManager* GetInstancePtr() { return sLogManager; }
         inline static LogManager & GetInstance() { 
             if (sLogManager) return *sLogManager; else throw EEmptyReference("no log manager instance");
@@ -416,16 +395,22 @@ namespace Forte
          * of the LogManager.
          */
         Mutex& GetMutex(void) { return mLogMutex; }
+        
+        /*
+         * Get a reference to the log singleton mutex to allow locking from
+         * hlog()
+         */
+        static Mutex& GetSingletonMutex(void) { return sLogManagerMutex; }
 
     protected:
         friend class Mutex;
         std::vector<Logfile*> mLogfiles;
-        ThreadKey mLogContextStackKey;
         ThreadKey mThreadInfoKey;
         Mutex mLogMutex;
         unsigned mLogMaskTemplate;
         static LogManager *sLogManager;
-    
+        static Mutex sLogManagerMutex;
+
         // Source File specific log masks (global)
         std::map<FString,unsigned int> mFileMasks;
 

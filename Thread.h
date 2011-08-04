@@ -23,7 +23,7 @@ namespace Forte
     EXCEPTION_SUBCLASS2(EThread, EThreadUnknown, "Thread::myThread() called from unknown thread");
     EXCEPTION_SUBCLASS2(EThread, EThreadShutdown, "Thread Shutting Down");
 
-    class Thread : public Object
+    class Thread : virtual public Object
     {
     public:
         inline Thread(void) : 

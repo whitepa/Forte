@@ -58,7 +58,7 @@ BOOST_FIXTURE_TEST_SUITE( context, ContextFixture );
 
 BOOST_AUTO_TEST_CASE(ContextGetInvalidKey)
 {
-    BOOST_CHECK_THROW(contextGetObject(c), EInvalidKey);
+    BOOST_CHECK_THROW(contextGetObject(c), EContextInvalidKey);
 }
 
 BOOST_AUTO_TEST_CASE(ContextSetGetObject)
@@ -140,11 +140,11 @@ BOOST_AUTO_TEST_CASE(MiscTests)
 {
     hlog(HLOG_INFO, "MiscTests");
     // verify invalid keys throws
-    BOOST_CHECK_THROW(c.Get<LogManager>("forte.logManager"), EInvalidKey);
+    BOOST_CHECK_THROW(c.Get<LogManager>("forte.logManager"), EContextInvalidKey);
 
     c.Set("forte.config", ObjectPtr(new ServiceConfig()));
 
-    BOOST_CHECK_THROW(c.Get<ServiceConfig>("forte.config.fail"), EInvalidKey);
+    BOOST_CHECK_THROW(c.Get<ServiceConfig>("forte.config.fail"), EContextInvalidKey);
 
     // verify type mismatch throws
     BOOST_CHECK_THROW(c.Get<LogManager>("forte.config"), EContextTypeMismatch);
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(MiscTests)
     BOOST_CHECK(TestClass::sCount == 1);
     c.Remove("testobject");
     BOOST_CHECK(TestClass::sCount == 0);
-    BOOST_CHECK_THROW(c.Get<TestClass>("testobject"), EInvalidKey);
+    BOOST_CHECK_THROW(c.Get<TestClass>("testobject"), EContextInvalidKey);
 
     c.Set("testobject", ObjectPtr(new TestClass()));
     BOOST_CHECK(TestClass::sCount == 1);

@@ -2,6 +2,7 @@
 #define __Forte__Context_h__
 
 #include "Exception.h"
+#include "LogManager.h"
 #include "Object.h"
 #include "AutoMutex.h"
 #include <boost/shared_ptr.hpp>
@@ -34,8 +35,8 @@
 namespace Forte
 {
     EXCEPTION_CLASS(EContext);
-    EXCEPTION_SUBCLASS2(EContext, EInvalidKey, "Invalid Key");
-    EXCEPTION_SUBCLASS2(EContext, EEmptyPointer, "Empty Pointer");
+    EXCEPTION_SUBCLASS2(EContext, EContextInvalidKey, "Invalid Key");
+    EXCEPTION_SUBCLASS2(EContext, EContextEmptyPointer, "Empty Pointer");
     EXCEPTION_SUBCLASS2(EContext, EContextTypeMismatch, "Context Type Mismatch");
  
     /**
@@ -87,11 +88,13 @@ namespace Forte
             ObjectMap::const_iterator i;
             Forte::AutoUnlockMutex lock(mLock);
             if ((i = mObjectMap.find(key)) == mObjectMap.end())
-                throw_exception(EInvalidKey(key));
+                throw_exception(EContextInvalidKey(key));
             boost::shared_ptr<ValueType> ptr(
                 boost::dynamic_pointer_cast<ValueType>((*i).second));
             if (!ptr)
-                throw_exception(EContextTypeMismatch()); // TODO: include types in error message
+            {
+                hlog_and_throw(HLOG_ERR, EContextTypeMismatch(FStringFC(), "Invalid type for '%s': asked for %s, but %s was found", key, typeid(ValueType).name(), typeid((*i).second).name())); 
+            }
             return ptr;
         }
 

@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include "LogManager.h"
-#include "ProcessManager.h"
+#include "ProcessManagerImpl.h"
 #include "ProcessFuture.h"
 #include "Future.h"
 #include "AutoFD.h"
@@ -74,7 +74,7 @@ TEST_F(ProcessManagerTest, MemLeak)
     try
     {
         hlog(HLOG_INFO, "new ProcessManage");
-        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
         hlog(HLOG_INFO, "CreateProcess");
         
         sleep(1); // causes a race condition where the next Process is
@@ -117,7 +117,7 @@ TEST_F(ProcessManagerTest, FDLeak)
 
         ProcFileSystem pfs(c);
 
-        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
         hlog(HLOG_INFO, "CreateProcess");
 
         unsigned int openDescriptors = pfs.CountOpenFileDescriptors();
@@ -191,7 +191,7 @@ TEST_F(ProcessManagerTest, RunProcess)
     try
     {
         hlog(HLOG_INFO, "new ProcessManager");
-        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
         hlog(HLOG_INFO, "CreateProcess");
 
         sleep(1); // causes a race condition where the next Process is
@@ -226,7 +226,7 @@ TEST_F(ProcessManagerTest, ErrorOutput)
     try
     {
         hlog(HLOG_INFO, "new ProcessManager");
-        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
         hlog(HLOG_INFO, "CreateProcess");
 
         sleep(1); // causes a race condition where the next Process is
@@ -258,7 +258,7 @@ TEST_F(ProcessManagerTest, ErrorOutputNonZero)
     try
     {
         hlog(HLOG_INFO, "new ProcessManager");
-        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
         hlog(HLOG_INFO, "CreateProcess");
 
         sleep(1); // causes a race condition where the next Process is
@@ -287,7 +287,7 @@ TEST_F(ProcessManagerTest, ReturnCodeHandling)
 {
     try
     {
-        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
         boost::shared_ptr<ProcessFuture> ph = pm->CreateProcess("/bin/false");
         ASSERT_THROW(ph->GetResult(), EProcessFutureTerminatedWithNonZeroStatus);
         ASSERT_TRUE(!ph->IsRunning());
@@ -309,7 +309,7 @@ TEST_F(ProcessManagerTest, RunMultipleProcess)
 {
     try
     {
-        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
         
         sleep(3);
 
@@ -334,7 +334,7 @@ TEST_F(ProcessManagerTest, Exceptions)
     try
     {
         hlog(HLOG_INFO, "Exceptions");
-        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
         hlog(HLOG_INFO, "CreateProcess");
         boost::shared_ptr<ProcessFuture> ph = pm->CreateProcessDontRun("/bin/sleep 3");
         hlog(HLOG_INFO, "GetProcessTerminationType");
@@ -378,7 +378,7 @@ TEST_F(ProcessManagerTest, CancelProcess)
     try
     {
         hlog(HLOG_INFO, "CancelProcess");
-        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
         boost::shared_ptr<ProcessFuture> ph = pm->CreateProcess("/bin/sleep 100");
         ASSERT_TRUE(ph->IsRunning());
         ph->Cancel();
@@ -409,7 +409,7 @@ TEST_F(ProcessManagerTest, AbandonProcess)
         pid_t pid = -1;
         hlog(HLOG_INFO, "AbandonProcess");
         {
-            boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+            boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
             boost::shared_ptr<ProcessFuture> ph = pm->CreateProcess("/bin/sleep 100");
             pid = ph->GetProcessPID();
             ASSERT_TRUE(ph->IsRunning());
@@ -434,7 +434,7 @@ TEST_F(ProcessManagerTest, FileIO)
     try
     {
         hlog(HLOG_INFO, "FileIO");
-        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
         boost::shared_ptr<ProcessFuture> ph = pm->CreateProcessDontRun("/bin/sleep 1");
 
         // check that we propery throw when the input file doesn't exist
@@ -492,7 +492,7 @@ TEST_F(ProcessManagerTest, Callbacks)
     try
     {
         hlog(HLOG_INFO, "Callbacks");
-        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
         boost::shared_ptr<ProcessFuture> ph = pm->CreateProcessDontRun("/bin/ls", "/", "temp.out");
         ph->SetProcessCompleteCallback(ProcessComplete);
         pm->RunProcess(ph);
@@ -518,7 +518,7 @@ TEST_F(ProcessManagerTest, ProcmonRunning)
         hlog(HLOG_INFO, "ProcmonRunning");
         pid_t monitorPid = -1;
         {
-            boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+            boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
             boost::shared_ptr<ProcessFuture> ph = pm->CreateProcess("/bin/sleep 3");
             ph->GetResult();
             monitorPid = ph->GetMonitorPID();
@@ -553,7 +553,7 @@ TEST_F(ProcessManagerTest, ProcessTimeout)
     try
     {
         hlog(HLOG_INFO, "CancelProcess");
-        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
         boost::shared_ptr<ProcessFuture> ph = pm->CreateProcess("/bin/sleep 10");
         ASSERT_TRUE(ph->IsRunning());
         ASSERT_THROW(ph->GetResultTimed(Timespec::FromSeconds(5)), EFutureTimeoutWaitingForResult);
@@ -577,7 +577,7 @@ TEST_F(ProcessManagerTest, CommandLineEscape)
     try
     {
         hlog(HLOG_INFO, "Command Line Escapes");
-        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
         FString result;
         FString test("firstword secondword");
         pm->CreateProcessAndGetResult("/bin/echo \"" + test + "\"", result);

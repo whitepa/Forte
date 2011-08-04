@@ -64,11 +64,13 @@ pid_t DaemonUtil::ForkSafely(void)
 {
     try
     {
+        AutoUnlockMutex logSingletonLock(LogManager::GetSingletonMutex());
         AutoUnlockMutex logLock(LogManager::GetInstance().GetMutex());
         return fork();
     }
     catch (EEmptyReference &e)
     {
+        printf("ForkSafely: EEmptyReference\n");
     }
     return fork();
 }

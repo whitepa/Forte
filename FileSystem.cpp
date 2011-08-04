@@ -8,6 +8,7 @@
 #include <cstring>
 #include <sys/time.h>
 #include "SystemCallUtil.h"
+#include "FTrace.h"
 
 using namespace Forte;
 namespace boostfs = boost::filesystem;
@@ -199,10 +200,11 @@ int FileSystem::FStatAt(int dir_fd, const FString& path, struct stat *st, int fl
 
 void FileSystem::GetChildren(const FString& path, 
                              std::vector<Forte::FString> &children,
-                             bool recurse) const
+                             bool recurse,
+                             bool includePathInChildNames) const
 {
-    hlog(HLOG_DEBUG4, "FileSystem::%s(%s, %s)", __FUNCTION__,
-         path.c_str(), (recurse ? "true" : "false"));
+    FTRACE2("%s, %s, %s", path.c_str(), (recurse ? "true" : "false"),
+            (includePathInChildNames ? "true" : "false"));
 
     DIR *d = ::opendir(path);
     if (!d)
@@ -235,7 +237,14 @@ void FileSystem::GetChildren(const FString& path,
             }
             else
             {
-                children.push_back(path + "/" + stmp);
+                if (includePathInChildNames)
+                {
+                    children.push_back(path + "/" + stmp);
+                }
+                else
+                {
+                    children.push_back(stmp);
+                }
             }
         }
     }    
@@ -815,19 +824,68 @@ FString FileSystem::FileGetContents(const FString& filename) const
     return ret;
 }
 
-
-void FileSystem::FilePutContents(const FString& filename, const FString& data, bool append)
+void FileSystem::FileOpen(AutoFD &autoFd, const FString& path, int flags, int mode)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::file_put_contents(%s, [data])", 
-         filename.c_str());
+    FTRACE2("%s, %i, %i", path.c_str(), flags, mode);
+
+    autoFd = ::open(path, flags, mode);
+    if (autoFd == AutoFD::NONE) 
+    {
+        SystemCallUtil::ThrowErrNoException(errno);
+    }
+}
+
+void FileSystem::FilePutContents(int fd, const char* fmt, ...)
+{
+    FTRACE2("%i", fd);
+
+    va_list args;
+    va_start(args, fmt);
+    FILE *file=fdopen(fd, "w");
+    if (file == NULL)
+    {
+        SystemCallUtil::ThrowErrNoException(errno);
+    }
+    vfprintf(file, fmt, args);
+    va_end(args);
+
+    // @TODO fclose(file) ??
+}
+
+void FileSystem::FilePutContents(const FString& filename, const FString& data, 
+                                 bool append, bool throwOnError)
+{
+    FTRACE2("%s, [data], %s, %s", filename.c_str(), 
+            (append ? "APPEND" : "DON'T APPEND"),
+            (throwOnError ? "THROW ON ERROR" : "DON'T THROW ON ERROR"));
+
     ios_base::openmode mode=ios::out | ios::binary;
 
-    if (append) {
+    if (append) 
+    {
         mode=mode | ios::app;
     }
 
     ofstream out(filename, mode);
-    if (out.good()) out.write(data.c_str(), data.size());
+    if (out.good()) 
+    {
+        hlog(HLOG_DEBUG, "Writing data to %s", filename.c_str());
+        if (throwOnError) 
+        {
+            out.exceptions( ofstream::failbit | ofstream::badbit );
+        }
+        out.write(data.c_str(), data.size());
+    }
+    else if (throwOnError)
+    {
+        hlog_and_throw(HLOG_ERR, 
+                       EFileSystem(FStringFC(), "%s not available for writing",
+                                   filename.c_str()));
+    }
+    else
+    {
+        hlog(HLOG_WARN, "%s: NOT available for writing", filename.c_str());
+    }
 }
 
 void FileSystem::FileAppend(const FString& from, const FString& to)

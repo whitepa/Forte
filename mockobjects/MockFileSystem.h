@@ -16,7 +16,14 @@ namespace Forte
         Forte::FString FileGetContents(const Forte::FString& filename) const;
         void FilePutContents(const Forte::FString& filename, 
                              const Forte::FString& data, 
-                             bool append=false);
+                             bool append=false,
+                             bool throwOnError=false);
+        void FileClearContents(const Forte::FString& filename);
+        map<int, FString> mFilesByFD;
+        void SetFDForFileOpen(unsigned int fd);
+        virtual void FileOpen(AutoFD &autoFd, const FString& path, int flags, 
+                              int mode);
+        virtual void FilePutContents(int fd, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
 
         void FileAppend(const FString& from, const FString& to);
 
@@ -71,14 +78,23 @@ namespace Forte
         map<FString, vector<FString> > mChildren;
         void SetChildren(const FString& parentPath, 
                          std::vector<Forte::FString> &children);
-
+        void AddChild(const FString& parentPath, const FString& child);
+        void RemoveChild(const FString& parentPath, const FString& child);
         void GetChildren(const FString& path, 
                          std::vector<Forte::FString> &children,
-                         bool recurse = false) const;
+                         bool recurse = false,
+                         bool includePathInChildNames = true) const;
         
+
+        map<FString, FString> mReadLinkResults;
+        virtual FString ReadLink(const FString& path);
+        void SetReadLinkResult(const FString& path, const FString& result);
+        void ClearReadLinkResult(const FString& path);
+
     protected:
         StrStrMap mFiles;
         std::map<FString, struct statfs> mStatFSResponseMap;
+        unsigned int mFDForFileOpen;
     };
     typedef boost::shared_ptr<MockFileSystem> MockFileSystemPtr;
 }

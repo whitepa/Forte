@@ -25,7 +25,10 @@ class TimerTarget : public Forte::Object
 public:
     TimerTarget(void) : mCount(0) {};
 
-    void TimerFired(void) { hlog(HLOG_INFO, "timer fired!"); mCount++; }
+    void TimerFired(void) { 
+        mCount++; 
+        hlog(HLOG_INFO, "timer fired! (mCount now: %i)", mCount); 
+    }
     int mCount;
 };
 

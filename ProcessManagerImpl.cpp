@@ -1,6 +1,6 @@
-// ProcessManager.cpp
+// ProcessManagerImpl.cpp
 #include "DaemonUtil.h"
-#include "ProcessManager.h"
+#include "ProcessManagerImpl.h"
 #include "ProcessFuture.h"
 #include "AutoMutex.h"
 #include "Exception.h"
@@ -28,12 +28,13 @@
 
 using namespace Forte;
 
-const int Forte::ProcessManager::MAX_RUNNING_PROCS = 128;
-const int Forte::ProcessManager::PDU_BUFFER_SIZE = 4096;
+const int Forte::ProcessManagerImpl::MAX_RUNNING_PROCS = 128;
+const int Forte::ProcessManagerImpl::PDU_BUFFER_SIZE = 4096;
 
-Forte::ProcessManager::ProcessManager() :
+Forte::ProcessManagerImpl::ProcessManagerImpl() :
     mProcmonPath("/usr/libexec/procmon")
 {
+    FTRACE;
     char *procmon = getenv("FORTE_PROCMON");
     if (procmon)
     {
@@ -42,14 +43,15 @@ Forte::ProcessManager::ProcessManager() :
     }
 
     mPeerSet.SetupEPoll();
-    mPeerSet.SetProcessPDUCallback(boost::bind(&ProcessManager::pduCallback, this, _1));
-    mPeerSet.SetErrorCallback(boost::bind(&ProcessManager::errorCallback, this, _1));
+    mPeerSet.SetProcessPDUCallback(boost::bind(&ProcessManagerImpl::pduCallback, this, _1));
+    mPeerSet.SetErrorCallback(boost::bind(&ProcessManagerImpl::errorCallback, this, _1));
 
     initialized();
 }
 
-Forte::ProcessManager::~ProcessManager() 
+Forte::ProcessManagerImpl::~ProcessManagerImpl() 
 {
+    FTRACE;
     // \TODO wake up waiters, they should throw. This wont happen
     // automatically because the callers will be sharing ownership of
     // the Process objects.
@@ -61,22 +63,24 @@ Forte::ProcessManager::~ProcessManager()
 }
 
 boost::shared_ptr<ProcessFuture> 
-Forte::ProcessManager::CreateProcess(const FString &command,
-                                     const FString &currentWorkingDirectory,
-                                     const FString &outputFilename,
-                                     const FString &errorFilename,
-                                     const FString &inputFilename,
-                                     const StrStrMap *environment)
+Forte::ProcessManagerImpl::CreateProcess(const FString &command,
+                                         const FString &currentWorkingDirectory,
+                                         const FString &outputFilename,
+                                         const FString &errorFilename,
+                                         const FString &inputFilename,
+                                         const StrStrMap *environment)
 {
     FTRACE;
-    boost::shared_ptr<ProcessFuture> ph(
-        new ProcessFuture(GetPtr(),
-                          command,
-                          currentWorkingDirectory,
-                          outputFilename,
-                          errorFilename,
-                          inputFilename,
-                          environment));
+    boost::shared_ptr<ProcessManagerImpl> mgr =
+        dynamic_pointer_cast<ProcessManagerImpl>(GetPtr());
+    boost::shared_ptr<ProcessFutureImpl> ph(
+        new ProcessFutureImpl(mgr,
+                              command,
+                              currentWorkingDirectory,
+                              outputFilename,
+                              errorFilename,
+                              inputFilename,
+                              environment));
     startMonitor(ph);
     {
         AutoUnlockMutex lock(mProcessesLock);
@@ -88,22 +92,24 @@ Forte::ProcessManager::CreateProcess(const FString &command,
 }
 
 boost::shared_ptr<ProcessFuture> 
-Forte::ProcessManager::CreateProcessDontRun(const FString &command,
-                                            const FString &currentWorkingDirectory,
-                                            const FString &outputFilename,
-                                            const FString &errorFilename,
-                                            const FString &inputFilename,
-                                            const StrStrMap *environment)
+Forte::ProcessManagerImpl::CreateProcessDontRun(const FString &command,
+                                                const FString &currentWorkingDirectory,
+                                                const FString &outputFilename,
+                                                const FString &errorFilename,
+                                                const FString &inputFilename,
+                                                const StrStrMap *environment)
 {
     FTRACE;
-    boost::shared_ptr<ProcessFuture> ph(
-        new ProcessFuture(GetPtr(),
-                          command,
-                          currentWorkingDirectory,
-                          outputFilename,
-                          errorFilename,
-                          inputFilename,
-                          environment));
+    boost::shared_ptr<ProcessManagerImpl> mgr =
+        dynamic_pointer_cast<ProcessManagerImpl>(GetPtr());
+    boost::shared_ptr<ProcessFutureImpl> ph(
+        new ProcessFutureImpl(mgr,
+                              command,
+                              currentWorkingDirectory,
+                              outputFilename,
+                              errorFilename,
+                              inputFilename,
+                              environment));
     startMonitor(ph);
     AutoUnlockMutex lock(mProcessesLock);
     mProcesses[ph->getManagementFD()] = ph;
@@ -111,13 +117,15 @@ Forte::ProcessManager::CreateProcessDontRun(const FString &command,
     return ph;
 }
 
-void Forte::ProcessManager::RunProcess(
+void Forte::ProcessManagerImpl::RunProcess(
     boost::shared_ptr<ProcessFuture> ph)
 {
-    ph->run();
+    boost::shared_ptr<ProcessFutureImpl> pfi =
+        dynamic_pointer_cast<ProcessFutureImpl>(ph);
+    pfi->run();
 }
 
-void Forte::ProcessManager::abandonProcess(const boost::shared_ptr<Forte::PDUPeer> &peer)
+void Forte::ProcessManagerImpl::abandonProcess(const boost::shared_ptr<Forte::PDUPeer> &peer)
 {
     // don't allow the object to be destroyed while the lock is held,
     // as the Process destructor also will attempt to abandon itself
@@ -137,18 +145,18 @@ void Forte::ProcessManager::abandonProcess(const boost::shared_ptr<Forte::PDUPee
     mPeerSet.PeerDelete(peer);
 }
 
-void Forte::ProcessManager::startMonitor(
-    boost::shared_ptr<Forte::ProcessFuture> ph)
+void Forte::ProcessManagerImpl::startMonitor(
+    boost::shared_ptr<Forte::ProcessFutureImpl> ph)
 {
     int fds[2];
     if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) < 0)
-        throw EProcessManagerUnableToCreateSocket(FStringFC(), "%s", strerror(errno));
+        throw_exception(EProcessManagerUnableToCreateSocket(FStringFC(), "%s", strerror(errno)));
     AutoFD parentfd(fds[0]);
     AutoFD childfd(fds[1]);
 
     pid_t childPid = DaemonUtil::ForkSafely();
     if(childPid < 0) 
-        throw EProcessManagerUnableToFork(FStringFC(), "%s", strerror(errno));
+        throw_exception(EProcessManagerUnableToFork(FStringFC(), "%s", strerror(errno)));
     else if(childPid == 0)
     {
         //fprintf(stderr, "procmon child, childfd=%d\n", childfd.GetFD());
@@ -193,17 +201,17 @@ void Forte::ProcessManager::startMonitor(
     }
 }
 
-boost::shared_ptr<Forte::PDUPeer> Forte::ProcessManager::addPeer(int fd)
+boost::shared_ptr<Forte::PDUPeer> Forte::ProcessManagerImpl::addPeer(int fd)
 {
     hlog(HLOG_DEBUG, "adding ProcessMonitor peer on fd %d", fd);
     return mPeerSet.PeerCreate(fd);
 }
 
-int ProcessManager::CreateProcessAndGetResult(const FString& command, 
-                                              FString& output, 
-                                              const Timespec &timeout,
-                                              const FString &inputFilename,
-                                              const StrStrMap *environment)
+int ProcessManagerImpl::CreateProcessAndGetResult(const FString& command, 
+                                                  FString& output, 
+                                                  const Timespec &timeout,
+                                                  const FString &inputFilename,
+                                                  const StrStrMap *environment)
 {
     FTRACE;
     FString randomSuffix;
@@ -213,6 +221,7 @@ int ProcessManager::CreateProcessAndGetResult(const FString& command,
                           randomSuffix.c_str());
     FString errorFilename(FStringFC(), "/tmp/sc_commandoutput_error_%s.tmp", 
                           randomSuffix.c_str());
+
     hlog(HLOG_DEBUG, "command = %s, timeout=%ld, output=%s",
          command.c_str(), timeout.AsSeconds(), outputFilename.c_str());
     boost::shared_ptr<ProcessFuture> future = 
@@ -270,7 +279,7 @@ int ProcessManager::CreateProcessAndGetResult(const FString& command,
 }
 
 
-void Forte::ProcessManager::pduCallback(PDUPeer &peer)
+void Forte::ProcessManagerImpl::pduCallback(PDUPeer &peer)
 {
     FTRACE;
     // route this to the correct Process object
@@ -281,13 +290,13 @@ void Forte::ProcessManager::pduCallback(PDUPeer &peer)
     // p needs to declared first and then lock, so that 
     // they get destructed appropiately
     hlog(HLOG_DEBUG, "Going to obtain processes lock");
-    boost::shared_ptr<ProcessFuture> p;
+    boost::shared_ptr<ProcessFutureImpl> p;
     AutoUnlockMutex lock(mProcessesLock);
     hlog(HLOG_DEBUG, "obtained lock");
 
     ProcessMap::iterator i;
     if ((i = mProcesses.find(fd)) == mProcesses.end())
-        throw EProcessManagerInvalidPeer();
+        throw_exception(EProcessManagerInvalidPeer());
 
     hlog(HLOG_DEBUG, "Going to get shared pointer for fd %d", fd);
     p = (*i).second.lock();
@@ -306,11 +315,11 @@ void Forte::ProcessManager::pduCallback(PDUPeer &peer)
         // thereby deleting this process from the ProcessManager
         // map
         hlog(HLOG_ERROR, "Unable to get shared pointer for fd %d", fd);
-        throw EProcessManagerNoSharedPtr();
+        throw_exception(EProcessManagerNoSharedPtr());
     }
 }
 
-void Forte::ProcessManager::errorCallback(PDUPeer &peer)
+void Forte::ProcessManagerImpl::errorCallback(PDUPeer &peer)
 {
     FTRACE;
     // route this to the correct Process object
@@ -319,11 +328,11 @@ void Forte::ProcessManager::errorCallback(PDUPeer &peer)
     // ordering of the variables p and lock and important
     // p needs to declared first and then lock, so that 
     // they get destructed appropiately
-    boost::shared_ptr<ProcessFuture> p;
+    boost::shared_ptr<ProcessFutureImpl> p;
     AutoUnlockMutex lock(mProcessesLock);
     ProcessMap::iterator i;
     if ((i = mProcesses.find(fd)) == mProcesses.end())
-        throw EProcessManagerInvalidPeer();
+        throw_exception(EProcessManagerInvalidPeer());
 
     p = (*i).second.lock();
     if (p.get() != NULL)
@@ -339,11 +348,11 @@ void Forte::ProcessManager::errorCallback(PDUPeer &peer)
         // destructor of ProcessFuture should abandon the process
         // thereby deleting this process from the ProcessManager
         // map
-        throw EProcessManagerNoSharedPtr();
+        throw_exception(EProcessManagerNoSharedPtr());
     }
 }
 
-void* Forte::ProcessManager::run(void)
+void* Forte::ProcessManagerImpl::run(void)
 {
     while (!mThreadShutdown)
     {
@@ -361,7 +370,7 @@ void* Forte::ProcessManager::run(void)
     return NULL;
 }
 
-bool Forte::ProcessManager::IsProcessMapEmpty(void)
+bool Forte::ProcessManagerImpl::IsProcessMapEmpty(void)
 {
     AutoUnlockMutex lock(mProcessesLock);
     return (mProcesses.size() == 0);

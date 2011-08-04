@@ -30,6 +30,10 @@ namespace Forte
         bool isCancelled(void) {
             return mActiveObjectThread.IsCancelled();
         }
+
+        void setThreadName(const FString &name){
+            mActiveObjectThread.SetName(name);
+        }
     private:
         Forte::ActiveObjectThread mActiveObjectThread;
     };

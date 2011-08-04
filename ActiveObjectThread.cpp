@@ -31,6 +31,11 @@ bool ActiveObjectThread::IsCancelled(void)
         return mCurrentAsyncInvocation->IsCancelled();
 }
 
+void ActiveObjectThread::SetName(const FString &name)
+{
+    setThreadName(FString(FStringFC(), "active-%s", name.c_str()));
+}
+
 void * ActiveObjectThread::run(void)
 {
     shared_ptr<Event> event;

@@ -142,6 +142,13 @@ namespace Forte
             mTimespec.tv_nsec = 0;
         }
 
+        /*
+         * Gets a string representation
+         */
+        FString GetString(void) const {
+            return FString(FStringFC(), "%lu.%09lu", mTimespec.tv_sec,
+                           mTimespec.tv_nsec);
+        }
     protected:
         struct timespec mTimespec;
     };

@@ -26,6 +26,8 @@ namespace Forte
 
         virtual bool IsCancelled(void);
 
+        virtual void SetName(const FString &name);
+
     private:
         Forte::EventQueue mQueue;
         Forte::Mutex mLock;

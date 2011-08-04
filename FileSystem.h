@@ -49,7 +49,8 @@ namespace Forte
         virtual bool IsDir(const FString& path) const;
         virtual void GetChildren(const FString& path, 
                                  std::vector<Forte::FString> &children,
-                                 bool recurse = false) const;
+                                 bool recurse = false,
+                                 bool includePathInChildNames = true) const;
         virtual int LStat(const FString& path, struct stat *st);
         virtual int StatAt(int dir_fd, const FString& path, struct stat *st);
         virtual int LStatAt(int dir_fd, const FString& path, struct stat *st);
@@ -101,8 +102,11 @@ namespace Forte
         virtual FString FileGetContents(const FString& filename) const;
         virtual void FilePutContents(const FString& filename, 
                                      const FString& data,
-                                     bool append=false);
-
+                                     bool append=false,
+                                     bool throwOnError=false);
+        virtual void FileOpen(AutoFD &autoFd, const FString &path, int flags, 
+                              int mode);
+        virtual void FilePutContents(int fd, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
         virtual void FileAppend(const FString& from, const FString& to);
 
         /// deep_copy copies a directory tree from 'source' to 'dest'.

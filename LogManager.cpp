@@ -11,6 +11,7 @@ using namespace Forte;
 using namespace std;
 
 LogManager *LogManager::sLogManager = NULL;
+Mutex LogManager::sLogManagerMutex;
 
 // Logfile
 Logfile::Logfile(const FString& path, ostream *str, unsigned logMask, bool delStream) :
@@ -185,46 +186,27 @@ LogMsg::LogMsg() :
     mThread(NULL)
 {}
 
-
-// LogContext
-LogContext::LogContext()
-{
-    LogManager &mgr(LogManager::GetInstance());
-    if (mgr.mLogContextStackKey.Get() == NULL)
-        mgr.mLogContextStackKey.Set(new LogContextStack());
-    mLogMgrPtr = &mgr;
-    LogContextStack *stack = (LogContextStack *)(mgr.mLogContextStackKey.Get());
-    if (!(stack->mStack.empty()))
-    {
-        LogContext *previousContext(stack->mStack.back());
-        mClient = previousContext->mClient;
-        mPrefix = previousContext->mPrefix;
-    }
-    stack->mStack.push_back(this);
-}
-
-LogContext::~LogContext()
-{
-    // remove pointer to this log context from the manager
-    AutoUnlockMutex lock(mLogMgrPtr->mLogMutex);
-    LogContextStack *stack = (LogContextStack *)(mLogMgrPtr->mLogContextStackKey.Get());
-    if (stack) stack->mStack.pop_back();
-}
-
-
 // LogThreadInfo
-LogThreadInfo::LogThreadInfo(LogManager &mgr, Thread &thr) :
-    mLogMgr(mgr),
-    mThread(thr)
+LogThreadInfo::LogThreadInfo(Thread &thr) : mThread(thr)
 {
-    mLogMgr.mThreadInfoKey.Set(this);
+    AutoUnlockMutex lock(LogManager::GetSingletonMutex());
+    LogManager *log_mgr = LogManager::GetInstancePtr();
+    if (log_mgr != NULL)
+    {
+        log_mgr->mThreadInfoKey.Set(this);
+    }
 }
 
 LogThreadInfo::~LogThreadInfo()
 {
     // remove pointer to this log context from the manager
-    AutoUnlockMutex lock(mLogMgr.mLogMutex);
-    mLogMgr.mThreadInfoKey.Set(NULL);
+    AutoUnlockMutex lock(LogManager::GetSingletonMutex());
+    LogManager *log_mgr = LogManager::GetInstancePtr();
+    if (log_mgr != NULL)
+    {
+        AutoUnlockMutex lock(log_mgr->GetMutex());
+        log_mgr->mThreadInfoKey.Set(NULL);
+    }
 }
 
 
@@ -237,6 +219,7 @@ LogManager::LogManager() {
     // process.  If you need a second log file, add it with a second
     // BeginLogging() call.
 
+    AutoUnlockMutex lock(sLogManagerMutex);
     if (!sLogManager) {
         sLogManager = this;
     }
@@ -247,6 +230,7 @@ LogManager::LogManager() {
 LogManager::~LogManager() {
     Log(HLOG_DEBUG, "logging halted");
     EndLogging();
+    AutoUnlockMutex lock(sLogManagerMutex);
     sLogManager = NULL;
 }
 
@@ -491,13 +475,6 @@ void LogManager::LogMsgString(const char * func, const char * file, int line, in
     msg.mFunction = func;
     msg.mFile = file;
     msg.mLine = line;
-    LogContextStack *stack = (LogContextStack*)mLogContextStackKey.Get();
-    if (stack && !(stack->mStack.empty()))
-    {
-        LogContext *c(stack->mStack.back());
-        msg.mClient = c->mClient;
-        msg.mPrefix = c->mPrefix;
-    }
 
     // decide whether this message should be logged anywhere.
     // Decision is made by (in order of precedence):
@@ -544,6 +521,7 @@ void _hlog(const char *func, const char * file, int line, int level, const char 
     va_start(ap, fmt);
     try
     {
+        AutoUnlockMutex lock(LogManager::GetSingletonMutex());
         LogManager *log_mgr = LogManager::GetInstancePtr();
         if (log_mgr != NULL) log_mgr->LogMsgVa(func, file, line, level, fmt, ap);
     }

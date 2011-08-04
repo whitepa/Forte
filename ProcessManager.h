@@ -5,7 +5,6 @@
 #include "Types.h"
 #include "PDUPeerSet.h"
 #include "Object.h"
-#include "ProcessManagerPDU.h"
 #include "Clock.h"
 #include <boost/pointer_cast.hpp>
 #include <boost/function.hpp>
@@ -31,46 +30,10 @@ namespace Forte
      * ProcessManager provides for the creation and management of
      * child processes in an async manner
      */
-    class ProcessManager : public Thread
+    class ProcessManager : virtual public Object
     {
         friend class Forte::ProcessFuture;
-    protected:
- 
     public:
-
-        static const int MAX_RUNNING_PROCS;
-        static const int PDU_BUFFER_SIZE;
-
-        typedef std::map<int, boost::weak_ptr<ProcessFuture> > ProcessMap;
-
-        ProcessManager();
-
-        /**
-         * ProcessManager destructor. If the process manager is being destroyed it will
-         * notify all running Process Wait()'ers, and mark the process termination
-         * type as ProcessNotTerminated.
-         */
-        virtual ~ProcessManager();
-
-
-        /**
-         * Get a shared pointer to this ProcessManager.  NOTE: A
-         * shared_ptr to this ProcessManager must already exist.
-         * 
-         * @return shared_ptr
-         */
-        boost::shared_ptr<ProcessManager> GetPtr(void) {
-            try
-            {
-                return boost::static_pointer_cast<ProcessManager>(shared_from_this());
-            }
-            catch (boost::bad_weak_ptr &e)
-            {
-                throw EProcessManagerNoSharedPtr();
-            }
-        }
-
-
         /**
          * CreateProcess() is the factory function to create a
          * Process object representing a child process. The
@@ -104,7 +67,7 @@ namespace Forte
             const FString &outputFilename = "/dev/null",
             const FString &errorFilename = "/dev/null",
             const FString &inputFilename = "/dev/null",
-            const StrStrMap *environment = NULL);
+            const StrStrMap *environment = NULL) = 0;
 
         virtual boost::shared_ptr<ProcessFuture> CreateProcessDontRun(
             const FString &command,
@@ -112,82 +75,17 @@ namespace Forte
             const FString &outputFilename = "/dev/null",
             const FString &errorFilename = "/dev/null",
             const FString &inputFilename = "/dev/null",
-            const StrStrMap *environment = NULL);
+            const StrStrMap *environment = NULL) = 0;
 
-        virtual void RunProcess(boost::shared_ptr<ProcessFuture> ph);
+        virtual void RunProcess(boost::shared_ptr<ProcessFuture> ph) = 0;
 
-        virtual const FString & GetProcmonPath(void) { return mProcmonPath; }
-
-        virtual bool IsProcessMapEmpty(void);
+        virtual bool IsProcessMapEmpty(void) = 0;
 
         virtual int CreateProcessAndGetResult(const Forte::FString& command, 
                                               Forte::FString& output, 
                                               const Timespec &timeout = Timespec::FromSeconds(-1),
                                               const FString &inputFilename = "/dev/null",
-                                              const StrStrMap *environment = NULL);
-    protected:
-
-        /**
-         * helper function called by Process objects to notify
-         * the ProcessManager that a child process is being abandoned
-         *
-         * @param fd file descriptor connected to the process being abandoned
-         */
-        virtual void abandonProcess(const boost::shared_ptr<Forte::PDUPeer> &peer);
-
-        virtual void startMonitor(boost::shared_ptr<Forte::ProcessFuture> ph);
-
-        /**
-         * the main runloop for the ProcessManager thread monitoring
-         * child processes.
-         */
-        virtual void * run(void);
-
-        /** 
-         * addPeer() is used by new Process objects after creating
-         * their monitoring process.  The ProcessManager object (which
-         * owns the Process object) is responsible for polling the
-         * associated file descriptor.
-         * 
-         * @param fd 
-         * @return shared pointer to the newly created PDU Peer
-         */
-        virtual boost::shared_ptr<Forte::PDUPeer> addPeer(int fd);
-
-        /**
-         * This function gets called whenever a PDU is received on any
-         * peer.
-         * 
-         * @param peer The peer we received the PDU from.
-         * @param pdu The PDU itself.
-         */
-        void pduCallback(PDUPeer &peer);
-
-        /** 
-         * This function gets called when an error is encountered on a
-         * peer connection and the peer is removed from the
-         * PDUPeerSet.
-         * 
-         * @param peer 
-         */
-        void errorCallback(PDUPeer &peer);
-
-        /**
-         * Lock for the process map
-         */
-        Mutex mProcessesLock;
-
-        /**
-         * a map of processes, indexed by process ID
-         */
-        ProcessMap mProcesses;
-
-        /**
-         * Set of PDU peers
-         */
-        PDUPeerSet mPeerSet;
-
-        FString mProcmonPath;
+                                              const StrStrMap *environment = NULL) = 0;
     };
     typedef boost::shared_ptr<ProcessManager> ProcessManagerPtr;
 };

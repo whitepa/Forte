@@ -36,8 +36,7 @@ LIBS = \
 	$(CURL_LIBS) \
 	$(OS_LIBS) \
 	$(XML_LIBS) \
-	$(BOOST_UNIT_TEST_LIB_STATIC) \
-
+	$(SQLITE_LIBS)
 
 BSRCS = ContextUnitTest.cpp \
 	ExpDecayingAvgUnitTest.cpp \
@@ -49,18 +48,21 @@ BSRCS = ContextUnitTest.cpp \
 	StateMachineUnitTest4.cpp \
 	StateMachineUnitTest5.cpp \
 	StateMachineUnitTest6.cpp \
-	StateMachineUnitTest7.cpp
+	StateMachineUnitTest7.cpp \
+	StateMachineUnitTest8.cpp
 
 GSRCS = ActiveObjectUnitTest.cpp \
 	CheckedValueStoreUnitTest.cpp \
 	CheckedValueUnitTest.cpp \
 	ClusterLockUnitTest.cpp \
+	ConditionUnitTest.cpp \
 	ContextPredicateUnitTest.cpp \
 	DbLiteConnectionUnitTest.cpp \
 	ExceptionUnitTest.cpp \
 	FileSystemUnitTest.cpp \
 	FileSystemUtilUnitTest.cpp \
 	FStringUnitTest.cpp \
+	PidFileUnitTest.cpp \
 	PDUPeerUnitTest.cpp \
 	ProcessManagerUnitTest.cpp \
 	RunLoopUnitTest.cpp \
@@ -84,138 +86,60 @@ $(BPROGS): $(TARGETDIR)/%: $(FORTE) $(FORTE_MOCK) %.cpp $(TARGETDIR)/%.o
 	$(FORTE) \
 	$(FORTE_MOCK) \
 	$(INCLUDE) \
-	$(LIBS)
+	$(LIBS) \
+	$(BOOST_UNIT_TEST_LIB_STATIC) \
+
 
 # the dependencies in this rule are wrong:
 $(TARGETDIR)/ContextPredicateUnitTest: ContextPredicateUnitTest.cpp
-	@echo "Compiling $@..."
-	$(QUIET)$(CCC) FileSystemUnitTest.cpp \
-	-o $@ \
-	$(FORTE) \
-	$(FORTE_MOCK) \
-	$(INCLUDE) \
-	$(GTEST_LIB) \
-	$(LIBS)
 
-$(TARGETDIR)/FileSystemUnitTest: ../$(TARGETDIR)/FileSystem.o FileSystemUnitTest.cpp
-	@echo "Compiling $@..."
-	$(QUIET)$(CCC) FileSystemUnitTest.cpp \
-	-o $@ \
-	../$(TARGETDIR)/FileSystem.o \
-	$(INCLUDE) \
-	$(GTEST_LIB) \
-	$(LIBS)
+$(TARGETDIR)/FileSystemUnitTest: FileSystemUnitTest.cpp \
+	../$(TARGETDIR)/FileSystem.o 
 
-$(TARGETDIR)/FileSystemUtilUnitTest: ../$(TARGETDIR)/FileSystemUtil.o FileSystemUtilUnitTest.cpp
-	@echo "Compiling $@..."
-	$(QUIET)$(CCC) FileSystemUtilUnitTest.cpp \
-	-o $@ \
+$(TARGETDIR)/FileSystemUtilUnitTest: FileSystemUtilUnitTest.cpp \
+	 ../$(TARGETDIR)/FileSystemUtil.o \
 	../$(TARGETDIR)/FileSystemUtil.o \
-	../$(TARGETDIR)/FileSystem.o \
-	$(INCLUDE) \
-	$(GTEST_LIB) \
-	$(LIBS)
+	../$(TARGETDIR)/FileSystem.o
 
-$(TARGETDIR)/ExceptionUnitTest: ../$(TARGETDIR)/Exception.o ExceptionUnitTest.cpp
-	@echo "Compiling $@..."
-	$(QUIET)$(CCC) ExceptionUnitTest.cpp \
-	-o $@ \
-	$(FORTE) \
-	$(INCLUDE) \
-	$(GTEST_LIB) \
-	$(LIBS)
-
+$(TARGETDIR)/ExceptionUnitTest: ExceptionUnitTest.cpp \
+	../$(TARGETDIR)/Exception.o
 
 $(TARGETDIR)/DbLiteConnectionUnitTest: DbLiteConnectionUnitTest.cpp
-	@echo "Compiling $@..."
-	$(QUIET)$(CCC) DbLiteConnectionUnitTest.cpp \
-	-o $@ \
-	$(FORTE) \
-	$(INCLUDE) \
-	$(GTEST_LIB) \
-	$(LIBS) \
-	-lsqlite3
 
-$(TARGETDIR)/FStringUnitTest: ../$(TARGETDIR)/FString.o FStringUnitTest.cpp
-	@echo "Compiling $@..."
-	$(QUIET)$(CCC) FStringUnitTest.cpp \
-	-o $@ \
-	$(INCLUDE) \
-	$(GTEST_LIB) \
-	$(LIBS)
+$(TARGETDIR)/FStringUnitTest: FStringUnitTest.cpp \
+	../$(TARGETDIR)/FString.o 
 
-$(TARGETDIR)/ProcessManagerUnitTest: ../$(TARGETDIR)/ProcessManager.o ProcessManagerUnitTest.cpp $(FORTE)
-	@echo "Compiling $@..."
-	$(QUIET)$(CCC) ProcessManagerUnitTest.cpp \
-	-o $@ \
-	$(INCLUDE) \
-	$(GTEST_LIB) \
-	$(LIBS)
+$(TARGETDIR)/ProcessManagerUnitTest: ProcessManagerUnitTest.cpp \
+	../$(TARGETDIR)/ProcessManagerImpl.o \
+	../$(TARGETDIR)/ProcessFutureImpl.o \
 
 $(TARGETDIR)/PDUPeerUnitTest: PDUPeerUnitTest.cpp $(FORTE)
-	@echo "Compiling $@..."
-	$(QUIET)$(CCC) PDUPeerUnitTest.cpp \
-	-o $@ \
-	$(INCLUDE) \
-	$(OS_LIBS) \
-	$(GTEST_LIB) \
-	$(FORTE_LIBS) \
-	$(FORTE_MOCK_LIBS) \
 
 $(TARGETDIR)/ClusterLockUnitTest: ClusterLockUnitTest.cpp $(FORTE)
-	@echo "Compiling $@..."
-	$(QUIET)$(CCC) ClusterLockUnitTest.cpp \
-	-o $@ \
-	$(INCLUDE) \
-	$(OS_LIBS) \
-	$(GTEST_LIB) \
-	$(FORTE_LIBS) \
-	$(FORTE_MOCK_LIBS) \
-	$(BOOST_FS_LIB) \
 
-$(TARGETDIR)/ActiveObjectUnitTest: ActiveObjectUnitTest.cpp $(FORTE)
-	@echo "Compiling $@..."
-	$(QUIET)$(CCC) ActiveObjectUnitTest.cpp \
-	-o $@ \
-	$(INCLUDE) \
-	$(OS_LIBS) \
-	$(GTEST_LIB) \
-	$(FORTE_LIBS) \
-	$(FORTE_MOCK_LIBS) \
-	$(BOOST_FS_LIB) \
+$(TARGETDIR)/ConditionUnitTest: ConditionUnitTest.cpp
 
-$(TARGETDIR)/RunLoopUnitTest: RunLoopUnitTest.cpp $(FORTE)
-	@echo "Building $@..."
-	$(QUIET)$(CCC) $< \
-	-o $@ \
-	$(INCLUDE) \
-	$(GTEST_LIB) \
-	$(LIBS)
+$(TARGETDIR)/ActiveObjectUnitTest: ActiveObjectUnitTest.cpp 
+
+$(TARGETDIR)/RunLoopUnitTest: RunLoopUnitTest.cpp
 
 $(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp
-	@echo "Compiling $@..."
-	$(QUIET)$(CCC) SCSIUtilUnitTest.cpp \
-	-o $(TARGETDIR)/SCSIUtilUnitTest \
-	$(SCALE_SERVICE_CLIENT_LIBS)  \
-	$(INCLUDE) \
-	$(GTEST_LIB) \
-	$(LIBS)
 
-$(TARGETDIR)/CheckedValueStoreUnitTest: ../$(TARGETDIR)/CheckedValueStore.o CheckedValueStoreUnitTest.cpp
-	@echo "Building $@..."
-	$(QUIET)$(CCC) CheckedValueStoreUnitTest.cpp \
-	-o $@ \
-	$(INCLUDE) \
-	$(GTEST_LIB) \
-	$(LIBS)
+$(TARGETDIR)/CheckedValueStoreUnitTest: CheckedValueStoreUnitTest.cpp ../$(TARGETDIR)/CheckedValueStore.o 
 
-$(TARGETDIR)/CheckedValueUnitTest: ../$(TARGETDIR)/CheckedValue.o CheckedValueUnitTest.cpp
-	@echo "Building $@..."
-	$(QUIET)$(CCC) CheckedValueUnitTest.cpp \
-	-o $@ \
+$(TARGETDIR)/CheckedValueUnitTest: CheckedValueUnitTest.cpp ../$(TARGETDIR)/CheckedValue.o 
+
+$(TARGETDIR)/PidFileUnitTest: PidFileUnitTest.cpp ../$(TARGETDIR)/PidFile.o 
+
+$(GPROGS): 
+	@echo "Building $@ from $<..."
+	$(QUIET)$(CCC) $^ -o $@ \
 	$(INCLUDE) \
-	$(GTEST_LIB) \
-	$(LIBS)
+	$(FORTE_MOCK_LIBS) \
+	$(LIBS) \
+	$(FORTE_MOCK_INCLUDE) \
+	$(GTEST_LIB)
+
 
 # tail
 include $(BUILDROOT)/re/make/tail.mk

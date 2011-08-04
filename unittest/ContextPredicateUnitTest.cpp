@@ -4,6 +4,8 @@
 
 using namespace Forte;
 
+LogManager logManager;
+
 static const char *validStrArray[] = {
     "One",
     "Two",
@@ -16,9 +18,7 @@ class ContextPredicateTest : public ::testing::Test
 public:
     static void SetUpTestCase() {
         signal(SIGPIPE, SIG_IGN);
-        logManager.SetLogMask("//stdout", HLOG_ALL);
-        logManager.BeginLogging("//stdout");
-
+        logManager.BeginLogging(__FILE__ ".log", HLOG_ALL);
     };
 
     Forte::Context c1;
@@ -51,13 +51,14 @@ TEST_F (ContextPredicateTest, s_test1)
     Forte::ContextPredicate cp2(Forte::ContextPredicate::CHECKED_INT_EQUALS,
                                 "int1", 1);
     EXPECT_TRUE( cp2.Evaluate(c1) );
-    EXPECT_FALSE( cp2.EAvaluate(c2) );
+    EXPECT_FALSE( cp2.Evaluate(c2) );
 
     // test int GTE
     Forte::ContextPredicate cp3(Forte::ContextPredicate::CHECKED_INT_GTE,
                                 "int1", 2);
     Forte::ContextPredicate cp4(Forte::ContextPredicate::CHECKED_INT_GTE,
                                 "int1", 0);
+    c1.Get<CheckedInt32>("int1")->Set(1);
     EXPECT_FALSE( cp3.Evaluate(c1) );
     EXPECT_TRUE( cp3.Evaluate(c2) );
     EXPECT_TRUE( cp4.Evaluate(c1) );
@@ -76,14 +77,20 @@ TEST_F (ContextPredicateTest, s_test1)
     EXPECT_THROW( cp6.Evaluate(c1), EContextPredicateInvalid );
 
     // test AND
+    EXPECT_TRUE(cp1.Evaluate(c1));
+    EXPECT_TRUE(cp2.Evaluate(c1));
+    EXPECT_TRUE(cp4.Evaluate(c1));
     EXPECT_TRUE(
         Forte::ContextPredicate(
             Forte::ContextPredicate::AND, cp1, cp2, cp4)
         .Evaluate(c1) == true);
+
+    c2.Get<CheckedInt32>("int1")->Set(1);
+    EXPECT_TRUE(cp2.Evaluate(c2));
     EXPECT_FALSE(
         Forte::ContextPredicate(
             Forte::ContextPredicate::AND, cp1, cp2, cp4)
-        .Evaluate(c2) == false);
+        .Evaluate(c2));
 
     // test OR
     EXPECT_TRUE(
@@ -96,13 +103,14 @@ TEST_F (ContextPredicateTest, s_test1)
         .Evaluate(c2) == false);
 
     // test NOT
+    EXPECT_TRUE(cp1.Evaluate(c1));
     EXPECT_FALSE(
         Forte::ContextPredicate(
             Forte::ContextPredicate::NOT, cp1)
-        .Evaluate(c1) == false);
+        .Evaluate(c1));
     EXPECT_TRUE(
         Forte::ContextPredicate(
             Forte::ContextPredicate::NOT, cp1)
-        .Evaluate(c2) == true);
+        .Evaluate(c2));
 }
 

@@ -8,6 +8,7 @@
 #include "Clock.h"
 #include "Util.h"
 #include <boost/exception_ptr.hpp>
+#include <boost/exception/diagnostic_information.hpp> 
 
 namespace Forte
 {
@@ -66,7 +67,9 @@ namespace Forte
                 }
                 catch (boost::unknown_exception &e)
                 {
-                    throw EFutureExceptionUnknown();
+                    hlog(HLOG_ERR, "Caught unknown exception: %s", 
+                         boost::diagnostic_information(mException).c_str());
+                    hlog_and_throw(HLOG_ERR, EFutureExceptionUnknown());
                 }
             }
             return mResult;
@@ -145,7 +148,9 @@ namespace Forte
                 }
                 catch (boost::unknown_exception &e)
                 {
-                    throw EFutureExceptionUnknown();
+                    hlog(HLOG_ERR, "Caught unknown exception: %s", 
+                         boost::diagnostic_information(mException).c_str());
+                    hlog_and_throw(HLOG_ERR, EFutureExceptionUnknown());
                 }
             }
         }

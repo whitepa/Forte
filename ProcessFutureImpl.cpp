@@ -1,6 +1,6 @@
-// ProcessFuture.cpp
+// ProcessFutureImpl.cpp
 
-#include "ProcessFuture.h"
+#include "ProcessFutureImpl.h"
 #include "ProcessManager.h"
 #include "AutoMutex.h"
 #include "Clock.h"
@@ -29,7 +29,7 @@
 using namespace boost;
 using namespace Forte;
 
-Forte::ProcessFuture::ProcessFuture(const boost::shared_ptr<ProcessManager> &mgr,
+Forte::ProcessFutureImpl::ProcessFutureImpl(const boost::shared_ptr<ProcessManagerImpl> &mgr,
                         const FString &command, 
                         const FString &currentWorkingDirectory, 
                         const FString &outputFilename, 
@@ -53,10 +53,10 @@ Forte::ProcessFuture::ProcessFuture(const boost::shared_ptr<ProcessManager> &mgr
     if(environment) 
     {
         mEnvironment.insert(environment->begin(), environment->end());
-    }
+    }    
 }
 
-Forte::ProcessFuture::~ProcessFuture() 
+Forte::ProcessFutureImpl::~ProcessFutureImpl() 
 {
     try
     {
@@ -80,7 +80,7 @@ Forte::ProcessFuture::~ProcessFuture()
     }
 }
 
-void Forte::ProcessFuture::SetProcessCompleteCallback(ProcessCompleteCallback processCompleteCallback)
+void Forte::ProcessFutureImpl::SetProcessCompleteCallback(ProcessCompleteCallback processCompleteCallback)
 {
     if(mState != STATE_READY) 
     {
@@ -90,7 +90,7 @@ void Forte::ProcessFuture::SetProcessCompleteCallback(ProcessCompleteCallback pr
     mProcessCompleteCallback = processCompleteCallback;
 }
 
-void Forte::ProcessFuture::SetCurrentWorkingDirectory(const FString &cwd) 
+void Forte::ProcessFutureImpl::SetCurrentWorkingDirectory(const FString &cwd) 
 {
     if(mState != STATE_READY) 
     {
@@ -100,7 +100,7 @@ void Forte::ProcessFuture::SetCurrentWorkingDirectory(const FString &cwd)
     mCurrentWorkingDirectory = cwd;
 }
 
-void Forte::ProcessFuture::SetEnvironment(const StrStrMap *env)
+void Forte::ProcessFutureImpl::SetEnvironment(const StrStrMap *env)
 {
     if(mState != STATE_READY)
     {
@@ -114,7 +114,7 @@ void Forte::ProcessFuture::SetEnvironment(const StrStrMap *env)
     }
 }
 
-void Forte::ProcessFuture::SetInputFilename(const FString &infile)
+void Forte::ProcessFutureImpl::SetInputFilename(const FString &infile)
 {
     if(mState != STATE_READY)
     {
@@ -124,7 +124,7 @@ void Forte::ProcessFuture::SetInputFilename(const FString &infile)
     mInputFilename = infile;
 }
 
-void Forte::ProcessFuture::SetOutputFilename(const FString &outfile)
+void Forte::ProcessFutureImpl::SetOutputFilename(const FString &outfile)
 {
     if(mState != STATE_READY)
     {
@@ -134,7 +134,7 @@ void Forte::ProcessFuture::SetOutputFilename(const FString &outfile)
     mOutputFilename = outfile;
 }
 
-void Forte::ProcessFuture::SetErrorFilename(const FString &errorfile)
+void Forte::ProcessFutureImpl::SetErrorFilename(const FString &errorfile)
 {
     if(mState != STATE_READY)
     {
@@ -144,9 +144,9 @@ void Forte::ProcessFuture::SetErrorFilename(const FString &errorfile)
     mErrorFilename = errorfile;
 }
 
-boost::shared_ptr<ProcessManager> Forte::ProcessFuture::GetProcessManager(void)
+boost::shared_ptr<ProcessManagerImpl> Forte::ProcessFutureImpl::getProcessManager(void)
 {
-    shared_ptr<ProcessManager> mgr(mProcessManagerPtr.lock());
+    shared_ptr<ProcessManagerImpl> mgr(mProcessManagerPtr.lock());
     if (!mgr)
     {
         throw EProcessFutureHandleInvalid();
@@ -154,7 +154,7 @@ boost::shared_ptr<ProcessManager> Forte::ProcessFuture::GetProcessManager(void)
     return mgr;
 }
 
-void Forte::ProcessFuture::run()
+void Forte::ProcessFutureImpl::run()
 {
     if (!mManagementChannel)
         throw EProcessFutureHandleInvalid();
@@ -212,7 +212,7 @@ void Forte::ProcessFuture::run()
 
 }
 
-void Forte::ProcessFuture::setState(int state)
+void Forte::ProcessFutureImpl::setState(int state)
 {
     mState = state;
     if (isInTerminalState())
@@ -321,7 +321,7 @@ void Forte::ProcessFuture::setState(int state)
     mWaitCond.Broadcast();
 }
 
-void Forte::ProcessFuture::GetResult()
+void Forte::ProcessFutureImpl::GetResult()
 {
     if(mState == STATE_READY) 
     {
@@ -332,26 +332,37 @@ void Forte::ProcessFuture::GetResult()
     Future<void>::GetResult();
 }
 
+void Forte::ProcessFutureImpl::GetResultTimed(const Timespec &timeout)
+{
+    if(mState == STATE_READY) 
+    {
+        hlog(HLOG_ERR, "tried waiting on a process that has not been started");
+        throw EProcessFutureNotRunning();
+    }
 
-void Forte::ProcessFuture::abandon()
+    Future<void>::GetResultTimed(timeout);
+}
+
+
+void Forte::ProcessFutureImpl::abandon()
 {
 
     hlog(HLOG_DEBUG, "abandoning process ID %u", mProcessPid);
 
     if (mManagementChannel)
     {
-        GetProcessManager()->abandonProcess(mManagementChannel);
+        getProcessManager()->abandonProcess(mManagementChannel);
     }
     
     setState(STATE_ABANDONED);
 }
 
-bool Forte::ProcessFuture::IsRunning()
+bool Forte::ProcessFutureImpl::IsRunning()
 {
     return isInRunningState();
 }
 
-void Forte::ProcessFuture::Signal(int signum)
+void Forte::ProcessFutureImpl::Signal(int signum)
 {
     if (!isInRunningState())
         throw EProcessFutureNotRunning();
@@ -363,7 +374,7 @@ void Forte::ProcessFuture::Signal(int signum)
     mManagementChannel->SendPDU(pdu);
 }
 
-unsigned int Forte::ProcessFuture::GetStatusCode() 
+unsigned int Forte::ProcessFutureImpl::GetStatusCode() 
 { 
     if(mState == STATE_READY)
     {
@@ -378,7 +389,7 @@ unsigned int Forte::ProcessFuture::GetStatusCode()
     return mStatusCode;
 }
 
-Forte::ProcessFuture::ProcessTerminationType Forte::ProcessFuture::GetProcessTerminationType() 
+Forte::ProcessFuture::ProcessTerminationType Forte::ProcessFutureImpl::GetProcessTerminationType() 
 { 
     if(mState == STATE_READY)
     {
@@ -398,7 +409,7 @@ Forte::ProcessFuture::ProcessTerminationType Forte::ProcessFuture::GetProcessTer
         return ProcessUnknownTermination;
 }
 
-FString Forte::ProcessFuture::GetOutputString()
+FString Forte::ProcessFutureImpl::GetOutputString()
 {
     if(mState == STATE_READY)
     {
@@ -444,7 +455,7 @@ FString Forte::ProcessFuture::GetOutputString()
     return mOutputString;
 }
 
-FString Forte::ProcessFuture::GetErrorString()
+FString Forte::ProcessFutureImpl::GetErrorString()
 {
     if(mState == STATE_READY)
     {
@@ -490,13 +501,13 @@ FString Forte::ProcessFuture::GetErrorString()
     return mErrorString;
 }
 
-void Forte::ProcessFuture::Cancel()
+void Forte::ProcessFutureImpl::Cancel()
 {
     Signal(SIGTERM);
     Forte::Future<void>::Cancel();
 }
 
-void Forte::ProcessFuture::handlePDU(PDUPeer &peer)
+void Forte::ProcessFutureImpl::handlePDU(PDUPeer &peer)
 {
     FTRACE;
     PDU pdu;
@@ -518,7 +529,7 @@ void Forte::ProcessFuture::handlePDU(PDUPeer &peer)
     }
 }
 
-void Forte::ProcessFuture::handleControlRes(PDUPeer &peer, const PDU &pdu)
+void Forte::ProcessFutureImpl::handleControlRes(PDUPeer &peer, const PDU &pdu)
 {
     FTRACE;
     const ProcessControlResPDU *resPDU = reinterpret_cast<const ProcessControlResPDU*>(pdu.payload);
@@ -535,7 +546,7 @@ void Forte::ProcessFuture::handleControlRes(PDUPeer &peer, const PDU &pdu)
     }
 }
 
-void Forte::ProcessFuture::handleStatus(PDUPeer &peer, const PDU &pdu)
+void Forte::ProcessFutureImpl::handleStatus(PDUPeer &peer, const PDU &pdu)
 {
     FTRACE;
     const ProcessStatusPDU *status = reinterpret_cast<const ProcessStatusPDU*>(pdu.payload);
@@ -564,7 +575,7 @@ void Forte::ProcessFuture::handleStatus(PDUPeer &peer, const PDU &pdu)
     }
 }
 
-void Forte::ProcessFuture::handleError(PDUPeer &peer)
+void Forte::ProcessFutureImpl::handleError(PDUPeer &peer)
 {
     // the process monitor connection has encountered an unrecoverable
     // error.

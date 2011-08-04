@@ -71,8 +71,8 @@ SRCS =	\
 	PosixTimer.cpp \
 	ProcFileSystem.cpp \
 	ProcRunner.cpp \
-	ProcessFuture.cpp \
-	ProcessManager.cpp \
+	ProcessFutureImpl.cpp \
+	ProcessManagerImpl.cpp \
 	Random.cpp \
 	RandomGenerator.cpp \
 	ReceiverThread.cpp \
