@@ -90,6 +90,9 @@ TEST_F(ProcessManagerTest, MemLeak)
             hlog(HLOG_INFO, "StatusCode: %d", ph->GetStatusCode());
             hlog(HLOG_INFO, "OutputString: %s", ph->GetOutputString().c_str());
         }
+        // it is possible for the pf not to be destructed at this point due to a
+        // pending PDU. We sleep here to let the destruction happen
+	sleep(1);
         ASSERT_TRUE(pm->IsProcessMapEmpty());
     }
     catch (Exception& e)

@@ -113,14 +113,13 @@ namespace Forte
 
         virtual const FString & GetProcmonPath(void) { return mProcmonPath; }
 
-        virtual bool IsProcessMapEmpty(void) 
-        { 
-            return (mProcesses.size() == 0);
-        }
+        virtual bool IsProcessMapEmpty(void);
 
         virtual int CreateProcessAndGetResult(const Forte::FString& command, 
                                               Forte::FString& output, 
-                                              const Timespec &timeout = Timespec::FromSeconds(-1));
+                                              const Timespec &timeout = Timespec::FromSeconds(-1),
+                                              const FString &inputFilename = "/dev/null",
+                                              const StrStrMap *environment = NULL);
     protected:
 
         /**

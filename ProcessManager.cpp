@@ -197,7 +197,9 @@ boost::shared_ptr<Forte::PDUPeer> Forte::ProcessManager::addPeer(int fd)
 
 int ProcessManager::CreateProcessAndGetResult(const FString& command, 
                                               FString& output, 
-                                              const Timespec &timeout)
+                                              const Timespec &timeout,
+                                              const FString &inputFilename,
+                                              const StrStrMap *environment)
 {
     FTRACE;
     FString randomSuffix;
@@ -208,7 +210,7 @@ int ProcessManager::CreateProcessAndGetResult(const FString& command,
     hlog(HLOG_INFO, "command = %s, timeout=%ld, output=%s",
          command.c_str(), timeout.AsSeconds(), outputFilename.c_str());
     boost::shared_ptr<ProcessFuture> future = 
-        CreateProcess(command, "/", outputFilename);
+        CreateProcess(command, "/", outputFilename, inputFilename, environment);
 
     try
     {
@@ -326,4 +328,9 @@ void* Forte::ProcessManager::run(void)
     return NULL;
 }
 
+bool Forte::ProcessManager::IsProcessMapEmpty(void)
+{
+    AutoUnlockMutex lock(mProcessesLock);
+    return (mProcesses.size() == 0);
+}
 
