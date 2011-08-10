@@ -21,6 +21,8 @@ void Forte::PDUPeer::SendPDU(const Forte::PDU &pdu) const
     len += pdu.payloadSize;
     if (len > sizeof(Forte::PDU))
         throw EPeerSendInvalid();
+    hlog(HLOG_DEBUG2, "sending %zu bytes on fd %d, payloadsize = %u", 
+            len, mFD.GetFD(), pdu.payloadSize);
     if (send(mFD, &pdu, len, 0) < 0)
         throw EPeerSendFailed(FStringFC(), "%s", strerror(errno));
 }
@@ -41,7 +43,7 @@ bool Forte::PDUPeer::lockedIsPDUReady(void) const
     size_t minPDUSize = sizeof(Forte::PDU) - Forte::PDU::PDU_MAX_PAYLOAD;
     if (mCursor < minPDUSize)
     {
-        hlog(HLOG_DEBUG2, "buffer contains less data than minimum PDU");
+        hlog(HLOG_DEBUG4, "buffer contains less data than minimum PDU");
         return false;
     }
     Forte::PDU *pdu = reinterpret_cast<Forte::PDU *>(mPDUBuffer.get());
@@ -66,14 +68,15 @@ bool Forte::PDUPeer::RecvPDU(Forte::PDU &out)
     size_t minPDUSize = sizeof(Forte::PDU) - Forte::PDU::PDU_MAX_PAYLOAD;
     Forte::PDU *pdu = reinterpret_cast<Forte::PDU *>(mPDUBuffer.get());
     size_t len = minPDUSize + pdu->payloadSize;
-    hlog(HLOG_DEBUG2, "found valid PDU: len=%llu", (u64) len);
+    hlog(HLOG_DEBUG2, "found valid PDU: len=%zu", len);
     // \TODO this memmove() based method is inefficient.  Implement a
     // proper ring-buffer.
     memcpy(&out, pdu, len);
     // now, move the rest of the buffer and cursor back by 'len' bytes
     memmove(mPDUBuffer.get(), mPDUBuffer.get() + len, mBufSize - len);
-    hlog(HLOG_DEBUG2, "found valid PDU: oldCursor=%llu newCursor=%llu", 
-         (u64) mCursor, (u64) mCursor - len);
+    memset(mPDUBuffer.get() + mBufSize - len, 0, len);
+    hlog(HLOG_DEBUG2, "found valid PDU: oldCursor=%zu newCursor=%zu", 
+         mCursor, mCursor - len);
     mCursor -= len;
     return true;
     

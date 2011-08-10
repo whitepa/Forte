@@ -112,15 +112,19 @@ void Forte::PDUPeerSet::Poll(int msTimeout)
         AutoReadUnlock lock(mEPollLock);
         if (mEPollFD == -1 || !mBuffer)
             throw EPDUPeerSetNotPolling();
-        nfds = epoll_wait(mEPollFD, events, 32, msTimeout);
+       
+        memset(events, 0, 32*sizeof(struct epoll_event));
+       
+        do
+        {
+            nfds = epoll_wait(mEPollFD, events, 32, msTimeout);
+        } 
+        while (nfds < 0 && errno == EINTR);
+
         buffer = mBuffer;
     }
 //    hlog(HLOG_DEBUG, "epoll_wait complete, nfds=%d", nfds);
-    if (nfds < 0 &&
-        ((errno == EBADF ||
-          errno == EFAULT ||
-          errno == EINVAL) &&
-         errno != EINTR))
+    if (nfds < 0 && (errno == EBADF || errno == EFAULT || errno == EINVAL))
     {
         throw EPDUPeerSetPollFailed(strerror(errno));
     }
@@ -173,7 +177,8 @@ void Forte::PDUPeerSet::Poll(int msTimeout)
             }
             else
             {
-                hlog(HLOG_DEBUG, "received %llu bytes", (u64) len);
+                hlog(HLOG_DEBUG, "received %d bytes on fd %d", 
+                     len, peer->GetFD());
                 peer->DataIn(len, rawBuffer);
                 if (mProcessPDUCallback && peer->IsPDUReady())
                     mProcessPDUCallback(*peer);
