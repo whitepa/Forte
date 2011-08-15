@@ -526,3 +526,40 @@ FString FString::ShellEscape() const
     ret.Replace("'", "'\\''");
     return "'" + ret + "'";
 }
+
+int FString::ExplodeBinary(std::vector<FString> &components)
+{
+    components.clear();
+
+    size_t pos = 0;
+    size_t end = size();
+    while (pos != end && (end - pos) >= sizeof(uint16_t))
+    {
+        uint16_t len;
+        memcpy(&len, c_str() + pos, sizeof(len));
+        len = ntohs(len);
+        pos += sizeof(len);
+        if (pos + len > end)
+            len = end - pos;
+        components.push_back(FString(c_str() + pos, len));
+        pos += len;
+    }
+    return components.size();
+}
+
+/**
+ * Takes a vector of FStrings and encodes them
+ */
+FString& FString::ImplodeBinary(const std::vector<FString> &components)
+{
+    clear();
+    std::vector<FString>::const_iterator i;
+    for (i = components.begin(); i != components.end(); ++i)
+    {
+        uint16_t len = i->size();
+        len = htons(len);
+        append((char *) &len, sizeof(len));
+        append(*i);
+    }
+    return *this;
+}

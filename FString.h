@@ -370,6 +370,27 @@ namespace Forte
          *Saves an FString in the specified file. 
          **/
         static void SaveFile(const char *filename, const FString &in);
+
+        /**
+         * Creates a vector of strings by splitting the spring based on the following
+         * structure
+         *
+         *      16  14  12 10   8   6   4   2   0
+         *        +---+---+---+---+---+---+---+---+
+         *        |    FIELD1 length (uint16)     |
+         *        +---+---+---+---+---+---+---+---+
+         *        | FIELD 1...|   FIELD 2 LENGTH
+         *        +---+---+---+---+---+---+---+---+
+         *          (uint16_t)| FIELD 2 ...   |...|
+         *        +---+---+---+---+---+---+---+---+
+         */
+        int ExplodeBinary(std::vector<FString> &components);
+
+        /**
+         * Takes a vector of FStrings and encodes them
+         */
+        FString& ImplodeBinary(const std::vector<FString> &components);
+
     };
 
     inline FString operator +(const FString& str, const FString& add) { FString ret = str; ret += add; return ret; }

@@ -128,6 +128,29 @@ TEST_F(FStringTest, ExplodeFStringTest)
     ASSERT_EQ(shards[1], "world");
 }
 
+TEST_F(FStringTest, ImplodeExplodeBinaryFStringTest)
+{
+    FString s;
+    std::vector<FString> components;
+
+    components.push_back("this is first vector");
+    components.push_back("this is second vector");
+    components.push_back("");
+    components.push_back("this is third vector");
+
+    s.ImplodeBinary(components);
+    std::vector<FString> componentsTest;
+
+    s.ExplodeBinary(componentsTest);
+
+    ASSERT_EQ(components.size(), componentsTest.size());
+
+    for (int i=0; i < components.size(); i++)
+    {
+        ASSERT_STREQ( components[i], componentsTest[i] );
+    }
+}
+
 TEST_F(FStringTest, TokenizeFStringTest)
 {
     FString s, d;
