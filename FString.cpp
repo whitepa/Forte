@@ -51,14 +51,29 @@ FString::FString(const std::set<unsigned int> &intset)
         first = false;
     }
 }
-FString::FString(const std::set<std::string> &strset)
+FString::FString(const std::set<std::string> &strset, bool quotes)
 {
     bool first = true;
     std::set<std::string>::const_iterator i;
     for (i = strset.begin(); i != strset.end(); ++i)
     {
         if (!first) append(",");
+        if (quotes) append("'");
         append(FString(*i));
+        if (quotes) append("'");
+        first = false;
+    }
+}
+FString::FString(const std::set<FString> &strset, bool quotes)
+{
+    bool first = true;
+    std::set<FString>::const_iterator i;
+    for (i = strset.begin(); i != strset.end(); ++i)
+    {
+        if (!first) append(",");
+        if (quotes) append("'");
+        append(*i);
+        if (quotes) append("'");
         first = false;
     }
 }
