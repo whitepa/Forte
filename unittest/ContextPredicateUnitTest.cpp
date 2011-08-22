@@ -1,6 +1,6 @@
 #include "Forte.h"
-#define BOOST_TEST_MODULE "ContextPredicate Unit Tests"
-#include <boost/test/unit_test.hpp>
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 using namespace Forte;
 
@@ -11,20 +11,27 @@ static const char *validStrArray[] = {
     NULL
 };
 
-struct ContextPredicateFixture {
-    ContextPredicateFixture() { BOOST_TEST_MESSAGE("setup fixture"); }
+class ContextPredicateTest : public ::testing::Test
+{
+public:
+    static void SetUpTestCase() {
+        signal(SIGPIPE, SIG_IGN);
+        logManager.SetLogMask("//stdout", HLOG_ALL);
+        logManager.BeginLogging("//stdout");
+
+    };
 
     Forte::Context c1;
     Forte::Context c2;
+
+    static void TearDownTestCase() {
+
+    };
+
 };
 
-BOOST_FIXTURE_TEST_SUITE( s, ContextPredicateFixture );
-BOOST_AUTO_TEST_CASE ( s_test1 )
+TEST_F (ContextPredicateTest, s_test1)
 {
-    LogManager logMgr;
-    logMgr.BeginLogging();
-    logMgr.SetGlobalLogMask(HLOG_ALL);
-
     // test string equality
     c1.Set("string", ObjectPtr(new CheckedStringEnum(validStrArray)));
     c2.Set("string", ObjectPtr(new CheckedStringEnum(validStrArray)));
@@ -32,8 +39,9 @@ BOOST_AUTO_TEST_CASE ( s_test1 )
     c2.Get<CheckedStringEnum>("string")->Set("Two");
     Forte::ContextPredicate cp1(Forte::ContextPredicate::CHECKED_STRING_EQUALS,
                                "string", "One");    
-    BOOST_CHECK( cp1.Evaluate(c1) == true );
-    BOOST_CHECK( cp1.Evaluate(c2) == false );
+
+    EXPECT_TRUE( cp1.Evaluate(c1) );
+    EXPECT_FALSE( cp1.Evaluate(c2) );
 
     // test int equality
     c1.Set("int1", ObjectPtr(new CheckedInt32()));
@@ -42,60 +50,59 @@ BOOST_AUTO_TEST_CASE ( s_test1 )
     c2.Get<CheckedInt32>("int1")->Set(2);
     Forte::ContextPredicate cp2(Forte::ContextPredicate::CHECKED_INT_EQUALS,
                                 "int1", 1);
-    BOOST_CHECK( cp2.Evaluate(c1) == true );
-    BOOST_CHECK( cp2.Evaluate(c2) == false );
+    EXPECT_TRUE( cp2.Evaluate(c1) );
+    EXPECT_FALSE( cp2.EAvaluate(c2) );
 
     // test int GTE
     Forte::ContextPredicate cp3(Forte::ContextPredicate::CHECKED_INT_GTE,
                                 "int1", 2);
     Forte::ContextPredicate cp4(Forte::ContextPredicate::CHECKED_INT_GTE,
                                 "int1", 0);
-    BOOST_CHECK( cp3.Evaluate(c1) == false );
-    BOOST_CHECK( cp3.Evaluate(c2) == true );
-    BOOST_CHECK( cp4.Evaluate(c1) == true );
-    BOOST_CHECK( cp4.Evaluate(c2) == true );
+    EXPECT_FALSE( cp3.Evaluate(c1) );
+    EXPECT_TRUE( cp3.Evaluate(c2) );
+    EXPECT_TRUE( cp4.Evaluate(c1) );
+    EXPECT_TRUE( cp4.Evaluate(c2) );
 
     // test exception from checked int (uninitialized)
     c1.Set("int2", ObjectPtr(new CheckedInt32()));
     Forte::ContextPredicate cp5(Forte::ContextPredicate::CHECKED_INT_GTE,
                                 "int2", 0);
-    BOOST_CHECK_THROW( cp5.Evaluate(c1), ECheckedValueUninitialized );
+    EXPECT_THROW( cp5.Evaluate(c1), ECheckedValueUninitialized );
     c1.Get<CheckedInt32>("int2")->Set(0);
-    BOOST_CHECK( cp5.Evaluate(c1) == true );
+    EXPECT_TRUE( cp5.Evaluate(c1) );
 
     // test invalid predicate exception
     Forte::ContextPredicate cp6(Forte::ContextPredicate::NOT, cp4, cp5);
-    BOOST_CHECK_THROW( cp6.Evaluate(c1), EContextPredicateInvalid );
+    EXPECT_THROW( cp6.Evaluate(c1), EContextPredicateInvalid );
 
     // test AND
-    BOOST_CHECK(
+    EXPECT_TRUE(
         Forte::ContextPredicate(
             Forte::ContextPredicate::AND, cp1, cp2, cp4)
         .Evaluate(c1) == true);
-    BOOST_CHECK(
+    EXPECT_FALSE(
         Forte::ContextPredicate(
             Forte::ContextPredicate::AND, cp1, cp2, cp4)
         .Evaluate(c2) == false);
 
     // test OR
-    BOOST_CHECK(
+    EXPECT_TRUE(
         Forte::ContextPredicate(
             Forte::ContextPredicate::OR, cp1, cp2, cp4)
         .Evaluate(c1) == true);
-    BOOST_CHECK(
+    EXPECT_FALSE(
         Forte::ContextPredicate(
             Forte::ContextPredicate::OR, cp1, cp2)
         .Evaluate(c2) == false);
 
     // test NOT
-    BOOST_CHECK(
+    EXPECT_FALSE(
         Forte::ContextPredicate(
             Forte::ContextPredicate::NOT, cp1)
         .Evaluate(c1) == false);
-    BOOST_CHECK(
+    EXPECT_TRUE(
         Forte::ContextPredicate(
             Forte::ContextPredicate::NOT, cp1)
         .Evaluate(c2) == true);
 }
-BOOST_AUTO_TEST_SUITE_END();
 

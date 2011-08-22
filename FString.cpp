@@ -527,7 +527,7 @@ FString FString::ShellEscape() const
     return "'" + ret + "'";
 }
 
-int FString::ExplodeBinary(std::vector<FString> &components)
+int FString::ExplodeBinary(std::vector<FString> &components) const
 {
     components.clear();
 

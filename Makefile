@@ -105,6 +105,8 @@ HEADERS = \
 	AutoDoUndo.h \
 	AutoDynamicLibraryHandle.h \
 	Base64.h \
+	CheckedValue.h \
+	CheckedValueStore.h \
 	Clock.h \
 	Condition.h \
 	Curl.h \

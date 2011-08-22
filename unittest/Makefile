@@ -39,8 +39,7 @@ LIBS = \
 	$(BOOST_UNIT_TEST_LIB_STATIC) \
 
 
-BSRCS = ContextPredicateUnitTest.cpp \
-	ContextUnitTest.cpp \
+BSRCS = ContextUnitTest.cpp \
 	ExpDecayingAvgUnitTest.cpp \
 	GUIDGeneratorUnitTest.cpp \
 	ProcFileSystemUnitTest.cpp \
@@ -54,7 +53,9 @@ BSRCS = ContextPredicateUnitTest.cpp \
 
 GSRCS = ActiveObjectUnitTest.cpp \
 	CheckedValueStoreUnitTest.cpp \
+	CheckedValueUnitTest.cpp \
 	ClusterLockUnitTest.cpp \
+	ContextPredicateUnitTest.cpp \
 	DbLiteConnectionUnitTest.cpp \
 	ExceptionUnitTest.cpp \
 	FileSystemUnitTest.cpp \
@@ -79,9 +80,23 @@ all: $(PROGS)
 # progs
 $(BPROGS): $(TARGETDIR)/%: $(FORTE) $(FORTE_MOCK) %.cpp $(TARGETDIR)/%.o
 	@echo "Linking $@ ..."
-	@$(CCC) -o $@ $@.o $(LIBS)
+	@$(CCC) -o $@ $@.o \
+	$(FORTE) \
+	$(FORTE_MOCK) \
+	$(INCLUDE) \
+	$(LIBS)
 
 # the dependencies in this rule are wrong:
+$(TARGETDIR)/ContextPredicateUnitTest: ContextPredicateUnitTest.cpp
+	@echo "Compiling $@..."
+	$(QUIET)$(CCC) FileSystemUnitTest.cpp \
+	-o $@ \
+	$(FORTE) \
+	$(FORTE_MOCK) \
+	$(INCLUDE) \
+	$(GTEST_LIB) \
+	$(LIBS)
+
 $(TARGETDIR)/FileSystemUnitTest: ../$(TARGETDIR)/FileSystem.o FileSystemUnitTest.cpp
 	@echo "Compiling $@..."
 	$(QUIET)$(CCC) FileSystemUnitTest.cpp \
@@ -170,7 +185,7 @@ $(TARGETDIR)/ActiveObjectUnitTest: ActiveObjectUnitTest.cpp $(FORTE)
 	$(BOOST_FS_LIB) \
 
 $(TARGETDIR)/RunLoopUnitTest: RunLoopUnitTest.cpp $(FORTE)
-	echo "Building $@..."
+	@echo "Building $@..."
 	$(QUIET)$(CCC) $< \
 	-o $@ \
 	$(INCLUDE) \
@@ -187,9 +202,17 @@ $(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp
 	$(LIBS)
 
 $(TARGETDIR)/CheckedValueStoreUnitTest: ../$(TARGETDIR)/CheckedValueStore.o CheckedValueStoreUnitTest.cpp
-	echo "Building $@..."
+	@echo "Building $@..."
 	$(QUIET)$(CCC) CheckedValueStoreUnitTest.cpp \
-	-o $(TARGETDIR)/CheckedValueStoreUnitTest \
+	-o $@ \
+	$(INCLUDE) \
+	$(GTEST_LIB) \
+	$(LIBS)
+
+$(TARGETDIR)/CheckedValueUnitTest: ../$(TARGETDIR)/CheckedValue.o CheckedValueUnitTest.cpp
+	@echo "Building $@..."
+	$(QUIET)$(CCC) CheckedValueUnitTest.cpp \
+	-o $@ \
 	$(INCLUDE) \
 	$(GTEST_LIB) \
 	$(LIBS)

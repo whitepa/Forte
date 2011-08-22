@@ -384,7 +384,7 @@ namespace Forte
          *          (uint16_t)| FIELD 2 ...   |...|
          *        +---+---+---+---+---+---+---+---+
          */
-        int ExplodeBinary(std::vector<FString> &components);
+        int ExplodeBinary(std::vector<FString> &components) const;
 
         /**
          * Takes a vector of FStrings and encodes them
