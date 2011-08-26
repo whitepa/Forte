@@ -21,6 +21,8 @@ namespace Forte
         class CurlException : public Exception
         {
         public:
+            CurlException() {};
+            CurlException(const FString &str) : Exception(str) {};
             CurlException(int errorCode, const FString &str) :
                 Exception(str),
                 mErrorCode(errorCode) {};
@@ -46,7 +48,7 @@ namespace Forte
         virtual void SetURL(const FString& url);
         void SetRecvHeaderCB(header_cb_t func, void *data = NULL);
         void SetRecvCB(data_cb_t func, void *data = NULL);
-        void SetInternalCB(void);
+        virtual void SetInternalCB(void);
         void SetOutputFile(FILE* file);
         void SetSendCB(data_cb_t func, void *data = NULL);
         void SetProgressCB(progress_cb_t func, void *data = NULL);
@@ -63,7 +65,7 @@ namespace Forte
         void SetLowSpeed(int bps, int time);
 
         void Reset();
-        void Perform();
+        virtual void Perform();
 
         FString mBuf;
      protected:
