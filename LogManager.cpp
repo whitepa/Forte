@@ -245,7 +245,7 @@ LogManager::LogManager() {
 }
  
 LogManager::~LogManager() {
-    Log(HLOG_INFO, "logging halted");
+    Log(HLOG_DEBUG, "logging halted");
     EndLogging();
     sLogManager = NULL;
 }

@@ -5,6 +5,7 @@
 #include "LogManager.h"
 #include "PDUPeerSet.h"
 #include "ProcessFuture.h"
+#include "ServiceConfig.h"
 
 namespace Forte
 {
@@ -122,6 +123,11 @@ namespace Forte
          * A log manager, so we can log.
          */
         Forte::LogManager mLogManager;
+
+        /**
+         * ServiceConfig to load the configuration file.
+         */
+        Forte::ServiceConfig mServiceConfig;
 
         /**
          * flag to indicate a SIGCHLD has been received, and wait()

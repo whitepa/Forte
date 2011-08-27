@@ -17,7 +17,24 @@ Forte::ProcessMonitor::ProcessMonitor(int argc, char *argv[]) :
     mInputFilename("/dev/null"),
     mOutputFilename("/dev/null")
 {
-    mLogManager.BeginLogging("/tmp/procmon.log"); // \TODO
+    FString logFile;
+    FString logLevel;
+    try
+    {
+        mServiceConfig.ReadConfigFile("/etc/procmon.conf");
+        logFile = mServiceConfig.Get("logfile");
+        logLevel = mServiceConfig.Get("loglevel");
+    }
+    catch (EServiceConfig &e)
+    {
+        // failed to load config, use some defaults
+    }
+    if (logFile != "")
+    {
+        mLogManager.SetGlobalLogMask(
+            mLogManager.ComputeLogMaskFromString(logLevel));
+        mLogManager.BeginLogging(logFile);
+    }
     // single argument only, should be a file descriptor
     if (argc != 2)
         throw EProcessMonitorArguments();
@@ -285,6 +302,8 @@ void Forte::ProcessMonitor::startProcess(void)
             throw EProcessMonitorUnableToOpenOutputFile(FStringFC(), "%s", strerror(errno));
     }
     while (outputfd == -1 && errno == EINTR);
+
+    hlog(HLOG_INFO, "running command: %s", mCmdline.c_str());
 
     pid_t pid;
     if ((pid = DaemonUtil::ForkSafely()) == 0)
