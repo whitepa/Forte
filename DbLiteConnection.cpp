@@ -76,7 +76,7 @@ bool DbLiteConnection::Connect()
 
     if (err == SQLITE_OK)
     {
-        sqlite3_busy_timeout(mDB, 250);
+        sqlite3_busy_timeout(mDB, 1000); // 1 second
         return true;
     }
 

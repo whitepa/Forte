@@ -25,7 +25,7 @@ namespace Forte
                           const FString& pass,
                           const FString& host = "localhost", 
                           const FString& socket = "",
-                          unsigned int retries = 3);
+                          unsigned int retries = 20);
 
         // connection management
         virtual bool Connect() = 0;

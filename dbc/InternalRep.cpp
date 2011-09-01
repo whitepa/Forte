@@ -932,7 +932,7 @@ void Table::genPrimaryCtor(FILE *h, FILE *c) const
             mClassname.c_str(), paramStr.c_str());
     fprintf(c, "    Forte::DbResultRow row;\n");
     fprintf(c, "    if (!res.FetchRow(row))\n");
-    fprintf(c, "        boost::throw_exception(Forte::DbException(\"invalid %s\"));\n", paramStr.c_str());
+    fprintf(c, "        boost::throw_exception(Forte::DbLookupFailedException(\"invalid %s\"));\n", paramStr.c_str());
     fprintf(c, "    Set(row);\n");
     fprintf(c, "}\n");
 }
