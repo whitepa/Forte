@@ -112,6 +112,9 @@ namespace Forte
         void GetVectorKeys(
             const char *key,
             FStringVector &vec /*OUT*/);
+        void GetVectorKeys(
+            const boost::property_tree::ptree::path_type &key,
+            FStringVector &vec /*OUT*/);
 
         /** 
          * GetVectorSubKey will retrieve a vector of values from the configuration.

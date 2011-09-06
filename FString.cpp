@@ -1,4 +1,5 @@
 #include "FString.h"
+#include "Foreach.h"
 #include "LogManager.h"
 #include <cstdio>
 #include <cstdarg>
@@ -331,6 +332,75 @@ int FString::Tokenize(const char *delim, std::vector<std::string> &components, s
         components.push_back(Mid(start));
     }
 
+    return components.size();
+}
+
+#define CLEAN_CHAR_VECTOR(vec)		\
+    foreach (const char *str, vec)	\
+        if (str)			\
+            free((void*)str);		\
+    vec.clear();
+
+int FString::Tokenize(const char *delim, std::vector<char*> &components, size_t max_parts) const
+{
+    size_t start = 0, end = 0;
+    size_t i = 0;
+    char *tmp;
+    CLEAN_CHAR_VECTOR(components);
+
+    while (1)
+    {
+        start = find_first_not_of(delim, start);
+        if (std::string::npos == start)
+            break;
+        end = find_first_of(delim, start);
+        if (std::string::npos == end)
+        {
+            if ((tmp = strdup(Mid(start).c_str())) == NULL)
+            {
+                CLEAN_CHAR_VECTOR(components);
+                break;
+            }
+            components.push_back(tmp);
+            break;
+        }
+
+        if (++i == max_parts) break;
+
+        if (end - start > 0)
+        {
+            if ((tmp = strdup(Mid(start, end - start).c_str())) == NULL)
+            {
+                CLEAN_CHAR_VECTOR(components);
+                break;
+            }
+            components.push_back(tmp);
+        }
+        start = end;
+    }
+
+    if (max_parts != 0 &&
+        i == max_parts)
+    {
+        // we reached the max parts and breaked
+        if ((tmp = strdup(Mid(start).c_str())) == NULL)
+        {
+            CLEAN_CHAR_VECTOR(components);
+        }
+        else
+            components.push_back(tmp);
+    }
+
+    return components.size();
+}
+
+int FString::Tokenize(const char *delim, std::vector<const char*> &components, size_t max_parts) const
+{
+    std::vector<char*> result;
+    CLEAN_CHAR_VECTOR(components);
+    Tokenize(delim, result, max_parts);
+    foreach (char *str, result)
+        components.push_back(str);
     return components.size();
 }
 

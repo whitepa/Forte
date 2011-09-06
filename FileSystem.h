@@ -36,6 +36,9 @@ namespace Forte
         typedef void (*progress_callback_t)(uint64_t, void*);
 
         // interface
+        virtual FString Basename(const FString& filename,
+                                 const FString& suffix = "");
+        virtual FString Dirname(const FString& filename);
         virtual FString GetCWD();
         virtual void Touch(const FString& file);
         virtual bool FileExists(const FString& filename) const;

@@ -118,9 +118,36 @@ void ServiceConfig::GetVectorKeys(
     vec.clear();
 
     AutoUnlockMutex lock(mMutex);
-    foreach (const boost::property_tree::ptree::value_type &v, mPTree.get_child(key))
+    try
     {
-        vec.push_back(v.first);
+        foreach (const boost::property_tree::ptree::value_type &v, mPTree.get_child(key))
+        {
+            vec.push_back(v.first);
+        }
+    }
+    catch (boost::property_tree::ptree_error &e)
+    {
+        boost::throw_exception(EServiceConfigNoKey(e.what()));
+    }
+}
+
+void ServiceConfig::GetVectorKeys(
+    const boost::property_tree::ptree::path_type &key,
+    FStringVector &vec /*OUT*/)
+{
+    vec.clear();
+
+    AutoUnlockMutex lock(mMutex);
+    try
+    {
+        foreach (const boost::property_tree::ptree::value_type &v, mPTree.get_child(key))
+        {
+            vec.push_back(v.first);
+        }
+    }
+    catch (boost::property_tree::ptree_error &e)
+    {
+        boost::throw_exception(EServiceConfigNoKey(e.what()));
     }
 }
 

@@ -310,6 +310,8 @@ namespace Forte
         //in delim can be a delimiter.
         int Tokenize(const char *delim, std::vector<FString> &components, size_t max_parts = 0) const;
         int Tokenize(const char *delim, std::vector<std::string> &components, size_t max_parts = 0) const;
+        int Tokenize(const char *delim, std::vector<char*> &components, size_t max_parts = 0) const;
+        int Tokenize(const char *delim, std::vector<const char*> &components, size_t max_parts = 0) const;
 
         // TODO: make templated Implode functions
         /// Combine multiple components into a single string.  Glue will be used

@@ -38,6 +38,44 @@ FString FileSystem::StrError(int err) const
 
 
 // interface
+FString FileSystem::Basename(const FString& filename,
+                             const FString& suffix)
+{
+    FString result(filename);
+    FStringVector pathComponents;
+    int count = filename.Explode("/", pathComponents);
+    if (count)
+    {
+        FString base = pathComponents[count-1];
+        if (!suffix.empty())
+        {
+            FString end = base.Right(suffix.length());
+            if (end.Compare(suffix) == 0)
+                result = base.Left(base.length() - suffix.length());
+            else
+                result = base;
+        }
+        else
+        {
+            result = base;
+        }
+    }
+    return result;
+}
+
+FString FileSystem::Dirname(const FString& filename)
+{
+    FString result(".");
+    FStringVector pathComponents;
+    int count = filename.Explode("/", pathComponents);
+    if (count)
+    {
+        pathComponents.pop_back();
+        result = result.Implode("/", pathComponents);
+    }
+    return result;
+}
+
 FString FileSystem::GetCWD()
 {
     FString ret;
