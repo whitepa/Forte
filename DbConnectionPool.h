@@ -3,8 +3,10 @@
 
 #ifndef FORTE_NO_DB
 
+#include <boost/shared_ptr.hpp>
 #include "AutoMutex.h"
 #include "DbConnection.h"
+#include "DbConnectionFactory.h"
 #include "ServiceConfig.h"
 
 namespace Forte
@@ -21,6 +23,7 @@ namespace Forte
         DbConnectionPool(ServiceConfig &configObj);
         DbConnectionPool(const char *dbType,
                          const char *dbName,
+                         const char *dbAltName = "",
                          const char *dbUser = "",
                          const char *dbPassword = "",
                          const char *dbHost = "",
@@ -33,12 +36,16 @@ namespace Forte
         void ReleaseDbConnection(DbConnection& connection);
         void DeleteConnections();
 
+        const FString& GetDbName() const;
+        const FString& GetBackupDbName() const;
+        const FString& GetDbType() const;
     private:
         static auto_ptr<DbConnectionPool> spInstance;
         static Mutex sSingletonMutex;
 
         FString mDbType;
         FString mDbName;
+        FString mDbAltName;
         FString mDbUser;
         FString mDbPassword;
         FString mDbHost;
@@ -48,6 +55,7 @@ namespace Forte
         Mutex mPoolMutex;
         list<DbConnection*> mFreeConnections;
         set<DbConnection*> mUsedConnections;
+        boost::shared_ptr<DbConnectionFactory> mDbConnectionFactory;
     };
 };
 #endif

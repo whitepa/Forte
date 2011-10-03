@@ -1,9 +1,9 @@
 #ifndef FORTE_NO_DB
 
-// DbConnection.cpp
 #include "FTime.h"
 #include "DbConnection.h"
 #include "DbException.h"
+#include "DbSqlStatement.h"
 #include "LogManager.h"
 
 using namespace Forte;
@@ -189,6 +189,26 @@ void DbConnection::Rollback()
     sql.Format("rollback");
     Execute(sql);
     mQueriesPending = false;    
+}
+
+void DbConnection::BackupDatabase(const FString &targetPath)
+{
+    throw EDbConnectionNotImplemented();
+}
+
+bool DbConnection::Execute(const DbSqlStatement& statement)
+{
+    return Execute(statement.GetStatement().c_str());
+}
+
+DbResult DbConnection::Use(const DbSqlStatement& statement)
+{
+    return Use(statement.GetStatement().c_str());
+}
+
+DbResult DbConnection::Store(const DbSqlStatement& statement)
+{
+    return Store(statement.GetStatement().c_str());
 }
 
 #endif

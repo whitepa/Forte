@@ -21,7 +21,6 @@ namespace Forte
         virtual ~DbLiteConnection();
 
         // initialization
-        // initialization
         virtual bool Init(const FString& db, 
                           const FString& user, 
                           const FString& pass,
@@ -47,14 +46,17 @@ namespace Forte
         virtual bool IsTemporaryError() const;
     
         // misc.
-        virtual uint64_t InsertID() { return sqlite3_last_insert_rowid(mDB); }
-        virtual uint64_t AffectedRows() { return sqlite3_changes(mDB); }
+        virtual uint64_t InsertID();
+        virtual uint64_t AffectedRows();
         virtual FString Escape(const char *str);
 
         // SQLite specific backup functionality
         virtual void BackupDatabase(const FString &targetPath);
 
     private:
+        FString getTmpBackupPath(const FString& targetPath) const;
+        virtual void backupDatabase(const FString &targetPath);
+        void removeTmpBackup(const FString &targetPath);
         void setError();
         DbResult Query(const FString& sql);
         struct sqlite3 *mDB;

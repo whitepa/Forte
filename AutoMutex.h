@@ -74,6 +74,27 @@ namespace Forte
         pthread_mutex_t mPThreadMutex;
     };
 
+    class RecursiveMutex : public Mutex
+    {
+    public:
+        typedef Mutex base_type;
+
+        RecursiveMutex(const pthread_mutexattr_t *attr = NULL)
+            :base_type(NULL)
+        {
+            pthread_mutexattr_t attrCopy;
+            pthread_mutexattr_init(&attrCopy);
+
+            if(attr)
+            {
+                 attrCopy = *attr;
+            }
+
+            pthread_mutexattr_settype(&attrCopy, PTHREAD_MUTEX_RECURSIVE);
+            pthread_mutex_init(&mPThreadMutex, &attrCopy);
+        }
+    };
+
     class AutoLockMutex : public Object {
     public:
         inline AutoLockMutex(Mutex &mutex):mMutex(mutex) {mMutex.Unlock();}

@@ -23,7 +23,7 @@ COMMON_LIBS = \
 	$(SSH2_LIBS) \
 	-lpthread -lrt
 
-PROGS=$(TARGETDIR)/SCSIUtilUnitTest
+PROGS=$(TARGETDIR)/SCSIUtilUnitTest $(TARGETDIR)/DbMirroredConnectionUnitTest
 
 # define LIBDIRS for distclean
 LIBDIRS=$(FORTE_DIR)
@@ -39,14 +39,23 @@ $(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp
 	$(SCALE_SERVICE_CLIENT_LIBS)  \
 	$(COMMON_INCLUDE) \
 	$(COMMON_LIBS)
+	
+$(TARGETDIR)/DbMirroredConnectionUnitTest: DbMirroredConnectionUnitTest.cpp $(FORTE)
+	@echo "Building $@..."
+	$(QUIET)$(CCC) DbMirroredConnectionUnitTest.cpp \
+	-o $(TARGETDIR)/DbMirroredConnectionUnitTest \
+	$(SCALE_SERVICE_CLIENT_LIBS) \
+	$(COMMON_INCLUDE) \
+	$(COMMON_LIBS) \
+	$(BOOST_FS_LIB) \
+	$(DB_LIBS) \
+	-lsqlite3
 
-install: 
-# $(PROGS)
-# 	@echo "Creating paths under $(PREFIX)"
-# 	@$(MKDIR) $(PREFIX)/opt/scale/lib/qa
-
-# 	@echo "Copying files to $(PREFIX)"
-# 	@$(CP) $(PROGS) $(PREFIX)/opt/scale/lib/qa
+install: all 
+	@echo "Creating paths under $(PREFIX)"
+	@$(MKDIR) $(PREFIX)/opt/scale/lib/qa/onbox
+	@echo "Copying files to $(PREFIX)"
+	@$(CP) $(TARGETDIR)/DbMirroredConnectionUnitTest $(PREFIX)/opt/scale/lib/qa/onbox
 
 include $(BUILDROOT)/re/make/tail.mk
 

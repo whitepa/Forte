@@ -22,7 +22,7 @@ namespace Forte
                 // set autocommit appropriately
                 AutoCommit(autocommit);
             }
-        DbAutoConnection(shared_ptr<DbConnectionPool> poolPtr,
+        DbAutoConnection(boost::shared_ptr<DbConnectionPool> poolPtr,
                          bool autocommit = true)
             : mPoolPtr(poolPtr), 
               mDbConnection(mPoolPtr->GetDbConnection())
@@ -92,7 +92,7 @@ namespace Forte
         };
     
     private:
-        shared_ptr<DbConnectionPool> mPoolPtr;
+        boost::shared_ptr<DbConnectionPool> mPoolPtr;
         DbConnection & mDbConnection;
     };
 };

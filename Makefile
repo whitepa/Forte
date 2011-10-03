@@ -39,7 +39,13 @@ SRCS =	\
 	DbMyConnection.cpp \
 	DbPgConnection.cpp \
 	DbLiteConnection.cpp \
+	DbLiteConnectionFactory.cpp \
+	DbMirroredConnection.cpp \
+	DbMirroredConnectionFactory.cpp \
 	DbConnectionPool.cpp \
+	DbSqlStatement.cpp \
+	DbBackupManager.cpp \
+	DbBackupManagerThread.cpp \
 	DbException.cpp \
 	DbRow.cpp \
 	DbResult.cpp \
@@ -57,6 +63,7 @@ SRCS =	\
 	FTime.cpp \
 	FTrace.cpp \
 	GUIDGenerator.cpp \
+	INotify.cpp \
 	LogManager.cpp \
 	LogTimer.cpp \
 	MD5.cpp \
@@ -117,6 +124,12 @@ HEADERS = \
 	DbMyConnection.h \
 	DbPgConnection.h \
 	DbLiteConnection.h \
+	DbLiteConnectionFactory.h \
+	DbMirroredConnection.h \
+	DbMirroredConnectionFactory.h \
+	DbBackupManager.h \
+	DbSqlStatement.h \
+	DbBackupManagerThread.h \
 	DbConnectionPool.h \
 	DbException.h \
 	DbRow.h \
@@ -136,6 +149,7 @@ HEADERS = \
 	FTime.h \
 	FTrace.h \
 	GUIDGenerator.h \
+	INotify.h \
 	LogManager.h \
 	LogTimer.h \
 	Murmur.h \
