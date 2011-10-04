@@ -64,6 +64,7 @@ boost::shared_ptr<ProcessFuture>
 Forte::ProcessManager::CreateProcess(const FString &command,
                                      const FString &currentWorkingDirectory,
                                      const FString &outputFilename,
+                                     const FString &errorFilename,
                                      const FString &inputFilename,
                                      const StrStrMap *environment)
 {
@@ -73,6 +74,7 @@ Forte::ProcessManager::CreateProcess(const FString &command,
                           command,
                           currentWorkingDirectory,
                           outputFilename,
+                          errorFilename,
                           inputFilename,
                           environment));
     startMonitor(ph);
@@ -89,6 +91,7 @@ boost::shared_ptr<ProcessFuture>
 Forte::ProcessManager::CreateProcessDontRun(const FString &command,
                                             const FString &currentWorkingDirectory,
                                             const FString &outputFilename,
+                                            const FString &errorFilename,
                                             const FString &inputFilename,
                                             const StrStrMap *environment)
 {
@@ -98,6 +101,7 @@ Forte::ProcessManager::CreateProcessDontRun(const FString &command,
                           command,
                           currentWorkingDirectory,
                           outputFilename,
+                          errorFilename,
                           inputFilename,
                           environment));
     startMonitor(ph);
@@ -207,10 +211,13 @@ int ProcessManager::CreateProcessAndGetResult(const FString& command,
     guidGen.GenerateGUID(randomSuffix);
     FString outputFilename(FStringFC(), "/tmp/sc_commandoutput_%s.tmp", 
                           randomSuffix.c_str());
+    FString errorFilename(FStringFC(), "/tmp/sc_commandoutput_error_%s.tmp", 
+                          randomSuffix.c_str());
     hlog(HLOG_DEBUG, "command = %s, timeout=%ld, output=%s",
          command.c_str(), timeout.AsSeconds(), outputFilename.c_str());
     boost::shared_ptr<ProcessFuture> future = 
-        CreateProcess(command, "/", outputFilename, inputFilename, environment);
+        CreateProcess(command, "/", outputFilename, 
+                      errorFilename, inputFilename, environment);
 
     try
     {
@@ -224,16 +231,24 @@ int ProcessManager::CreateProcessAndGetResult(const FString& command,
         {
             hlog(HLOG_WARN, "Failed to unlink temporary file %s", strerror(errno));
         }
+        if (unlink(errorFilename.c_str()))
+        {
+            hlog(HLOG_WARN, "Failed to unlink temporary file %s", strerror(errno));
+        }
         return statusCode;
     }
     catch (EProcessFutureTerminatedWithNonZeroStatus &e)
     {
         // in this case we can still get the 
         // output
-        output = future->GetOutputString();
+        output = future->GetErrorString();
         hlog(HLOG_DEBUG, "output = %s", output.c_str());
         
         if (unlink(outputFilename.c_str()))
+        {
+            hlog(HLOG_WARN, "Failed to unlink temporary file %s", strerror(errno));
+        }
+        if (unlink(errorFilename.c_str()))
         {
             hlog(HLOG_WARN, "Failed to unlink temporary file %s", strerror(errno));
         }
@@ -243,6 +258,10 @@ int ProcessManager::CreateProcessAndGetResult(const FString& command,
     {
         hlog(HLOG_DEBUG, "exception throw : %s", e.what());
         if (unlink(outputFilename.c_str()))
+        {
+            hlog(HLOG_WARN, "Failed to unlink temporary file %s", strerror(errno));
+        }
+        if (unlink(errorFilename.c_str()))
         {
             hlog(HLOG_WARN, "Failed to unlink temporary file %s", strerror(errno));
         }

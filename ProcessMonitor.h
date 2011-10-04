@@ -16,6 +16,8 @@ namespace Forte
                         "Unable to open input file");
     EXCEPTION_SUBCLASS2(EProcessMonitor, EProcessMonitorUnableToOpenOutputFile,
                         "Unable to open output file");
+    EXCEPTION_SUBCLASS2(EProcessMonitor, EProcessMonitorUnableToOpenErrorFile,
+                        "Unable to open error file");
     EXCEPTION_SUBCLASS2(EProcessMonitor, EProcessMonitorUnableToCWD,
                         "Unable to change to working directory");
     EXCEPTION_SUBCLASS2(EProcessMonitor, EProcessMonitorUnableToFork,
@@ -159,6 +161,7 @@ namespace Forte
         FString mCWD;
         FString mInputFilename;
         FString mOutputFilename;
+        FString mErrorFilename;
     };
 };
 

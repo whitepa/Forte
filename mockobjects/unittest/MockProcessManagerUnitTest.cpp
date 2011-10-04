@@ -26,7 +26,7 @@ TEST_F(MockProcessManagerTest, HappyPath)
 {
     boost::shared_ptr<MockProcessManager> mpm(new MockProcessManager);
     FString outputString = "i slept for 3 secs";
-    mpm->SetCommandResponse("/bin/sleep 3", outputString, 0);
+    mpm->SetCommandResponse("/bin/sleep 3", outputString, "", 0);
     
     boost::shared_ptr<ProcessFuture> ph = mpm->CreateProcess("/bin/sleep 3",
                                                              "./",
@@ -40,7 +40,7 @@ TEST_F(MockProcessManagerTest, ProcessTimeout)
 {
     boost::shared_ptr<MockProcessManager> mpm(new MockProcessManager);
     FString outputString = "i slept for 3 secs";
-    mpm->SetCommandResponse("/bin/sleep 3", outputString, 0, 3000);
+    mpm->SetCommandResponse("/bin/sleep 3", outputString, "", 0, 3000);
     MonotonicClock clock;
     
     boost::shared_ptr<ProcessFuture> ph = mpm->CreateProcess("/bin/sleep 3",
@@ -66,7 +66,7 @@ TEST_F(MockProcessManagerTest, CommandNotSet)
 TEST_F(MockProcessManagerTest, NonZeroStatus)
 {
     boost::shared_ptr<MockProcessManager> mpm(new MockProcessManager);
-    mpm->SetCommandResponse("/bin/sleep 3", "", 1);
+    mpm->SetCommandResponse("/bin/sleep 3", "", "", 1);
     
     boost::shared_ptr<ProcessFuture> ph = mpm->CreateProcess("/bin/sleep 3");
 
@@ -77,8 +77,8 @@ TEST_F(MockProcessManagerTest, NonZeroStatus)
 TEST_F(MockProcessManagerTest, MultipleProcesses)
 {
     boost::shared_ptr<MockProcessManager> mpm(new MockProcessManager);
-    mpm->SetCommandResponse("/bin/sleep 3", "", 0, 3000);
-    mpm->SetCommandResponse("/bin/sleep 6", "", 0, 6000);
+    mpm->SetCommandResponse("/bin/sleep 3", "", "", 0, 3000);
+    mpm->SetCommandResponse("/bin/sleep 6", "", "", 0, 6000);
     
     boost::shared_ptr<ProcessFuture> ph1 = mpm->CreateProcess("/bin/sleep 3");
     boost::shared_ptr<ProcessFuture> ph2 = mpm->CreateProcess("/bin/sleep 6");

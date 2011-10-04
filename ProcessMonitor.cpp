@@ -15,7 +15,8 @@ bool Forte::ProcessMonitor::sGotSIGCHLD = false;
 
 Forte::ProcessMonitor::ProcessMonitor(int argc, char *argv[]) :
     mInputFilename("/dev/null"),
-    mOutputFilename("/dev/null")
+    mOutputFilename("/dev/null"),
+    mErrorFilename("/dev/null")
 {
     FString logFile;
     FString logLevel;
@@ -133,6 +134,9 @@ void Forte::ProcessMonitor::handleParam(const PDUPeer &peer, const PDU &pdu)
         break;
     case ProcessOutfile:
         mOutputFilename.assign(paramPDU->str);
+        break;
+    case ProcessErrfile:
+        mErrorFilename.assign(paramPDU->str);
         break;
     default:
         hlog(HLOG_ERR, "received unknown param code %d", paramPDU->param);
@@ -286,7 +290,7 @@ void Forte::ProcessMonitor::startProcess(void)
     // open the input and output files
     // these will throw if they are unable to open the files
     // and keep looping if they are interrupted during the open
-    int inputfd, outputfd;
+    int inputfd, outputfd, errorfd;
     do
     {
         inputfd = open(mInputFilename, O_RDWR);
@@ -302,6 +306,14 @@ void Forte::ProcessMonitor::startProcess(void)
             throw EProcessMonitorUnableToOpenOutputFile(FStringFC(), "%s", strerror(errno));
     }
     while (outputfd == -1 && errno == EINTR);
+
+    do
+    {
+        errorfd = open(mErrorFilename, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR);
+        if(errorfd == -1 && errno != EINTR)
+            throw EProcessMonitorUnableToOpenErrorFile(FStringFC(), "%s", strerror(errno));
+    }
+    while (errorfd == -1 && errno == EINTR);
 
     hlog(HLOG_INFO, "running command: %s", mCmdline.c_str());
 
@@ -342,7 +354,7 @@ void Forte::ProcessMonitor::startProcess(void)
 
         while (dup2(inputfd, 0) == -1 && errno == EINTR);
         while (dup2(outputfd, 1) == -1 && errno == EINTR);
-        while (dup2(outputfd, 2) == -1 && errno == EINTR); // \TODO stderr?
+        while (dup2(errorfd, 2) == -1 && errno == EINTR); 
 
         // close all other FDs
         int fdstart = 3;
@@ -385,6 +397,7 @@ void Forte::ProcessMonitor::startProcess(void)
     // parent
     while (close(inputfd) == -1 && errno == EINTR);
     while (close(outputfd) == -1 && errno == EINTR);
+    while (close(errorfd) == -1 && errno == EINTR);
 
     if (pid < 0)
     {

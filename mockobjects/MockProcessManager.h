@@ -12,6 +12,7 @@ namespace Forte
                         "Unexpected command received!");
     EXCEPTION_SUBCLASS(EMockProcessManager, EMockProcessManagerUnableToOpenInputFile);
     EXCEPTION_SUBCLASS(EMockProcessManager, EMockProcessManagerUnableToOpenOutputFile);
+    EXCEPTION_SUBCLASS(EMockProcessManager, EMockProcessManagerUnableToOpenErrorFile);
     EXCEPTION_SUBCLASS(EMockProcessManager, EMockProcessManagerUnableToExec);
     EXCEPTION_SUBCLASS(EMockProcessManager, EMockProcessManagerUnknownMessage);
     
@@ -19,6 +20,7 @@ namespace Forte
     {
         FString mCommand;
         FString mResponse;
+        FString mErrorResponse;
         int mResponseCode;
         int mCommandExecutionTime;  // in milliseconds
     };
@@ -49,6 +51,7 @@ namespace Forte
         FString mCWD;
         FString mInputFilename;
         FString mOutputFilename;
+        FString mErrorFilename;
         bool mShutdown;
     };
     
@@ -62,6 +65,7 @@ namespace Forte
         void SetCommandResponse(
             const FString& command,
             const FString& response,
+            const FString& errorResponse = "",
             int responseCode = 0,
             int commandExecutionTime = 0
             );

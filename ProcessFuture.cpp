@@ -33,16 +33,19 @@ Forte::ProcessFuture::ProcessFuture(const boost::shared_ptr<ProcessManager> &mgr
                         const FString &command, 
                         const FString &currentWorkingDirectory, 
                         const FString &outputFilename, 
+                        const FString &errorFilename, 
                         const FString &inputFilename, 
                         const StrStrMap *environment) : 
     mProcessManagerPtr(mgr),
     mCommand(command), 
     mCurrentWorkingDirectory(currentWorkingDirectory),
     mOutputFilename(outputFilename),
+    mErrorFilename(errorFilename),
     mInputFilename(inputFilename),
     mMonitorPid(-1),
     mProcessPid(-1),
     mOutputString(""),
+    mErrorString(""),
     mState(STATE_READY),
     mWaitCond(mWaitLock)
 {
@@ -131,6 +134,16 @@ void Forte::ProcessFuture::SetOutputFilename(const FString &outfile)
     mOutputFilename = outfile;
 }
 
+void Forte::ProcessFuture::SetErrorFilename(const FString &errorfile)
+{
+    if(mState != STATE_READY)
+    {
+        hlog(HLOG_ERR, "tried setting the error filename after the process had been started");
+        throw EProcessFutureStarted();
+    }
+    mErrorFilename = errorfile;
+}
+
 boost::shared_ptr<ProcessManager> Forte::ProcessFuture::GetProcessManager(void)
 {
     shared_ptr<ProcessManager> mgr(mProcessManagerPtr.lock());
@@ -176,6 +189,10 @@ void Forte::ProcessFuture::run()
     
         strncpy(param->str, mOutputFilename.c_str(), sizeof(param->str));
         param->param = ProcessOutfile;
+        mManagementChannel->SendPDU(paramPDU);
+
+        strncpy(param->str, mErrorFilename.c_str(), sizeof(param->str));
+        param->param = ProcessErrfile;
         mManagementChannel->SendPDU(paramPDU);
 
         // send the control PDU telling the process to start
@@ -248,6 +265,10 @@ void Forte::ProcessFuture::setState(int state)
                 case ProcessUnableToOpenOutputFile:
                     boost::throw_exception(
                         EProcessFutureUnableToOpenOutputFile(mErrorString));
+                    break;  
+                case ProcessUnableToOpenErrorFile:
+                    boost::throw_exception(
+                        EProcessFutureUnableToOpenErrorFile(mErrorString));
                     break;  
                 case ProcessUnableToCWD:
                     boost::throw_exception(
@@ -421,6 +442,52 @@ FString Forte::ProcessFuture::GetOutputString()
     }
 
     return mOutputString;
+}
+
+FString Forte::ProcessFuture::GetErrorString()
+{
+    if(mState == STATE_READY)
+    {
+        hlog(HLOG_ERR, "tried grabbing the error from a process that hasn't been started");
+        throw EProcessFutureNotStarted();
+    }
+    else if(!isInTerminalState())
+    {
+        hlog(HLOG_ERR, "tried grabbing the error from a process that hasn't completed yet");
+        throw EProcessFutureNotFinished();
+    }
+
+    // lazy loading of the error string
+    // check to see if the error string is empty
+    // if so, and the error file wasn't the bit bucket
+    // load it up and return it. Otherwise, we just load the
+    // string we have already loaded
+    if (mErrorString.empty() && mErrorFilename != "/dev/null") 
+    {
+        // read log file
+        FString stmp;
+        ifstream in(mErrorFilename, ios::in | ios::binary);
+        char buf[4096];
+  
+        mErrorString.clear();
+  
+        while (in.good())
+        {
+            in.read(buf, sizeof(buf));
+            stmp.assign(buf, in.gcount());
+            mErrorString += stmp;
+        }
+        
+        // cleanup
+        in.close();
+    } 
+    else if(mErrorFilename == "/dev/null")
+    {
+        hlog(HLOG_WARN, "no error filename set");
+        mErrorString.clear();
+    }
+
+    return mErrorString;
 }
 
 void Forte::ProcessFuture::Cancel()

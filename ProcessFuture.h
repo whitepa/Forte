@@ -24,6 +24,10 @@ namespace Forte
                         "Unable to open the output file");
     EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureUnableToCloseOutputFile,
                         "Unable to close the output file");
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureUnableToOpenErrorFile,
+                        "Unable to open the error file");
+    EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureUnableToCloseErrorFile,
+                        "Unable to close the error file");
     EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureUnableToCWD,
                         "Unable to change to working directory");
     EXCEPTION_SUBCLASS2(EProcessFuture, EProcessFutureUnableToFork,
@@ -103,7 +107,8 @@ namespace Forte
         ProcessFuture(const boost::shared_ptr<Forte::ProcessManager> &mgr,
                 const FString &command,
                 const FString &currentWorkingDirectory = "/",
-                const FString &outputFilename = "/dev/null", 
+                const FString &outputFilename = "/dev/null",
+                const FString &errorFilename = "/dev/null",       
                 const FString &inputFilename = "/dev/null",
                 const StrStrMap *environment = NULL);
 
@@ -172,8 +177,8 @@ namespace Forte
         void SetInputFilename(const FString &infile);
 
         /**
-         * SetOutputFilename() sets the output file to use. Both
-         * stdout and stderr are redirected here.  Can only be called
+         * SetOutputFilename() sets the output file to use.
+         * stdout is redirected here.  Can only be called
          * on a process not yet run.
          *
          * @throw EProcessFutureStarted
@@ -181,6 +186,17 @@ namespace Forte
          * @param string containing the path to the output file to use
          */
         void SetOutputFilename(const FString &outfile);
+
+        /**
+         * SetErrorFilename() sets the output file to use. 
+         * stderr is redirected here.  Can only be called
+         * on a process not yet run.
+         *
+         * @throw EProcessFutureStarted
+         *
+         * @param string containing the path to the error file to use
+         */
+        void SetErrorFilename(const FString &errorfile);
 
         /**
          * GetResult() block until the process has finished, or the process is abandoned.
@@ -253,6 +269,18 @@ namespace Forte
         FString GetOutputString();
 
         /**
+         * GetErrorString() returns the error output from the running process if the error file
+         * parameter was set. It will throw an exception if the child is not finished. We will
+         * want to be careful with this one. If you suspect the output might be large don't
+         * use this function. Instead, directly access the output file yourself.
+         *
+         * @throw EProcessFutureNotFinished
+         *
+         * @return string containing the output of the child process.
+         */
+        FString GetErrorString();
+
+        /**
          * Cancel() sends signal 15 to the running process.
          * 
          * @throw EProcessFutureNotRunning
@@ -282,6 +310,7 @@ namespace Forte
          * @throw EProcessFutureStarted
          * @throw EProcessFutureUnableToOpenInputFile
          * @throw EProcessFutureUnableToOpenOutputFile
+         * @throw EProcessFutureUnableToOpenErrorFile
          * @throw EProcessFutureUnableToFork
          * @throw EProcessFutureUnableToDuplicateInputFD
          * @throw EProcessFutureUnableToDuplicateOutputFD
@@ -289,6 +318,7 @@ namespace Forte
          * @throw EProcessFutureExecvFailed
          * @throw EProcessFutureUnableToCloseInputFile
          * @throw EProcessFutureUnableToCloseOutputFile
+         * @throw EProcessFutureUnableToCloseErrorFile
          *
          * @return pid_t with the process ID of the child process
          */
@@ -386,13 +416,14 @@ namespace Forte
 
         StrStrMap mEnvironment;
         FString mOutputFilename;
+        FString mErrorFilename;
         FString mInputFilename;
 
         pid_t mMonitorPid;
         pid_t mProcessPid;
         unsigned int mStatusCode;
-        FString mErrorString;
         FString mOutputString;
+        FString mErrorString;
 
         enum {
             STATE_READY,    // Process obj created

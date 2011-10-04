@@ -89,6 +89,9 @@ namespace Forte
          * @param outputFilename string containing the file to use for
          * writing output from the child process. Default value is
          * /dev/null
+         * @param errorFilename string containing the file to use for
+         * writing error output from the child process. Default value is
+         * /dev/null
          * @param environment a string-string map holding environment
          * variables that will be applied to the child process.  Note
          * that these variables are ADDED to the current environment.
@@ -99,6 +102,7 @@ namespace Forte
             const FString &command,
             const FString &currentWorkingDirectory = "/",
             const FString &outputFilename = "/dev/null",
+            const FString &errorFilename = "/dev/null",
             const FString &inputFilename = "/dev/null",
             const StrStrMap *environment = NULL);
 
@@ -106,6 +110,7 @@ namespace Forte
             const FString &command,
             const FString &currentWorkingDirectory = "/",
             const FString &outputFilename = "/dev/null",
+            const FString &errorFilename = "/dev/null",
             const FString &inputFilename = "/dev/null",
             const StrStrMap *environment = NULL);
 

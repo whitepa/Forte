@@ -100,6 +100,10 @@ void Forte::MockProcessHandler::handleParam(const PDUPeer &peer, const PDU &pdu)
         hlog(HLOG_DEBUG, "Got outfile param : %s", paramPDU->str);
         mOutputFilename.assign(paramPDU->str);
         break;
+    case ProcessErrfile:
+        hlog(HLOG_DEBUG, "Got errfile param : %s", paramPDU->str);
+        mErrorFilename.assign(paramPDU->str);
+        break;
     default:
         hlog(HLOG_ERR, "received unknown param code %d", paramPDU->param);
         break;
@@ -140,6 +144,11 @@ void Forte::MockProcessHandler::handleControlReq(const PDUPeer &peer, const PDU 
     catch (EMockProcessManagerUnableToOpenOutputFile &e)
     {
         sendControlRes(peer, ProcessUnableToOpenOutputFile);
+        return;
+    }
+    catch (EMockProcessManagerUnableToOpenErrorFile &e)
+    {
+        sendControlRes(peer, ProcessUnableToOpenErrorFile);
         return;
     }
     catch (EMockProcessManagerUnableToExec &e)
@@ -195,6 +204,7 @@ void Forte::MockProcessHandler::mockStartProcess(void)
     // these will throw if they are unable to open the files
     // and keep looping if they are interrupted during the open
     AutoFD outputfd;
+    AutoFD errorfd;
 
     do
     {
@@ -203,6 +213,13 @@ void Forte::MockProcessHandler::mockStartProcess(void)
             throw EMockProcessManagerUnableToOpenOutputFile(FStringFC(), "%s", strerror(errno));
     }
     while (outputfd == -1 && errno == EINTR);
+    do
+    {
+        errorfd = open(mErrorFilename, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR);
+        if(errorfd == -1 && errno != EINTR)
+            throw EMockProcessManagerUnableToOpenErrorFile(FStringFC(), "%s", strerror(errno));
+    }
+    while (errorfd == -1 && errno == EINTR);
 
 }
 
@@ -212,6 +229,7 @@ void Forte::MockProcessHandler::mockRunProcess(void)
     // these will throw if they are unable to open the files
     // and keep looping if they are interrupted during the open
     AutoFD outputfd;
+    AutoFD errorfd;
 
     do
     {
@@ -220,6 +238,13 @@ void Forte::MockProcessHandler::mockRunProcess(void)
             throw EMockProcessManagerUnableToOpenOutputFile(FStringFC(), "%s", strerror(errno));
     }
     while (outputfd == -1 && errno == EINTR);
+    do
+    {
+        errorfd = open(mErrorFilename, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR);
+        if(errorfd == -1 && errno != EINTR)
+            throw EMockProcessManagerUnableToOpenErrorFile(FStringFC(), "%s", strerror(errno));
+    }
+    while (errorfd == -1 && errno == EINTR);
 
     // now sleep for the expected amount of time
     if (mExpectedCommandResponse->mCommandExecutionTime > 0)
@@ -245,6 +270,25 @@ void Forte::MockProcessHandler::mockRunProcess(void)
             throw EMockProcessManagerUnableToExec();
         }
     }
+
+    // write the error output
+    size_t sizeOfErrorOutput = mExpectedCommandResponse->mErrorResponse.size();
+    if (sizeOfErrorOutput > 0)
+    {
+        ssize_t wrote = 0;
+        if ((wrote = write(errorfd, 
+                           mExpectedCommandResponse->mErrorResponse.c_str(),
+                           sizeOfErrorOutput)) == (ssize_t)sizeOfErrorOutput)
+        {
+            // was able to write the whole response
+            hlog(HLOG_DEBUG, "Wrote %zu of error response for command %s", 
+                 wrote, mExpectedCommandResponse->mErrorResponse.c_str());
+        }
+        else
+        {
+            throw EMockProcessManagerUnableToExec();
+        }
+    }
 }
 
 Forte::MockProcessManager::MockProcessManager() :
@@ -261,6 +305,7 @@ Forte::MockProcessManager::~MockProcessManager()
 void Forte::MockProcessManager::SetCommandResponse(
     const FString& command,
     const FString& response,
+    const FString& errorResponse,
     int responseCode,
     int commandExecutionTime)
 {
@@ -268,6 +313,7 @@ void Forte::MockProcessManager::SetCommandResponse(
         new ExpectedCommandResponse());
     expectedResponse->mCommand = command;
     expectedResponse->mResponse = response;
+    expectedResponse->mErrorResponse = errorResponse;
     expectedResponse->mResponseCode = responseCode;
     expectedResponse->mCommandExecutionTime = commandExecutionTime;
     mCommandResponseMap[command] = expectedResponse;

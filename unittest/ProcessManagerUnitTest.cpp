@@ -10,6 +10,8 @@
 #include "AutoFD.h"
 #include "FileSystem.h"
 #include "ProcFileSystem.h"
+#include "AutoDoUndo.h"
+#include <boost/bind.hpp>
 
 using namespace Forte;
 
@@ -206,6 +208,73 @@ TEST_F(ProcessManagerTest, RunProcess)
         hlog(HLOG_INFO, "Termination Type: %d", ph->GetProcessTerminationType());
         hlog(HLOG_INFO, "StatusCode: %d", ph->GetStatusCode());
         hlog(HLOG_INFO, "OutputString: %s", ph->GetOutputString().c_str());
+    }
+    catch (Exception &e)
+    {
+        hlog(HLOG_ERR, "exception: %s", e.what());
+        FAIL();
+    }
+}
+
+void cleanupOutputFile(const Forte::FString &filename)
+{
+    unlink(filename.c_str());
+}
+
+TEST_F(ProcessManagerTest, ErrorOutput)
+{
+    try
+    {
+        hlog(HLOG_INFO, "new ProcessManager");
+        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        hlog(HLOG_INFO, "CreateProcess");
+
+        sleep(1); // causes a race condition where the next Process is
+                  // added during the epoll_wait
+        AutoDoUndo<void, void> autoCleanup(
+            boost::function<void ()>(),
+            boost::bind(&cleanupOutputFile, "/tmp/pmuinttesterrorout.tmp"),
+            false);
+
+        hlog(HLOG_INFO, "Run Process");
+        boost::shared_ptr<ProcessFuture> ph = pm->CreateProcess(
+            "/bin/echo Error: file already exists. >&2", "/", 
+            "/dev/null", "/tmp/pmuinttesterrorout.tmp");
+
+        ASSERT_NO_THROW(ph->GetResult());
+        hlog(HLOG_INFO, "Is Running");
+        ASSERT_TRUE(!ph->IsRunning());
+        ASSERT_TRUE(ph->GetErrorString() == "Error: file already exists.\n");
+    }
+    catch (Exception &e)
+    {
+        hlog(HLOG_ERR, "exception: %s", e.what());
+        FAIL();
+    }
+}
+
+TEST_F(ProcessManagerTest, ErrorOutputNonZero)
+{
+    try
+    {
+        hlog(HLOG_INFO, "new ProcessManager");
+        boost::shared_ptr<ProcessManager> pm(new ProcessManager);
+        hlog(HLOG_INFO, "CreateProcess");
+
+        sleep(1); // causes a race condition where the next Process is
+                  // added during the epoll_wait
+        AutoDoUndo<void, void> autoCleanup(
+            boost::function<void ()>(),
+            boost::bind(&cleanupOutputFile, "/tmp/pmuinttesterrorout.tmp"),
+            false);
+
+        hlog(HLOG_INFO, "Run Process");
+        boost::shared_ptr<ProcessFuture> ph = pm->CreateProcess(
+            "/bin/echo Error: file already exists. >&2; /bin/false", "/", 
+            "/dev/null", "/tmp/pmuinttesterrorout.tmp");
+
+        ASSERT_THROW(ph->GetResult(), EProcessFutureTerminatedWithNonZeroStatus);
+        ASSERT_TRUE(ph->GetErrorString() == "Error: file already exists.\n");
     }
     catch (Exception &e)
     {

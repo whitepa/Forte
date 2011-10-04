@@ -32,7 +32,8 @@ namespace Forte
         ProcessCmdline,
         ProcessCwd,
         ProcessInfile,
-        ProcessOutfile
+        ProcessOutfile,
+        ProcessErrfile
     };
 
     struct ProcessParamPDU
@@ -71,6 +72,7 @@ namespace Forte
         ProcessSuccess,
         ProcessUnableToOpenInputFile,
         ProcessUnableToOpenOutputFile,
+        ProcessUnableToOpenErrorFile,
         ProcessUnableToCWD,
         ProcessUnableToFork,
         ProcessUnableToExec,
