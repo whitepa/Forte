@@ -21,7 +21,7 @@ namespace Forte
     {
     public:
 
-        RunLoop();
+        RunLoop(const FString &name = FString("runloop"));
         virtual ~RunLoop();
 
         /** 
@@ -39,6 +39,7 @@ namespace Forte
     private:
         virtual void * run(void);
 
+        const FString mName;
         mutable Mutex mLock;
 
         class RunLoopScheduleItem

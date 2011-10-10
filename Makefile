@@ -28,9 +28,7 @@ SRCS =	\
 	CheckedValueStore.cpp \
 	Clock.cpp \
 	Collector.cpp \
-	CollectorPollThread.cpp \
 	Condition.cpp \
-	ConditionPollThread.cpp \
 	Context.cpp \
 	ContextPredicate.cpp \
 	Curl.cpp \
@@ -205,7 +203,7 @@ all: $(LIB) $(TARGETDIR)/procmon
 	$(MAKE_SUBDIRS)
 
 $(TARGETDIR)/procmon: $(TARGETDIR)/procmon.o $(TARGETDIR)/ProcessMonitor.o $(LIB)
-	$(CCC) -o $@ $< $(TARGETDIR)/ProcessMonitor.o -L$(TARGETDIR) -lforte -lpthread
+	$(CCC) -o $@ $< $(TARGETDIR)/ProcessMonitor.o -L$(TARGETDIR) -lforte -lpthread $(BOOST_REGEX_LIB)
 
 utiltest: $(TPROG)
 

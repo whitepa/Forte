@@ -1,6 +1,7 @@
 #include "Foreach.h"
 #include "FTrace.h"
 #include "ServiceConfig.h"
+#include <boost/regex.hpp>
 
 using namespace Forte;
 
@@ -108,7 +109,15 @@ void ServiceConfig::GetVectorSubKey(const char *key,     // nodes
 
 int ServiceConfig::GetInteger(const char *key)
 {
-    return mPTree.get<int>(key, 0);
+    AutoUnlockMutex lock(mMutex);
+    try
+    {
+        return mPTree.get<int>(key);
+    }
+    catch (boost::property_tree::ptree_error &e)
+    {
+        boost::throw_exception(EServiceConfigNoKey(key));
+    }
 }
 
 void ServiceConfig::GetVectorKeys(
@@ -178,6 +187,32 @@ void ServiceConfig::WriteToConfigFile(const char *newConfigFile)
     {
         FString stmp;
         stmp.Format("could not write to config file : %s", newConfigFile);
-        throw EServiceConfig(stmp);
+        boost::throw_exception(EServiceConfig(stmp));
     }
+}
+
+Forte::FString ServiceConfig::GetFirstMatchingRegexExpressionKey(
+        const char* parentKey,
+        const char* childToMatch)
+{
+    FTRACE;
+
+    Forte::FStringVector subKeyVector;
+    GetVectorKeys(parentKey, subKeyVector);
+
+    foreach (const FString &key, subKeyVector)
+    {
+        // Forte::FString key = v.first;
+        hlog(HLOG_DEBUG, "parentKey: %s, : childToMatch %s",
+                parentKey, childToMatch);
+
+        // we need to do a regex kind of compare
+        boost::regex e(key);
+        if (regex_match(childToMatch, e))
+        {
+            return FString(FStringFC(), "%s/%s", parentKey, key.c_str());
+        }
+    }
+
+    boost::throw_exception(EServiceConfigNoKey());
 }

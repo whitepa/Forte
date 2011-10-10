@@ -139,7 +139,17 @@ namespace Forte
          * @param newConfigFile the new config file to write.
          */
         void WriteToConfigFile(const char *newConfigFile);
-        
+
+        /**
+         * Gets the first property containing a regex expression that
+         * matches the child key given. For example the child key "a.1.B"
+         * would match the regular expression is "a\..*\.B"
+         *
+         * @param parentKey key containing subkeys that are regular expressions
+         * @param childToMatch key to actually match
+         */
+        FString GetFirstMatchingRegexExpressionKey(const char *parentKey,
+                const char* childToMatch);
 
     protected:
 

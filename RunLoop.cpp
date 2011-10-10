@@ -2,7 +2,8 @@
 #include "LogManager.h"
 #include "FTrace.h"
 
-Forte::RunLoop::RunLoop()
+Forte::RunLoop::RunLoop(const Forte::FString &name) :
+        mName(name)
 {
     FTRACE;
     initialized();
@@ -39,7 +40,7 @@ bool Forte::RunLoop::IsEmpty() const
 
 void * Forte::RunLoop::run(void)
 {
-    mThreadName.Format("runloop-%u", GetThreadID());
+    mThreadName.Format("%s-%u", mName.c_str(), GetThreadID());
     hlog(HLOG_DEBUG, "runloop starting");
     MonotonicClock mc; 
     std::multiset<RunLoopScheduleItem>::iterator i;

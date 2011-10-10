@@ -8,6 +8,7 @@
 #include <sys/time.h>
 #include "FString.h"
 #include "Object.h"
+#include <boost/function.hpp>
 
 namespace Forte
 {
