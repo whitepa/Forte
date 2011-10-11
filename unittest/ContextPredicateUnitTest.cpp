@@ -28,6 +28,13 @@ public:
 
     };
 
+    static bool PredicateFunctionSet(const Forte::Context &c) {
+        return true;
+    }
+
+    static bool PredicateFunctionClear(const Forte::Context &c) {
+        return false;
+    }
 };
 
 TEST_F (ContextPredicateTest, s_test1)
@@ -75,6 +82,17 @@ TEST_F (ContextPredicateTest, s_test1)
     // test invalid predicate exception
     Forte::ContextPredicate cp6(Forte::ContextPredicate::NOT, cp4, cp5);
     EXPECT_THROW( cp6.Evaluate(c1), EContextPredicateInvalid );
+
+    // test predicate function
+    Forte::ContextPredicate cp7(Forte::ContextPredicate::PREDICATE_FUNCTION_SET, 
+                                boost::make_shared<Forte::ContextPredicateFunction>(
+                                    ContextPredicateTest::PredicateFunctionSet));
+    EXPECT_TRUE( cp7.Evaluate(c1) );
+
+    Forte::ContextPredicate cp8(Forte::ContextPredicate::PREDICATE_FUNCTION_CLEAR, 
+                                boost::make_shared<Forte::ContextPredicateFunction>(
+                                    ContextPredicateTest::PredicateFunctionClear));
+    EXPECT_TRUE( cp8.Evaluate(c1) );
 
     // test AND
     EXPECT_TRUE(cp1.Evaluate(c1));
