@@ -33,8 +33,8 @@ namespace Forte
             virtual bool FetchRow(DbRow& row /*OUT*/);
 
             // memory management (use within a single thread only)
-            void AddRef() { mCount++; };
-            void Release() { if (--mCount == 0) delete this; };
+            virtual void AddRef() { mCount++; };
+            virtual void Release() { if (--mCount == 0) delete this; };
         private:
             int mCount;
          };

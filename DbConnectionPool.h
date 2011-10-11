@@ -18,8 +18,6 @@ namespace Forte
     class DbConnectionPool : public Object {
 
     public:
-
-        DbConnectionPool();
         DbConnectionPool(ServiceConfig &configObj);
         DbConnectionPool(const char *dbType,
                          const char *dbName,
@@ -32,14 +30,15 @@ namespace Forte
 
         virtual ~DbConnectionPool();
 
-        DbConnection& GetDbConnection();
-        void ReleaseDbConnection(DbConnection& connection);
-        void DeleteConnections();
+        virtual DbConnection& GetDbConnection();
+        virtual void ReleaseDbConnection(DbConnection& connection);
+        virtual void DeleteConnections();
 
         const FString& GetDbName() const;
         const FString& GetBackupDbName() const;
         const FString& GetDbType() const;
-    private:
+    protected:
+        DbConnectionPool() {};
         static auto_ptr<DbConnectionPool> spInstance;
         static Mutex sSingletonMutex;
 

@@ -96,5 +96,6 @@ namespace Forte
         DbConnection & mDbConnection;
     };
 };
+typedef boost::shared_ptr<Forte::DbAutoConnection> DbAutoConnectionPtr;
 #endif
 #endif
