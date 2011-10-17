@@ -157,6 +157,8 @@ DbResult DbLiteConnection::Query(const FString& sql)
                 case SQLITE_LOCKED:
                     sqlite3_reset(stmt);
                     --tries_remaining;
+                    if (tries_remaining > 0)
+                        usleep(50000); // sleep 50 milliseconds
                     break;
 
                     //// hard failures, just fail immediately:
