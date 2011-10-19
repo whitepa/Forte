@@ -151,7 +151,7 @@ void Forte::ProcessManager::startMonitor(
         throw EProcessManagerUnableToFork(FStringFC(), "%s", strerror(errno));
     else if(childPid == 0)
     {
-        fprintf(stderr, "procmon child, childfd=%d\n", childfd.GetFD());
+        //fprintf(stderr, "procmon child, childfd=%d\n", childfd.GetFD());
         // child
         // close all file descriptors, except the PDU channel
         while (close(parentfd) == -1 && errno == EINTR);

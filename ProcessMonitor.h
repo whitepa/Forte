@@ -12,6 +12,8 @@ namespace Forte
     EXCEPTION_SUBCLASS(EProcessFuture, EProcessMonitor);
     EXCEPTION_SUBCLASS2(EProcessMonitor, EProcessMonitorArguments,
                         "Incorrect command line arguments");
+    EXCEPTION_SUBCLASS2(EProcessMonitor, EProcessMonitorArgumentsTooLong,
+                        "Size of arguments and environment exceeds maximum");
     EXCEPTION_SUBCLASS2(EProcessMonitor, EProcessMonitorUnableToOpenInputFile,
                         "Unable to open input file");
     EXCEPTION_SUBCLASS2(EProcessMonitor, EProcessMonitorUnableToOpenOutputFile,

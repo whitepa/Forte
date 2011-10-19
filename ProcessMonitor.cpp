@@ -323,7 +323,16 @@ void Forte::ProcessMonitor::startProcess(void)
         // child
         sigset_t set;
         char *argv[128]; // @TODO - don't hardcode a max # of args
-	// @TODO - guarantee # of bytes of args and environment is less than ARG_MAX
+        size_t cmdEnvLen = mCmdline.length() + 15;
+        unsigned int envCount = 0;
+        while (environ[envCount] != 0)
+        {                
+            cmdEnvLen += strlen(environ[envCount]);
+            envCount++;
+        }
+        hlog(HLOG_DEBUG, "Total command size: %u", (unsigned)cmdEnvLen);
+        if (cmdEnvLen >= ARG_MAX)
+            throw EProcessMonitorArgumentsTooLong();
 
         // we need to split the command up
 
