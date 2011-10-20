@@ -18,20 +18,19 @@ namespace Forte
     public:
         virtual ~ActiveObject() {};
 
-    protected:
         template<typename ResultType>
-        shared_ptr<Forte::Future<ResultType> > invokeAsync(
+        shared_ptr<Forte::Future<ResultType> > InvokeAsync(
             boost::function<ResultType(void)> callback) {
             shared_ptr<Future<ResultType> > future(make_shared<Future<ResultType> >());
             mActiveObjectThread.Enqueue(
                 make_shared<ConcreteInvocation<ResultType> >(future, callback));
             return future;
         }
-        bool isCancelled(void) {
+        bool IsCancelled(void) {
             return mActiveObjectThread.IsCancelled();
         }
 
-        void setThreadName(const FString &name){
+        void SetThreadName(const FString &name){
             mActiveObjectThread.SetName(name);
         }
     private:
