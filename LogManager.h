@@ -384,6 +384,13 @@ namespace Forte
 
         void LogMsgVa(const char * func, const char *file, int line, int level, const char *fmt, va_list ap);
 
+        /**
+         *LogMsgString(const char *func, const char *file, int line, int level, const std::string& message)
+         *performs the same function as Log() but it is a special case where it takes a std::string as a message
+         **/
+
+        void LogMsgString(const char * func, const char * file, int line, int level, const std::string& message);
+
         static FString LogMaskStr(int mask);
 
         /**
@@ -433,6 +440,12 @@ namespace Forte
 
 void _hlog(const char *func, const char *file, int line, int level, const char * fmt, ...) __attribute__((format(printf, 5, 6)));
 #define hlog(level, fmt...) _hlog(__FUNCTION__, __FILE__, __LINE__, level, fmt)
+
+void _hlogstream(const char *func, const char *file, int line, int level, const std::string& message);
+#define hlogstream(level, message) {                                    \
+    std::ostringstream o;                                               \
+    o << message;                                                       \
+    _hlogstream(__FUNCTION__, __FILE__, __LINE__, level, o.str()); }
 
 void _hlog_errno(const char* func, const char* file, int line, int level);
 #define hlog_errno(level)  _hlog_errno(__FUNCTION__, __FILE__, __LINE__, level)

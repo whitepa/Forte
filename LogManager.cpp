@@ -450,6 +450,14 @@ void LogManager::LogMsgVa(int level, const char *fmt, va_list ap)
 
 void LogManager::LogMsgVa(const char * func, const char * file, int line, int level, const char *fmt, va_list ap)
 {
+    char *amsg;
+    vasprintf(&amsg, fmt, ap);
+    LogMsgString(func, file, line, level, amsg);
+    free(amsg);
+}
+
+void LogManager::LogMsgString(const char * func, const char * file, int line, int level, const std::string& message)
+{
     char tmp[128];
     tmp[0] = 0;
     LogMsg msg;
@@ -467,7 +475,7 @@ void LogManager::LogMsgVa(const char * func, const char * file, int line, int le
         case LOG_ALERT: level = HLOG_ALERT; break;
         case LOG_EMERG: level = HLOG_EMERG; break;
         default: level = HLOG_CRIT; break;
-        } 
+        }
     }
     gettimeofday(&(msg.mTime), NULL);
     if (gethostname(tmp, sizeof(tmp))==0)
@@ -479,9 +487,7 @@ void LogManager::LogMsgVa(const char * func, const char * file, int line, int le
     if (ti != NULL)
         msg.mThread = &(ti->mThread);
     msg.mLevel = level;
-    char *amsg;
-    vasprintf(&amsg, fmt, ap);
-    msg.mMsg = amsg;
+    msg.mMsg = message;
     msg.mFunction = func;
     msg.mFile = file;
     msg.mLine = line;
@@ -492,7 +498,6 @@ void LogManager::LogMsgVa(const char * func, const char * file, int line, int le
         msg.mClient = c->mClient;
         msg.mPrefix = c->mPrefix;
     }
-    free(amsg);
 
     // decide whether this message should be logged anywhere.
     // Decision is made by (in order of precedence):
@@ -508,7 +513,7 @@ void LogManager::LogMsgVa(const char * func, const char * file, int line, int le
             fileSpecific = true;
         else
             return; // do not log anywhere
-    }        
+    }
 
     // send the message to all the logfiles
     foreach (Logfile *i, mLogfiles)
@@ -523,7 +528,7 @@ void LogManager::LogMsgVa(const char * func, const char * file, int line, int le
             else
                 continue; // don't log to this path
         }
-        if (fileSpecific || 
+        if (fileSpecific ||
             pathFileSpecific ||
             (level & (lf.mLogMask)) != 0)
         {
@@ -546,6 +551,18 @@ void _hlog(const char *func, const char * file, int line, int level, const char 
     {
     }
     va_end(ap);
+}
+
+void _hlogstream(const char *func, const char * file, int line, int level, const std::string& message)
+{
+    try
+    {
+        LogManager *log_mgr = LogManager::GetInstancePtr();
+        if (log_mgr != NULL) log_mgr->LogMsgString(func, file, line, level, message);
+    }
+    catch (...)
+    {
+    }
 }
 
 void _hlog_errno(const char* func, const char* file, int line, int level)
