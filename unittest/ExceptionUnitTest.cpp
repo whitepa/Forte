@@ -185,3 +185,20 @@ TEST_F(ExceptionTest, hlogAndThrow)
         ASSERT_STREQ(e.what(), "EExceptionUnitTest");
     }
 }
+
+EXCEPTION_PARAM_SUBCLASS(EExceptionUnitTest, TestParameterException, "%s %s", (FString)(FString));
+
+TEST_F(ExceptionTest, ParameterException)
+{
+    FTRACE;
+
+    try
+    {
+        throw(TestParameterException("param1", "param2"));
+    }
+    catch (TestParameterException &e)
+    {
+        ASSERT_STREQ(e.what(), "param1 param2");
+    }
+
+}

@@ -15,21 +15,53 @@
 #include <boost/preprocessor/seq/enum.hpp>
 #include <boost/preprocessor/repetition/enum.hpp>
 #include <boost/preprocessor/repetition/repeat.hpp>
+#include <boost/preprocessor/facilities/empty.hpp>
+#include <boost/preprocessor/punctuation/paren.hpp>
 
-#define PARAMETER_NAME_DATA(z, n, data) BOOST_PP_CAT(parameter, BOOST_PP_SUB(n, 2))
-#define PARAMETER_NAME(z, n, data) BOOST_PP_CAT(parameter, n)
-#define PARAMETER_TYPES_AND_NAMES_REFERENCE(s, data, elem) const elem& PARAMETER_NAME_DATA(~, s, ~)
 
-#define EXCEPTION_PARAM_SUBCLASS(PARENT, NAME, DESC, PARAMS_SEQ)                                        \
-    class NAME : public virtual PARENT,                                                                 \
-                 public Forte::ParameterizedException< BOOST_PP_SEQ_ENUM(PARAMS_SEQ) >                 \
+#define PARAMETER_APPEND_SEMICOLON(r, data, elem) elem;
+#define PARAMETER_NAME_DATA(z, n, data) BOOST_PP_CAT(data, BOOST_PP_SUB(n, 2))
+#define PARAMETER_INITIALIZE(s, data, elem) PARAMETER_NAME_DATA(~, s, mParameter)(PARAMETER_NAME_DATA(~, s, p))
+#define PARAMETER_AS_CSTR(s, data, elem) Forte::FString(PARAMETER_NAME_DATA(~, s, p)).c_str()
+#define PARAMETER_TYPES_AND_NAMES_REFERENCE(s, data, elem) const elem& PARAMETER_NAME_DATA(~, s, p)
+#define PARAMETER_TYPES_AND_NAMES_DECLARE(s, data, elem) const elem PARAMETER_NAME_DATA(~, s, mParameter)
+#define PARAMETER_VECTOR_PUSH_BACK(s, data, elem) result.push_back(Forte::FString(PARAMETER_NAME_DATA(~, s, mParameter)))
+
+
+/*
+ * Declare Parametric exceptions
+ * DESC: format string: all substitution tokes must be of %s.
+ * PARAM_TYPES must be sequences such as (Forte::FString)(int)
+ *      types must have a FString Constructor
+ */
+#define EXCEPTION_PARAM_SUBCLASS(PARENT, NAME, DESC, PARAM_TYPES)                                       \
+    class NAME : public PARENT                                                                          \
     {                                                                                                   \
     public:                                                                                             \
-        inline NAME(BOOST_PP_SEQ_ENUM(BOOST_PP_SEQ_TRANSFORM(PARAMETER_TYPES_AND_NAMES_REFERENCE, 0, PARAMS_SEQ))) : \
-            Forte::ParameterizedException< BOOST_PP_SEQ_ENUM(PARAMS_SEQ) >(DESC, BOOST_PP_ENUM(BOOST_PP_SEQ_SIZE(PARAMS_SEQ), PARAMETER_NAME, ~))        \
+        inline NAME(BOOST_PP_SEQ_ENUM(BOOST_PP_SEQ_TRANSFORM(PARAMETER_TYPES_AND_NAMES_REFERENCE, 0, PARAM_TYPES))) : \
+        mFormattedDescription(DESC),                                                                    \
+        BOOST_PP_SEQ_ENUM(BOOST_PP_SEQ_TRANSFORM(PARAMETER_INITIALIZE, 0, PARAM_TYPES))                 \
         {                                                                                               \
+            mDescription.Format(DESC, BOOST_PP_SEQ_ENUM(BOOST_PP_SEQ_TRANSFORM(PARAMETER_AS_CSTR, 0, PARAM_TYPES))); \
         }                                                                                               \
-    };                                                                                                  \
+        virtual ~NAME()  throw() {}                                                                     \
+        virtual const std::string &GetFormattedDescription() const throw()                              \
+        {                                                                                               \
+            return mFormattedDescription;                                                               \
+        }                                                                                               \
+        virtual std::string GetFormattedDescriptionAsObjCStyle() const throw()                          \
+        {                                                                                               \
+            const boost::regex e("%[^%]");                                                              \
+            return boost::regex_replace(mFormattedDescription, e, "%@");                                \
+        }                                                                                               \
+        virtual void GetParametersAsStrings(std::vector<std::string> &result) const throw()             \
+        {                                                                                               \
+            result.clear();                                                                             \
+            BOOST_PP_SEQ_FOR_EACH(PARAMETER_APPEND_SEMICOLON, ~, BOOST_PP_SEQ_TRANSFORM(PARAMETER_VECTOR_PUSH_BACK, 0, PARAM_TYPES))         \
+        }                                                                                               \
+        Forte::FString mFormattedDescription;                                                           \
+        BOOST_PP_SEQ_FOR_EACH(PARAMETER_APPEND_SEMICOLON, ~, BOOST_PP_SEQ_TRANSFORM(PARAMETER_TYPES_AND_NAMES_DECLARE, 0, PARAM_TYPES))      \
+    };
 
 /**
  * @TODO figure out how to add the format attributes back into the
@@ -124,7 +156,20 @@ namespace Forte
         }
 
         virtual const char *what() const throw() { 
-            return mDescription; 
+            return mDescription;
+        }
+
+        virtual const std::string &GetFormattedDescription() const throw()
+        {
+            return mDescription;
+        }
+        virtual std::string GetFormattedDescriptionAsObjCStyle() const throw()
+        {
+            return mDescription;
+        }
+        virtual void GetParametersAsStrings(std::vector<std::string> &result) const throw()
+        {
+            result.clear();
         }
 
         std::string ExtendedDescription();
@@ -146,55 +191,6 @@ namespace Forte
     EXCEPTION_SUBCLASS2(EFString, EFStringUnknownAddressFamily, 
                         "Unknown address family");
 
-    template<typename P1, typename P2>
-    class ParameterizedException : public virtual Exception
-    {
-    public:
-        ParameterizedException(const char *formattedDescription,
-                const P1 &p1, const P2 &p2) :
-                    Exception(FStringFC(), formattedDescription, FString(mParameter1).c_str(),
-                            FString(mParameter2).c_str()),
-                    mFormattedDescription(formattedDescription),
-                    mParameter1(p1),
-                    mParameter2(p2)
-        {
-
-        }
-
-        virtual ~ParameterizedException()  throw()
-        {
-        }
-        FString GetFormattedDescriptionAsObjCStyle()
-        {
-            const boost::regex e("%[^%]");
-            return boost::regex_replace(mFormattedDescription, e, "%@");
-        }
-        void GetParametersAsFStrings(std::vector<FString> &result)
-        {
-            result.clear();
-            result.push_back(FString(mParameter1));
-            result.push_back(FString(mParameter2));
-        }
-
-        FString mFormattedDescription;
-        const P1 mParameter1;
-        const P2 mParameter2;
-    };
+    EXCEPTION_PARAM_SUBCLASS(EFString, ParamException, "%s %s", (FString)(FString));
 };
-
-class ParamException : public Forte::ParameterizedException<Forte::FString,
-                Forte::FString>
-{
-public:
-    inline ParamException(const Forte::FString& parameter0,
-            const Forte::FString& parameter1) :
-            Forte::ParameterizedException<Forte::FString, Forte::FString>(
-                    "%s %s", parameter0, parameter1)
-    {
-    }
-};
-;
-
-EXCEPTION_PARAM_SUBCLASS(Forte::Exception, ParaException, "%s %s", (Forte::FString)(Forte::FString));
-
 #endif

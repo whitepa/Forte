@@ -195,4 +195,24 @@ TEST_F(FStringTest, TokenizeFStringTest)
     ASSERT_EQ(tokens[0], "this is    a     test  ");
 }
 
+TEST_F(FStringTest, OFormat)
+{
+    FString format("test no params");
+    std::vector<FString> fParams;
+    std::vector<std::string> sParams;
 
+    ASSERT_STREQ(FString(FStringFO(), format, fParams), format);
+    ASSERT_STREQ(FString(FStringFO(), static_cast<std::string>(format), sParams), format);
+
+    format = "test %@%@ blah%@";
+    fParams.push_back("1");
+    fParams.push_back("2");
+    fParams.push_back("3");
+    sParams.push_back("1");
+    sParams.push_back("2");
+    sParams.push_back("3");
+
+    ASSERT_STREQ(FString(FStringFO(), format, fParams), FString("test 12 blah3"));
+    ASSERT_STREQ(FString(FStringFO(), static_cast<std::string>(format), sParams),
+            FString("test 12 blah3"));
+}

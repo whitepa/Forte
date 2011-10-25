@@ -20,6 +20,10 @@ namespace Forte
     public:
         FStringFC() {};
     }; 
+    class FStringFO { // type for the FString Objective-C format constructor 'flag'
+    public:
+        FStringFO() {};
+    };
 
     /**
      *The FString class provides a rich set of methods for handling strings. Use this class to
@@ -46,16 +50,28 @@ namespace Forte
         void Format(const char *format, ...) __attribute__((format(printf,2,3)));
 
         /**
-         *Constructs an FString from the sequence of data formatted as the format argument 
-         *specifies using a variable argument list.
+         * Overwrites this FString with a new FString from the sequence of data
+         * formatted as the format argument specifies using a variable argument
+         * list.
          **/
 
         void VFormat(const char *format, int size, va_list ap);
 
         /**
+         * Overwrites a FString utilizing a format string in objective-c
+         * style where %@ means a token to replace with a string parameter
+         */
+        void OFormat(const FString &format, const std::vector<std::string> &parameters);
+
+        /**
+         * Overwrites a FString utilizing a format string in objective-c
+         * style where %@ means a token to replace with a string parameter
+         */
+        void OFormat(const FString &format, const std::vector<FString> &parameters);
+
+        /**
          *Constructs an FString from another FString. 
          **/
-
         FString(const FString& other) { static_cast<std::string&>(*this) = other; }
 
         /**
@@ -140,9 +156,21 @@ namespace Forte
         FString(const struct sockaddr *sa);
 
         /**
-         *Constructs an FString from the sequence of data formatted as the format argument specifies.
+         *Constructs a FString from the sequence of data formatted as the format argument specifies.
          **/
         FString(const FStringFC &f, const char *format, ...)  __attribute__((format(printf,3,4)));
+
+        /**
+         * Constructs a FString utilizing a format string in objective-c
+         * style where %@ means a token to replace with a string parameter
+         */
+        FString(const FStringFO &f, const FString &format, const std::vector<std::string> &parameters);
+
+        /**
+         * Constructs a FString utilizing a format string in objective-c
+         * style where %@ means a token to replace with a string parameter
+         */
+        FString(const FStringFO &f, const FString &format, const std::vector<FString> &parameters);
         virtual ~FString();
 
     public:

@@ -29,6 +29,7 @@ FString::~FString()
 {
 }
 
+
 FString::FString(const std::vector<unsigned int> &intvec)
 {
     bool first = true;
@@ -122,6 +123,15 @@ FString::FString(const struct sockaddr *sa)
         throw EFStringUnknownAddressFamily(FStringFC(), "AF %d not supported", sa->sa_family);
 }
 
+FString::FString(const FStringFO &f, const FString &format, const std::vector<FString> &parameters)
+{
+    OFormat(format, parameters);
+}
+
+FString::FString(const FStringFO &f, const FString &format, const std::vector<std::string> &parameters)
+{
+    OFormat(format, parameters);
+}
 
 void FString::Format(const char *format, ...)
 {
@@ -647,4 +657,62 @@ FString& FString::ImplodeBinary(const std::vector<FString> &components)
         append(*i);
     }
     return *this;
+}
+
+void FString::OFormat(const FString &format, const std::vector<std::string> &parameters)
+{
+    clear();
+
+    size_t size = format.length();
+    size = size + (2 * parameters.size());
+    foreach(const std::string &parameter, parameters)
+    {
+        size += parameter.size();
+    }
+    reserve(size);
+
+    size_t startPos = 0;
+    size_t endPos = format.find_first_of("%@");
+    std::vector<std::string>::const_iterator it = parameters.begin();
+
+    while (endPos != npos && it != parameters.end())
+    {
+        append(format, startPos, endPos - startPos);
+        append(*it);
+        it++;
+        startPos = endPos + 2;
+        endPos = format.find_first_of("%@", startPos);
+    }
+    if (startPos < size)
+        append(format, startPos, size - startPos);
+
+}
+
+void FString::OFormat(const FString &format, const std::vector<FString> &parameters)
+{
+    clear();
+
+    size_t size = format.length();
+    size = size + (2 * parameters.size());
+    foreach(const FString &parameter, parameters)
+    {
+        size += parameter.size();
+    }
+    reserve(size);
+
+    size_t startPos = 0;
+    size_t endPos = format.find_first_of("%@");
+    std::vector<FString>::const_iterator it = parameters.begin();
+
+    while (endPos != npos && it != parameters.end())
+    {
+        append(format, startPos, endPos - startPos);
+        append(*it);
+        it++;
+        startPos = endPos + 2;
+        endPos = format.find_first_of("%@", startPos);
+    }
+
+    if (startPos < size)
+        append(format, startPos, size - startPos);
 }

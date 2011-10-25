@@ -75,7 +75,6 @@ bool DbMyResult::MyData::FetchRow(DbResultRow& row /*OUT*/)
     return ret;
 }
 
-
 size_t DbMyResult::MyData::GetNumColumns()
 {
     return mNumCols;

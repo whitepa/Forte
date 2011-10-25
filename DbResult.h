@@ -22,6 +22,7 @@ namespace Forte
             // abstract interface
             virtual bool IsOkay() const = 0;
             virtual bool FetchRow(DbResultRow& row /*OUT*/) = 0;
+            virtual void UnFetchRow() = 0;
             virtual size_t GetNumColumns() = 0;
             virtual FString GetColumnName(size_t i) = 0;
             virtual size_t GetFieldLength(size_t i) = 0;
@@ -58,6 +59,7 @@ namespace Forte
         inline bool IsOkay() { return (mData != NULL) && mData->IsOkay(); }
         inline bool FetchRow(DbResultRow& row) { return (mData != NULL) && mData->FetchRow(row); }
         inline bool FetchRow(DbRow& row) { return (mData != NULL) && mData->FetchRow(row); }
+        inline void UnFetchRow() { if (mData) mData->UnFetchRow(); }
         inline size_t GetNumColumns() { return (mData ? mData->GetNumColumns() : 0); }
         inline FString GetColumnName(size_t i) { return (mData ? mData->GetNumColumns() : 0); }
         inline size_t GetFieldLength(size_t i) { return (mData ? mData->GetFieldLength(i) : 0); }

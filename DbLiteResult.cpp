@@ -139,6 +139,13 @@ bool DbLiteResult::LiteData::FetchRow(DbResultRow& row /*OUT*/)
     return true;
 }
 
+void DbLiteResult::LiteData::UnFetchRow()
+{
+    Row::iterator ri;
+    if (mCurrentRow == mRes.begin()) return;
+    --mCurrentRow;
+    --mNextRow;
+}
 
 size_t DbLiteResult::LiteData::GetNumColumns()
 {

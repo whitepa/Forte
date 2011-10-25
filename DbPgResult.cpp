@@ -95,6 +95,11 @@ bool DbPgResult::PgData::FetchRow(DbResultRow& row /*OUT*/)
     return true;
 }
 
+void DbPgResult::PgData::UnFetchRow()
+{
+    if (mCurrentRow != 0)
+        mCurrentRow--;
+}
 
 size_t DbPgResult::PgData::GetNumColumns()
 {

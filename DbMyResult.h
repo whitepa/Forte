@@ -24,6 +24,9 @@ namespace Forte
             // abstract interface
             virtual bool IsOkay() const;
             virtual bool FetchRow(DbResultRow& row /*OUT*/);
+            virtual void UnFetchRow() {
+                throw Exception("DbMyResult::seek not implemented");
+            }
             virtual size_t GetNumColumns();
             virtual FString GetColumnName(size_t i);
             virtual size_t GetFieldLength(size_t i);
