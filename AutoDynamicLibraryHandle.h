@@ -45,15 +45,17 @@ namespace Forte
         }
 
         virtual void *GetFunctionPointer(const Forte::FString& fName) {
-            char *error;
-            void *func;
+            char *error = NULL;
+            void *func = NULL;
             
             if (!IsLoaded())
             {
                 hlog(HLOG_ERR, "Unable to get pointer to %s because the library %s is not loaded", fName.c_str(), mPath.c_str());
                 throw ELibraryNotLoaded(FStringFC(), "Unable to get pointer to %s because the library %s is not loaded", fName.c_str(), mPath.c_str());
             }
-            
+
+            dlerror(); //clear any existing error
+
             func = dlsym(mHandle, fName.c_str());
             if ((error = dlerror()) != NULL)  
             {
