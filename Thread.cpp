@@ -174,7 +174,8 @@ Thread::~Thread()
     if (!mDeletingCalled)
     {
         hlog(HLOG_CRIT, "Software error: "
-             "dtor failed to call deleting()");
+             "dtor failed to call deleting() in thread '%s'",
+             mThreadName.c_str());
         deleting();
     }
 }
