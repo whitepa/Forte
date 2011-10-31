@@ -300,10 +300,13 @@ void ServerMain::MainLoop()
                 hlog(HLOG_ERR,"Unhandled signal %d received.", sig);
             }
         }
+        else if (errno == EINTR)
+        {
+            continue;
+        }
         else if (errno != EAGAIN) // EAGAIN when timeout occurs
         {
-            // should only be EINTR (interrupted with a signal not in sig mask)
-            //                EINVAL (invalid timeout)
+            // should only be EINVAL (invalid timeout)
             hlog(HLOG_ERR, "Error while calling sigtimedwait (%s)", 
                  strerror(errno));
      
