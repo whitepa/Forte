@@ -402,6 +402,19 @@ namespace Forte
          */
         static Mutex& GetSingletonMutex(void) { return sLogManagerMutex; }
 
+
+        /**
+         * LogRatelimit() will limit the logging from a particular
+         * file/line to once every given number of seconds.  Call this
+         * method prior to logging any message you need ratelimited.
+         * If this method returns true, then call hlog().
+         *
+         * @param rate logging will be limited to once every 'rate'
+         * seconds
+         * @return bool whether or not caller should call hlog()
+         */
+        bool LogRatelimit(const char *file, int line, int rate);
+
     protected:
         friend class Mutex;
         std::vector<Logfile*> mLogfiles;
@@ -413,6 +426,8 @@ namespace Forte
 
         // Source File specific log masks (global)
         std::map<FString,unsigned int> mFileMasks;
+
+        std::map<FString,time_t> mRateLimitedTimestamps;
 
         void beginLogging(const char *path, int mask);  // helper - no locking
         void endLogging(const char *path);    // helper - no locking
@@ -428,20 +443,28 @@ void _hlog(const char *func, const char *file, int line, int level, const char *
 
 void _hlogstream(const char *func, const char *file, int line, int level, const std::string& message);
 #define hlogstream(level, message) {                                    \
-    std::ostringstream o;                                               \
-    o << message;                                                       \
-    _hlogstream(__FUNCTION__, __FILE__, __LINE__, level, o.str()); }
+        std::ostringstream o;                                           \
+        o << message;                                                   \
+        _hlogstream(__FUNCTION__, __FILE__, __LINE__, level, o.str()); }
 
 void _hlog_errno(const char* func, const char* file, int line, int level);
 #define hlog_errno(level)  _hlog_errno(__FUNCTION__, __FILE__, __LINE__, level)
 
-#define hlog_and_throw(level, exception_decl)                          \
-{                                                                      \
-    const std::exception &exception_instance = exception_decl;         \
-    hlog(level, "EXCEPTION %s thrown (%s)",                            \
-            typeid(exception_instance).name(),                         \
-            exception_decl.what());                                    \
-    boost::throw_exception(exception_decl);                            \
-}
+#define hlog_and_throw(level, exception_decl)                           \
+    {                                                                   \
+        const std::exception &exception_instance = exception_decl;      \
+        hlog(level, "EXCEPTION %s thrown (%s)",                         \
+             typeid(exception_instance).name(),                         \
+             exception_decl.what());                                    \
+        boost::throw_exception(exception_decl);                         \
+    }
+
+
+/**
+ * hlog_ratelimit() will limit the logging from a particular file/line
+ * to once every given number of seconds.
+ */
+#define hlog_ratelimit(rate) _hlog_ratelimit(__FILE__, __LINE__, rate)
+bool _hlog_ratelimit(const char *file, int line, int rate);
 
 #endif

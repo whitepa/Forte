@@ -553,6 +553,31 @@ void _hlog_errno(const char* func, const char* file, int line, int level)
     _hlog(func, file, line, level, "strerror: %s", err_buf);
 }
 
+bool _hlog_ratelimit(const char *file, int line, int rate)
+{
+    AutoUnlockMutex lock(LogManager::GetSingletonMutex());
+    LogManager *log_mgr = LogManager::GetInstancePtr();
+    if (log_mgr != NULL)
+        return log_mgr->LogRatelimit(file, line, rate);
+    else
+        return true;
+}
+
+bool LogManager::LogRatelimit(const char *file, int line, int rate)
+{
+    FString key(FStringFC(), "%s:%d", file, line);
+    time_t now = time(0);
+    if (mRateLimitedTimestamps.find(key)==
+        mRateLimitedTimestamps.end() ||
+        mRateLimitedTimestamps[key] < now - rate)
+    {
+        mRateLimitedTimestamps[key] = now;
+        return true;
+    }
+    else
+        return false;
+}
+
 static const char *levelstr[] = 
 {
     "0",
