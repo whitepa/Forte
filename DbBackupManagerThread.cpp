@@ -5,19 +5,64 @@
 #include "INotify.h"
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/algorithm/string.hpp>
 #include <sys/inotify.h>
+
+#include <boost/filesystem/path.hpp>
 
 using namespace boost;
 using namespace Forte;
 
 DbBackupManagerThread::DbBackupManagerThread(boost::shared_ptr<DbConnectionPool> pool)
-    :base_type(), mPool(pool), mInotify(make_shared<INotify>())
+    :base_type(), mPool(pool), mDbWatch(-1), mDbParentDirWatch(-1)
 {
     if(pool && ! pool->GetDbName().empty() && ! pool->GetBackupDbName().empty())
     {
-        mInotify->AddWatch(pool->GetDbName(), IN_MODIFY | IN_ATTRIB);
+        mInotify.reset(new INotify());
+
+        addWatchDbParentDir();
+        addWatchDb();
+
         setThreadName("backupmgr");
         initialized();
+    }
+}
+
+void DbBackupManagerThread::addWatchDbParentDir()
+{
+    FileSystem fs;
+    const string parentPath(fs.Dirname(mPool->GetDbName()));
+
+    try
+    {
+        if(fs.FileExists(parentPath))
+        {
+            mDbParentDirWatch = mInotify->AddWatch(parentPath, IN_CREATE | IN_IGNORED);
+            hlogstream(HLOG_DEBUG, "added watch on: " << parentPath);
+        }
+    }
+    catch(EINotifyAddWatchFailed& e)
+    {
+        hlogstream(HLOG_WARN, "no primary db to watch during ctor: " << e.what());
+    }
+}
+
+void DbBackupManagerThread::addWatchDb()
+{
+    const string& dbPath(mPool->GetDbName());
+
+    try
+    {
+        FileSystem fs;
+        if(fs.FileExists(dbPath))
+        {
+            mDbWatch = mInotify->AddWatch(dbPath, IN_MODIFY | IN_ATTRIB);
+            hlogstream(HLOG_DEBUG, "added watch on: " << dbPath);
+        }
+    }
+    catch(EINotifyAddWatchFailed& e)
+    {
+        hlogstream(HLOG_WARN, "no parent path to db to watch during ctor: " << e.what());
     }
 }
 
@@ -51,33 +96,113 @@ void DbBackupManagerThread::backupDb()
     }
     catch(DbException& e)
     {
-        hlog(HLOG_WARN, "%s", e.what());
+        hlogstream(HLOG_DEBUG, e.what());
     }
+    catch(std::exception& e)
+    {
+        hlogstream(HLOG_WARN, e.what());
+    }
+}
+
+void DbBackupManagerThread::resetWatchDbParentDir()
+{
+    FileSystem fs;
+    hlogstream(HLOG_DEBUG, "watch removed for parent" << fs.Dirname(mPool->GetDbName()));
+    mDbParentDirWatch = -1;
+}
+
+void DbBackupManagerThread::resetWatchDb()
+{
+    hlogstream(HLOG_DEBUG, "watch removed for db: " << mPool->GetDbName());
+    mDbWatch = -1;
+}
+
+bool DbBackupManagerThread::hasWatchDbParentDir() const
+{
+    return (mDbParentDirWatch != -1);
+}
+
+bool DbBackupManagerThread::hasWatchDb() const
+{
+    return (mDbWatch != -1);
 }
 
 void* DbBackupManagerThread::run()
 {
-    try
-    {
-        DbAutoConnection connection(mPool);
-    }
-    catch(DbException& e)
-    {
-        hlog(HLOG_WARN, "%s", e.what());
-    }
+    FileSystem fs;
+
+    backupDb();
 
     timespec previousTimeSpec(getModificationTime());
 
     while(! this->IsShuttingDown())
     {
+        if(! hasWatchDbParentDir())
+        {
+            addWatchDbParentDir();
+        }
+
         INotify::EventVector events (mInotify->Read(TIMEOUT_SECS_BEFORE_CHECKING_MODIFICATION_TIME));
 
-        if(events.size())
+        if(! events.empty())
         {
-            hlog(HLOG_TRACE, "%lu kicks to be serviced", events.size());
+            INotify::EventVector::size_type kickCount(0);
 
-            backupDb();
-            previousTimeSpec = getModificationTime();
+            for(INotify::EventVector::const_iterator i=events.begin(); i!=events.end(); i++)
+            {
+                const INotify::Event& event(**i);
+
+                hlogstream(HLOG_DEBUG, event);
+
+                if(event.wd == mDbParentDirWatch)
+                {
+                    if(event.mask & IN_IGNORED)
+                    {
+                        resetWatchDbParentDir();
+                    }
+                    else if(event.mask & IN_CREATE)
+                    {
+                        const string dbName(fs.Basename(mPool->GetDbName()));
+
+                        if(event.name == dbName)
+                        {
+                            addWatchDb();
+                        }
+                    }
+                    else if(event.mask & IN_IGNORED)
+                    {
+                        kickCount = 0;
+                        resetWatchDbParentDir();
+                    }
+                    else
+                    {
+                        hlogstream(HLOG_DEBUG, "unhandled " << event);
+                    }
+                }
+                else if(event.wd == mDbWatch)
+                {
+                    if(event.mask & (IN_MODIFY | IN_ATTRIB))
+                    {
+                        ++kickCount;
+                    }
+                    else if(event.mask & IN_IGNORED)
+                    {
+                        kickCount = 0;
+                        resetWatchDb();
+                    }
+                    else
+                    {
+                        hlogstream(HLOG_DEBUG, "unhandled " << event);
+                    }
+                }
+            }
+
+            if(kickCount > 0 && hasWatchDb())
+            {
+                hlogstream(HLOG_DEBUG, kickCount << " kicks to be serviced");
+                backupDb();
+                previousTimeSpec = getModificationTime();
+            }
         }
         else
         {

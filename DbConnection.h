@@ -87,6 +87,8 @@ namespace Forte
         virtual DbResult Use(const DbSqlStatement& statement);
         virtual DbResult Store(const DbSqlStatement& statement);
 
+        virtual const std::string& GetDbName() const;
+
         // db information
         FString mDBType;      // mysql, postgresql, etc.
         FString mDBName;

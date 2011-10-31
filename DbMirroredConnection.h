@@ -50,6 +50,8 @@ public:
     DbResult Use(const DbSqlStatement& statement);
     DbResult Store(const DbSqlStatement& statement);
 
+    virtual const std::string& GetDbName() const;
+
 private:
     bool setActiveSecondary();
     bool isActiveSecondary() const;

@@ -65,6 +65,7 @@ GSRCS = ActiveObjectUnitTest.cpp \
 	FileSystemUnitTest.cpp \
 	FileSystemUtilUnitTest.cpp \
 	FStringUnitTest.cpp \
+	INotifyUnitTest.cpp \
 	PidFileUnitTest.cpp \
 	PDUPeerUnitTest.cpp \
 	ProcessManagerUnitTest.cpp \
@@ -112,6 +113,9 @@ $(TARGETDIR)/DbLiteConnectionUnitTest: DbLiteConnectionUnitTest.cpp $(FORTE)
 $(TARGETDIR)/DbConnectionPoolUnitTest: DbConnectionPoolUnitTest.cpp $(FORTE)
 
 $(TARGETDIR)/DbMirroredConnectionUnitTest: DbMirroredConnectionUnitTest.cpp $(FORTE)
+
+$(TARGETDIR)/INotifyUnitTest: INotifyUnitTest.cpp \
+	../$(TARGETDIR)/INotify.o
 
 $(TARGETDIR)/FStringUnitTest: FStringUnitTest.cpp \
 	../$(TARGETDIR)/FString.o 

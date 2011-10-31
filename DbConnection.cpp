@@ -211,4 +211,9 @@ DbResult DbConnection::Store(const DbSqlStatement& statement)
     return Store(statement.GetStatement().c_str());
 }
 
+const std::string& DbConnection::GetDbName() const
+{
+    return mDBName;
+}
+
 #endif

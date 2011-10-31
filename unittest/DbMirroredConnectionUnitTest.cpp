@@ -163,6 +163,83 @@ TEST_F(BasicDatabaseTest, SqliteBackupDatabaseTest)
     ASSERT_NO_THROW(dbConnection.BackupDatabase(getBackupDatabaseName()));
 }
 
+/*
+ * Test case where database doesn't exist prior to backup manager instantiation
+ */
+TEST_F(BasicDatabaseTest, SqliteDbBackupManagerThreadWhenNoInitialDatabaseTest)
+{
+
+    shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
+
+    RemoveDatabases();
+
+    FileSystem fs;
+
+    ASSERT_FALSE(fs.FileExists(getDatabaseName()));
+    ASSERT_FALSE(fs.FileExists(getBackupDatabaseName()));
+
+    {
+        DbBackupManagerThread backupMgr(pool);
+
+        CreateDatabases();
+        CreateTables();
+    }
+
+    ASSERT_TRUE(fs.FileExists(getDatabaseName()));
+    ASSERT_TRUE(fs.FileExists(getBackupDatabaseName()));
+}
+
+
+/*
+ * Test case where primary db is future prior to db backup manager instantiation
+ */
+TEST_F(BasicDatabaseTest, SqliteDbBackupManagerThreadWhenFuturePrimaryDatabaseTest)
+{
+    int rows(0);
+
+    // pool to backup database
+    shared_ptr<DbConnectionPool> backupPool(make_shared<DbConnectionPool>("sqlite", getBackupDatabaseName()));
+
+    {
+        shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
+
+        // make an empty primary
+        RemoveDatabases();
+        CreateDatabases();
+
+        // make an initial backup
+        {
+            DbAutoConnection dbConnection(pool);
+            dbConnection->BackupDatabase(getBackupDatabaseName());
+        }
+
+        // insert some tables and rows
+        CreateTables();
+        rows = (PopulateData());
+
+        // create backup
+        {
+            DbBackupManagerThread backupMgr(pool);
+
+            DbResult res;
+
+            // keep the backup manager thread going long enough to enter the run loop prior to dtor
+            unsigned int ctr(0);
+            do
+            {
+                DbAutoConnection dbConnection(backupPool);
+                res = dbConnection->Store(SelectDbSqlStatement(SELECT_TEST_TABLE));
+            }
+            while(res.GetNumRows() < 1 && (++ctr < 10));
+        }
+    }
+
+    DbAutoConnection dbConnection(backupPool);
+    DbResult res = dbConnection->Store(SelectDbSqlStatement(SELECT_TEST_TABLE));
+
+    ASSERT_EQ(res.GetNumRows(), rows);
+}
+
 TEST_F(BasicDatabaseTest, SqliteSameSourceAndTargetBackupDatabaseTest)
 {
     DbConnectionPool pool("sqlite_mirrored", getDatabaseName());
@@ -189,6 +266,31 @@ TEST_F(BasicDatabaseTest, SqliteManualFailoverAndManualBackupDatabaseTest)
 
     DbResult res = dbConnection->Store(SelectDbSqlStatement(SELECT_TEST_TABLE));
     EXPECT_EQ(res.GetNumRows(), rows);
+}
+
+TEST_F(BasicDatabaseTest, SqliteNoPathToBackupTargetDatabaseTest)
+{
+    size_t rows(0);
+    DbResult res;
+
+    shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), "/tmp/tmp/tmp/backup.db"));
+    DbAutoConnection dbConnection(pool);
+    {
+        ASSERT_NO_THROW(DbBackupManagerThread backupMgr(pool));
+    }
+}
+
+TEST_F(BasicDatabaseTest, SqliteNoPrimaryOnAutoBackupDatabaseTest)
+{
+    size_t rows(0);
+    DbResult res;
+
+    shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
+
+    {
+        RemovePrimaryDatabase();
+        ASSERT_NO_THROW(DbBackupManagerThread backupMgr(pool));
+    }
 }
 
 TEST_F(BasicDatabaseTest, SqliteManualFailoverAutoBackupDatabaseTest)
@@ -292,5 +394,4 @@ TEST_F(BasicDatabaseTest, AutoBackupAutoFailoverStabilityOfBackupManagerUnderPri
     // results here are unknown as the primary could fail before the backup mgr had a chance to finish. test case is ok as long as exceptions aren't thrown
     //EXPECT_EQ(res.GetNumRows(), rows);
 }
-
 

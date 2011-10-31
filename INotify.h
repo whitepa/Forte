@@ -53,7 +53,7 @@ namespace Forte {
             * @param event inotify_event
             */
             Event(const inotify_event* event);
-        private:
+
             const int wd;
             const uint32_t mask;
             const uint32_t cookie;
@@ -110,6 +110,8 @@ namespace Forte {
         char mKickerPath[32];
         int mKickerWatchFd;
     }; // INotify
+
+    std::ostream& operator<<(std::ostream& out, const INotify::Event& o);
 
 } // forte
 

@@ -12,7 +12,7 @@ INotify::Event::Event(const inotify_event* event): wd(event->wd), mask(event->ma
 {
     if(event->len)
     {
-        name.assign(event->name, event->len-1);
+        name.assign(event->name, strnlen(event->name, event->len-1));
     }
 }
 
@@ -56,6 +56,9 @@ INotify::~INotify()
 
         mWatchFds.erase(fd);
     }
+
+    FileSystem fs;
+    fs.Unlink(mKickerPath);
 }
 
 int INotify::AddWatch(const std::string& path, const int& mask)
@@ -132,4 +135,26 @@ void INotify::Interrupt()
     fs.Touch(mKickerPath);
 }
 
+namespace Forte
+{
 
+std::ostream& operator<<(std::ostream& out, const INotify::Event& o)
+{
+    out << "Inotify::Event {wd=" << o.wd << ", mask=" << o.mask;
+
+    if(o.cookie)
+    {
+        out << ", cookie=" << o.cookie;
+    }
+
+    if(! o.name.empty())
+    {
+        out << ", name=" << o.name;
+    }
+
+    out << "}";
+
+    return out;
+}
+
+}

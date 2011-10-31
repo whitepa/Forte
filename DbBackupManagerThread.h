@@ -1,6 +1,14 @@
 #include "DbBackupManager.h"
 #include "Thread.h"
-#include <boost/shared_ptr.hpp>
+
+namespace boost
+{
+    template <class T>
+    class shared_ptr;
+
+    template <class T>
+    class scoped_ptr;
+}
 
 namespace Forte {
 
@@ -21,6 +29,13 @@ namespace Forte {
         timespec getModificationTime() const;
         void backupDb();
 
+        void addWatchDbParentDir();
+        void addWatchDb();
+        void resetWatchDbParentDir();
+        void resetWatchDb();
+        bool hasWatchDb() const;
+        bool hasWatchDbParentDir() const;
+
         enum
         {
             TIMEOUT_SECS_BEFORE_CHECKING_MODIFICATION_TIME = 1
@@ -28,8 +43,9 @@ namespace Forte {
 
     private:
         boost::shared_ptr<DbConnectionPool> mPool;
-        boost::shared_ptr<INotify> mInotify;
-
+        boost::scoped_ptr<INotify> mInotify;
+        int mDbWatch;
+        int mDbParentDirWatch;
     }; // DbBackupManagerThread
 
 } // namespace Forte

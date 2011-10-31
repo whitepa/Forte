@@ -23,7 +23,7 @@ COMMON_LIBS = \
 	$(SSH2_LIBS) \
 	-lpthread -lrt
 
-PROGS=$(TARGETDIR)/SCSIUtilUnitTest $(TARGETDIR)/DbMirroredConnectionUnitTest
+PROGS=$(TARGETDIR)/SCSIUtilUnitTest $(TARGETDIR)/DbMirroredConnectionUnitTest $(TARGETDIR)/INotifyUnitTest
 
 # define LIBDIRS for distclean
 LIBDIRS=$(FORTE_DIR)
@@ -50,12 +50,22 @@ $(TARGETDIR)/DbMirroredConnectionUnitTest: DbMirroredConnectionUnitTest.cpp $(FO
 	$(BOOST_FS_LIB) \
 	$(DB_LIBS) \
 	-lsqlite3
+	
+$(TARGETDIR)/INotifyUnitTest: INotifyUnitTest.cpp $(FORTE)
+	@echo "Building $@..."
+	$(QUIET)$(CCC) INotifyUnitTest.cpp \
+	-o $(TARGETDIR)/INotifyUnitTest \
+	$(SCALE_SERVICE_CLIENT_LIBS) \
+	$(COMMON_INCLUDE) \
+	$(COMMON_LIBS) \
+	$(BOOST_FS_LIB)
 
 install: all 
 	@echo "Creating paths under $(PREFIX)"
 	@$(MKDIR) $(PREFIX)/opt/scale/lib/qa/onbox
 	@echo "Copying files to $(PREFIX)"
 	@$(CP) $(TARGETDIR)/DbMirroredConnectionUnitTest $(PREFIX)/opt/scale/lib/qa/onbox
+	@$(CP) $(TARGETDIR)/INotifyUnitTest $(PREFIX)/opt/scale/lib/qa/onbox
 
 include $(BUILDROOT)/re/make/tail.mk
 

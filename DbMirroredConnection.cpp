@@ -111,6 +111,12 @@ bool DbMirroredConnection::Init(const FString& db, const FString& user, const FS
                 FileSystem fs;
                 if(! mAltDbName.empty() && ! fs.FileExists(mAltDbName))
                 {
+                    const string dirName(fs.Dirname(mAltDbName));
+                    if(! fs.FileExists(dirName))
+                    {
+                        fs.MakeFullPath(dirName);
+                    }
+
                     mDbConnection->BackupDatabase(mAltDbName);
                 }
             }
@@ -573,3 +579,7 @@ DbMirroredConnection::~DbMirroredConnection()
 {
 }
 
+const std::string& DbMirroredConnection::GetDbName() const
+{
+    return mDbConnection->GetDbName();
+}
