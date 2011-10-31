@@ -510,7 +510,7 @@ void TableDeletor::generateCPP(const Table &t, FILE *h, FILE *c)
     fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\"DELETE FROM %s WHERE %s \",\n",t.mName.c_str(), formatStr.c_str());
     fprintf(c, "               %s);\n", formatParams.c_str());
-    fprintf(c, "    Forte::DbUtil::DbExecute(db, sql);\n");
+    fprintf(c, "    Forte::DbUtil::DbExecute(db, Forte::DeleteDbSqlStatement(sql));\n");
     fprintf(c, "}\n");
 }
 
@@ -545,7 +545,7 @@ void TableExistor::generateCPP(const Table &t, FILE *h, FILE *c)
     fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\"SELECT 1 FROM %s WHERE %s \",\n",t.mName.c_str(), formatStr.c_str());
     fprintf(c, "               %s);\n", formatParams.c_str());
-    fprintf(c, "    Forte::DbResult res = Forte::DbUtil::DbStore(db, sql);\n");
+    fprintf(c, "    Forte::DbResult res = Forte::DbUtil::DbStore(db, Forte::SelectDbSqlStatement(sql));\n");
     fprintf(c, "    return (res.GetNumRows() != 0);\n");
     fprintf(c, "}\n");
 }
@@ -586,7 +586,7 @@ void TableLookup::generateCPP(const Table &t, FILE *h, FILE *c)
     fprintf(c, "    sql.Format(\"SELECT %s FROM %s WHERE %s \",\n",
             retcol.sqlName().c_str(), t.mName.c_str(), formatStr.c_str());
     fprintf(c, "               %s);\n", formatParams.c_str());
-    fprintf(c, "    Forte::DbResult res = Forte::DbUtil::DbStore(db, sql);\n");
+    fprintf(c, "    Forte::DbResult res = Forte::DbUtil::DbStore(db, Forte::SelectDbSqlStatement(sql));\n");
     fprintf(c, "    Forte::DbResultRow row;\n");
     fprintf(c, "    if (!res.FetchRow(row))\n");
     fprintf(c, "        boost::throw_exception(Forte::DbLookupFailedException(\"Unable to lookup '%s'\"));\n", mName.c_str());
@@ -988,7 +988,7 @@ void Table::genSelect(FILE *h, FILE *c) const
     fprintf(c, "    sql.Format(\"SELECT %s FROM %s %s \");\n", 
             colstr.c_str(), mName.c_str(), (mAlias.empty())?"":mAlias.c_str());
     fprintf(c, "    if (appendSql) sql.append(appendSql);\n");
-    fprintf(c, "    return Forte::DbUtil::DbStore(db, sql);\n");
+    fprintf(c, "    return Forte::DbUtil::DbStore(db, Forte::SelectDbSqlStatement(sql));\n");
     fprintf(c, "}\n");
 }
 void Table::genCount(FILE *h, FILE *c) const
@@ -1000,7 +1000,7 @@ void Table::genCount(FILE *h, FILE *c) const
     fprintf(c, "    sql.Format(\"SELECT COUNT(*) FROM %s %s \");\n", 
             mName.c_str(), (mAlias.empty())?"":mAlias.c_str());
     fprintf(c, "    if (appendSql) sql.append(appendSql);\n");
-    fprintf(c, "    Forte::DbResult res = Forte::DbUtil::DbStore(db, sql);\n");
+    fprintf(c, "    Forte::DbResult res = Forte::DbUtil::DbStore(db, Forte::SelectDbSqlStatement(sql));\n");
     fprintf(c, "    Forte::DbResultRow row;\n");
     fprintf(c, "    if (res.FetchRow(row))\n");
     fprintf(c, "        return GetUInt(row, 0);\n");
@@ -1037,7 +1037,7 @@ void Table::genSelectAlias(FILE *h, FILE *c) const
             "tableAlias?tableAlias:\"\");\n",
             mName.c_str());
     fprintf(c, "    if (appendSql) sql.append(appendSql);\n");
-    fprintf(c, "    return Forte::DbUtil::DbStore(db, sql);\n");
+    fprintf(c, "    return Forte::DbUtil::DbStore(db, Forte::SelectDbSqlStatement(sql));\n");
     fprintf(c, "}\n");
 }
 void Table::genSelectPrimaryKey(FILE *h, FILE *c) const
@@ -1194,7 +1194,7 @@ void Table::genReplace(FILE *h, FILE *c, bool key, bool set) const
 //         fprintf(c, "               \"SET %%s\",\n");
 //         fprintf(c, "               setSql(db).c_str());\n");
 //     }
-    fprintf(c, "    Forte::DbUtil::DbExecute(db, sql);\n");
+    fprintf(c, "    Forte::DbUtil::DbExecute(db, Forte::ReplaceDbSqlStatement(sql));\n");
     fprintf(c, "    SetOrig();\n");
     fprintf(c, "}\n");
     fprintf(c, "\n");
@@ -1257,7 +1257,7 @@ void Table::genInsert(FILE *h, FILE *c, bool keynoauto, bool set) const
 //                          mName.c_str());
 //////////////////////////////
 
-    fprintf(c, "    Forte::DbUtil::DbExecute(db, sql);\n");
+    fprintf(c, "    Forte::DbUtil::DbExecute(db, Forte::InsertDbSqlStatement(sql));\n");
     if (mAutoIncrementColumn)
         fprintf(c, "    %s = db.InsertID();\n", 
                 TC(TableColumn,mAutoIncrementColumn).cName().c_str());
@@ -1280,7 +1280,7 @@ void Table::genUpdate(FILE *h, FILE *c, bool set, bool where) const
     fprintf(c, "               \"SET %%s \"\n");
     fprintf(c, "               \"WHERE %%s \",\n");
     fprintf(c, "               setSql(db).c_str(), whereSql(db).c_str());\n");
-    fprintf(c, "    Forte::DbUtil::DbExecute(db, sql);\n");
+    fprintf(c, "    Forte::DbUtil::DbExecute(db, Forte::UpdateDbSqlStatement(sql));\n");
     fprintf(c, "    SetOrig();\n");
     fprintf(c, "}\n");
     fprintf(c, "\n");
@@ -1326,7 +1326,7 @@ void Table::genUpdateKey(FILE *h, FILE *c, bool key, bool set, bool where) const
     fprintf(c, "               \"SET %%s, %%s \"\n");
     fprintf(c, "               \"WHERE %%s \",\n");
     fprintf(c, "               keySql(db).c_str(), setSql(db).c_str(), origWhereSql(db).c_str());\n");
-    fprintf(c, "    Forte::DbUtil::DbExecute(db, sql);\n");
+    fprintf(c, "    Forte::DbUtil::DbExecute(db, Forte::UpdateDbSqlStatement(sql));\n");
 
     // update foreign keys
     foreach (YYSTYPE k, mForeignKeys)
@@ -1459,7 +1459,7 @@ void Table::genFKRestrict(FILE *h, FILE *c) const
         fprintf(c, "    sql.Format(\"SELECT 1 FROM %s WHERE %s LIMIT 1 \",\n", 
                 mName.c_str(), formatStr.c_str());
         fprintf(c, "               %s);\n", formatParams.c_str());
-        fprintf(c, "    Forte::DbResult res = Forte::DbUtil::DbStore(db, sql);\n");
+        fprintf(c, "    Forte::DbResult res = Forte::DbUtil::DbStore(db, Forte::SelectDbSqlStatement(sql));\n");
         fprintf(c, "    if (res.GetNumRows() != 0)\n");
         fprintf(c, "        boost::throw_exception(Forte::DbException(\"Foreign key restriction\"));\n");
         fprintf(c, "}\n");
@@ -1509,7 +1509,7 @@ void Table::genFKUpdate(FILE *h, FILE *c) const
         fprintf(c, "    sql.Format(\"UPDATE %s SET %s WHERE %s \",\n", 
                 mName.c_str(), setStr.c_str(), formatStr.c_str());
         fprintf(c, "               %s, %s);\n", setParams.c_str(), formatParams.c_str());
-        fprintf(c, "    Forte::DbUtil::DbExecute(db, sql);\n");
+        fprintf(c, "    Forte::DbUtil::DbExecute(db, Forte::UpdateDbSqlStatement(sql));\n");
         fprintf(c, "}\n");
     }
 
@@ -1599,7 +1599,7 @@ void Table::genFKDelete(FILE *h, FILE *c) const
         fprintf(c, "    sql.Format(\"DELETE FROM %s WHERE %s \",\n", 
                 mName.c_str(), formatStr.c_str());
         fprintf(c, "               %s);\n", formatParams.c_str());
-        fprintf(c, "    Forte::DbUtil::DbExecute(db, sql);\n");
+        fprintf(c, "    Forte::DbUtil::DbExecute(db, Forte::DeleteDbSqlStatement(sql));\n");
         fprintf(c, "}\n");
     }
 
@@ -1668,7 +1668,7 @@ void Table::genDeleteMe(FILE *h, FILE *c, bool where) const
     fprintf(c, "    sql.Format(\"DELETE FROM %s \"\n", mName.c_str());
     fprintf(c, "               \"WHERE %%s \",\n");
     fprintf(c, "               whereSql(db).c_str());\n");
-    fprintf(c, "    Forte::DbUtil::DbExecute(db, sql);\n");
+    fprintf(c, "    Forte::DbUtil::DbExecute(db, Forte::DeleteDbSqlStatement(sql));\n");
 
     // do foreign key deletes
     fprintf(c, "    if (cascade)\n    {\n");

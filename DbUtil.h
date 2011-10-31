@@ -7,6 +7,7 @@
 #include "DbResult.h"
 #include "DbConnection.h"
 #include "DbException.h"
+#include "DbSqlStatement.h"
 #include "LogManager.h"
 #include <stdarg.h>
 
@@ -14,7 +15,8 @@ namespace Forte
 {
     class DbUtil {
     public:
-        static inline DbResult DbStore(const char *func, DbConnection &db, const char *sql)
+
+        static inline DbResult DbStore(const char *func, DbConnection &db, const char* sql)
         {
 
             if (db.mLogQueries) hlog(HLOG_DEBUG, "Executing sql [%s]", sql);
@@ -36,7 +38,8 @@ namespace Forte
                      func, db.mTries, db.mErrno);
             return result;
         }
-        static inline DbResult DbUse(const char *func, DbConnection &db, const char *sql)
+
+        static inline DbResult DbUse(const char *func, DbConnection &db, const char* sql)
         {
             if (db.mLogQueries) hlog(HLOG_DEBUG, "Executing sql [%s]", sql);
             DbResult result;
@@ -56,7 +59,8 @@ namespace Forte
                      func, db.mTries, db.mErrno);
             return result;
         }
-        static inline void DbExecute(const char *func, DbConnection &db, const char *sql)
+
+        static inline void DbExecute(const char *func, DbConnection &db, const char* sql)
         {
             if (db.mLogQueries) hlog(HLOG_DEBUG, "Executing sql [%s]", sql);
 
@@ -75,6 +79,71 @@ namespace Forte
                 hlog(HLOG_WARN, "%s: query executed after %u tries; errno was %u",
                      func, db.mTries, db.mErrno);
         }
+
+        static inline DbResult DbStore(const char *func, DbConnection &db, const DbSqlStatement& sql)
+        {
+
+            if (db.mLogQueries) hlog(HLOG_DEBUG, "Executing sql [%s]", sql.GetStatement().c_str());
+
+            DbResult result;
+            if (!(result = db.Store(sql)))
+            {
+                // database error
+                FString err;
+                err.Format("%s: query failed; errno=%u tries=%u retries=%u error=%s full_query=%s",
+                           func, db.mErrno, db.mTries, db.mRetries, db.mError.c_str(), sql.GetStatement().c_str());
+                if (db.IsTemporaryError())
+                    throw DbTempErrorException(err, db.mErrno);
+                else
+                    throw DbException(err, db.mErrno);
+            }
+            if (db.mTries > 1)
+                hlog(HLOG_WARN, "%s: query executed after %u tries; errno was %u",
+                     func, db.mTries, db.mErrno);
+            return result;
+        }
+
+        static inline DbResult DbUse(const char *func, DbConnection &db, const DbSqlStatement& sql)
+        {
+            if (db.mLogQueries) hlog(HLOG_DEBUG, "Executing sql [%s]", sql.GetStatement().c_str());
+            DbResult result;
+            if (!(result = db.Use(sql)))
+            {
+                // database error
+                FString err;
+                err.Format("%s: query failed; errno=%u tries=%u retries=%u error=%s full_query=%s",
+                           func, db.mErrno, db.mTries, db.mRetries, db.mError.c_str(), sql.GetStatement().c_str());
+                if (db.IsTemporaryError())
+                    throw DbTempErrorException(err, db.mErrno); // indicate temporary error
+                else
+                    throw DbException(err, db.mErrno);
+            }
+            if (db.mTries > 1)
+                hlog(HLOG_WARN, "%s: query executed after %u tries; errno was %u",
+                     func, db.mTries, db.mErrno);
+            return result;
+        }
+
+        static inline void DbExecute(const char *func, DbConnection &db, const DbSqlStatement& sql)
+        {
+            if (db.mLogQueries) hlog(HLOG_DEBUG, "Executing sql [%s]", sql.GetStatement().c_str());
+
+            if (!db.Execute(sql))
+            {
+                // database error
+                FString err;
+                err.Format("%s: query failed; errno=%u tries=%u retries=%u error=%s full_query=%s",
+                           func, db.mErrno, db.mTries, db.mRetries, db.mError.c_str(), sql.GetStatement().c_str());
+                if (db.IsTemporaryError())
+                    throw DbTempErrorException(err, db.mErrno);
+                else
+                    throw DbException(err, db.mErrno);
+            }
+            if (db.mTries > 1)
+                hlog(HLOG_WARN, "%s: query executed after %u tries; errno was %u",
+                     func, db.mTries, db.mErrno);
+        }
+
         static inline FString DbEscape(DbConnection &db, const char *sql_in)
         {
             return db.Escape(sql_in);

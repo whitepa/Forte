@@ -34,6 +34,44 @@ namespace Forte
     {
         friend class Forte::ProcessFuture;
     public:
+
+        static const int MAX_RUNNING_PROCS;
+        static const int PDU_BUFFER_SIZE;
+
+        typedef std::map<int, boost::weak_ptr<ProcessFuture> > ProcessMap;
+
+        ProcessManager()
+        {
+        }
+
+        /**
+         * ProcessManager destructor. If the process manager is being destroyed it will
+         * notify all running Process Wait()'ers, and mark the process termination
+         * type as ProcessNotTerminated.
+         */
+        virtual ~ProcessManager()
+        {
+        }
+
+
+        /**
+         * Get a shared pointer to this ProcessManager.  NOTE: A
+         * shared_ptr to this ProcessManager must already exist.
+         * 
+         * @return shared_ptr
+         */
+        boost::shared_ptr<ProcessManager> GetPtr(void) {
+            try
+            {
+                return boost::shared_dynamic_cast<ProcessManager>(shared_from_this());
+            }
+            catch (boost::bad_weak_ptr &e)
+            {
+                throw EProcessManagerNoSharedPtr();
+            }
+        }
+
+
         /**
          * CreateProcess() is the factory function to create a
          * Process object representing a child process. The

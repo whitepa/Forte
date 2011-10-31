@@ -1,11 +1,14 @@
 #ifndef FORTE_NO_DB
 #ifndef FORTE_NO_SQLITE
 
+#include <boost/bind.hpp>
 #include "DbLiteConnection.h"
 #include "DbLiteResult.h"
 #include "DbException.h"
 #include "LogManager.h"
+#include "FileSystem.h"
 #include "Util.h"
+#include "AutoDoUndo.h"
 
 using namespace Forte;
 
@@ -68,6 +71,8 @@ bool DbLiteConnection::Init(struct sqlite3 *db)
 
 bool DbLiteConnection::Connect()
 {
+    hlog(HLOG_DEBUG, "connecting to %s", mDBName.c_str());
+
     int err;
 
     if (mDB != NULL && !Close()) return false;
@@ -83,6 +88,7 @@ bool DbLiteConnection::Connect()
     if (mDB != NULL)
     {
         setError();
+        throw EDbConnectionConnectFailed();
     }
     else
     {
@@ -96,6 +102,8 @@ bool DbLiteConnection::Connect()
 
 bool DbLiteConnection::Close()
 {
+    hlog(HLOG_TRACE, "closing %s", mDBName.c_str());
+
     if (sqlite3_close(mDB) == SQLITE_OK)
     {
         mDB = NULL;
@@ -179,7 +187,14 @@ DbResult DbLiteConnection::Query(const FString& sql)
         else remain = tail;
     }
 
-    if (!res) setError();
+    if(mErrno == SQLITE_IOERR)
+    {
+        throw EDbConnectionIoError();
+    }
+
+    if (!res)
+        setError();
+
     return res;
 }
 
@@ -204,8 +219,7 @@ DbResult DbLiteConnection::Use(const FString& sql)
 
 bool DbLiteConnection::IsTemporaryError() const
 {
-    return (mErrno == SQLITE_BUSY ||
-            mErrno == SQLITE_LOCKED);
+    return (mErrno == SQLITE_BUSY || mErrno == SQLITE_LOCKED);
 }
 
 
@@ -225,10 +239,51 @@ FString DbLiteConnection::Escape(const char *str)
 
 void DbLiteConnection::BackupDatabase(const FString &targetPath)
 {
+    typedef AutoDoUndo<void, void> BackupOperation;
+    BackupOperation op(boost::bind(&::DbLiteConnection::backupDatabase, this, targetPath),
+                       boost::bind(&::DbLiteConnection::removeTmpBackup, this, targetPath));
+}
+
+void DbLiteConnection::removeTmpBackup(const FString &targetPath)
+{
+    try
+    {
+        FileSystem fs;
+        const FString tmpTargetPath(getTmpBackupPath(targetPath));
+        if(fs.FileExists(tmpTargetPath))
+        {
+            fs.Unlink(tmpTargetPath);
+        }
+    }
+    catch(Exception& e)
+    {
+        hlog(HLOG_WARN, "%s", e.what());
+    }
+}
+
+FString DbLiteConnection::getTmpBackupPath(const FString& targetPath) const
+{
+    FileSystem fs;
+    FString tmpTargetPath(targetPath);
+    tmpTargetPath += ".tmp";
+    return tmpTargetPath;
+}
+
+void DbLiteConnection::backupDatabase(const FString &targetPath)
+{
+    hlog(HLOG_TRACE, "backing up db to %s", targetPath.c_str());
+
+    if(mDBName == targetPath)
+    {
+        hlog(HLOG_ERROR, "- operation ignored, source and target are same path={%s}", mDBName.c_str());
+        throw EDbLiteBackupFailed();
+    }
+
     // @TODO this function is a prototype
     // See: http://www.sqlite.org/backup.html
     DbLiteConnection dbTarget(SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
-    dbTarget.Init(targetPath);
+    const FString tmpTargetPath(getTmpBackupPath(targetPath));
+    dbTarget.Init(tmpTargetPath);
 
     /* Open the sqlite3_backup object used to accomplish the transfer */
     sqlite3_backup *pBackup;
@@ -252,8 +307,29 @@ void DbLiteConnection::BackupDatabase(const FString &targetPath)
         // }
     } while( rc==SQLITE_OK || rc==SQLITE_BUSY || rc==SQLITE_LOCKED );
 
+    if(rc != SQLITE_DONE)
+    {
+        throw EDbLiteBackupFailed();
+    }
+
     /* Release resources allocated by backup_init(). */
-    (void)sqlite3_backup_finish(pBackup);
+    if(sqlite3_backup_finish(pBackup) != SQLITE_OK)
+    {
+        hlog(HLOG_ERROR, "failed to finish backup to %s", tmpTargetPath.c_str());
+    }
+
+    FileSystem fs;
+    fs.Rename(tmpTargetPath, targetPath);
+}
+
+uint64_t DbLiteConnection::InsertID()
+{
+    return sqlite3_last_insert_rowid(mDB);
+}
+
+uint64_t DbLiteConnection::AffectedRows()
+{
+    return sqlite3_changes(mDB);
 }
 
 

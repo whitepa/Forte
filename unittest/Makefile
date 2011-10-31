@@ -34,6 +34,7 @@ LIBS = \
 	$(BOOST_SYSTEM_LIB) \
 	$(BOOST_REGEX_LIB) \
 	$(CURL_LIBS) \
+	$(DB_LIBS) \
 	$(OS_LIBS) \
 	$(XML_LIBS) \
 	$(SQLITE_LIBS)
@@ -58,6 +59,8 @@ GSRCS = ActiveObjectUnitTest.cpp \
 	ConditionUnitTest.cpp \
 	ContextPredicateUnitTest.cpp \
 	DbLiteConnectionUnitTest.cpp \
+	DbConnectionPoolUnitTest.cpp \
+	DbMirroredConnectionUnitTest.cpp \
 	ExceptionUnitTest.cpp \
 	FileSystemUnitTest.cpp \
 	FileSystemUtilUnitTest.cpp \
@@ -104,7 +107,11 @@ $(TARGETDIR)/FileSystemUtilUnitTest: FileSystemUtilUnitTest.cpp \
 $(TARGETDIR)/ExceptionUnitTest: ExceptionUnitTest.cpp \
 	../$(TARGETDIR)/Exception.o
 
-$(TARGETDIR)/DbLiteConnectionUnitTest: DbLiteConnectionUnitTest.cpp
+$(TARGETDIR)/DbLiteConnectionUnitTest: DbLiteConnectionUnitTest.cpp $(FORTE)
+	
+$(TARGETDIR)/DbConnectionPoolUnitTest: DbConnectionPoolUnitTest.cpp $(FORTE)
+
+$(TARGETDIR)/DbMirroredConnectionUnitTest: DbMirroredConnectionUnitTest.cpp $(FORTE)
 
 $(TARGETDIR)/FStringUnitTest: FStringUnitTest.cpp \
 	../$(TARGETDIR)/FString.o 

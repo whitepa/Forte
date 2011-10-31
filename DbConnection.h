@@ -13,6 +13,15 @@ using namespace std;
 
 namespace Forte
 {
+    class DbSqlStatement;
+
+    EXCEPTION_SUBCLASS(Exception, EDbConnection);
+    EXCEPTION_SUBCLASS(EDbConnection, EDbConnectionNotImplemented);
+    EXCEPTION_SUBCLASS(EDbConnection, EDbConnectionConnectFailed);
+    EXCEPTION_SUBCLASS(EDbConnection, EDbConnectionPendingFailed);
+    EXCEPTION_SUBCLASS(EDbConnection, EDbConnectionIoError);
+    EXCEPTION_SUBCLASS(EDbConnection, EDbConnectionReadOnly);
+
     class DbConnection : public Object
     {
     public:
@@ -71,6 +80,12 @@ namespace Forte
         // retry configuration
         unsigned int mRetries;     // number of times to retry failed queries / connections
         unsigned int mQueryRetryDelay; // delay between retries in milliseconds
+
+        virtual void BackupDatabase(const FString &targetPath);
+
+        virtual bool Execute(const DbSqlStatement& statement);
+        virtual DbResult Use(const DbSqlStatement& statement);
+        virtual DbResult Store(const DbSqlStatement& statement);
 
         // db information
         FString mDBType;      // mysql, postgresql, etc.
