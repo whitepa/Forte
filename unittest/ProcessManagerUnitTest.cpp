@@ -12,6 +12,7 @@
 #include "ProcFileSystem.h"
 #include "AutoDoUndo.h"
 #include <boost/bind.hpp>
+#include <boost/make_shared.hpp>
 
 using namespace Forte;
 
@@ -656,3 +657,33 @@ TEST_F(ProcessManagerTest, CommandLineEscape)
     }
 }
 
+
+TEST_F(ProcessManagerTest, ProcessManagerCanRunHost)
+{
+    using namespace boost;
+    try
+    {
+        shared_ptr<ProcessManagerImpl> processManagerPtr = 
+            make_shared<ProcessManagerImpl>();
+
+        ProcessManagerImpl& processManager = *processManagerPtr;
+
+        FString output;
+        FString test("/usr/bin/host scalecomputing.com");
+        processManager.CreateProcessAndGetResult(test, output);
+
+        hlogstream(HLOG_INFO, "Got output:" << output);
+    }
+    catch (Exception &e)
+    {
+        hlogstream(HLOG_ERR, "Exception: " << 
+                   typeid(e).name() << " " << e.what());
+        FAIL();
+    }
+    catch (std::exception &e)
+    {
+        hlogstream(HLOG_ERR, "std_exception: " << 
+                   typeid(e).name() << " " << e.what());
+        FAIL();
+    }
+}

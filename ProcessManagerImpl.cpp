@@ -149,55 +149,74 @@ void Forte::ProcessManagerImpl::startMonitor(
     boost::shared_ptr<Forte::ProcessFutureImpl> ph)
 {
     int fds[2];
-    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) < 0)
-        throw_exception(EProcessManagerUnableToCreateSocket(FStringFC(), "%s", strerror(errno)));
-    AutoFD parentfd(fds[0]);
-    AutoFD childfd(fds[1]);
 
-    pid_t childPid = DaemonUtil::ForkSafely();
-    if(childPid < 0) 
-        throw_exception(EProcessManagerUnableToFork(FStringFC(), "%s", strerror(errno)));
-    else if(childPid == 0)
+    try
     {
-        //fprintf(stderr, "procmon child, childfd=%d\n", childfd.GetFD());
-        // child
-        // close all file descriptors, except the PDU channel
-        while (close(parentfd) == -1 && errno == EINTR);
-        for (int n = 3; n < 1024; ++n)
-            if (n != childfd)
-                while (close(n) == -1 && errno == EINTR);
-        // clear sig mask
-        sigset_t set;
-        sigemptyset(&set);
-        pthread_sigmask(SIG_SETMASK, &set, NULL);
+        if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) < 0)
+            throw_exception(EProcessManagerUnableToCreateSocket(FStringFC(), "%s", strerror(errno)));
+        AutoFD parentfd(fds[0]);
+        AutoFD childfd(fds[1]);
 
-        // create a new process group / session
-        daemon(1, 0); // (redirects 0,1,2 to /dev/null)
-        setsid();
-        FString childfdStr(childfd);
-        char **vargs = new char* [3];
-        vargs[0] = const_cast<char *>("(procmon)"); // \TODO include the name of the monitored process
-        vargs[1] = const_cast<char *>(childfdStr.c_str());
-        vargs[2] = 0;
+        pid_t childPid = DaemonUtil::ForkSafely();
+        if(childPid < 0) 
+            throw_exception(EProcessManagerUnableToFork(FStringFC(), "%s", strerror(errno)));
+        else if(childPid == 0)
+        {
+            //fprintf(stderr, "procmon child, childfd=%d\n", childfd.GetFD());
+            // child
+            // close all file descriptors, except the PDU channel
+            while (close(parentfd) == -1 && errno == EINTR);
+            for (int n = 3; n < 1024; ++n)
+                if (n != childfd)
+                    while (close(n) == -1 && errno == EINTR);
+            // clear sig mask
+            sigset_t set;
+            sigemptyset(&set);
+            pthread_sigmask(SIG_SETMASK, &set, NULL);
+
+            // create a new process group / session
+            daemon(1, 0); // (redirects 0,1,2 to /dev/null)
+            setsid();
+            FString childfdStr(childfd);
+            char **vargs = new char* [3];
+            vargs[0] = const_cast<char *>("(procmon)"); // \TODO include the name of the monitored process
+            vargs[1] = const_cast<char *>(childfdStr.c_str());
+            vargs[2] = 0;
 //        fprintf(stderr, "procmon child, exec '%s' '%s'\n", mProcmonPath.c_str(), vargs[1]);
-        execv(mProcmonPath, vargs);
+            execv(mProcmonPath, vargs);
 //        fprintf(stderr, "procmon child, exec failed: %d %s\n", errno, strerror(errno));
-        exit(-1);
-    }
-    else
-    {
-        // parent
-        childfd.Close();
-        // add a PDUPeer to the PeerSet owned by the ProcessManager
-        //shared_ptr<ProcessManager> pm(mProcessManagerPtr.lock());
-        ph->mManagementChannel = addPeer(parentfd);
-        parentfd.Release();
+            exit(-1);
+        }
+        else
+        {
+            // parent
+            childfd.Close();
+            // add a PDUPeer to the PeerSet owned by the ProcessManager
+            //shared_ptr<ProcessManager> pm(mProcessManagerPtr.lock());
+            ph->mManagementChannel = addPeer(parentfd);
+            parentfd.Release();
 
-        // wait for process to deamonise 
-        // if we don't do this we will leave 
-        // behind zombie processes 
-        int child_status;
-        waitpid(-1, &child_status, WNOHANG);
+            // wait for process to deamonise 
+            // if we don't do this we will leave 
+            // behind zombie processes 
+            int child_status;
+            waitpid(-1, &child_status, WNOHANG);
+        }
+    }
+    catch (EProcessManagerUnableToCreateSocket &e)
+    {
+        hlog(HLOG_ERR, "Unable to create socket for process monitor: '%s'", e.what());
+        throw;
+    }
+    catch (EProcessManagerUnableToFork &e)
+    {
+        hlog(HLOG_ERR, "Unable to fork for process monitor: '%s'", e.what());
+        throw;
+    }
+    catch (...)
+    {
+        hlog(HLOG_ERR, "Unknown error starting process monitor");
+        throw;
     }
 }
 
