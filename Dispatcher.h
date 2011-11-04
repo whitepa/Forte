@@ -43,6 +43,8 @@ namespace Forte
                                     std::list<boost::shared_ptr<Event> > &queuedEvents) = 0;
         virtual int GetRunningEvents(int maxEvents, 
                                      std::list<boost::shared_ptr<Event> > &runningEvents) = 0;
+
+        virtual int GetQueueDepth(void) { return mEventQueue.Depth(); }
     
         FString mDispatcherName;
     protected:

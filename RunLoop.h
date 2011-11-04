@@ -21,7 +21,11 @@ namespace Forte
     {
     public:
 
-        RunLoop(const FString &name = FString("runloop"));
+        /**
+         * Instantiate a runloop.  The caller MUST specify a name for
+         * the runloop.
+         */
+        RunLoop(const FString &name);
         virtual ~RunLoop();
 
         /** 

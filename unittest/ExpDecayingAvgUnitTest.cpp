@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(CheckDeadLock)
     logManager.BeginLogging();
 
     // setup
-    RunLoop rl;
+    RunLoop rl("test");
     sleep(2);    
     BOOST_CHECK(rl.IsEmpty());
 }
@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(Test1)
     logManager.BeginLogging();
     // setup
     {
-        ExpDecayingAvg a(make_shared<RunLoop>(), EDA_VALUE, 10000);
+        ExpDecayingAvg a(make_shared<RunLoop>("test"), EDA_VALUE, 10000);
 
         for (int x = 0; x < 30; x++)
         {
