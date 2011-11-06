@@ -23,8 +23,17 @@ void Forte::PDUPeer::SendPDU(const Forte::PDU &pdu) const
         throw EPeerSendInvalid();
     hlog(HLOG_DEBUG2, "sending %zu bytes on fd %d, payloadsize = %u", 
             len, mFD.GetFD(), pdu.payloadSize);
-    if (send(mFD, &pdu, len, 0) < 0)
-        throw EPeerSendFailed(FStringFC(), "%s", strerror(errno));
+
+    size_t offset = 0;
+    const char* buf = reinterpret_cast<const char*>(&pdu);
+    while (len > 0)
+    {
+        int sent = send(mFD, buf+offset, len, 0);
+        if (sent < 0)
+            throw EPeerSendFailed(FStringFC(), "%s", strerror(errno));
+        offset += sent;
+        len -= sent;
+    }
 }
 
 bool Forte::PDUPeer::IsPDUReady(void) const
