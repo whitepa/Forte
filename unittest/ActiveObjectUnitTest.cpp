@@ -55,6 +55,13 @@ public:
         return InvokeAsync<void>(boost::bind(&ActiveTester::ThrowIncorrectly, this));
     };
 
+    void Shutdown(void) {
+        ActiveObject::Shutdown();
+    }
+    void Shutdown(bool waitForQueueDrain, bool cancelRunning) {
+        ActiveObject::Shutdown(waitForQueueDrain, cancelRunning);
+    }
+
 protected:
     int OneSecondOperationNullary(void) { sleep(1); return 1; }
     int AddTwoNumbersVerySlowly(int a, int b) { sleep(1); return a + b; }
@@ -126,4 +133,45 @@ TEST_F(ActiveObjectTest, Cancellation)
     ASSERT_EQ(false, future->IsReady());
     future->Cancel();
     ASSERT_THROW(future->GetResult(), EActiveTesterCancelled);
+}
+TEST_F(ActiveObjectTest, ShutdownAndWaitForDrainDefaultParameters)
+{
+    ActiveTester a;
+    shared_ptr<Future<int> > future1 = a.PerformAddTwoNumbersVerySlowlyCancellable(1,2);
+    shared_ptr<Future<int> > future2 = a.PerformAddTwoNumbersVerySlowlyCancellable(1,2);
+    a.Shutdown();
+    ASSERT_NO_THROW(future1->GetResult());
+    ASSERT_NO_THROW(future2->GetResult());
+    ASSERT_EQ(3, future1->GetResult());
+    ASSERT_EQ(3, future2->GetResult());
+    shared_ptr<Future<int> > future3;
+    ASSERT_THROW(future3 = a.PerformAddTwoNumbersVerySlowlyCancellable(1,2), EActiveObjectShuttingDown);
+}
+TEST_F(ActiveObjectTest, ShutdownAndClearQueue)
+{
+    ActiveTester a;
+    shared_ptr<Future<int> > future1 = a.PerformAddTwoNumbersVerySlowlyCancellable(1,2);
+    shared_ptr<Future<int> > future2 = a.PerformAddTwoNumbersVerySlowlyCancellable(1,2);
+    usleep(100000);
+    a.Shutdown(false, false);
+    ASSERT_NO_THROW(future1->GetResult());
+    ASSERT_EQ(3, future1->GetResult());
+
+    ASSERT_THROW(future2->GetResult(), EFutureDropped);
+
+    shared_ptr<Future<int> > future3;
+    ASSERT_THROW(future3 = a.PerformAddTwoNumbersVerySlowlyCancellable(1,2), EActiveObjectShuttingDown);
+}
+TEST_F(ActiveObjectTest, ShutdownClearQueueAndCancel)
+{
+    ActiveTester a;
+    shared_ptr<Future<int> > future1 = a.PerformAddTwoNumbersVerySlowlyCancellable(1,2);
+    shared_ptr<Future<int> > future2 = a.PerformAddTwoNumbersVerySlowlyCancellable(1,2);
+    usleep(100000);
+    a.Shutdown(false, true);
+    ASSERT_THROW(future1->GetResult(), EActiveTesterCancelled);
+    ASSERT_THROW(future2->GetResult(), EFutureDropped);
+
+    shared_ptr<Future<int> > future3;
+    ASSERT_THROW(future3 = a.PerformAddTwoNumbersVerySlowlyCancellable(1,2), EActiveObjectShuttingDown);
 }

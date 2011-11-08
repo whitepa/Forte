@@ -6,7 +6,9 @@
 
 namespace Forte
 {
-
+    EXCEPTION_CLASS(EActiveObject);
+    EXCEPTION_SUBCLASS2(EActiveObject, EActiveObjectShuttingDown,
+                        "Active Object is shutting down");
     /**
      * ActiveObject
      *
@@ -16,25 +18,46 @@ namespace Forte
     class ActiveObject : virtual public Forte::Object
     {
     public:
-        virtual ~ActiveObject() {};
+        ActiveObject() : 
+            mActiveObjectThreadPtr(new Forte::ActiveObjectThread()) {};
+        virtual ~ActiveObject() {Shutdown(true,false);}
 
         template<typename ResultType>
         shared_ptr<Forte::Future<ResultType> > InvokeAsync(
             boost::function<ResultType(void)> callback) {
+            if (!mActiveObjectThreadPtr)
+                throw_exception(EActiveObjectShuttingDown());
             shared_ptr<Future<ResultType> > future(make_shared<Future<ResultType> >());
-            mActiveObjectThread.Enqueue(
+            mActiveObjectThreadPtr->Enqueue(
                 make_shared<ConcreteInvocation<ResultType> >(future, callback));
             return future;
         }
         bool IsCancelled(void) {
-            return mActiveObjectThread.IsCancelled();
+            if (!mActiveObjectThreadPtr)
+                throw_exception(EActiveObjectShuttingDown());
+            return mActiveObjectThreadPtr->IsCancelled();
         }
 
         void SetThreadName(const FString &name){
-            mActiveObjectThread.SetName(name);
+            if (!mActiveObjectThreadPtr)
+                throw_exception(EActiveObjectShuttingDown());
+            mActiveObjectThreadPtr->SetName(name);
+        }
+
+        void Shutdown(bool waitForQueueDrain = true, 
+                      bool cancelRunning = false) {
+            if (!mActiveObjectThreadPtr)
+                return;
+            mActiveObjectThreadPtr->Shutdown();
+            if (!waitForQueueDrain)
+                mActiveObjectThreadPtr->DropQueue();
+            if (cancelRunning)
+                mActiveObjectThreadPtr->CancelRunning();
+            mActiveObjectThreadPtr->WaitForShutdown();
+            mActiveObjectThreadPtr.reset();
         }
     private:
-        Forte::ActiveObjectThread mActiveObjectThread;
+        boost::scoped_ptr<Forte::ActiveObjectThread> mActiveObjectThreadPtr;
     };
 
 };

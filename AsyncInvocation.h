@@ -12,6 +12,7 @@ namespace Forte
     public:
         virtual void Execute(void) = 0;
         virtual void Cancel(void) = 0;
+        virtual void Drop(void) = 0;
         virtual bool IsCancelled(void) = 0;
         virtual ~AsyncInvocation() {};
     };
@@ -35,6 +36,9 @@ namespace Forte
             {
                 mFuture->SetException(boost::current_exception());
             }
+        }
+        virtual void Drop(void) {
+            mFuture->Drop();
         }
         virtual void Cancel(void) {
             mFuture->Cancel();
@@ -65,6 +69,9 @@ namespace Forte
             {
                 mFuture->SetException(boost::current_exception());
             }
+        }
+        virtual void Drop(void) {
+            mFuture->Drop();
         }
         virtual void Cancel(void) {
             mFuture->Cancel();

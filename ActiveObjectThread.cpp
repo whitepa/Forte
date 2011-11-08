@@ -18,6 +18,8 @@ ActiveObjectThread::~ActiveObjectThread()
 
 void ActiveObjectThread::Enqueue(const boost::shared_ptr<AsyncInvocation> &ai)
 {
+    if (IsShuttingDown())
+        throw_exception(EActiveObjectThreadShuttingDown());
     mQueue.Add(ai);
     Notify();
 }
@@ -36,10 +38,34 @@ void ActiveObjectThread::SetName(const FString &name)
     setThreadName(FString(FStringFC(), "active-%s", name.c_str()));
 }
 
-void * ActiveObjectThread::run(void)
+void ActiveObjectThread::DropQueue(void)
 {
     shared_ptr<Event> event;
-    while (!IsShuttingDown())
+    while((event = mQueue.Get()))
+    {
+        shared_ptr<Forte::AsyncInvocation> invocation =
+            dynamic_pointer_cast<AsyncInvocation>(event);
+        event.reset();
+        if (invocation)
+        {
+            invocation->Drop();
+        }
+    }
+}
+void ActiveObjectThread::CancelRunning(void)
+{
+    if (mCurrentAsyncInvocation)
+        mCurrentAsyncInvocation->Cancel();
+}
+void * ActiveObjectThread::run(void)
+{
+    FTRACE;
+    shared_ptr<Event> event;
+    // Always attempt to drain the queue, even if shutting down.  If
+    // the caller desires immediate shutdown, ActiveObject::Shutdown()
+    // with the appropriate parameters will have been called, and the
+    // queue will be immediately cleared.
+    while (!IsShuttingDown() || mQueue.Depth() > 0)
     {
         while((event = mQueue.Get()))
         {
@@ -56,7 +82,7 @@ void * ActiveObjectThread::run(void)
             mCurrentAsyncInvocation.reset();
         }
         // @TODO this is racy... we may sleep when there is an event waiting.
-        interruptibleSleep(Timespec::FromSeconds(1));
+        interruptibleSleep(Timespec::FromSeconds(1), false);
     }
     return NULL;
 }

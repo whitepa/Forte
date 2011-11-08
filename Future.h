@@ -15,6 +15,8 @@ namespace Forte
     EXCEPTION_CLASS(EFuture);
     EXCEPTION_SUBCLASS2(EFuture, EFutureResultAlreadySet,
                         "Future result is already set");
+    EXCEPTION_SUBCLASS2(EFuture, EFutureDropped,
+                        "Future has been dropped");
     EXCEPTION_SUBCLASS2(EFuture, EFutureExceptionUnknown,
                         "An unknown exception was thrown during async invocation");
     EXCEPTION_SUBCLASS2(EFuture, EFutureTimeoutWaitingForResult,
@@ -29,6 +31,12 @@ namespace Forte
         virtual ~Future() {};
 
         virtual void Cancel() { AutoUnlockMutex lock(mLock); mCancelled = true; }
+
+        virtual void Drop(void) {
+            Cancel();
+            SetException(boost::copy_exception(EFutureDropped()));
+        }
+
         virtual bool IsCancelled() const { AutoUnlockMutex lock(mLock); return mCancelled; }
         virtual bool IsReady() const { return mResultReady; }
 
@@ -86,6 +94,7 @@ namespace Forte
             mResult = result;
         }
         virtual void SetException(boost::exception_ptr e) {
+            FTRACE;
             AutoUnlockMutex lock(mLock);
             mException = e;
             mResultReady = true;
@@ -109,6 +118,12 @@ namespace Forte
         virtual ~Future() {};
 
         virtual void Cancel() { AutoUnlockMutex lock(mLock); mCancelled = true; }
+
+        virtual void Drop(void) {
+            Cancel();
+            SetException(boost::copy_exception(EFutureDropped()));
+        }
+
         virtual bool IsCancelled() const { AutoUnlockMutex lock(mLock); return mCancelled; }
         virtual bool IsReady() const { return mResultReady; }
 

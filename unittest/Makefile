@@ -108,7 +108,7 @@ $(TARGETDIR)/ExceptionUnitTest: ExceptionUnitTest.cpp \
 	../$(TARGETDIR)/Exception.o
 
 $(TARGETDIR)/DbLiteConnectionUnitTest: DbLiteConnectionUnitTest.cpp $(FORTE)
-	
+
 $(TARGETDIR)/DbConnectionPoolUnitTest: DbConnectionPoolUnitTest.cpp $(FORTE)
 
 $(TARGETDIR)/DbMirroredConnectionUnitTest: DbMirroredConnectionUnitTest.cpp $(FORTE)
@@ -124,13 +124,13 @@ $(TARGETDIR)/PDUPeerUnitTest: PDUPeerUnitTest.cpp $(FORTE)
 
 $(TARGETDIR)/ClusterLockUnitTest: ClusterLockUnitTest.cpp $(FORTE)
 
-$(TARGETDIR)/ConditionUnitTest: ConditionUnitTest.cpp
+$(TARGETDIR)/ConditionUnitTest: ConditionUnitTest.cpp $(FORTE)
 
-$(TARGETDIR)/ActiveObjectUnitTest: ActiveObjectUnitTest.cpp 
+$(TARGETDIR)/ActiveObjectUnitTest: ActiveObjectUnitTest.cpp $(FORTE)
 
-$(TARGETDIR)/RunLoopUnitTest: RunLoopUnitTest.cpp
+$(TARGETDIR)/RunLoopUnitTest: RunLoopUnitTest.cpp $(FORTE)
 
-$(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp
+$(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp $(FORTE)
 
 $(TARGETDIR)/CheckedValueStoreUnitTest: CheckedValueStoreUnitTest.cpp ../$(TARGETDIR)/CheckedValueStore.o 
 

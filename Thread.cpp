@@ -49,7 +49,7 @@ void * Thread::startThread(void *obj)
     // run the thread
     try
     {
-        if (!thr->mThreadShutdown) retval = thr->run();
+        retval = thr->run();
     }
     catch (EThreadShutdown &e)
     {
@@ -98,7 +98,8 @@ void Thread::WaitForShutdown()
 {
     AutoUnlockMutex lock(mShutdownCompleteLock);
     if (mShutdownComplete) return;
-    mShutdownCompleteCondition.Wait();
+    while (!mShutdownComplete)
+        mShutdownCompleteCondition.Wait();
 }
 
 void Thread::WaitForInitialize()
