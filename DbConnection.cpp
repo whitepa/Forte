@@ -1,6 +1,7 @@
 #ifndef FORTE_NO_DB
 
 #include "FTime.h"
+#include "FTrace.h"
 #include "DbConnection.h"
 #include "DbException.h"
 #include "DbSqlStatement.h"
@@ -160,8 +161,9 @@ void DbConnection::AutoCommit(bool enabled)
 
 void DbConnection::Begin()
 {
+    FTRACE;
+
     FString sql;
-    hlog(HLOG_DEBUG, "DbConnection::begin()");
     sql.Format("begin");
     Execute(sql);
     mQueriesPending = true;
@@ -170,8 +172,9 @@ void DbConnection::Begin()
 
 void DbConnection::Commit()
 {
+    FTRACE;
+
     FString sql;
-    hlog(HLOG_DEBUG, "DbConnection::commit()");
     if (mAutoCommit == true)
         hlog(HLOG_WARN, "commit() called while autocommit enabled");
     sql.Format("commit");
@@ -182,8 +185,9 @@ void DbConnection::Commit()
 
 void DbConnection::Rollback()
 {
+    FTRACE;
+
     FString sql;
-    hlog(HLOG_DEBUG, "DbConnection::rollback()");
     if (mAutoCommit == true)
         hlog(HLOG_WARN, "rollback() called while autocommit enabled");
     sql.Format("rollback");
@@ -198,22 +202,27 @@ void DbConnection::BackupDatabase(const FString &targetPath)
 
 bool DbConnection::Execute(const DbSqlStatement& statement)
 {
-    return Execute(statement.GetStatement().c_str());
+    return Execute(statement.GetStatement());
 }
 
 DbResult DbConnection::Use(const DbSqlStatement& statement)
 {
-    return Use(statement.GetStatement().c_str());
+    return Use(statement.GetStatement());
 }
 
 DbResult DbConnection::Store(const DbSqlStatement& statement)
 {
-    return Store(statement.GetStatement().c_str());
+    return Store(statement.GetStatement());
 }
 
 const std::string& DbConnection::GetDbName() const
 {
     return mDBName;
+}
+
+bool DbConnection::HasPendingQueries() const
+{ 
+    return mQueriesPending;
 }
 
 #endif

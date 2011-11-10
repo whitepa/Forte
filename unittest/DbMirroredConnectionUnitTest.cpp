@@ -350,14 +350,28 @@ TEST_F(BasicDatabaseTest, AutoBackupAutoFailoverDbMirroredConnectionTest)
     DbResult res;
 
     shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
+    shared_ptr<DbConnectionPool> backupPool(make_shared<DbConnectionPool>("sqlite", getBackupDatabaseName()));
 
     {
         {
             DbBackupManagerThread backupMgr(pool);
 
+            // populate while db backup mgr running
             {
                 DbAutoConnection dbConnection(pool);
                 ASSERT_NO_THROW(rows = PopulateData(*dbConnection));
+            }
+
+            // wait for sync
+            {
+                DbResult res;
+                unsigned int ctr(0);
+                do
+                {
+                    DbAutoConnection dbConnection(backupPool);
+                    res = dbConnection->Store(SelectDbSqlStatement(SELECT_TEST_TABLE));
+                }
+                while(res.GetNumRows() < 100 && (++ctr < 10));
             }
         }
 

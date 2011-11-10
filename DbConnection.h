@@ -54,8 +54,8 @@ namespace Forte
         virtual void Begin();
         virtual void Commit();
         virtual void Rollback();
-        inline bool HasPendingQueries() { return mQueriesPending; }
-    
+        virtual bool HasPendingQueries() const;
+
         // misc.
         virtual uint64_t InsertID() = 0;
         virtual uint64_t AffectedRows() = 0;

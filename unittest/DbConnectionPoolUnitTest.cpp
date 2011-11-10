@@ -169,7 +169,7 @@ TEST_F(BasicDatabasePoolTest, SqliteReleaseDatabaseConnectionTest)
 
 TEST_F(BasicDatabasePoolTest, SqliteDoubleReleaseDatabaseConnectionTest)
 {
-    DbConnectionPool pool("sqlite", getDatabaseName());
+    DbConnectionPool pool("sqlite", getDatabaseName(), "", "", "", "", "", 1);
     DbConnection& dbConnection(pool.GetDbConnection());
     ASSERT_NO_THROW(pool.ReleaseDbConnection(dbConnection));
     ASSERT_THROW(pool.ReleaseDbConnection(dbConnection), Forte::EDbConnectionPool);
@@ -240,7 +240,7 @@ TEST_F(BasicDatabasePoolTest, SqliteMirroredReleaseDatabaseConnectionTest)
 
 TEST_F(BasicDatabasePoolTest, SqliteMirroredDoubleReleaseDatabaseConnectionTest)
 {
-    DbConnectionPool pool("sqlite_mirrored", getDatabaseName());
+    DbConnectionPool pool("sqlite_mirrored", getDatabaseName(),"","","","","",1);
     DbConnection& dbConnection(pool.GetDbConnection());
     ASSERT_NO_THROW(pool.ReleaseDbConnection(dbConnection));
     ASSERT_THROW(pool.ReleaseDbConnection(dbConnection), Forte::EDbConnectionPool);

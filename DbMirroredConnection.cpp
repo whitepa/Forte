@@ -44,11 +44,11 @@ bool DbMirroredConnection::setActiveSecondary()
 
         if(! mDbConnectionSecondary)
         {
-            hlog(HLOG_TRACE, "create a secondary DB connection");
+            hlogstream(HLOG_DEBUG, "create a secondary DB connection");
             mDbConnectionSecondary.reset(mSecondaryDbConnectionFactory->create());
         }
 
-        hlog(HLOG_TRACE, "try to init secondary DB connection to %s", mAltDbName.c_str());
+        hlogstream(HLOG_DEBUG, "try to init secondary DB connection to " << mAltDbName);
         const bool ok(mDbConnectionSecondary->Init(mAltDbName, mDbConnection->mUser, mDbConnection->mPassword,
                       mDbConnection->mHost, mDbConnection->mSocket, 3));
 
@@ -58,19 +58,19 @@ bool DbMirroredConnection::setActiveSecondary()
         }
         else
         {
-            hlog(HLOG_TRACE, "failed to init secondary DB connection");
+            hlogstream(HLOG_DEBUG, "failed to init secondary DB connection");
         }
 
         return ok;
     }
     catch(EDbConnectionIoError& e)
     {
-        hlog(HLOG_WARN, "%s", e.what());
+        hlogstream(HLOG_WARN, e.what());
         return false;
     }
     catch(EDbConnectionConnectFailed& e)
     {
-        hlog(HLOG_WARN, "%s", e.what());
+        hlogstream(HLOG_WARN, e.what());
         return false;
     }
 
@@ -83,7 +83,7 @@ bool DbMirroredConnection::Init(const FString& db, const FString& user, const FS
 
     if(isActiveSecondary())
     {
-        hlog(HLOG_TRACE, "try to init secondary connection");
+        hlogstream(HLOG_DEBUG, "try to init secondary connection");
 
         try
         {
@@ -92,16 +92,16 @@ bool DbMirroredConnection::Init(const FString& db, const FString& user, const FS
         }
         catch(EDbConnectionConnectFailed& e)
         {
-            hlog(HLOG_WARN, "%s", e.what());
+            hlogstream(HLOG_WARN, e.what());
         }
         catch(EDbConnectionIoError& e)
         {
-            hlog(HLOG_WARN, "%s", e.what());
+            hlogstream(HLOG_WARN, e.what());
         }
     }
     else
     {
-        hlog(HLOG_TRACE, "attempt init primary DB connection");
+        hlogstream(HLOG_DEBUG, "attempt init primary DB connection");
 
         try
         {
@@ -124,14 +124,14 @@ bool DbMirroredConnection::Init(const FString& db, const FString& user, const FS
         }
         catch(EDbConnectionConnectFailed& e)
         {
-            hlog(HLOG_WARN, "%s", e.what());
+            hlogstream(HLOG_WARN, e.what());
         }
         catch(EDbConnectionIoError& e)
         {
-            hlog(HLOG_WARN, "%s", e.what());
+            hlogstream(HLOG_WARN, e.what());
         }
 
-        hlog(HLOG_TRACE, "failed to init primary DB Connection");
+        hlogstream(HLOG_DEBUG, "failed to init primary DB Connection");
 
         return setActiveSecondary();
     }
@@ -149,11 +149,11 @@ bool DbMirroredConnection::Connect()
     }
     catch(EDbConnectionConnectFailed& e)
     {
-        hlog(HLOG_WARN, "%s", e.what());
+        hlogstream(HLOG_WARN, e.what());
     }
     catch(EDbConnectionIoError& e)
     {
-        hlog(HLOG_WARN, "%s", e.what());
+        hlogstream(HLOG_WARN, e.what());
     }
 
     if(isActivePrimary())
@@ -177,7 +177,7 @@ bool DbMirroredConnection::Close()
     }
     catch(EDbConnectionIoError& e)
     {
-        hlog(HLOG_WARN, "%s", e.what());
+        hlogstream(HLOG_WARN, e.what());
     }
 
     if(isActivePrimary())
@@ -201,7 +201,7 @@ bool DbMirroredConnection::Execute(const FString& sql)
     }
     catch(EDbConnectionIoError& e)
     {
-        hlog(HLOG_WARN, "%s", e.what());
+        hlogstream(HLOG_WARN, e.what());
     }
 
     if(isActivePrimary())
@@ -225,7 +225,7 @@ DbResult DbMirroredConnection::Store(const FString& sql)
     }
     catch(EDbConnectionIoError& e)
     {
-        hlog(HLOG_WARN, "%s", e.what());
+        hlogstream(HLOG_WARN, e.what());
     }
 
     if(isActivePrimary())
@@ -249,7 +249,7 @@ DbResult DbMirroredConnection::Use(const FString& sql)
     }
     catch(EDbConnectionIoError& e)
     {
-        hlog(HLOG_WARN, "%s", e.what());
+        hlogstream(HLOG_WARN, e.what());
     }
 
     if(isActivePrimary())
@@ -273,7 +273,7 @@ bool DbMirroredConnection::Execute2(const FString& sql)
     }
     catch(EDbConnectionIoError& e)
     {
-      hlog(HLOG_WARN, "%s", e.what());
+      hlogstream(HLOG_WARN, e.what());
     }
 
     if(isActivePrimary())
@@ -297,7 +297,7 @@ DbResult DbMirroredConnection::Store2(const FString& sql)
     }
     catch(EDbConnectionIoError& e)
     {
-        hlog(HLOG_WARN, "%s", e.what());
+        hlogstream(HLOG_WARN, e.what());
     }
 
     if(isActivePrimary())
@@ -321,7 +321,7 @@ DbResult DbMirroredConnection::Use2(const FString& sql)
     }
     catch(EDbConnectionIoError& e)
     {
-        hlog(HLOG_WARN, "%s", e.what());
+        hlogstream(HLOG_WARN, e.what());
     }
 
     if(isActivePrimary())
@@ -346,7 +346,7 @@ void DbMirroredConnection::AutoCommit(bool enabled)
     }
     catch(EDbConnectionIoError& e)
     {
-        hlog(HLOG_WARN, "%s", e.what());
+        hlogstream(HLOG_WARN, e.what());
     }
 
     if(isActivePrimary())
@@ -369,7 +369,7 @@ void DbMirroredConnection::Begin()
     }
     catch(EDbConnectionIoError& e)
     {
-        hlog(HLOG_WARN, "%s", e.what());
+        hlogstream(HLOG_WARN, e.what());
     }
 
     if(isActivePrimary())
@@ -398,7 +398,7 @@ void DbMirroredConnection::Commit()
         }
         catch(EDbConnectionIoError& e)
         {
-            hlog(HLOG_WARN, "%s", e.what());
+            hlogstream(HLOG_WARN, e.what());
         }
 
         if(setActiveSecondary())
@@ -425,7 +425,7 @@ void DbMirroredConnection::Rollback()
         }
         catch(EDbConnectionIoError& e)
         {
-            hlog(HLOG_WARN, "%s", e.what());
+            hlogstream(HLOG_WARN, e.what());
         }
 
         if(setActiveSecondary())
@@ -439,13 +439,40 @@ uint64_t DbMirroredConnection::InsertID()
 {
     AutoUnlockMutex guard(mMutex);
 
-    return mDbConnection->InsertID();
+    try
+    {
+        return mDbConnection->InsertID();
+    }
+    catch(EDbConnectionIoError& e)
+    {
+        hlogstream(HLOG_ERROR, e.what());
+
+        if(! isActiveSecondary())
+        {
+            (void)setActiveSecondary();
+        }
+
+        throw;
+    }
 }
 
 uint64_t DbMirroredConnection::AffectedRows()
 {
-    AutoUnlockMutex guard(mMutex);
-    return mDbConnection->AffectedRows();
+    try
+    {
+        return mDbConnection->AffectedRows();
+    }
+    catch(EDbConnectionIoError& e)
+    {
+        hlogstream(HLOG_ERROR, e.what());
+
+        if(! isActiveSecondary())
+        {
+            (void)setActiveSecondary();
+        }
+
+        throw;
+    }
 }
 
 FString DbMirroredConnection::Escape(const char *str)
@@ -492,7 +519,7 @@ bool DbMirroredConnection::Execute(const DbSqlStatement& statement)
         }
         catch(EDbConnectionIoError& e)
         {
-            hlog(HLOG_WARN, "%s", e.what());
+            hlogstream(HLOG_WARN, e.what());
         }
 
         if(setActiveSecondary())
@@ -527,7 +554,7 @@ DbResult DbMirroredConnection::Use(const DbSqlStatement& statement)
         }
         catch(EDbConnectionIoError& e)
         {
-            hlog(HLOG_WARN, "%s", e.what());
+            hlogstream(HLOG_WARN, e.what());
         }
 
         if(setActiveSecondary())
@@ -581,5 +608,24 @@ DbMirroredConnection::~DbMirroredConnection()
 
 const std::string& DbMirroredConnection::GetDbName() const
 {
-    return mDbConnection->GetDbName();
+    AutoUnlockMutex guard(mMutex);
+
+    if(mDbConnection)
+    {
+        return mDbConnection->GetDbName();
+    }
+
+    return mDBName;
+}
+
+bool DbMirroredConnection::HasPendingQueries() const
+{
+    AutoUnlockMutex guard(mMutex);
+
+    if(mDbConnection)
+    {
+        return mDbConnection->HasPendingQueries();
+    }
+
+    return false;
 }

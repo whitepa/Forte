@@ -30,6 +30,7 @@ public:
 
     bool Connect();
     bool Close();
+    bool HasPendingQueries() const;
     bool Execute(const FString& sql);
     DbResult Store(const FString& sql);
     DbResult Use(const FString& sql);
@@ -62,7 +63,7 @@ private:
     boost::shared_ptr<DbConnection> mDbConnection;
     boost::shared_ptr<DbConnection> mDbConnectionSecondary;
     const FString mAltDbName;
-    RecursiveMutex mMutex;
+    mutable RecursiveMutex mMutex;
 
 }; // DbMirroredConnection
 
