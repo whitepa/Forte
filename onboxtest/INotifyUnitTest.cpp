@@ -19,14 +19,31 @@ protected:
     {
     }
 
+    string getWatchedFileName() const
+    {
+        return "deleteme";
+    }
+
+    string getWatchedFileDir() const
+    {
+        return "/fsscale0";
+    }
+
     string getWatchedFilePath() const
     {
-        return "/fsscale0/deleteme";
+        return getWatchedFileDir() + "/" + getWatchedFileName();
+    }
+
+    bool existsWatchedFileDir() const
+    {
+        FileSystem fs;
+        return fs.FileExists(getWatchedFileDir());
     }
 
     virtual void SetUp()
     {
         mLogManager.BeginLogging("//stderr");
+        ASSERT_TRUE(existsWatchedFileDir()) << getWatchedFileDir();
     }
 
     void addWatch(const std::string& filePath)
@@ -79,7 +96,7 @@ TEST_F(INotifyTest, INotifyTestBasicFileModification)
 TEST_F(INotifyTest, INotifyTestThrowsEINotifyAddWatchFailed)
 {
     touch();
-    ASSERT_THROW(addWatch("/tmp/asdlfkjasdlfjasl;dfkja;ldsfkj"), Forte::EINotifyAddWatchFailed);
+    ASSERT_THROW(addWatch("/tmp/asdlfkjasdlfjasldfkjaldsfkj"), Forte::EINotifyAddWatchFailed);
     touch();
 }
 
