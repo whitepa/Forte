@@ -76,7 +76,7 @@ EXCEPTION_SUBCLASS(Exception, EMountGPFS);
 EXCEPTION_SUBCLASS(Exception, EUmountGPFS);
 
 
-class BasicDatabaseTest : public DatabaseTest
+class DbMirroredConnectionTest : public DatabaseTest
 {
 protected:
     typedef DatabaseTest base_type;
@@ -84,14 +84,14 @@ protected:
     virtual void CreateDatabases()
     {
         DbLiteConnection db (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
-        EXPECT_TRUE(db.Init(getDatabaseName()));
+        ASSERT_TRUE(db.Init(getDatabaseName()));
     }
 
     virtual void CreateTables()
     {
         DbLiteConnection db (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
-        EXPECT_TRUE(db.Init(getDatabaseName()));
-        EXPECT_TRUE(db.Execute(CREATE_TEST_TABLE));
+        ASSERT_TRUE(db.Init(getDatabaseName()));
+        ASSERT_TRUE(db.Execute(CREATE_TEST_TABLE));
     }
 
     virtual size_t PopulateData(DbConnection& db)
@@ -101,7 +101,7 @@ protected:
         {
             FString insertSql;
             insertSql.Format("INSERT INTO test VALUES (%d, %d)", i, rand());
-            EXPECT_TRUE(db.Execute(InsertDbSqlStatement(insertSql)));
+            db.Execute(InsertDbSqlStatement(insertSql));
         }
 
         return rows;
@@ -110,7 +110,7 @@ protected:
     virtual size_t PopulateData()
     {
         DbLiteConnection db (SQLITE_OPEN_READWRITE| SQLITE_OPEN_CREATE);
-        EXPECT_TRUE(db.Init(getDatabaseName()));
+        db.Init(getDatabaseName());
 
         return PopulateData(db);
     }
@@ -133,6 +133,7 @@ protected:
 
     virtual void SetUp()
     {
+        restoreMounts();
         base_type::SetUp();
     }
 
@@ -154,35 +155,80 @@ public: // drawback, bind requires these be public
     {
         FileSystem fs;
 
-        ASSERT_TRUE(fs.FileExists(getDatabaseName()));
+        ASSERT_TRUE(fs.FileExists(getDatabaseName())) << getDatabaseName();
 
         executeCommand("/etc/init.d/monit stop");
         executeCommand("/etc/init.d/scaled stop");
         executeCommand("/etc/init.d/screpld stop");
         executeCommand("/etc/init.d/gpfs stop");
-        sleep(10);
 
-        ASSERT_FALSE(fs.FileExists(getDatabaseName()));
+        waitMountsDown();
+
+        ASSERT_FALSE(fs.FileExists(getDatabaseName())) << getDatabaseName();
+    }
+
+    bool waitMountsDown()
+    {
+        for(unsigned long i = 0 ; i < 12 ; i++)
+        {
+            if(! checkMounts())
+            {
+                break;
+            }
+            sleep(10);
+        }
+    }
+
+    bool checkMounts()
+    {
+        try
+        {
+            return (executeCommand("mountpoint -q /fsscale0") == 0);
+        }
+        catch(Forte::Exception& e)
+        {
+            return false;
+        }
+    }
+
+    void restoreMounts()
+    {
+        for(unsigned long i = 0 ; i < 12 ; i++)
+        {
+            if(! checkMounts())
+            {
+                try
+                {
+                    executeCommand("mount /fsscale0");
+                }
+                catch(...)
+                {
+                }
+            }
+            else
+            {
+                break;
+            }
+            sleep(10);
+        }
     }
 
     void mountDatabase()
     {
         FileSystem fs;
 
-        ASSERT_FALSE(fs.FileExists(getDatabaseName()));
+        ASSERT_FALSE(fs.FileExists(getDatabaseName())) << getDatabaseName();
 
         executeCommand("/etc/init.d/gpfs start");
         executeCommand("/etc/init.d/screpld start");
         executeCommand("/etc/init.d/scaled start");
         executeCommand("/etc/init.d/monit start");
-        sleep(10);
-        executeCommand("mount /fsscale0");
-        sleep(5);
+        restoreMounts();
 
-        ASSERT_TRUE(fs.FileExists(getDatabaseName()));
+        ASSERT_TRUE(fs.FileExists(getDatabaseName())) << getDatabaseName();
     }
 
-    void executeCommand(const FString& cmd)
+    int executeCommand(const FString& cmd)
     {
         int ret;
         FString output;
@@ -195,20 +241,22 @@ public: // drawback, bind requires these be public
             hlog(HLOG_ERROR, err);
             throw EUmountGPFS(err);
         }
+
+        return ret;
     }
 
     boost::function<void()> UnmountDatabaseFunction()
     {
-        return boost::bind(&::BasicDatabaseTest::unmountDatabase, this);
+        return boost::bind(&::DbMirroredConnectionTest::unmountDatabase, this);
     }
 
     boost::function<void()> MountDatabaseFunction()
     {
-        return boost::bind(&::BasicDatabaseTest::mountDatabase, this);
+        return boost::bind(&::DbMirroredConnectionTest::mountDatabase, this);
     }
 };
 
-TEST_F(BasicDatabaseTest, SqliteBackupDatabaseTest)
+TEST_F(DbMirroredConnectionTest, SqliteBackupDatabaseTest)
 {
     const size_t rows = PopulateData();
     DbConnectionPool pool("sqlite_mirrored", getDatabaseName());
@@ -217,7 +265,7 @@ TEST_F(BasicDatabaseTest, SqliteBackupDatabaseTest)
     ASSERT_NO_THROW(dbConnection.BackupDatabase(getBackupDatabaseName()));
 }
 
-TEST_F(BasicDatabaseTest, SqliteManualFailoverManualBackupDatabaseTest)
+TEST_F(DbMirroredConnectionTest, SqliteManualFailoverManualBackupDatabaseTest)
 {
     const size_t rows = PopulateData();
 
@@ -236,10 +284,10 @@ TEST_F(BasicDatabaseTest, SqliteManualFailoverManualBackupDatabaseTest)
     DbConnection& dbConnection = pool.GetDbConnection();
 
     DbResult res = dbConnection.Store("SELECT * FROM test");
-    EXPECT_EQ(res.GetNumRows(), rows);
+    ASSERT_EQ(res.GetNumRows(), rows);
 }
 
-TEST_F(BasicDatabaseTest, SqliteAutoFailoverAutoBackupDatabaseTest)
+TEST_F(DbMirroredConnectionTest, SqliteAutoFailoverAutoBackupDatabaseTest)
 {
     size_t rows(0);
     shared_ptr<DbConnectionPool> pool (make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
@@ -255,11 +303,11 @@ TEST_F(BasicDatabaseTest, SqliteAutoFailoverAutoBackupDatabaseTest)
     DbAutoConnection dbConnection(pool);
     DbResult res = dbConnection->Store("SELECT * FROM test");
 
-    EXPECT_EQ(res.GetNumRows(), rows);
+    ASSERT_EQ(res.GetNumRows(), rows);
 }
 
 
-TEST_F(BasicDatabaseTest, SqliteFailedGPFSManualBackupDatabaseTest)
+TEST_F(DbMirroredConnectionTest, SqliteFailedGPFSManualBackupDatabaseTest)
 {
     const size_t rows = PopulateData();
     DbConnectionPool pool("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName());
@@ -269,7 +317,7 @@ TEST_F(BasicDatabaseTest, SqliteFailedGPFSManualBackupDatabaseTest)
         ASSERT_NO_THROW(dbConnection.BackupDatabase(getBackupDatabaseName()));
 
         DbResult resBeforeUnmount (dbConnection.Store("SELECT * FROM test"));
-        EXPECT_EQ(resBeforeUnmount.GetNumRows(), rows);
+        ASSERT_EQ(resBeforeUnmount.GetNumRows(), rows);
         pool.ReleaseDbConnection(dbConnection);
     }
 
@@ -278,12 +326,12 @@ TEST_F(BasicDatabaseTest, SqliteFailedGPFSManualBackupDatabaseTest)
     DbConnection& dbConnection(pool.GetDbConnection());
 
     DbResult resAfterUnmount (dbConnection.Store("SELECT * FROM test"));
-    EXPECT_EQ(resAfterUnmount.GetNumRows(), rows);
+    ASSERT_EQ(resAfterUnmount.GetNumRows(), rows);
 
     ASSERT_NO_THROW(pool.ReleaseDbConnection(dbConnection));
 }
 
-TEST_F(BasicDatabaseTest, SqliteFailedGPFSAutoBackupDatabaseTest)
+TEST_F(DbMirroredConnectionTest, SqliteFailedGPFSAutoBackupDatabaseTest)
 {
     size_t rows(0);
     shared_ptr<DbConnectionPool> pool (make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
@@ -294,7 +342,7 @@ TEST_F(BasicDatabaseTest, SqliteFailedGPFSAutoBackupDatabaseTest)
         ASSERT_NO_THROW(rows = PopulateData(*dbConnection));
 
         DbResult resBeforeUnmount (dbConnection->Store("SELECT * FROM test"));
-        EXPECT_EQ(resBeforeUnmount.GetNumRows(), rows);
+        ASSERT_EQ(resBeforeUnmount.GetNumRows(), rows);
     }
 
     AutoMountGPFS unmountGPFS(UnmountDatabaseFunction(), MountDatabaseFunction());
@@ -302,10 +350,10 @@ TEST_F(BasicDatabaseTest, SqliteFailedGPFSAutoBackupDatabaseTest)
     DbAutoConnection dbConnection(pool);
 
     DbResult resAfterUnmount (dbConnection->Store("SELECT * FROM test"));
-    EXPECT_EQ(resAfterUnmount.GetNumRows(), rows);
+    ASSERT_EQ(resAfterUnmount.GetNumRows(), rows);
 }
 
-TEST_F(BasicDatabaseTest, SqliteFailedGPFSPrimaryDbUnderHotDbConnectionDatabaseTest)
+TEST_F(DbMirroredConnectionTest, SqliteFailedGPFSPrimaryDbUnderHotDbConnectionDatabaseTest)
 {
     size_t rows(0);
     shared_ptr<DbConnectionPool> pool (make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
@@ -317,14 +365,14 @@ TEST_F(BasicDatabaseTest, SqliteFailedGPFSPrimaryDbUnderHotDbConnectionDatabaseT
         ASSERT_NO_THROW(rows = PopulateData(*dbConnection));
 
         DbResult resBeforeUnmount (dbConnection->Store("SELECT * FROM test"));
-        EXPECT_EQ(resBeforeUnmount.GetNumRows(), rows);
+        ASSERT_EQ(resBeforeUnmount.GetNumRows(), rows);
 
         AutoMountGPFS unmountGPFS(UnmountDatabaseFunction(), MountDatabaseFunction());
 
     }
 
     resAfterUnmount = dbConnection->Store("SELECT * FROM test");
-    EXPECT_EQ(resAfterUnmount.GetNumRows(), rows);
+    ASSERT_EQ(resAfterUnmount.GetNumRows(), rows);
 }
 
 
