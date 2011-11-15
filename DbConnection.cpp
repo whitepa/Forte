@@ -25,7 +25,7 @@ DbConnection::DbConnection()
     mErrno = 0;
     mTries = 0;
 
-    mRetries = 3;              // default to 3 retries
+    mRetries = 20;              // default to 3 retries
     mQueryRetryDelay = 1000; // 1 second delay
 }
 
