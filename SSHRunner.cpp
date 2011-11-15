@@ -372,6 +372,7 @@ int SSHRunner::createSocketAndConnect(
 
 FString SSHRunner::getErrorString()
 {
+    if (!mSession) return "NO SESSION!";
     FString errString("none");
     char* errMsg = NULL;
     int errNumber = libssh2_session_last_error(mSession, &errMsg, NULL, 1);
