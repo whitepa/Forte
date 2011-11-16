@@ -90,6 +90,7 @@ SRCS =	\
 	ServiceConfig.cpp \
 	SSHRunner.cpp \
 	State.cpp \
+	StateHistoryLogger.cpp \
 	StateMachine.cpp \
 	StateRegion.cpp \
 	Thread.cpp \

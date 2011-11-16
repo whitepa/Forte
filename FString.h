@@ -402,6 +402,8 @@ namespace Forte
          **/
         static void SaveFile(const char *filename, const FString &in);
 
+        static bool IsEmpty (const std::string& str) { return str.empty(); }
+
         /**
          * Creates a vector of strings by splitting the spring based on the following
          * structure
