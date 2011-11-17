@@ -26,7 +26,7 @@ public:
     ~DbMirroredConnection();
 
     bool Init(const FString& db,const FString& user,const FString& pass,
-              const FString& host = "localhost",const FString& socket = "", unsigned int retries = 3);
+              const FString& host = "localhost",const FString& socket = "", unsigned int retries = 20);
 
     bool Connect();
     bool Close();
