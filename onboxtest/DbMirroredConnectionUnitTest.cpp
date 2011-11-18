@@ -183,7 +183,7 @@ public: // drawback, bind requires these be public
     {
         try
         {
-            return (executeCommand("mountpoint -q /fsscale0") == 0);
+            return ((executeCommand("mountpoint -q /fsscale0") == 0) && (executeCommand("mountpoint -q /fs0") == 0));
         }
         catch(Forte::Exception& e)
         {
@@ -199,7 +199,7 @@ public: // drawback, bind requires these be public
             {
                 try
                 {
-                    executeCommand("mount /fsscale0");
+                    executeCommand("mmmount all -a");
                 }
                 catch(...)
                 {
