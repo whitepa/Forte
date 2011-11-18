@@ -44,11 +44,11 @@ bool DbMirroredConnection::setActiveSecondary()
 
         if(! mDbConnectionSecondary)
         {
-            hlogstream(HLOG_DEBUG, "create a secondary DB connection");
+            hlogstream(HLOG_INFO, "create a secondary DB connection");
             mDbConnectionSecondary.reset(mSecondaryDbConnectionFactory->create());
         }
 
-        hlogstream(HLOG_DEBUG, "try to init secondary DB connection to " << mAltDbName);
+        hlogstream(HLOG_INFO, "try to init secondary DB connection to " << mAltDbName);
         const bool ok(mDbConnectionSecondary->Init(mAltDbName, mDbConnection->mUser, mDbConnection->mPassword,
                       mDbConnection->mHost, mDbConnection->mSocket, 3));
 
@@ -58,7 +58,7 @@ bool DbMirroredConnection::setActiveSecondary()
         }
         else
         {
-            hlogstream(HLOG_DEBUG, "failed to init secondary DB connection");
+            hlogstream(HLOG_ERR, "failed to init secondary DB connection");
         }
 
         return ok;
@@ -131,7 +131,7 @@ bool DbMirroredConnection::Init(const FString& db, const FString& user, const FS
             hlogstream(HLOG_WARN, e.what());
         }
 
-        hlogstream(HLOG_DEBUG, "failed to init primary DB Connection");
+        hlogstream(HLOG_WARN, "failed to init primary DB Connection");
 
         return setActiveSecondary();
     }

@@ -142,7 +142,28 @@ DbResult DbLiteConnection::Query(const FString& sql)
     {
         // prepare statement
         mErrno = sqlite3_prepare_v2(mDB, remain, remain.length(), &stmt, &tail);
-        if (stmt == NULL) break;
+        if (stmt == NULL)
+        {
+            hlog(HLOG_INFO, "sqlite3_prepare_v2 failed Error was %d", mErrno);
+
+            mTries++;
+            switch (mErrno)
+            {
+            //// soft failures, keep retrying:
+            case SQLITE_BUSY:
+            case SQLITE_LOCKED:
+                --tries_remaining;
+                if (tries_remaining > 0)
+                    usleep(50000); // sleep 50 milliseconds
+                continue;
+
+                //// hard failures, just fail immediately:
+            default:
+                tries_remaining = 0;
+                break;
+            }
+            continue;
+        }
 
         do
         {
