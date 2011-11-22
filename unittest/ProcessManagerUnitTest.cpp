@@ -69,6 +69,54 @@ public:
     
 };
 
+TEST_F(ProcessManagerTest, Runs100ProcessesInUnder3Seconds)
+{
+    try
+    {
+        boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
+        std::list<boost::shared_ptr<ProcessFuture> > phList;
+        Forte::Timespec start = Forte::MonotonicClock().GetTime();
+        for (int i = 0; i < 100; ++i)
+        {
+            phList.push_back(
+                boost::shared_ptr<ProcessFuture>(
+                    pm->CreateProcess("/bin/sleep 1")));
+        }
+        foreach(const boost::shared_ptr<Forte::ProcessFuture> &ph, phList)
+        {
+            ASSERT_NO_THROW(ph->GetResult());
+            ASSERT_EQ(0, ph->GetStatusCode());
+            ASSERT_EQ(ProcessFuture::ProcessExited, ph->GetProcessTerminationType());
+        }
+        Forte::Timespec finish = Forte::MonotonicClock().GetTime();
+        ASSERT_TRUE(finish - start < Forte::Timespec::FromSeconds(3));
+    }
+    catch (std::exception& e)
+    {
+        hlog(HLOG_ERR, "exception: %s", e.what());
+        FAIL();
+    }
+}
+TEST_F(ProcessManagerTest, ReactsToChildTerminationInUnder50Millisec)
+{
+    try
+    {
+        boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
+        boost::shared_ptr<ProcessFuture> ph(
+            pm->CreateProcess("/bin/usleep 10"));
+        Forte::Timespec start = Forte::MonotonicClock().GetTime();
+        ASSERT_NO_THROW(ph->GetResult());
+        Forte::Timespec finish = Forte::MonotonicClock().GetTime();
+        ASSERT_EQ(0, ph->GetStatusCode());
+        ASSERT_EQ(ProcessFuture::ProcessExited, ph->GetProcessTerminationType());
+        ASSERT_TRUE(finish - start < Forte::Timespec::FromMillisec(50));
+    }
+    catch (std::exception& e)
+    {
+        hlog(HLOG_ERR, "exception: %s", e.what());
+        FAIL();
+    }
+}
 TEST_F(ProcessManagerTest, MemLeak)
 {
     try
@@ -607,3 +655,4 @@ TEST_F(ProcessManagerTest, CommandLineEscape)
         FAIL();
     }
 }
+

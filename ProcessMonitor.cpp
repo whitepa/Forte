@@ -74,7 +74,7 @@ void Forte::ProcessMonitor::Run()
         {
             if (sGotSIGCHLD)
                 doWait();
-            mPeerSet.Poll(500);
+            mPeerSet.Poll(500, true);
         }
         catch (EPDUPeerSetNoPeers &e)
         {

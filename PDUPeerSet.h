@@ -121,8 +121,11 @@ namespace Forte
          * @param msTimeout timeout in milliseconds before returning.
          * A value of -1 (the default) will wait indefinitely, while a
          * value of 0 will not wait at all.
+         * @param interruptible will return if the epoll syscall is
+         * interrupted by a signal.
+         *
          */
-        void Poll(int msTimeout = -1);
+        void Poll(int msTimeout = -1, bool interruptible = false);
 
         /** 
          * PeerDelete will delete the given peer from the PDUPeerSet,

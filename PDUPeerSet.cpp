@@ -103,7 +103,7 @@ void Forte::PDUPeerSet::TeardownEPoll(void)
     }
 }
 
-void Forte::PDUPeerSet::Poll(int msTimeout)
+void Forte::PDUPeerSet::Poll(int msTimeout, bool interruptible)
 {
     int nfds = 0;
     struct epoll_event events[32];
@@ -119,7 +119,7 @@ void Forte::PDUPeerSet::Poll(int msTimeout)
         {
             nfds = epoll_wait(mEPollFD, events, 32, msTimeout);
         } 
-        while (nfds < 0 && errno == EINTR);
+        while (nfds < 0 && !interruptible && errno == EINTR);
 
         buffer = mBuffer;
     }
