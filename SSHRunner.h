@@ -26,12 +26,6 @@ namespace Forte
     {
     public:
         /**
-         * Empty constructor
-         * Mostly for mock object which might inherit.
-         */
-        SSHRunner();
-
-        /**
          * Constructor
          *
          * @param username
@@ -77,6 +71,12 @@ namespace Forte
                              const FString &loclPath);
 
     protected:
+        /**
+         * Empty constructor
+         * Mostly for mock object which might inherit.
+         */
+        SSHRunner();
+
         LIBSSH2_SESSION *mSession;
         int mSocket;
         char mIPAddress[256];

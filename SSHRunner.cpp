@@ -25,26 +25,30 @@ SSHRunner::SSHRunner(const char *username,
     if (mSocket > 0)
     {
         mSession = libssh2_session_init();
+        if (!mSession)
+            hlog_and_throw(HLOG_ERR, ESessionError("Could not init ssh"));
         if (libssh2_session_startup(mSession, mSocket) < 0)
         {
-            libssh2_session_free(mSession);
-            close(mSocket);
             FString stmp(FStringFC(), 
                          "Could not startup the ssh session to %s:%d (err=%s)",
                          ipAddress, portNumber, getErrorString().c_str());
+
+            libssh2_session_free(mSession);
+            close(mSocket);
             hlog(HLOG_ERR, "%s", stmp.c_str());
             throw ESessionError(stmp);
         }
 
         if (libssh2_userauth_password(mSession, username, password) < 0)
         {
-            libssh2_session_disconnect(mSession, "Goodbye");
-            libssh2_session_free(mSession);
-            close(mSocket);
             FString stmp(FStringFC(), 
                   "Could not get authenticated using %s/%s to %s:%d (err=%s)",
                    username, password, 
                    ipAddress, portNumber, getErrorString().c_str());
+
+            libssh2_session_disconnect(mSession, "Goodbye");
+            libssh2_session_free(mSession);
+            close(mSocket);
             hlog(HLOG_ERR, "%s", stmp.c_str());
             throw ESessionError(stmp);
         }
@@ -75,13 +79,16 @@ SSHRunner::SSHRunner(const char *username,
     if (mSocket > 0)
     {
         mSession = libssh2_session_init();
+        if (!mSession)
+            hlog_and_throw(HLOG_ERR, ESessionError("Could not init ssh"));
         if (libssh2_session_startup(mSession, mSocket) < 0)
         {
-            libssh2_session_free(mSession);
-            close(mSocket);
             FString stmp(FStringFC(), 
                         "Could not startup the ssh session to %s:%d (err=%s)",
                         ipAddress, portNumber, getErrorString().c_str());
+
+            libssh2_session_free(mSession);
+            close(mSocket);
             hlog(HLOG_ERR, "%s", stmp.c_str());
             throw ESessionError(stmp);
         }
@@ -91,18 +98,21 @@ SSHRunner::SSHRunner(const char *username,
                                                    publicKeyFilePath,
                                                    privateKeyFilePath,
                                                    passphrase) < 0)
-            {
-                libssh2_session_disconnect(mSession, "Goodbye");
-                libssh2_session_free(mSession);
-                close(mSocket);
-                FString stmp(FStringFC(), 
-                             "Could not get authenticated using (%s)(%s)(%s) "
-                             "to %s:%d (err=%s)", 
-                             username, publicKeyFilePath, privateKeyFilePath, 
-                             ipAddress, portNumber, getErrorString().c_str());
-                hlog(HLOG_ERR, "%s", stmp.c_str());
-                throw ESessionError(stmp);
-            }
+        {
+            FString stmp(FStringFC(),
+                         "Could not get authenticated using (%s)(%s)(%s) "
+                         "to %s:%d (err=%s)",
+                         username, publicKeyFilePath, privateKeyFilePath,
+                         ipAddress, portNumber, getErrorString().c_str());
+
+            libssh2_session_disconnect(mSession, "Goodbye");
+            libssh2_session_free(mSession);
+
+            close(mSocket);
+
+            hlog(HLOG_ERR, "%s", stmp.c_str());
+            throw ESessionError(stmp);
+        }
     }
     else
     {
