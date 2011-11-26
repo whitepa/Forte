@@ -183,7 +183,7 @@ public: // drawback, bind requires these be public
     {
         try
         {
-            return ((executeCommand("mountpoint -q /fsscale0") == 0) && (executeCommand("mountpoint -q /fs0") == 0));
+            return ((executeCommand("/bin/mountpoint -q /fsscale0") == 0) && (executeCommand("/bin/mountpoint -q /fs0") == 0));
         }
         catch(Forte::Exception& e)
         {
@@ -193,13 +193,13 @@ public: // drawback, bind requires these be public
 
     void restoreMounts()
     {
-        for(unsigned long i = 0 ; i < 12 ; i++)
+        for(unsigned long i = 0 ; i < 30 ; i++)
         {
             if(! checkMounts())
             {
                 try
                 {
-                    executeCommand("mmmount all -a");
+                    executeCommand("/usr/lpp/mmfs/bin/mmmount all -a");
                 }
                 catch(...)
                 {
@@ -237,9 +237,14 @@ public: // drawback, bind requires these be public
         if ((ret = procRunner.Run(cmd, "", &output, PROC_RUNNER_DEFAULT_TIMEOUT)) != 0)
         {
             FString err;
-            err.Format("Unable to run '%s' [return code: %i] (%s)", cmd.c_str(), ret, output.c_str());
+            err.Format("Unable to run '%s' [return code: %i] (%s)", cmd.c_str(),
+                    ret, output.c_str());
             hlog(HLOG_ERROR, err);
             throw EUmountGPFS(err);
+        }
+        else if (!output.empty())
+        {
+            hlog(HLOG_INFO, "Command %s succeeded with output (%s)", output.c_str());
         }
 
         return ret;
