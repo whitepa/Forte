@@ -35,6 +35,7 @@ Forte::ProcessManagerImpl::ProcessManagerImpl() :
     mProcmonPath("/usr/libexec/procmon")
 {
     FTRACE;
+    setThreadName(FString(FStringFC(), "procmon-%u", GetThreadID()));
     char *procmon = getenv("FORTE_PROCMON");
     if (procmon)
     {
@@ -382,8 +383,8 @@ void* Forte::ProcessManagerImpl::run(void)
         }
         catch (Exception &e)
         {
-            hlog(HLOG_ERR, "caught exception: %s", e.what());
-            sleep(1); // prevent tight loops
+            hlog(HLOG_ERR, "process manager thread caught exception: %s", e.what());
+            interruptibleSleep(Forte::Timespec::FromSeconds(1)); // prevent tight loops
         }
     }
     return NULL;
