@@ -19,7 +19,7 @@ ServiceConfig::ServiceConfig(const char *configFile,
 }
 
 void ServiceConfig::ReadConfigFile(
-    const char *configFile, 
+    const char *configFile,
     ServiceConfig::ServiceConfigFileType type) {
     AutoUnlockMutex lock(mMutex);
     mConfigFileType = type;
@@ -44,7 +44,7 @@ void ServiceConfig::ReadConfigFile(
         FString stmp;
         stmp.Format("could not load file %s", mConfigFileName.c_str());
         throw EServiceConfig(stmp);
-    }    
+    }
 
 }
 
@@ -52,6 +52,19 @@ void ServiceConfig::Clear()
 {
     AutoUnlockMutex lock(mMutex);
     mPTree = boost::property_tree::ptree();
+}
+
+void ServiceConfig::Erase(const char *key)
+{
+    AutoUnlockMutex lock(mMutex);
+    try
+    {
+        mPTree.erase(key);
+    }
+    catch (boost::property_tree::ptree_error &e)
+    {
+        throw EServiceConfig(e.what());
+    }
 }
 
 void ServiceConfig::Set(const char *key, const char *value)
@@ -168,7 +181,7 @@ void ServiceConfig::WriteToConfigFile(void)
 void ServiceConfig::WriteToConfigFile(const char *newConfigFile)
 {
     AutoUnlockMutex lock(mMutex);
-    
+
     try
     {
         switch (mConfigFileType)
