@@ -1,3 +1,6 @@
+#ifndef FORTE_NO_DB
+#ifndef FORTE_NO_SQLITE
+
 #include "DbLiteConnectionFactory.h"
 #include "DbLiteConnection.h"
 
@@ -19,4 +22,5 @@ DbConnection* DbLiteConnectionFactory::create()
 }
 
 
-
+#endif
+#endif

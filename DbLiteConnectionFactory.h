@@ -3,6 +3,9 @@
 
 #include <DbConnectionFactory.h>
 
+#ifndef FORTE_NO_DB
+#ifndef FORTE_NO_SQLITE
+
 namespace Forte {
 
 class DbLiteConnectionFactory : public DbConnectionFactory
@@ -20,6 +23,8 @@ private:
 
 } // namespace Forte
 
-#endif // FORTE_DB_LITE_CONNECTION_FACTORY
+#endif  // FORTE_NO_SQLITE
+#endif  // FORTE_NO_DB
+#endif  // FORTE_DB_LITE_CONNECTION_FACTORY
 
 
