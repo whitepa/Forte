@@ -55,6 +55,7 @@ BSRCS = ContextUnitTest.cpp \
 GSRCS = ActiveObjectUnitTest.cpp \
 	CheckedValueStoreUnitTest.cpp \
 	CheckedValueUnitTest.cpp \
+	ClockUnitTest.cpp \
 	ClusterLockUnitTest.cpp \
 	ConditionUnitTest.cpp \
 	ContextPredicateUnitTest.cpp \
@@ -125,6 +126,8 @@ $(TARGETDIR)/ProcessManagerUnitTest: ProcessManagerUnitTest.cpp \
 	../$(TARGETDIR)/ProcessFutureImpl.o \
 
 $(TARGETDIR)/PDUPeerUnitTest: PDUPeerUnitTest.cpp $(FORTE)
+
+$(TARGETDIR)/ClockUnitTest: ClockUnitTest.cpp $(FORTE)
 
 $(TARGETDIR)/ClusterLockUnitTest: ClusterLockUnitTest.cpp $(FORTE)
 

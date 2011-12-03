@@ -60,6 +60,16 @@ namespace Forte
         }
 
         /**
+         *Test equality.
+         **/
+        bool operator == (const struct timespec &ts) const
+        {
+            if (mTimespec.tv_sec != ts.tv_sec) return false;
+            if (mTimespec.tv_nsec != ts.tv_nsec) return false;
+            return true;;
+        }
+
+        /**
          *Adds two Timespec objects together for you.
          **/
         Timespec operator+(const Timespec &other) const;

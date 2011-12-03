@@ -70,7 +70,15 @@ public:
     
 };
 
-TEST_F(ProcessManagerTest, Runs100ProcessesInUnder3Seconds)
+/*
+ * Depending on the load of the build vm running this test, the time
+ * this takes will be variable. If the time spikes to above 10
+ * seconds, it is more likely to indicate some sort of bug. On average
+ * this takes 2-3 seconds, during other builds it can take up 6
+ * seconds.
+ */
+
+TEST_F(ProcessManagerTest, Runs100ProcessesInUnder10Seconds)
 {
     try
     {
@@ -90,7 +98,7 @@ TEST_F(ProcessManagerTest, Runs100ProcessesInUnder3Seconds)
             ASSERT_EQ(ProcessFuture::ProcessExited, ph->GetProcessTerminationType());
         }
         Forte::Timespec finish = Forte::MonotonicClock().GetTime();
-        ASSERT_TRUE(finish - start < Forte::Timespec::FromSeconds(3));
+        ASSERT_TRUE(finish - start < Forte::Timespec::FromSeconds(10));
     }
     catch (std::exception& e)
     {

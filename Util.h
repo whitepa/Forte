@@ -51,7 +51,7 @@ inline struct timespec operator - (const struct timespec &a,
 {
     struct timespec result;
     result.tv_sec = a.tv_sec - b.tv_sec;
-    if (a.tv_nsec > b.tv_nsec)
+    if (a.tv_nsec >= b.tv_nsec)
         result.tv_nsec = a.tv_nsec - b.tv_nsec;
     else
     {
