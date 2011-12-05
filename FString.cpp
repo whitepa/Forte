@@ -716,3 +716,24 @@ void FString::OFormat(const FString &format, const std::vector<FString> &paramet
     if (startPos < size)
         append(format, startPos, size - startPos);
 }
+
+FString FString::HexDump() const
+{
+    size_t n = length();
+    FString result;
+    result.reserve(3 * n + 1);
+
+    size_t resultLen = 0;
+    char digit[4];
+
+    for (size_t i=0; i<n; i++, resultLen+=3)
+    {
+        snprintf(digit, 4, "%02X ", at(i));
+        result[resultLen] = digit[0];
+        result[resultLen+1] = digit[1];
+        result[resultLen+2] = digit[2];
+    }
+    result[resultLen] = '\0';
+    return result;
+}
+

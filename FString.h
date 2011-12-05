@@ -372,7 +372,13 @@ namespace Forte
 
         /// Scale Computing's split() and Join(), similar to the above Implode() and Explode()
         std::vector<FString> split(const char *separator, size_t max_parts = 0) const;
-       
+
+        /**
+         * Returns a hex dump of given FString.
+         * eg: FString of "ABz1\02" will return "41 42 7A 31 00 32"
+         */
+        FString HexDump() const;
+
         /**
          *Takes an array of FStrings and generates a brand new FString using the provided 
          *delimiter and returns it to you.  
