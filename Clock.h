@@ -70,10 +70,11 @@ namespace Forte
         }
 
         /**
-         *Adds two Timespec objects together for you.
+         *Adds two Timespec objects together
          **/
         Timespec operator+(const Timespec &other) const;
         Timespec operator-(const Timespec &other) const;
+        bool operator<(const Timespec& other) const;
 
         /**
          *Returns the current value of your Timespec object. 
@@ -229,6 +230,18 @@ namespace Forte
             return Clock::GetTime();
         };
     };
+
+    std::ostream& operator<<(std::ostream& os, const Timespec& obj);
 };
+
+namespace std
+{
+
+    template <>
+    const Forte::Timespec& min (const Forte::Timespec& a, const Forte::Timespec& b);
+
+    template <>
+    const Forte::Timespec& max (const Forte::Timespec& a, const Forte::Timespec& b);
+}
 
 #endif

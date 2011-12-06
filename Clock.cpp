@@ -32,3 +32,35 @@ Timespec Timespec::operator - (const Timespec &other) const
 {
     return Timespec(mTimespec - other.mTimespec);
 }
+
+bool Timespec::operator<(const Timespec& other) const
+{
+    return (mTimespec < other.mTimespec);
+}
+
+namespace Forte
+{
+
+std::ostream& operator<<(std::ostream& os, const Timespec& obj)
+{
+    os << obj.GetString();
+    return os;
+}
+
+}
+
+namespace std
+{
+
+    template <>
+    const Forte::Timespec& min (const Forte::Timespec& a, const Forte::Timespec& b)
+    {
+        return (a < b ? a : b);
+    }
+
+    template <>
+    const Forte::Timespec& max (const Forte::Timespec& a, const Forte::Timespec& b)
+    {
+        return (a < b ? b : a);
+    }
+}
