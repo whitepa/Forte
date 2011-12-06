@@ -15,8 +15,7 @@ class RunLoopTest : public ::testing::Test
 {
 public:
     static void SetUpTestCase() {
-        logManager.SetLogMask("//stdout", HLOG_ALL);
-        logManager.BeginLogging("//stdout");
+        logManager.BeginLogging(__FILE__ ".log", HLOG_ALL);
     }
 };
 
