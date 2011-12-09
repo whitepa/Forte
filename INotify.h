@@ -90,11 +90,18 @@ namespace Forte {
         void RemoveWatch(const int& fd);
 
         /**
+        * Verfies a watch
+        * @param fd  watched file descriptor to check
+        * @return  true if watched, false otherwise
+        */
+        bool IsWatch(const int& fd) const;
+
+        /**
         * Reads an array of events from inotify
-        * @param secs  seconds to wait before timing out the read operation
+        * @param ms  milliseconds to wait before timing out the read operation
         * @return  vector of Events read
         */
-        EventVector Read(const time_t& secs);
+        EventVector Read(const unsigned long& ms);
 
         /**
         * Interrupts the read operation, causing it to return with current Events

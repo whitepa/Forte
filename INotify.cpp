@@ -8,12 +8,9 @@ using namespace Forte;
 using namespace boost;
 using namespace std;
 
-INotify::Event::Event(const inotify_event* event): wd(event->wd), mask(event->mask), cookie(event->cookie)
+INotify::Event::Event(const inotify_event* event)
+    : wd(event->wd), mask(event->mask), cookie(event->cookie), name(event->len ? event->name: "")
 {
-    if(event->len)
-    {
-        name.assign(event->name, strnlen(event->name, event->len-1));
-    }
 }
 
 INotify::INotify(const size_t& maxBufferBytes) : buffer(maxBufferBytes), mNotifyFd(inotify_init())
@@ -51,7 +48,7 @@ INotify::~INotify()
 
         if(watchFd < 0)
         {
-            hlog(HLOG_ERROR, "inotify_rm_watch error: %d", watchFd);
+            hlogstream (HLOG_ERROR, "inotify_rm_watch on " << fd << " with error: " << watchFd);
         }
 
         mWatchFds.erase(fd);
@@ -64,37 +61,63 @@ INotify::~INotify()
 int INotify::AddWatch(const std::string& path, const int& mask)
 {
     AutoUnlockMutex guard(mMutex);
+
     const int watchFd(inotify_add_watch(mNotifyFd, path.c_str(), mask));
 
     if(watchFd < 0)
     {
-        throw EINotifyAddWatchFailed(FStringFC(),"inotify_add_watch error: %d", watchFd);
+        throw EINotifyAddWatchFailed(FStringFC(),"inotify_add_watch error: %d on %s", watchFd, path.c_str());
     }
 
     mWatchFds.insert(watchFd);
+
+    hlogstream (HLOG_DEBUG, "added watch " << watchFd << " on '" << path << "' with mask: " << hex << showbase << mask);
+
     return watchFd;
 }
 
 void INotify::RemoveWatch(const int& fd)
 {
     AutoUnlockMutex guard(mMutex);
+
+    set<int>::iterator i = mWatchFds.find(fd);
+
+    if (i == mWatchFds.end())
+    {
+        throw EINotifyRemoveWatchFailed(FStringFC(),"%d not watched", fd);
+    }
+
     const int watchFd(inotify_rm_watch(mNotifyFd, fd));
 
     if(watchFd < 0)
     {
-        throw EINotifyRemoveWatchFailed(FStringFC(),"inotify_rm_watch error: %d", watchFd);
+        throw EINotifyRemoveWatchFailed(FStringFC(),"inotify_rm_watch error: %d on %d", watchFd, fd);
     }
 
-    mWatchFds.erase(fd);
+    mWatchFds.erase(i);
+
+    hlogstream (HLOG_DEBUG, "removing watch " << fd);
 }
 
-INotify::EventVector INotify::Read(const time_t& secs)
+bool INotify::IsWatch(const int& fd) const
+{
+    return (mWatchFds.find(fd) != mWatchFds.end());
+}
+
+INotify::EventVector INotify::Read(const unsigned long& ms)
 {
     AutoUnlockMutex guard(mMutex);
 
     INotify::EventVector events;
 
-    timeval timeout = {secs,0};
+    timeval timeout = {ms/1000, (ms%1000)*1000};
+
+    if (timeout.tv_usec > 1000000)
+    {
+        timeout.tv_usec -= 1000000;
+        ++timeout.tv_sec;
+    }
+
     fd_set set;
     FD_ZERO (&set);
     FD_SET (mNotifyFd, &set);
@@ -103,18 +126,33 @@ INotify::EventVector INotify::Read(const time_t& secs)
 
     if(numDescriptors > 0)
     {
-        const size_t length(read(mNotifyFd, buffer.data(), buffer.size()));
+        const ssize_t length(read(mNotifyFd, buffer.data(), buffer.size()));
 
-        for (size_t i=0; i < length;)
+        if (length != -1)
         {
-            struct inotify_event *event = (struct inotify_event *) &buffer[i];
-
-            if (event->wd != mKickerWatchFd)
+            for (ssize_t i=0; i < length;)
             {
-                events.push_back(make_shared<Event>(event));
-            }
+                struct inotify_event *event = (struct inotify_event *) &buffer[i];
 
-            i += sizeof(struct inotify_event) + event->len;
+                if (event->wd != mKickerWatchFd)
+                {
+                    events.push_back(make_shared<Event>(event));
+                }
+
+                if (event->mask & IN_IGNORED)
+                {
+                    mWatchFds.erase(event->wd);
+                }
+
+                i += sizeof(struct inotify_event) + event->len;
+            }
+        }
+        else
+        {
+            if (errno != EINTR)
+            {
+                hlogstream (HLOG_ERROR, "read error: " << errno);
+            }
         }
     }
     else if(numDescriptors < 0)

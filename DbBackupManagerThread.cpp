@@ -142,7 +142,7 @@ void* DbBackupManagerThread::run()
             addWatchDbParentDir();
         }
 
-        INotify::EventVector events (mInotify->Read(TIMEOUT_SECS_BEFORE_CHECKING_MODIFICATION_TIME));
+        INotify::EventVector events (mInotify->Read(TIMEOUT_MS_BEFORE_CHECKING_MODIFICATION_TIME));
 
         if(! events.empty())
         {
@@ -169,11 +169,6 @@ void* DbBackupManagerThread::run()
                             addWatchDb();
                         }
                     }
-                    else if(event.mask & IN_IGNORED)
-                    {
-                        kickCount = 0;
-                        resetWatchDbParentDir();
-                    }
                     else
                     {
                         hlogstream(HLOG_DEBUG, "unhandled " << event);
@@ -181,14 +176,14 @@ void* DbBackupManagerThread::run()
                 }
                 else if(event.wd == mDbWatch)
                 {
-                    if(event.mask & (IN_MODIFY | IN_ATTRIB))
-                    {
-                        ++kickCount;
-                    }
-                    else if(event.mask & IN_IGNORED)
+                    if (event.mask & IN_IGNORED)
                     {
                         kickCount = 0;
                         resetWatchDb();
+                    }
+                    else if(event.mask & (IN_MODIFY | IN_ATTRIB))
+                    {
+                        ++kickCount;
                     }
                     else
                     {

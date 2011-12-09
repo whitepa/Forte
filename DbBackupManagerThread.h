@@ -38,7 +38,7 @@ namespace Forte {
 
         enum
         {
-            TIMEOUT_SECS_BEFORE_CHECKING_MODIFICATION_TIME = 1
+            TIMEOUT_MS_BEFORE_CHECKING_MODIFICATION_TIME = 1000
         };
 
     private:
