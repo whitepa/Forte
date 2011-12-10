@@ -244,13 +244,18 @@ void ServerMain::WritePidFile()
 
 void ServerMain::PrepareSigmask()
 {
+    FTRACE;
     sigemptyset(&mSigmask);
     sigaddset(&mSigmask, SIGINT);
     sigaddset(&mSigmask, SIGTERM);
     sigaddset(&mSigmask, SIGHUP);
     sigaddset(&mSigmask, SIGQUIT);
     sigaddset(&mSigmask, SIGALRM);
-    pthread_sigmask(SIG_BLOCK, &mSigmask, NULL);
+
+    if (pthread_sigmask(SIG_BLOCK, &mSigmask, NULL) == -1)
+    {
+        hlog(HLOG_ERR, "Could not set sigmask in ServerMain");
+    }
 }
 
 void ServerMain::Shutdown()

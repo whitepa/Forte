@@ -156,3 +156,48 @@ TEST_F(PDUPeerUnitTest, DataInBufferOverflowTest)
 
     ASSERT_THROW(peer.DataIn(len, (char*) &pdu), EPeerBufferOverflow);
 }
+
+
+TEST_F(PDUPeerUnitTest, ThrowESendFailedOnBrokenPipe)
+{
+    FTRACE;
+
+    try
+    {
+        int fds[2];
+        socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
+        Forte::AutoFD fd1(fds[0]);
+        Forte::AutoFD fd2(fds[1]);
+        Forte::PDUPeerSet set1;
+        Forte::PDUPeerSet set2;
+
+        shared_ptr<PDUPeer> peer1 = set1.PeerCreate(fd1);
+
+        set1.SetupEPoll();
+        set2.SetupEPoll();
+
+        shared_ptr<PDUPeer> peer2 = set2.PeerCreate(fd2);
+
+        PDU pdu, rpdu;
+        size_t len;
+        makeTestPDU(pdu, len);
+
+        peer1->SendPDU(pdu);
+
+        set2.Poll(1000);
+
+        EXPECT_EQ(true, peer2->IsPDUReady());
+        EXPECT_EQ(true, peer2->RecvPDU(rpdu));
+        EXPECT_EQ(0, memcmp(&pdu, &rpdu, sizeof(PDU)));
+
+   close(fds[1]);
+        
+   ASSERT_THROW(peer1->SendPDU(pdu), EPeerSendFailed);
+
+    }
+    catch (Forte::Exception &e)
+    {
+        hlog(HLOG_ERR, "caught exception: %s\n", e.what());
+    }
+}
+

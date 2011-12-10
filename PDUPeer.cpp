@@ -26,9 +26,10 @@ void Forte::PDUPeer::SendPDU(const Forte::PDU &pdu) const
 
     size_t offset = 0;
     const char* buf = reinterpret_cast<const char*>(&pdu);
+    int flags = MSG_NOSIGNAL;
     while (len > 0)
     {
-        int sent = send(mFD, buf+offset, len, 0);
+        int sent = send(mFD, buf+offset, len, flags);
         if (sent < 0)
             throw EPeerSendFailed(FStringFC(), "%s", strerror(errno));
         offset += sent;
