@@ -26,12 +26,14 @@ namespace Forte
         FString GetText() const;
         void Nuke();   // detach and delete this node and all of its subchildren
 
+        inline bool IsValid() const { return mNode != NULL; }
         inline FString GetName() const { return mNode == NULL ? "" : FString((const char*)mNode->name); }
         inline xmlNodePtr GetChildren() const { return mNode == NULL ? NULL : mNode->children; }
         inline xmlNodePtr GetNext() const { return mNode == NULL ? NULL : mNode->next; }
         inline xmlNodePtr GetParent() const { return mNode == NULL ? NULL : mNode->parent; }
         inline operator xmlNodePtr() { return mNode; }
         inline operator const xmlNodePtr() const { return mNode; }
+        inline operator const bool() const { return IsValid(); }
 
      protected:
         friend class XMLDoc;
