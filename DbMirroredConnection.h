@@ -52,6 +52,7 @@ public:
     DbResult Store(const DbSqlStatement& statement);
 
     virtual const std::string& GetDbName() const;
+    virtual const FString& GetCurrentQuery() const;
 
 private:
     bool setActiveSecondary();

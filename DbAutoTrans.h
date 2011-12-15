@@ -22,7 +22,8 @@ namespace Forte
             {
                 if (db.HasPendingQueries())
                 {
-                    hlog(HLOG_ERR, "DbAutoTrans(): new transaction created while queries pending");
+                    hlog(HLOG_ERR, 
+                         "new transaction created while queries pending");
                     db.Commit();
                 }
                 db.AutoCommit(false);

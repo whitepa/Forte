@@ -20,6 +20,7 @@ DbConnection::DbConnection()
     mReconnect = false;
     mQueriesPending = false;
     mAutoCommit = true;
+    mInTransaction = false;
 
     mErrno = 0;
     mTries = 0;
@@ -45,6 +46,7 @@ bool DbConnection::Init(const FString& db, const FString& user, const FString& p
     mPassword = pass;
     mSocket = socket;
     mRetries = retries;
+    mInTransaction = false;
 
     if (Connect())
     {
@@ -147,6 +149,8 @@ void DbConnection::LogSql(const FString &sql, const struct timeval &executionTim
 
 void DbConnection::AutoCommit(bool enabled)
 {
+    FTRACE2("%s", (enabled ? "TRUE" : "FALSE"));
+
     if (mAutoCommit == false && mQueriesPending)
     {
         hlog(HLOG_ERR, "DbConnection::AutoCommit() called with pending queries; committing pending queries");
@@ -160,25 +164,43 @@ void DbConnection::AutoCommit(bool enabled)
 
 void DbConnection::Begin()
 {
-    FTRACE;
+    FTRACE2("%s/begin", mDBName.c_str());
 
-    FString sql;
-    sql.Format("begin");
-    Execute(sql);
+    FString sql("begin");
+    if (!Execute(sql))
+    {
+        FString err(FStringFC(),
+                    "Begin failed: %s", mError.c_str());
+        if (IsTemporaryError())
+            throw DbTempErrorException(err, mErrno);
+        else
+            throw DbException(err, mErrno);
+    }
     mQueriesPending = true;
+    mInTransaction = true;
 }
 
 
 void DbConnection::Commit()
 {
-    FTRACE;
+    FTRACE2("%s/commit", mDBName.c_str());
 
-    FString sql;
+    FString sql("commit");
     if (mAutoCommit == true)
         hlog(HLOG_WARN, "commit() called while autocommit enabled");
-    sql.Format("commit");
-    Execute(sql);
+
+    if (!Execute(sql))
+    {
+        FString err(FStringFC(),
+                    "Commit failed: %s", mError.c_str());
+        if (IsTemporaryError())
+            throw DbTempErrorException(err, mErrno);
+        else
+            throw DbException(err, mErrno);
+    }
+
     mQueriesPending = false;
+    mInTransaction = false;
 }
 
 
@@ -186,12 +208,22 @@ void DbConnection::Rollback()
 {
     FTRACE;
 
-    FString sql;
+    FString sql("rollback");
     if (mAutoCommit == true)
         hlog(HLOG_WARN, "rollback() called while autocommit enabled");
-    sql.Format("rollback");
-    Execute(sql);
-    mQueriesPending = false;    
+
+    if (!Execute(sql))
+    {
+        FString err(FStringFC(),
+                    "Rollback failed: %s", mError.c_str());
+        if (IsTemporaryError())
+            throw DbTempErrorException(err, mErrno);
+        else
+            throw DbException(err, mErrno);
+    }
+
+    mQueriesPending = false;
+    mInTransaction = false;
 }
 
 void DbConnection::BackupDatabase(const FString &targetPath)

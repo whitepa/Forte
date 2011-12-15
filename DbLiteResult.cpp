@@ -39,6 +39,8 @@ DbLiteResult::LiteData::~LiteData()
 
 int DbLiteResult::LiteData::Load(sqlite3_stmt *stmt)
 {
+    const char *sql=sqlite3_sql(stmt);
+    FTRACE2("%s", sql);
     int i, n, err, type;
     Val val;
     Row row;
@@ -50,8 +52,10 @@ int DbLiteResult::LiteData::Load(sqlite3_stmt *stmt)
     n = sqlite3_column_count(stmt);
 
     // run statement
+    hlog(HLOG_DEBUG, "[%s] before step", sql);
     while ((err = sqlite3_step(stmt)) == SQLITE_ROW)
     {
+        hlog(HLOG_DEBUG, "[%s] in loop", sql);
         // init row
         row.clear();
         row.reserve(n);

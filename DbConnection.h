@@ -9,6 +9,8 @@
 #include "AutoMutex.h"
 #include <iostream>
 #include <fstream>
+#include "FTrace.h"
+
 using namespace std;
 
 namespace Forte
@@ -82,6 +84,7 @@ namespace Forte
         virtual DbResult Store(const DbSqlStatement& statement);
 
         virtual const std::string& GetDbName() const;
+        virtual const FString& GetCurrentQuery() const { return mCurrentQuery; }
 
         // db information
         FString mDBType;      // mysql, postgresql, etc.
@@ -90,12 +93,14 @@ namespace Forte
         FString mPassword;
         FString mHost;
         FString mSocket;
+        FString mCurrentQuery;
 
      protected:
         bool mDidInit;
         bool mReconnect;
         bool mQueriesPending;
         bool mAutoCommit;
+        bool mInTransaction;
 
         static ofstream sDebugOutputFile;
         static Mutex sDebugOutputMutex;

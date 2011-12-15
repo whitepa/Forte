@@ -37,6 +37,8 @@ namespace Forte
         const FString& GetDbName() const;
         const FString& GetBackupDbName() const;
         const FString& GetDbType() const;
+        virtual void OutputUsedConnectionStatus();
+
     protected:
         DbConnectionPool() {};
         static auto_ptr<DbConnectionPool> spInstance;

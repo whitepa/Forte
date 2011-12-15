@@ -18,6 +18,7 @@
 #include "LogManager.h"
 #include <boost/cast.hpp>
 #include <boost/scoped_ptr.hpp>
+#include "FTrace.h"
 
 using namespace Forte;
 using namespace boost;
@@ -97,16 +98,21 @@ DbConnection& DbConnectionPool::GetDbConnection() {
     AutoUnlockMutex lock(mPoolMutex);
     DbConnection * pDb;
 
+    FTRACE;
+
+    hlog(HLOG_DEBUG2, "[%s] Free connections=%zu, Used connections=%zu",
+         mDbName.c_str(), mFreeConnections.size(), mUsedConnections.size());
     if (mFreeConnections.size() == 0)
     {
+        hlog(HLOG_DEBUG2, "[%s] Creating new connection", mDbName.c_str());
         auto_ptr<DbConnection> pNewDb(mDbConnectionFactory->create());
         
         if (mDbSock.empty())
         {
             if (!pNewDb->Init(mDbName, mDbUser, mDbPassword, mDbHost)) {
                 FString err;
-                err.Format("Could not initialize database connection: %s",
-                           pNewDb->mError.c_str());
+                err.Format("[%s] Could not initialize database connection: %s",
+                           mDbName.c_str(), pNewDb->mError.c_str());
                 throw EDbConnectionPool(err.c_str());
             }
         }
@@ -114,28 +120,51 @@ DbConnection& DbConnectionPool::GetDbConnection() {
         {
             if (!pNewDb->Init(mDbName, mDbUser, mDbPassword, mDbHost, mDbSock)) {
                 FString err;
-                err.Format("Could not initialize socket database connection: %s",
-                           pNewDb->mError.c_str());
+                err.Format("[%s] Could not initialize socket database connection: %s",
+                           mDbName.c_str(), pNewDb->mError.c_str());
                 throw EDbConnectionPool(err.c_str());
             }
         }
         mUsedConnections.insert(mUsedConnections.end(), pNewDb.get());
         pDb = pNewDb.release();
+        hlog(HLOG_DEBUG2, "[%s] Free connections=%zu, Used connections=%zu",
+             mDbName.c_str(), mFreeConnections.size(), mUsedConnections.size());
     } else {
+        hlog(HLOG_DEBUG2, "[%s] Free connections=%zu, Used connections=%zu",
+             mDbName.c_str(), mFreeConnections.size(), mUsedConnections.size());
         pDb = mFreeConnections.back();
         mUsedConnections.insert(mUsedConnections.end(), pDb);
         mFreeConnections.pop_back();
+        hlog(HLOG_DEBUG2, "[%s] Free connections=%zu, Used connections=%zu",
+             mDbName.c_str(), mFreeConnections.size(), mUsedConnections.size());
     }
+    hlog(HLOG_DEBUG, "Returning connection [%p]", pDb);
     return *pDb;
 }
 
 void DbConnectionPool::ReleaseDbConnection(DbConnection& db)
 {
+    FTRACE;
+
     // make sure the connection has no pending queries
     if (db.HasPendingQueries())
     {
-        hlog(HLOG_ERR, "ReleaseDbConnection(): connection has uncommitted transaction!");
-        db.Rollback();
+        hlog(HLOG_ERR, "[%s] ReleaseDbConnection(): "
+             "connection has uncommitted transaction!", db.GetDbName().c_str());
+        try
+        {
+            db.Rollback();
+        }
+        catch (EDbConnection& e)
+        {
+            hlog(HLOG_ERR, "[%s] Failed to rollback: %s.  Continuing to release." , 
+                 db.GetDbName().c_str(), e.what());
+        }
+        catch (...)
+        {
+            hlog(HLOG_ERR, "[%s] Failed to rollback.  Continuing to release.",
+                 db.GetDbName().c_str());
+        }
     }
     AutoUnlockMutex lock(mPoolMutex);
     
@@ -144,16 +173,25 @@ void DbConnectionPool::ReleaseDbConnection(DbConnection& db)
 
     if(iConnection != mUsedConnections.end())
     {
+        hlog(HLOG_DEBUG2, 
+             "[%s] BEFORE:Free connections=%zu, Used connections=%zu",
+             mDbName.c_str(), mFreeConnections.size(), mUsedConnections.size());
         mFreeConnections.push_back(*iConnection);
         mUsedConnections.erase(iConnection);
-
         if (mFreeConnections.size() > mPoolSize)
         {
             // have too many connections in the pool, delete one
             DbConnection * pOldConnection = mFreeConnections.front();
+
+            hlog(HLOG_DEBUG2, "[%s] Deleting connection %p (%zu > %u)",
+                 mDbName.c_str(), pOldConnection, 
+                 mFreeConnections.size(), mPoolSize);
             mFreeConnections.pop_front();
             delete pOldConnection;
         }
+        hlog(HLOG_DEBUG2, 
+             "[%s] AFTER:Free connections=%zu, Used connections=%zu",
+             mDbName.c_str(), mFreeConnections.size(), mUsedConnections.size());
     }
     else
     {
@@ -174,6 +212,24 @@ const FString& DbConnectionPool::GetBackupDbName() const
 const FString& DbConnectionPool::GetDbType() const
 {
     return mDbType;
+}
+
+void DbConnectionPool::OutputUsedConnectionStatus()
+{
+    FTRACE;
+    AutoUnlockMutex lock(mPoolMutex);
+
+    if (mUsedConnections.size() == 0) return;
+
+    FString stuff("Used Connections:\n");
+
+    foreach (const DbConnection *pConn, mUsedConnections)
+    {
+        FString line(FStringFC(), 
+                     "%p: %s\n", pConn, pConn->GetCurrentQuery().c_str());
+        stuff.append(line);
+    }
+    hlog(HLOG_DEBUG, "%s", stuff.c_str());
 }
 
 #endif

@@ -68,27 +68,39 @@ namespace Forte
     class FunctionEntry
     {
     public:
-        FunctionEntry(const char *functionName, const char *file, int line) : mFN(functionName), mFile(file), mLine(line) {
+        FunctionEntry(const char *functionName, const char *file, int line) : mFN(functionName), mFile(file), mLine(line), mArgumentBuffer(NULL) {
             _hlog(mFN.c_str(), mFile, mLine, HLOG_TRACE, "ENTER");
         }
     
         FunctionEntry(const char *functionName, const char *file, int line, const char*fmt, ...) __attribute__((format(printf, 5, 6))): mFN(functionName), mFile(file), mLine(line) {
-            char buffer[512];
             va_list args;
             va_start(args, fmt);
-            vsnprintf(buffer, sizeof(buffer), fmt, args);
+            mArgumentBuffer = (char *)malloc(512);
+            vsnprintf(mArgumentBuffer, 512, fmt, args);
+
             _hlog(mFN.c_str(), mFile, mLine, 
-                  HLOG_TRACE, "ENTER (%s)", buffer);
+                  HLOG_TRACE, "ENTER (%s)", mArgumentBuffer);
             va_end(args);
         }
 
         virtual ~FunctionEntry() {
-            _hlog(mFN.c_str(), mFile, mLine, HLOG_TRACE, "EXIT");
+            if (mArgumentBuffer)
+            {
+                _hlog(mFN.c_str(), mFile, mLine, HLOG_TRACE, "EXIT (%s)", 
+                      mArgumentBuffer);
+                free(mArgumentBuffer);
+                mArgumentBuffer=NULL;
+            }
+            else
+            {
+                _hlog(mFN.c_str(), mFile, mLine, HLOG_TRACE, "EXIT");
+            }
         }
     protected:
         FString mFN;
         FString mFile;
         int mLine;
+        char *mArgumentBuffer;
     };
 };
 

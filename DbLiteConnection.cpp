@@ -9,6 +9,9 @@
 #include "FileSystem.h"
 #include "Util.h"
 #include "AutoDoUndo.h"
+#include "FTrace.h"
+#include "Clock.h"
+#include "DbConnectionPool.h"
 
 using namespace Forte;
 
@@ -17,6 +20,8 @@ DbLiteConnection::DbLiteConnection(int openFlags)
     DbConnection(),
     mFlags(openFlags)
 {
+    FTRACE2("%i", openFlags);
+
     mDBType = "sqlite";
     mDB = NULL;
 }
@@ -24,7 +29,12 @@ DbLiteConnection::DbLiteConnection(int openFlags)
 
 DbLiteConnection::~DbLiteConnection()
 {
-    Close();
+    FTRACE;
+    if (!Close())
+    {
+        hlog(HLOG_ERR, "[%s] [%p] Failed to close (%i - %s)",
+             mDBName.c_str(), this, mErrno, mError.c_str());
+    }
 }
 
 
@@ -50,6 +60,8 @@ bool DbLiteConnection::Init(const FString& db,
                             const FString& socket,
                             unsigned int retries)
 {
+    FTRACE2("%s,%s,%s,%s,%s,%u", db.c_str(), user.c_str(), pass.c_str(), 
+            host.c_str(), socket.c_str(), retries);
     return DbConnection::Init(db, user, pass, host, socket, retries);
 }
 
@@ -62,6 +74,7 @@ bool DbLiteConnection::Init(const FString& dbPath,
 
 bool DbLiteConnection::Init(struct sqlite3 *db)
 {
+    FTRACE2("<db>");
     mDB = db;
     mDidInit = true;
     mReconnect = false;
@@ -81,6 +94,8 @@ bool DbLiteConnection::Connect()
 
     if (err == SQLITE_OK)
     {
+        hlog(HLOG_DEBUG2, "[%s][%p] sqlite connection open",
+             mDBName.c_str(), mDB);
         sqlite3_busy_timeout(mDB, 1000); // 1 second
         return true;
     }
@@ -102,7 +117,7 @@ bool DbLiteConnection::Connect()
 
 bool DbLiteConnection::Close()
 {
-    hlog(HLOG_TRACE, "closing %s", mDBName.c_str());
+    hlog(HLOG_TRACE, "[%s] closing [%p/%p]", mDBName.c_str(), this, mDB);
 
     if (sqlite3_close(mDB) == SQLITE_OK)
     {
@@ -117,6 +132,8 @@ bool DbLiteConnection::Close()
 
 DbResult DbLiteConnection::Query(const FString& sql)
 {
+    FTRACE2("[%s] %s on [%p/%p]", mDBName.c_str(), sql.c_str(), this, mDB);
+
     unsigned int tries_remaining = mRetries + 1;
     struct timeval tv_start, tv_end;
     DbLiteResult res;
@@ -134,18 +151,23 @@ DbResult DbLiteConnection::Query(const FString& sql)
         setError();
         return res;
     }
-
+    mCurrentQuery = sql;
     if (mAutoCommit == false) mQueriesPending = true;
 
     // while queries remain in the given sql, and we have some tries left...
     while (remain.length() && tries_remaining > 0)
     {
         // prepare statement
+        hlog(HLOG_DEBUG, "[%s] Preparing statement [%s]", mDBName.c_str(),
+             sql.c_str());
         mErrno = sqlite3_prepare_v2(mDB, remain, remain.length(), &stmt, &tail);
         if (stmt == NULL)
         {
-            hlog(HLOG_WARN, "sqlite3_prepare_v2 failed Error was %d", mErrno);
-
+            hlog(HLOG_WARN, "[%s] sqlite3_prepare_v2 failed on [%s]. "
+                 "Error was %d.  Try %d of %d.",
+                 mDBName.c_str(), sql.c_str(), mErrno, 
+                 (mRetries - tries_remaining + 1),
+                 mRetries);
             mTries++;
             switch (mErrno)
             {
@@ -170,6 +192,8 @@ DbResult DbLiteConnection::Query(const FString& sql)
             // run query
             mTries++;
             gettimeofday(&tv_start, NULL);
+            hlog(HLOG_DEBUG, "[%s] Loading query [%s]", mDBName.c_str(),
+                 sql.c_str());
             mErrno = res.Load(stmt);
             gettimeofday(&tv_end, NULL);
             if (sDebugSql) LogSql(remain, tv_end - tv_start);
@@ -178,16 +202,34 @@ DbResult DbLiteConnection::Query(const FString& sql)
             if (mErrno != SQLITE_OK)
             {
                 res.Clear();
+                hlog(HLOG_WARN, "[%s] Load failed on [%s]. "
+                 "Error was %d.  Try %d of %d.",
+                 mDBName.c_str(), sql.c_str(), mErrno, 
+                     (mRetries - tries_remaining + 1),
+                     mRetries);
 
                 switch (mErrno)
                 {
                     //// soft failures, keep retrying:
                 case SQLITE_BUSY:
                 case SQLITE_LOCKED:
-                    sqlite3_reset(stmt);
-                    --tries_remaining;
-                    if (tries_remaining > 0)
-                        usleep(50000); // sleep 50 milliseconds
+                    // according to sqlite logs, if in a transaction
+                    // and a statement fails that is *not* commit
+                    // you must rollback the entire transaction and start over
+                    if (mInTransaction && (sql != "commit"))
+                    {
+                        hlog(HLOG_DEBUG, 
+                             "[%s] In a transaction. [%s] will be rolled back",
+                             mDBName.c_str(), sql.c_str());
+                        tries_remaining=0;
+                    }
+                    else
+                    {
+                        //sqlite3_reset(stmt);
+                        --tries_remaining;
+                        if (tries_remaining > 0)
+                            usleep(50000); // sleep 50 milliseconds
+                    }
                     break;
 
                     //// hard failures, just fail immediately:
@@ -218,7 +260,6 @@ DbResult DbLiteConnection::Query(const FString& sql)
 
     return res;
 }
-
 
 bool DbLiteConnection::Execute(const FString& sql)
 {
@@ -260,6 +301,7 @@ FString DbLiteConnection::Escape(const char *str)
 
 void DbLiteConnection::BackupDatabase(const FString &targetPath)
 {
+    FTRACE2("'%s' -> '%s'", mDBName.c_str(), targetPath.c_str());
     typedef AutoDoUndo<void, void> BackupOperation;
     BackupOperation op(boost::bind(&::DbLiteConnection::backupDatabase, this, targetPath),
                        boost::bind(&::DbLiteConnection::removeTmpBackup, this, targetPath));
@@ -267,12 +309,16 @@ void DbLiteConnection::BackupDatabase(const FString &targetPath)
 
 void DbLiteConnection::removeTmpBackup(const FString &targetPath)
 {
+    FTRACE2("%s", targetPath.c_str());
+
     try
     {
         FileSystem fs;
         const FString tmpTargetPath(getTmpBackupPath(targetPath));
         if(fs.FileExists(tmpTargetPath))
         {
+            hlog(HLOG_DEBUG, "Removing temporary backup file '%s'", 
+                 tmpTargetPath.c_str());
             fs.Unlink(tmpTargetPath);
         }
     }
@@ -287,6 +333,7 @@ FString DbLiteConnection::getTmpBackupPath(const FString& targetPath) const
     FileSystem fs;
     FString tmpTargetPath(targetPath);
     tmpTargetPath += ".tmp";
+    hlog(HLOG_DEBUG, "'%s' -> '%s'", targetPath.c_str(), tmpTargetPath.c_str());
     return tmpTargetPath;
 }
 
@@ -310,36 +357,31 @@ void DbLiteConnection::backupDatabase(const FString &targetPath)
     sqlite3_backup *pBackup;
     pBackup = sqlite3_backup_init(dbTarget.mDB, "main", mDB, "main");
     if (!pBackup)
-        throw EDbLiteBackupFailed();
+    {
+        hlog_and_throw(HLOG_WARN, EDbLiteBackupFailed());
+    }
 
-    /* Each iteration of this loop copies 5 database pages from database
-    ** pDb to the backup database. If the return value of backup_step()
-    ** indicates that there are still further pages to copy, sleep for
-    ** 250 ms before repeating. */
     int rc;
     do {
         rc = sqlite3_backup_step(pBackup, 5);
-        // xProgress(
-        //     sqlite3_backup_remaining(pBackup),
-        //     sqlite3_backup_pagecount(pBackup)
-        //     );
-        // if( rc==SQLITE_OK || rc==SQLITE_BUSY || rc==SQLITE_LOCKED ){
-        //     sqlite3_sleep(250);
-        // }
     } while( rc==SQLITE_OK || rc==SQLITE_BUSY || rc==SQLITE_LOCKED );
 
     if(rc != SQLITE_DONE)
     {
-        throw EDbLiteBackupFailed();
+        hlog_and_throw(HLOG_WARN, EDbLiteBackupFailed());
     }
 
     /* Release resources allocated by backup_init(). */
     if(sqlite3_backup_finish(pBackup) != SQLITE_OK)
     {
-        hlog(HLOG_ERROR, "failed to finish backup to %s", tmpTargetPath.c_str());
+        hlog(HLOG_ERROR, "failed to finish backup to %s", 
+             tmpTargetPath.c_str());
     }
 
+    // @TODO: these file system objects should be passed in
     FileSystem fs;
+    hlog(HLOG_DEBUG, "Renaming '%s' to '%s'", tmpTargetPath.c_str(),
+         targetPath.c_str());
     fs.Rename(tmpTargetPath, targetPath);
 }
 
@@ -352,7 +394,6 @@ uint64_t DbLiteConnection::AffectedRows()
 {
     return sqlite3_changes(mDB);
 }
-
 
 #endif
 #endif

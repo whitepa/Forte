@@ -1,6 +1,7 @@
 #include <DbMirroredConnectionFactory.h>
 #include <DbMirroredConnection.h>
 #include <boost/shared_ptr.hpp>
+#include "FTrace.h"
 
 using namespace Forte;
 using namespace boost;
@@ -16,5 +17,6 @@ DbMirroredConnectionFactory::DbMirroredConnectionFactory(shared_ptr<DbConnection
 
 DbConnection* DbMirroredConnectionFactory::DbMirroredConnectionFactory::create()
 {
+    FTRACE;
     return new DbMirroredConnection(mPrimaryDbConnectionFactory, mSecondaryDbConnectionFactory, mAltDbName);
 }

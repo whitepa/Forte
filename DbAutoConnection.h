@@ -8,6 +8,7 @@
 #include "DbConnectionPool.h"
 #include "LogManager.h"
 #include "Object.h"
+#include "FTrace.h"
 
 namespace Forte
 {
@@ -27,6 +28,7 @@ namespace Forte
             : mPoolPtr(poolPtr), 
               mDbConnection(mPoolPtr->GetDbConnection())
             {
+                FTRACE2("-,%s", (autocommit ? "TRUE" : "FALSE"));
                 // set autocommit appropriately
                 AutoCommit(autocommit);
             }
@@ -47,11 +49,17 @@ namespace Forte
             try {
                 if (mDbConnection.HasPendingQueries())
                 {
-                    hlog(HLOG_WARN, "rolling back pending queries on connection");
+                    hlog(HLOG_WARN, "queries pending. rolling back");
                     Rollback();
                 }
+            } catch (...) {
+                hlog(HLOG_ERR, "Failed to rollback");
+            }
+            try
+            {
                 mPoolPtr->ReleaseDbConnection(mDbConnection);
             } catch (...) {
+                hlog(HLOG_ERR, "Failed to release database connection");
             }
         }
 

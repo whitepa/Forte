@@ -7,6 +7,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string.hpp>
 #include <sys/inotify.h>
+#include "FTrace.h"
 
 #include <boost/filesystem/path.hpp>
 
@@ -89,6 +90,7 @@ timespec DbBackupManagerThread::getModificationTime() const
 
 void DbBackupManagerThread::backupDb()
 {
+    FTRACE;
     try
     {
         DbAutoConnection connection(mPool);
