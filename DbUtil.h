@@ -18,8 +18,7 @@ namespace Forte
 
         static inline DbResult DbStore(const char *func, DbConnection &db, const char* sql)
         {
-
-            if (db.mLogQueries) hlog(HLOG_DEBUG, "Executing sql [%s]", sql);
+            hlog(HLOG_SQL, "[%s] Executing sql [%s]", db.mDBName.c_str(), sql);
 
             DbResult result;
             if (!(result = db.Store(sql)))
@@ -41,7 +40,7 @@ namespace Forte
 
         static inline DbResult DbUse(const char *func, DbConnection &db, const char* sql)
         {
-            if (db.mLogQueries) hlog(HLOG_DEBUG, "Executing sql [%s]", sql);
+            hlog(HLOG_SQL, "[%s] Executing sql [%s]", db.mDBName.c_str(), sql);
             DbResult result;
             if (!(result = db.Use(sql)))
             {
@@ -62,7 +61,7 @@ namespace Forte
 
         static inline void DbExecute(const char *func, DbConnection &db, const char* sql)
         {
-            if (db.mLogQueries) hlog(HLOG_DEBUG, "Executing sql [%s]", sql);
+            hlog(HLOG_SQL, "[%s] Executing sql [%s]", db.mDBName.c_str(), sql);
 
             if (!db.Execute(sql))
             {
@@ -82,8 +81,8 @@ namespace Forte
 
         static inline DbResult DbStore(const char *func, DbConnection &db, const DbSqlStatement& sql)
         {
-
-            if (db.mLogQueries) hlog(HLOG_DEBUG, "Executing sql [%s]", sql.GetStatement().c_str());
+            hlog(HLOG_SQL, "[%s] Executing sql [%s]", db.mDBName.c_str(), 
+                 sql.GetStatement().c_str());
 
             DbResult result;
             if (!(result = db.Store(sql)))
@@ -105,7 +104,9 @@ namespace Forte
 
         static inline DbResult DbUse(const char *func, DbConnection &db, const DbSqlStatement& sql)
         {
-            if (db.mLogQueries) hlog(HLOG_DEBUG, "Executing sql [%s]", sql.GetStatement().c_str());
+            hlog(HLOG_SQL, "[%s] Executing sql [%s]", db.mDBName.c_str(), 
+                 sql.GetStatement().c_str());
+
             DbResult result;
             if (!(result = db.Use(sql)))
             {
@@ -126,7 +127,8 @@ namespace Forte
 
         static inline void DbExecute(const char *func, DbConnection &db, const DbSqlStatement& sql)
         {
-            if (db.mLogQueries) hlog(HLOG_DEBUG, "Executing sql [%s]", sql.GetStatement().c_str());
+            hlog(HLOG_SQL, "[%s] Executing sql [%s]", db.mDBName.c_str(), 
+                 sql.GetStatement().c_str());
 
             if (!db.Execute(sql))
             {

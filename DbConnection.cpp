@@ -20,7 +20,6 @@ DbConnection::DbConnection()
     mReconnect = false;
     mQueriesPending = false;
     mAutoCommit = true;
-    mLogQueries = false;
 
     mErrno = 0;
     mTries = 0;

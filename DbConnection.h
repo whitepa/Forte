@@ -65,12 +65,6 @@ namespace Forte
         static void DebugFile(const char *filename);
         void LogSql(const FString &sql, const struct timeval &executionTime);
 
-        bool mLogQueries;     // flag to turn (hlog) logging on/off on
-        // the fly (should be used when temporary
-        // logging is needed, auto connection will
-        // turn this off when released)
-        inline void LogQueries(bool log) { mLogQueries = log; }
-
         // error information
         FString mError;        // last database error
         unsigned int mErrno;   // last database error code

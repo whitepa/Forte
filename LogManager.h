@@ -19,6 +19,7 @@
 #include <boost/throw_exception.hpp>
 
 #define HLOG_NONE        0x00000000
+#define HLOG_SQL         0x00000400
 #define HLOG_TRACE       0x00000800
 #define HLOG_DEBUG4      0x00001000
 #define HLOG_DEBUG3      0x00002000
@@ -35,7 +36,7 @@
 #define HLOG_ALL         0x00FFFFFF
 #define HLOG_NODEBUG     0x00FE0000
 
-#define HLOG_MIN         HLOG_TRACE
+#define HLOG_MIN         HLOG_SQL
 #define HLOG_MAX         HLOG_EMERG
 #define HLOG_WARNING     HLOG_WARN
 #define HLOG_ERROR       HLOG_ERR

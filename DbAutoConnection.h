@@ -44,8 +44,6 @@ namespace Forte
 
     public:
         virtual ~DbAutoConnection() {
-            // turn off temporary logging
-            LogQueries(false);
             try {
                 if (mDbConnection.HasPendingQueries())
                 {
@@ -69,10 +67,7 @@ namespace Forte
         inline void Rollback(void) {
             mDbConnection.Rollback();
         };
-        inline void LogQueries(bool log) {
-            mDbConnection.LogQueries(log);
-        }
-    
+
         // Cast operator
         inline operator DbConnection* () const {
             return &mDbConnection;
