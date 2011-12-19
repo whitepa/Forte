@@ -144,7 +144,7 @@ DbResult DbLiteConnection::Query(const FString& sql)
         mErrno = sqlite3_prepare_v2(mDB, remain, remain.length(), &stmt, &tail);
         if (stmt == NULL)
         {
-            hlog(HLOG_INFO, "sqlite3_prepare_v2 failed Error was %d", mErrno);
+            hlog(HLOG_WARN, "sqlite3_prepare_v2 failed Error was %d", mErrno);
 
             mTries++;
             switch (mErrno)
