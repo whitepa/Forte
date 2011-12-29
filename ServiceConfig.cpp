@@ -129,6 +129,8 @@ int ServiceConfig::GetInteger(const char *key)
     }
     catch (boost::property_tree::ptree_error &e)
     {
+        hlog(HLOG_ERR, "error getting key %s : %s",
+             key, e.what());
         boost::throw_exception(EServiceConfigNoKey(key));
     }
 }
