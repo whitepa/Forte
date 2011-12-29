@@ -156,11 +156,11 @@ void ServerMain::initLogging()
     }
     catch (EServiceConfigNoKey& e)
     {
-        hlog(HLOG_WARN, "No special levels in config file: %s", e.what());
+        hlog(HLOG_DEBUG, "No special levels in config file: %s", e.what());
     }
     catch (...)
     {
-        hlog(HLOG_ERR, "Caught unknown error");
+        hlog(HLOG_ERR, "Unknown error occurred while looking up special log levels");
         throw;
     }
 
