@@ -25,8 +25,8 @@ void Forte::RunLoop::AddTimer(const shared_ptr<Timer> &timer)
     // schedule it
     MonotonicClock mc;
     mSchedule.insert(RunLoopScheduleItem(timer, mc.GetTime() + timer->GetInterval()));
-    hlog(HLOG_DEBUG, "scheduled timer (now=%ld interval=%ld.%llu)", 
-         mc.GetTime().AsSeconds(), timer->GetInterval().AsSeconds(), 
+    hlog(HLOG_DEBUG, "scheduled timer (now=%ld interval=%ld.%llu)",
+         mc.GetTime().AsSeconds(), timer->GetInterval().AsSeconds(),
          timer->GetInterval().AsMillisec() % 1000);
     // notify the run loop thread
     Notify();
@@ -42,7 +42,7 @@ void * Forte::RunLoop::run(void)
 {
     mThreadName.Format("runloop-%s-%u", mName.c_str(), GetThreadID());
     hlog(HLOG_DEBUG, "runloop starting");
-    MonotonicClock mc; 
+    MonotonicClock mc;
     std::multiset<RunLoopScheduleItem>::iterator i;
     AutoUnlockMutex lock(mLock);
     bool warned = false;
@@ -75,7 +75,7 @@ void * Forte::RunLoop::run(void)
                 latency = fireLatency;
             else
                 latency = schedLatency;
-            
+
             if (!warned && latency.AsMillisec() > 100)
             {
                 hlog(HLOG_WARN, "run loop has high latency (%lld ms)",
@@ -100,7 +100,7 @@ void * Forte::RunLoop::run(void)
                 }
                 catch (std::exception &e)
                 {
-                    hlog(HLOG_ERR, "exception in timer callback: %s",
+                    hlog(HLOG_WARN, "exception in timer callback: %s",
                          e.what());
                 }
             }
