@@ -39,14 +39,20 @@ void PidFile::Create(unsigned int pid)
     hlog(HLOG_DEBUG, "Pid file (%s) created with pid %u.", mPath.c_str(), pid);
 }
 
+void PidFile::Delete(void)
+{
+    FTRACE;
+    // delete the pidfile
+    hlog(HLOG_DEBUG, "deleting pidfile");
+    mFileSystem->Unlink(mPath);
+}
+
 PidFile::~PidFile()
 {
     FTRACE;
     if (mShouldDeleteWhenObjectDestroyed)
     {
-        // delete the pidfile
-        hlog(HLOG_DEBUG, "deleting pidfile");
-        mFileSystem->Unlink(mPath);
+        Delete();
     }
 }
 

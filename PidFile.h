@@ -40,6 +40,11 @@ namespace Forte
          */
         void Create(unsigned int pid=0);
 
+        /*
+         * Deletes the PID file
+         */
+        void Delete(void);
+
     protected:
         FString mPath;
         FileSystemPtr mFileSystem;

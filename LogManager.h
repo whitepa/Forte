@@ -60,6 +60,7 @@ namespace Forte
         FString mFunction;
         FString mFile;
         int mLine;
+        int mPID;
         struct in_addr mClient;
         FString mPrefix;
         FString mMsg;

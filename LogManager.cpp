@@ -113,7 +113,7 @@ FString Logfile::FormatMsg(const LogMsg &msg)
     levelstr = GetLevelStr(msg.mLevel);
     localtime_r(&(msg.mTime.tv_sec), &lt);
 
-    FString thread(FStringFC(), "[%s]",(msg.mThread) ? msg.mThread->mThreadName.c_str() : "unknown");
+    FString thread(FStringFC(), "[%d%s%s]", msg.mPID, (msg.mThread ?  "-" : ""), (msg.mThread ? msg.mThread->mThreadName.c_str() : ""));
     int padT = 25-thread.size();
     if (padT<0) padT=0;
     thread.append(padT,' ');
@@ -176,9 +176,11 @@ FString SysLogfile::FormatMsg(const LogMsg &msg)
 {
     FString levelstr, formattedMsg;
     levelstr = GetLevelStr(msg.mLevel);
-    formattedMsg.Format("%s [%s] %s\n",
+    formattedMsg.Format("%s [%d%s%s] %s\n",
                         levelstr.c_str(),
-                        (msg.mThread) ? msg.mThread->mThreadName.c_str() : "unknown",
+                        msg.mPID,
+                        msg.mThread ? "-" : "",
+                        msg.mThread ? msg.mThread->mThreadName.c_str() : "",
                         msg.mMsg.c_str());
     return formattedMsg;
 }
@@ -187,7 +189,9 @@ FString SysLogfile::FormatMsg(const LogMsg &msg)
 // LogMsg
 LogMsg::LogMsg() :
     mThread(NULL)
-{}
+{
+    mPID = getpid();
+}
 
 // LogThreadInfo
 LogThreadInfo::LogThreadInfo(Thread &thr) : mThread(thr)
