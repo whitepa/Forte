@@ -58,6 +58,7 @@ namespace Forte
         set<DbConnection*> mUsedConnections;
         boost::shared_ptr<DbConnectionFactory> mDbConnectionFactory;
     };
+    typedef boost::shared_ptr<DbConnectionPool> DbConnectionPoolPtr;
 };
 #endif
 #endif
