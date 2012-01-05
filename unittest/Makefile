@@ -71,7 +71,8 @@ GSRCS = ActiveObjectUnitTest.cpp \
 	PDUPeerUnitTest.cpp \
 	ProcessManagerUnitTest.cpp \
 	RunLoopUnitTest.cpp \
-	SCSIUtilUnitTest.cpp
+	SCSIUtilUnitTest.cpp \
+	StateMachineDoIntervalUnitTest.cpp \
 
 GPROGS = $(GSRCS:%.cpp=$(TARGETDIR)/%)
 BPROGS = $(BSRCS:%.cpp=$(TARGETDIR)/%)
@@ -138,6 +139,8 @@ $(TARGETDIR)/ActiveObjectUnitTest: ActiveObjectUnitTest.cpp $(FORTE)
 $(TARGETDIR)/RunLoopUnitTest: RunLoopUnitTest.cpp $(FORTE)
 
 $(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp $(FORTE)
+
+$(TARGETDIR)/StateMachineDoIntervalUnitTest: StateMachineDoIntervalUnitTest.cpp $(FORTE)
 
 $(TARGETDIR)/CheckedValueStoreUnitTest: CheckedValueStoreUnitTest.cpp ../$(TARGETDIR)/CheckedValueStore.o 
 
