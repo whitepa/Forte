@@ -11,6 +11,7 @@
 #include "DbSqlStatement.h"
 #include "DbAutoConnection.h"
 #include "DbBackupManagerThread.h"
+#include "FTrace.h"
 
 using namespace Forte;
 using namespace boost;
@@ -160,7 +161,7 @@ public: // drawback, bind requires these be public
         executeCommand("/etc/init.d/monit stop");
         executeCommand("/etc/init.d/scaled stop");
         executeCommand("/etc/init.d/screpld stop");
-        executeCommand("/etc/init.d/gpfs stop");
+        executeCommand("/usr/lpp/mmfs/bin/mmshutdown");
 
         waitMountsDown();
 
@@ -215,11 +216,13 @@ public: // drawback, bind requires these be public
 
     void mountDatabase()
     {
+        FTRACE;
+
         FileSystem fs;
 
         ASSERT_FALSE(fs.FileExists(getDatabaseName())) << getDatabaseName();
 
-        executeCommand("/etc/init.d/gpfs start");
+        executeCommand("/usr/lpp/mmfs/bin/mmstartup");
         executeCommand("/etc/init.d/screpld start");
         executeCommand("/etc/init.d/scaled start");
         executeCommand("/etc/init.d/monit start");
@@ -244,7 +247,14 @@ public: // drawback, bind requires these be public
         }
         else if (!output.empty())
         {
-            hlog(HLOG_INFO, "Command %s succeeded with output (%s)", output.c_str());
+            hlog(HLOG_INFO, "Command %s succeeded with output (%s)", 
+                 cmd.c_str(), 
+                 output.c_str());
+        }
+        else
+        {
+            hlog(HLOG_INFO, "Command %s succeeded with no output", 
+                 cmd.c_str());
         }
 
         return ret;
@@ -263,6 +273,8 @@ public: // drawback, bind requires these be public
 
 TEST_F(DbMirroredConnectionTest, SqliteBackupDatabaseTest)
 {
+    FTRACE;
+
     const size_t rows = PopulateData();
     DbConnectionPool pool("sqlite_mirrored", getDatabaseName());
     DbConnection& dbConnection(pool.GetDbConnection());
@@ -272,6 +284,8 @@ TEST_F(DbMirroredConnectionTest, SqliteBackupDatabaseTest)
 
 TEST_F(DbMirroredConnectionTest, SqliteManualFailoverManualBackupDatabaseTest)
 {
+    FTRACE;
+
     const size_t rows = PopulateData();
 
     {
@@ -294,6 +308,8 @@ TEST_F(DbMirroredConnectionTest, SqliteManualFailoverManualBackupDatabaseTest)
 
 TEST_F(DbMirroredConnectionTest, SqliteAutoFailoverAutoBackupDatabaseTest)
 {
+    FTRACE;
+
     size_t rows(0);
     shared_ptr<DbConnectionPool> pool (make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
 
@@ -314,6 +330,8 @@ TEST_F(DbMirroredConnectionTest, SqliteAutoFailoverAutoBackupDatabaseTest)
 
 TEST_F(DbMirroredConnectionTest, SqliteFailedGPFSManualBackupDatabaseTest)
 {
+    FTRACE;
+
     const size_t rows = PopulateData();
     DbConnectionPool pool("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName());
 
@@ -338,6 +356,8 @@ TEST_F(DbMirroredConnectionTest, SqliteFailedGPFSManualBackupDatabaseTest)
 
 TEST_F(DbMirroredConnectionTest, SqliteFailedGPFSAutoBackupDatabaseTest)
 {
+    FTRACE;
+
     size_t rows(0);
     shared_ptr<DbConnectionPool> pool (make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
 
@@ -360,6 +380,8 @@ TEST_F(DbMirroredConnectionTest, SqliteFailedGPFSAutoBackupDatabaseTest)
 
 TEST_F(DbMirroredConnectionTest, SqliteFailedGPFSPrimaryDbUnderHotDbConnectionDatabaseTest)
 {
+    FTRACE;
+
     size_t rows(0);
     shared_ptr<DbConnectionPool> pool (make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
     DbResult resAfterUnmount;
