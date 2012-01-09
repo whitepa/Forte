@@ -51,7 +51,7 @@ namespace Forte
         DbResult& operator =(Data *data);
 
         // helpers
-        void Clear();
+        virtual void Clear();
 
         // delegated members, a.k.a. the interface
         inline operator bool() const  { return (mData != NULL) && mData->IsOkay(); }

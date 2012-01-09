@@ -46,6 +46,7 @@ namespace Forte
 
     public:
         virtual ~DbAutoConnection() {
+            FTRACE;
             try {
                 if (mDbConnection.HasPendingQueries())
                 {

@@ -29,7 +29,7 @@ using namespace DBC;
 
 %token ALL AUTO_INCREMENT BIGINT BINARY BLOB BOOLEAN BT_STRING BY 
 %token CHAR CHARSET CREATE COUNT DATABASE DEFAULT DROP
-%token ENGINE EXISTS GRANT IDENTIFIED IF INSERT INT INTO KEY 
+%token ENGINE EXISTS GRANT IDENTIFIED IF INDEX INSERT INT INTO KEY 
 %token LONGTEXT NULL_TOK ON TABLE TEXT TINYINT TO PRIMARY
 %token PRIVILEGES REPLACE SET UNIQUE UNSIGNED USE VALUES VARBINARY VARCHAR
 
@@ -127,6 +127,7 @@ fk_opt:
 create:  CREATE TABLE opt_if_not_exists table_def 
            { PC().mTables.push_back($4); }
        | CREATE DATABASE db_ident
+       | CREATE INDEX opt_if_not_exists index_def 
        ;
 
 drop:  DROP TABLE opt_if_exists table_ident ;
@@ -187,6 +188,10 @@ table_ident:
         ident
       | db_ident '.' table_ident ;
 
+index_ident:
+        ident
+      | db_ident '.' index_ident ;
+
 wildcard_table_ident: 
         ident
       | db_ident '.' table_ident 
@@ -221,6 +226,9 @@ table_def:
            { 
                $$ = NEWOBJ(Table(TC(FString,$1), $3));
            };
+
+index_def:
+        index_ident ON table_ident '(' column_list ')'
 
 opt_table_engine:
         | ENGINE EQ IDENT ;

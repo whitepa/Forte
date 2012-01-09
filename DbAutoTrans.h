@@ -42,7 +42,15 @@ namespace Forte
             } catch (...) {
                 hlog(HLOG_ERR, "DbAutoTrans(): exception during rollback");
             }
-            db.AutoCommit(true);
+
+            try
+            {
+                db.AutoCommit(true);
+            }
+            catch (...)
+            {
+                hlog(HLOG_ERR, "Exception during AutoCommit");
+            }
         }
         
     protected:

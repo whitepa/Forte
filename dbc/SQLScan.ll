@@ -53,6 +53,7 @@ EXISTS        { return EXISTS; }
 GRANT         { return GRANT; }
 IDENTIFIED    { return IDENTIFIED; }
 IF            { return IF; }
+INDEX         { return INDEX; }
 INSERT        { return INSERT; }
 INT           { return INT; }
 INTEGER       { return INT; }
