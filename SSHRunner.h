@@ -79,7 +79,7 @@ namespace Forte
 
         LIBSSH2_SESSION *mSession;
         int mSocket;
-        char mIPAddress[256];
+        FString mIPAddress;
         int mPort;
 
         int createSocketAndConnect(const char *ipAddress, int portNumber); 

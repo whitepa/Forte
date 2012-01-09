@@ -152,7 +152,7 @@ int SSHRunner::Run(
         FString stmp(FStringFC(), 
                      "Could not open communication channel for executing "
                      "remote command [%s] on %s:%d.", 
-                     command.c_str(), mIPAddress, mPort);
+                     command.c_str(), mIPAddress.c_str(), mPort);
         hlog(HLOG_ERR, "%s", stmp.c_str());
         throw ERunError(stmp);
     }
@@ -162,7 +162,7 @@ int SSHRunner::Run(
     {
         FString stmp(FStringFC(), 
                      "Failed to run command [%s] on %s:%d (err=%s)", 
-                     command.c_str(), mIPAddress, mPort, 
+                     command.c_str(), mIPAddress.c_str(), mPort, 
                      getErrorString().c_str());
         hlog(HLOG_ERR, "%s", stmp.c_str());
         libssh2_channel_free(channel);
@@ -237,7 +237,7 @@ void SSHRunner::GetFile(const FString &remotePath, const FString &localPath)
     {
         FString stmp(FStringFC(), 
                      "Could not open communication channel for SCP of file "
-                     "[%s] on %s:%d.", remotePath.c_str(), mIPAddress, mPort);
+                     "[%s] on %s:%d.", remotePath.c_str(), mIPAddress.c_str(), mPort);
         hlog(HLOG_ERR, "%s", stmp.c_str());
         fd.Close();
         ::unlink(localPath.c_str());
@@ -286,8 +286,8 @@ void SSHRunner::GetFile(const FString &remotePath, const FString &localPath)
             {
                 FString err(FStringFC(), 
                             "Failed to SCP read file [%s] from %s/%d (err=%s)", 
-                             remotePath.c_str(), mIPAddress, mPort, 
-                             getErrorString().c_str());
+                            remotePath.c_str(), mIPAddress.c_str(), mPort, 
+                            getErrorString().c_str());
                 hlog(HLOG_ERR, "%s", err.c_str());
                 fd.Close();
                 ::unlink(localPath.c_str());
@@ -298,7 +298,7 @@ void SSHRunner::GetFile(const FString &remotePath, const FString &localPath)
             else
             {
                 hlog(HLOG_WARN, "Got LIBSSH2_ERROR_EAGAIN during read of [%s] from %s/%d", 
-                                 remotePath.c_str(), mIPAddress, mPort);
+                     remotePath.c_str(), mIPAddress.c_str(), mPort);
                 rc = 0;
             }
         }
@@ -374,7 +374,7 @@ int SSHRunner::createSocketAndConnect(
         throw ESocketError(stmp);
     }
 
-    strncpy(mIPAddress, ipAddress, strlen(ipAddress));
+    mIPAddress = ipAddress;
     mPort = portNumber;
 
     return sock;
