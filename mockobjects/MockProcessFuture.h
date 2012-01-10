@@ -19,6 +19,8 @@ namespace Forte
 {
     EXCEPTION_SUBCLASS2(EUnimplemented, EMockProcessFutureUnimplemented,
                         "Method not implemented by MockProcessManager");
+    EXCEPTION_SUBCLASS2(EUnimplemented, EMockProcessFutureCancelUnimplemented,
+                        "Method not implemented by MockProcessManager");
 
     /**
      * A handle to a process managed by ProcessManager
@@ -187,7 +189,7 @@ namespace Forte
          * 
          * @throw EProcessFutureNotRunning
          */
-        virtual void Cancel() { Signal(15); }
+        virtual void Cancel() { throw EMockProcessFutureCancelUnimplemented(); }
 
         /**
          * GetMonitorPID() returns the pid for the monitor
