@@ -69,8 +69,7 @@ namespace Forte
         StrStrMap mSymLinksCreated;
         
         void Unlink(const FString& path, bool unlink_children = false,
-                    progress_callback_t progress_callback = NULL,
-                    void *callback_data = NULL);
+                    const ProgressCallback &progressCallback = ProgressCallback());
         map<FString, bool> mFilesUnlinked;
         bool FileWasUnlinked(const FString& path);
         void ClearFilesUnlinked();

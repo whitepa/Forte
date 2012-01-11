@@ -13,7 +13,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <dirent.h>
-
+#include <boost/function.hpp>
 
 namespace Forte
 {
@@ -33,7 +33,7 @@ namespace Forte
 
         // types
         typedef std::map<ino_t, std::string> InodeMap;
-        typedef void (*progress_callback_t)(uint64_t, void*);
+        typedef boost::function<void (uint64_t)> ProgressCallback;
 
         // interface
         virtual FString Basename(const FString& filename,
@@ -51,6 +51,7 @@ namespace Forte
                                  std::vector<Forte::FString> &children,
                                  bool recurse = false,
                                  bool includePathInChildNames = true) const;
+        uint64_t CountChildren(const FString& path, bool recurse) const;
         virtual int LStat(const FString& path, struct stat *st);
         virtual int StatAt(int dir_fd, const FString& path, struct stat *st);
         virtual int LStatAt(int dir_fd, const FString& path, struct stat *st);
@@ -65,8 +66,7 @@ namespace Forte
          * \ref unlinkHelper
          **/
         virtual void Unlink(const FString& path, bool unlink_children = false,
-                            progress_callback_t progress_callback = NULL,
-                            void *callback_data = NULL);
+                const ProgressCallback &progressCallback = ProgressCallback());
 
         virtual void UnlinkAt(int dir_fd, const FString& path);
         virtual void Rename(const FString& from, const FString& to);
@@ -111,13 +111,11 @@ namespace Forte
 
         /// deep_copy copies a directory tree from 'source' to 'dest'.
         virtual void DeepCopy(const FString& source, const FString& dest, 
-                              progress_callback_t progress_callback = NULL,
-                              void *callback_data = NULL);
+                const ProgressCallback &progressCallback = ProgressCallback());
 
 
         virtual void Copy(const FString& from_path, const FString& to_path,
-                          progress_callback_t progress_callback = NULL,
-                          void *callback_data = NULL);
+                          const ProgressCallback &progressCallback = ProgressCallback());
         // error messages
         virtual FString StrError(int err /*errno*/) const;
     protected:
@@ -128,8 +126,7 @@ namespace Forte
                                 const struct stat& st,
                                 InodeMap &inode_map/*IN-OUT*/, 
                                 uint64_t &size_copied/*IN-OUT*/,
-                                progress_callback_t progress_callback = NULL,
-                                void *callback_data = NULL);
+                                const ProgressCallback &progressCallback = ProgressCallback());
 
         virtual void deepCopyHelper(
             const FString& source, 
@@ -137,9 +134,7 @@ namespace Forte
             const FString& dir, 
             InodeMap &inode_map, 
             uint64_t &size_copied,
-            progress_callback_t progress_callback = NULL,
-            void *callback_data = NULL);
-
+            const ProgressCallback &progressCallback = ProgressCallback());
 
         /**
          * unlink just one path (no recursion)

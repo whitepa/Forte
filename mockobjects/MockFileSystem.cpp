@@ -375,8 +375,7 @@ bool MockFileSystem::SymLinkWasCreated(const FString& from, const FString& to)
 }
 
 void MockFileSystem::Unlink(const FString& path, bool unlink_children,
-                    progress_callback_t progress_callback,
-                    void *callback_data)
+        const ProgressCallback &progressCallback)
 {
     FTRACE2("%s", path.c_str());
 

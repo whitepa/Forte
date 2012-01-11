@@ -250,10 +250,52 @@ void FileSystem::GetChildren(const FString& path,
     }    
 }
 
+uint64_t FileSystem::CountChildren(const FString& path,
+                             bool recurse) const
+{
+    FTRACE2("%s, %s", path.c_str(), (recurse ? "true" : "false"));
+
+    DIR *d = ::opendir(path);
+    if (!d)
+        SystemCallUtil::ThrowErrNoException(errno);
+    AutoFD dir(d);
+
+    int err_number = 0;
+    FString stmp;
+    struct dirent *result;
+    struct dirent entry;
+
+    uint64_t count = 0;
+    while ((err_number = readdir_r(dir, &entry, &result)) == 0
+           && result != NULL)
+    {
+        stmp = entry.d_name;
+
+        if (stmp != "." && stmp != "..")
+        {
+            if (IsDir(path + "/" + stmp))
+            {
+                if (recurse)
+                {
+                    count += CountChildren(path + "/" + stmp, recurse);
+                }
+                else
+                {
+                    hlog(HLOG_DEBUG, "Skipping %s (not recursing)",
+                         stmp.c_str());
+                }
+            }
+            else
+            {
+                count++;
+            }
+        }
+    }
+    return count;
+}
 
 void FileSystem::Unlink(const FString& path, bool unlink_children,
-                        progress_callback_t progress_callback,
-                        void *callback_data)
+        const ProgressCallback &progressCallback)
 {
     hlog(HLOG_DEBUG4, "FileSystem::%s(%s, %s)", __FUNCTION__,
          path.c_str(), (unlink_children ? "true" : "false"));
@@ -297,7 +339,7 @@ void FileSystem::Unlink(const FString& path, bool unlink_children,
                 if (stmp != "." && stmp != "..")
                 {
                     Unlink(path + "/" + entry.d_name,
-                           true, progress_callback, callback_data);
+                           true, progressCallback);
                 }
             }
 
@@ -319,7 +361,7 @@ void FileSystem::Unlink(const FString& path, bool unlink_children,
     unlinkHelper(path);
 
     // callback?
-    if (progress_callback != NULL) progress_callback(0, callback_data);
+    if (progressCallback) progressCallback(0);
 }
 
 
@@ -906,13 +948,12 @@ void FileSystem::FileAppend(const FString& from, const FString& to)
 }
 
 void FileSystem::DeepCopy(const FString& source, const FString& dest, 
-                          progress_callback_t progress_callback,
-                          void *callback_data)
+        const ProgressCallback &progressCallback)
 {
     InodeMap inode_map;
     uint64_t size_copied = 0;
     deepCopyHelper(source, dest, source, inode_map, size_copied, 
-                   progress_callback, callback_data);
+                   progressCallback);
 }
 
 
@@ -921,8 +962,7 @@ void FileSystem::deepCopyHelper(const FString& base_from,
                                 const FString& dir,
                                 InodeMap &inode_map,
                                 uint64_t &size_copied,
-                                progress_callback_t progress_callback,
-                                void *callback_data)
+                                const ProgressCallback &progressCallback)
 {
     hlog(HLOG_DEBUG4, "Filesystem::%s(%s, %s, %s)", __FUNCTION__,
          base_from.c_str(), base_to.c_str(), dir.c_str());
@@ -982,14 +1022,14 @@ void FileSystem::deepCopyHelper(const FString& base_from,
         else if (S_ISDIR(st.st_mode))
         {
             deepCopyHelper(base_from, base_to, path, inode_map, size_copied, 
-                           progress_callback, callback_data);
+                           progressCallback);
         }
         else
         {
             try
             {
                 copyHelper(path, to_path, st, inode_map, size_copied,
-                           progress_callback, callback_data);
+                           progressCallback);
             }
             catch (Exception &e)
             {
@@ -1006,8 +1046,7 @@ void FileSystem::deepCopyHelper(const FString& base_from,
 
 void FileSystem::Copy(const FString &from_path,
                       const FString &to_path,
-                      progress_callback_t progress_callback,
-                      void *callback_data)
+                      const ProgressCallback &progressCallback)
 {
     InodeMap inode_map;
     uint64_t size_copied = 0;
@@ -1019,7 +1058,7 @@ void FileSystem::Copy(const FString &from_path,
                               from_path.c_str(), to_path.c_str());
     }
 
-    copyHelper(from_path, to_path, st, inode_map, size_copied, progress_callback, callback_data);
+    copyHelper(from_path, to_path, st, inode_map, size_copied, progressCallback);
 }
 
 
@@ -1028,8 +1067,7 @@ void FileSystem::copyHelper(const FString& from_path,
                             const struct stat& st,
                             InodeMap &inode_map,
                             uint64_t &size_copied,
-                            progress_callback_t progress_callback,
-                            void *callback_data)
+                            const ProgressCallback &progressCallback)
 {
     struct timeval times[2];
 
@@ -1096,9 +1134,9 @@ void FileSystem::copyHelper(const FString& from_path,
                 if (x == r) out.seekp(in.tellg(), ios::beg);            // leave a hole
                 else out.write(buf, r);
 
-                if ((progress_callback != NULL) && ((++i % 160) == 0))  // every 10 MB
+                if ((progressCallback) && ((++i % 160) == 0))  // every 10 MB
                 {
-                    progress_callback(size_copied + in.tellg(), callback_data);
+                    progressCallback(size_copied + in.tellg());
                 }
 
                 // TODO: replace this as g_shutdown has been removed!
@@ -1147,6 +1185,6 @@ void FileSystem::copyHelper(const FString& from_path,
     }
 
     // progress
-    if (progress_callback != NULL) progress_callback(size_copied, callback_data);
+    if (progressCallback) progressCallback(size_copied);
 }
 
