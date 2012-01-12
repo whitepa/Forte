@@ -50,7 +50,7 @@ Forte::ProcessManagerImpl::ProcessManagerImpl() :
     initialized();
 }
 
-Forte::ProcessManagerImpl::~ProcessManagerImpl() 
+Forte::ProcessManagerImpl::~ProcessManagerImpl()
 {
     FTRACE;
     // \TODO wake up waiters, they should throw. This wont happen
@@ -58,12 +58,12 @@ Forte::ProcessManagerImpl::~ProcessManagerImpl()
     // the Process objects.
 
     // \TODO abandon processes
-    
+
     // shut down the thread
     deleting();
 }
 
-boost::shared_ptr<ProcessFuture> 
+boost::shared_ptr<ProcessFuture>
 Forte::ProcessManagerImpl::CreateProcess(const FString &command,
                                          const FString &currentWorkingDirectory,
                                          const FString &outputFilename,
@@ -92,7 +92,7 @@ Forte::ProcessManagerImpl::CreateProcess(const FString &command,
     return ph;
 }
 
-boost::shared_ptr<ProcessFuture> 
+boost::shared_ptr<ProcessFuture>
 Forte::ProcessManagerImpl::CreateProcessDontRun(const FString &command,
                                                 const FString &currentWorkingDirectory,
                                                 const FString &outputFilename,
@@ -159,7 +159,7 @@ void Forte::ProcessManagerImpl::startMonitor(
         AutoFD childfd(fds[1]);
 
         pid_t childPid = DaemonUtil::ForkSafely();
-        if(childPid < 0) 
+        if(childPid < 0)
             throw_exception(EProcessManagerUnableToFork(FStringFC(), "%s", strerror(errno)));
         else if(childPid == 0)
         {
@@ -197,9 +197,9 @@ void Forte::ProcessManagerImpl::startMonitor(
             ph->mManagementChannel = addPeer(parentfd);
             parentfd.Release();
 
-            // wait for process to deamonise 
-            // if we don't do this we will leave 
-            // behind zombie processes 
+            // wait for process to deamonise
+            // if we don't do this we will leave
+            // behind zombie processes
             int child_status;
             waitpid(-1, &child_status, WNOHANG);
         }
@@ -227,8 +227,8 @@ boost::shared_ptr<Forte::PDUPeer> Forte::ProcessManagerImpl::addPeer(int fd)
     return mPeerSet.PeerCreate(fd);
 }
 
-int ProcessManagerImpl::CreateProcessAndGetResult(const FString& command, 
-                                                  FString& output, 
+int ProcessManagerImpl::CreateProcessAndGetResult(const FString& command,
+                                                  FString& output,
                                                   const Timespec &timeout,
                                                   const FString &inputFilename,
                                                   const StrStrMap *environment)
@@ -237,15 +237,15 @@ int ProcessManagerImpl::CreateProcessAndGetResult(const FString& command,
     FString randomSuffix;
     GUIDGenerator guidGen;
     guidGen.GenerateGUID(randomSuffix);
-    FString outputFilename(FStringFC(), "/tmp/sc_commandoutput_%s.tmp", 
+    FString outputFilename(FStringFC(), "/tmp/sc_commandoutput_%s.tmp",
                           randomSuffix.c_str());
-    FString errorFilename(FStringFC(), "/tmp/sc_commandoutput_error_%s.tmp", 
+    FString errorFilename(FStringFC(), "/tmp/sc_commandoutput_error_%s.tmp",
                           randomSuffix.c_str());
 
     hlog(HLOG_DEBUG, "command = %s, timeout=%ld, output=%s",
          command.c_str(), timeout.AsSeconds(), outputFilename.c_str());
-    boost::shared_ptr<ProcessFuture> future = 
-        CreateProcess(command, "/", outputFilename, 
+    boost::shared_ptr<ProcessFuture> future =
+        CreateProcess(command, "/", outputFilename,
                       errorFilename, inputFilename, environment);
 
     try
@@ -268,11 +268,11 @@ int ProcessManagerImpl::CreateProcessAndGetResult(const FString& command,
     }
     catch (EProcessFutureTerminatedWithNonZeroStatus &e)
     {
-        // in this case we can still get the 
+        // in this case we can still get the
         // output
         output = future->GetErrorString();
         hlog(HLOG_DEBUG, "output = %s", output.c_str());
-        
+
         if (unlink(outputFilename.c_str()))
         {
             hlog(HLOG_WARN, "Failed to unlink temporary file %s", strerror(errno));
@@ -307,7 +307,7 @@ void Forte::ProcessManagerImpl::pduCallback(PDUPeer &peer)
     int fd = peer.GetFD();
 
     // ordering of the variables p and lock and important
-    // p needs to declared first and then lock, so that 
+    // p needs to declared first and then lock, so that
     // they get destructed appropiately
     hlog(HLOG_DEBUG, "Going to obtain processes lock");
     boost::shared_ptr<ProcessFutureImpl> p;
@@ -327,10 +327,10 @@ void Forte::ProcessManagerImpl::pduCallback(PDUPeer &peer)
     }
     else
     {
-        // could not obtain shared_ptr 
+        // could not obtain shared_ptr
         // from weak ptr. Probably the owner of ProcessFuture
         // handle deleted it but did not call abandon in the
-        // ProcessManager. This should not happen since, the 
+        // ProcessManager. This should not happen since, the
         // destructor of ProcessFuture should abandon the process
         // thereby deleting this process from the ProcessManager
         // map
@@ -346,7 +346,7 @@ void Forte::ProcessManagerImpl::errorCallback(PDUPeer &peer)
     int fd = peer.GetFD();
 
     // ordering of the variables p and lock and important
-    // p needs to declared first and then lock, so that 
+    // p needs to declared first and then lock, so that
     // they get destructed appropiately
     boost::shared_ptr<ProcessFutureImpl> p;
     AutoUnlockMutex lock(mProcessesLock);
@@ -361,10 +361,10 @@ void Forte::ProcessManagerImpl::errorCallback(PDUPeer &peer)
     }
     else
     {
-        // could not obtain shared_ptr 
+        // could not obtain shared_ptr
         // from weak ptr. Probably the owner of ProcessFuture
         // handle deleted it but did not call abandon in the
-        // ProcessManager. This should not happen since, the 
+        // ProcessManager. This should not happen since, the
         // destructor of ProcessFuture should abandon the process
         // thereby deleting this process from the ProcessManager
         // map
