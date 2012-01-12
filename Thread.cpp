@@ -125,14 +125,12 @@ void Thread::interruptibleSleep(const struct timespec &interval, bool throwOnShu
     // during that interval, we will return early (or throw
     // EThreadShutdown if so requested).
 
-    // Pthread condition timedwaits use real time clock values, so we
-    // have to dance around a bit to get this to work correctly in all
-    // cases.
-    RealtimeClock rtc;
+    // Forte::ThreadConditions use the monotonic clock now, but we still need to
+    // dance around spurious wakeups
+
     MonotonicClock mc;
     struct timespec start = mc.GetTime(); // monotonic start time
-    struct timespec now = rtc.GetTime();  // realtime now
-    struct timespec end = now + interval; // realtime end of sleep
+    struct timespec end = start + interval; // monotonic end of sleep
 
     AutoUnlockMutex lock(mNotifyLock);
     while (!mThreadShutdown && !mNotified)
@@ -150,19 +148,12 @@ void Thread::interruptibleSleep(const struct timespec &interval, bool throwOnShu
             throw EThread(FStringFC(), "Software error: %s", strerror(errno));
         else if (status == ETIMEDOUT)
         {
-            // re-evaluate timeout, as spurious wakeups may occur
+            // evaluate timeout actually occurred, as spurious wakeups may occur
             AutoLockMutex unlock(mNotifyLock);
             // mutex is unlocked here
             struct timespec mnow = mc.GetTime(); // monotonic now
             if (interval < mnow - start)
-                // yes, we timed out
-                return;
-            else
-            {
-                // didn't time out, reset the end timespec and keep waiting
-                now = rtc.GetTime();
-                end = now + interval - (mnow - start);
-            }
+                return; // yes, we timed out
         }
         // mutex is re-locked here
     }

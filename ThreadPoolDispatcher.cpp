@@ -137,7 +137,8 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
 
 Forte::ThreadPoolDispatcherWorker::ThreadPoolDispatcherWorker(ThreadPoolDispatcher &disp) :
     DispatcherThread(disp),
-    mLastPeriodicCall(time(0))
+    mMonotonicClock(),
+    mLastPeriodicCall(mMonotonicClock.GetTime().AsSeconds())
 {
     initialized();
 }
@@ -198,18 +199,14 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
             mEventPtr.reset();
             // event will be deleted HERE
         }
-        struct timeval now;
-        struct timespec timeout;
-        gettimeofday(&now, 0);
-        timeout.tv_sec = now.tv_sec + 1; // wake up every second
-        timeout.tv_nsec = now.tv_usec * 1000;
         disp.mSpareThreadSem.Post();
 //        hlog(HLOG_DEBUG4, "waiting for events...");
-        disp.mNotify.TimedWait(timeout);
+        disp.mNotify.TimedWait(1);  // wake up every second
         disp.mSpareThreadSem.TryWait();
         if (mThreadShutdown) break;
         // see if we need to run periodic
-        gettimeofday(&now, 0);
+        struct timespec now;
+        mMonotonicClock.GetTime(now);
         if (disp.mRequestHandler->mTimeout != 0 &&
             (unsigned int)(now.tv_sec - mLastPeriodicCall) > disp.mRequestHandler->mTimeout)
         {

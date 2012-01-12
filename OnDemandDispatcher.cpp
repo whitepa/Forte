@@ -60,12 +60,7 @@ void * Forte::OnDemandDispatcherManager::run(void)
             break;
         }
 
-        struct timeval now;
-        struct timespec timeout;
-        gettimeofday(&now, 0);
-        timeout.tv_sec = now.tv_sec + 1; // wake up every second
-        timeout.tv_nsec = now.tv_usec * 1000;
-        disp.mNotify.TimedWait(timeout);
+        disp.mNotify.TimedWait(1);
     }
 
     // signal any workers to shutdown

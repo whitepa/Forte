@@ -23,6 +23,7 @@ namespace Forte
         virtual ~ThreadPoolDispatcherWorker();
     protected:
         virtual void *run(void);
+        MonotonicClock mMonotonicClock;
         time_t mLastPeriodicCall;
     };
     class ThreadPoolDispatcher : public Dispatcher

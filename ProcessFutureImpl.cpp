@@ -206,9 +206,12 @@ void Forte::ProcessFutureImpl::run()
         throw EProcessFutureManagementProcFailed(e.what());
     }
     // wait for the process to change state
+    MonotonicClock mtc;
     AutoUnlockMutex lock(mWaitLock);
     while (mState == STATE_STARTING)
-        mWaitCond.TimedWait(Timespec::FromMillisec(100));
+    {
+        mWaitCond.TimedWait(mtc.GetTime() + Timespec::FromMillisec(100));
+    }
 
 }
 

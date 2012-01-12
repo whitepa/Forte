@@ -51,13 +51,10 @@ namespace Forte
                 else if (timeout.IsPositive())
                 {
                     MonotonicClock mtc;
-                    RealtimeClock rtc;
                     Timespec mtTimeout = mtc.GetTime() + timeout;
                     while (!mResultReady && (mtc.GetTime() <= mtTimeout))
                     {
-                        Timespec rtTimeout = rtc.GetTime()
-                                + (mtTimeout - mtc.GetTime());
-                        mCondition.TimedWait(rtTimeout);
+                        mCondition.TimedWait(mtTimeout);
                     }
                     if (!mResultReady)
                         throw EFutureTimeoutWaitingForResult();
@@ -138,13 +135,10 @@ namespace Forte
                 else if (timeout.IsPositive())
                 {
                     MonotonicClock mtc;
-                    RealtimeClock rtc;
                     Timespec mtTimeout = mtc.GetTime() + timeout;
                     while (!mResultReady && (mtc.GetTime() <= mtTimeout))
                     {
-                        Timespec rtTimeout = rtc.GetTime()
-                                + (mtTimeout - mtc.GetTime());
-                        mCondition.TimedWait(rtTimeout);
+                        mCondition.TimedWait(mtTimeout);
                     }
                     if (!mResultReady)
                         throw EFutureTimeoutWaitingForResult();
