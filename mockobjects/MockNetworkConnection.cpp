@@ -7,7 +7,7 @@ using namespace Forte;
 class MockThread : public Thread
 {
 public:
-    MockThread(const MockNetworkConnection::MockNetworkNodePtr& node, 
+    MockThread(const MockNetworkConnection::MockNetworkNodePtr& node,
                int fd,
                bool exit) :
         mHasException (false),
@@ -21,7 +21,7 @@ public:
 
 protected:
     void *run (void) {
-        
+
         try
         {
             mNode->runAndCloseFD(mFD, mExit);
@@ -38,7 +38,7 @@ protected:
     MockNetworkConnection::MockNetworkNodePtr mNode;
     int mFD;
     bool mExit;
-    
+
 };
 
 MockNetworkConnection::MockNetworkConnection(
@@ -70,11 +70,11 @@ void MockNetworkConnection::RunMockNetwork()
     }
     else if (childPid == 0)
     {
-        
+
         // child
         // NOTE: the network node whose state is not to
         // be saved is run on the child process.
-        
+
         // first close the parent fd
         close(parentfd);
 
@@ -87,10 +87,10 @@ void MockNetworkConnection::RunMockNetwork()
     {
         // parent
         // MockThread thread;
-        
+
         // first close the child fd
         close(childfd);
-        
+
         // now run the network node
         MockThread thread(mNodeWhoseStateIsSaved, parentfd, false);
 
@@ -98,12 +98,12 @@ void MockNetworkConnection::RunMockNetwork()
 
         if (thread.mHasException)
         {
-            hlog(HLOG_DEBUG, 
+            hlog(HLOG_DEBUG,
                  "Got exception in thread.  Sending %d SIGINT...", childPid);
 
             // wait for all child pids to finish and then throw
             kill(childPid, SIGTERM);
-            hlog(HLOG_DEBUG, "Child pid %d killed. Waiting for it to finish", 
+            hlog(HLOG_DEBUG, "Child pid %d killed. Waiting for it to finish",
                  childPid);
             int status;
             ::wait(&status);
