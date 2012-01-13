@@ -33,26 +33,26 @@ public:
         mProcMonLocation = "";
         if (fs.FileExists("../obj/SC001-x86_64-opt/procmon"))
         {
-            mProcMonLocation.Format( 
-                "FORTE_PROCMON=../obj/SC001-x86_64-%s/procmon", 
-                "opt");            
-        } 
+            mProcMonLocation.Format(
+                "FORTE_PROCMON=../obj/SC001-x86_64-%s/procmon",
+                "opt");
+        }
         else if (fs.FileExists("../obj/SC001-x86_64-debug/procmon"))
         {
-            mProcMonLocation.Format( 
-                "FORTE_PROCMON=../obj/SC001-x86_64-%s/procmon", 
-                "debug");            
+            mProcMonLocation.Format(
+                "FORTE_PROCMON=../obj/SC001-x86_64-%s/procmon",
+                "debug");
         }
         else if (fs.FileExists("../obj/SC001-x86_64-rel/procmon"))
         {
-            mProcMonLocation.Format( 
-                "FORTE_PROCMON=../obj/SC001-x86_64-%s/procmon", 
+            mProcMonLocation.Format(
+                "FORTE_PROCMON=../obj/SC001-x86_64-%s/procmon",
                 "rel");
         }
         else if (fs.FileExists("../obj/SC001-x86_64-prof/procmon"))
         {
-            mProcMonLocation.Format( 
-                "FORTE_PROCMON=../obj/SC001-x86_64-%s/procmon", 
+            mProcMonLocation.Format(
+                "FORTE_PROCMON=../obj/SC001-x86_64-%s/procmon",
                 "prof");
         }
         // else let Processmanager use the default location it knows abt
@@ -67,7 +67,7 @@ public:
     static void TearDownTestCase() {
 
     };
-    
+
 };
 
 /*
@@ -133,7 +133,7 @@ TEST_F(ProcessManagerTest, MemLeak)
         hlog(HLOG_INFO, "new ProcessManage");
         boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
         hlog(HLOG_INFO, "CreateProcess");
-        
+
         sleep(1); // causes a race condition where the next Process is
         // added during the epoll_wait
         {
@@ -157,7 +157,7 @@ TEST_F(ProcessManagerTest, MemLeak)
     catch (Exception& e)
     {
         hlog(HLOG_ERR, "exception: %s", e.what());
-        FAIL();        
+        FAIL();
     }
 }
 
@@ -185,21 +185,21 @@ TEST_F(ProcessManagerTest, FDLeak)
             hlog(HLOG_INFO, "Run Process");
             hlog(HLOG_INFO, "Creating First Process");
             boost::shared_ptr<ProcessFuture> ph1 = pm->CreateProcess("/bin/sleep 6");
-            hlog(HLOG_INFO, "Open file descriptor : %u, expected: %u", 
+            hlog(HLOG_INFO, "Open file descriptor : %u, expected: %u",
                  pfs.CountOpenFileDescriptors(),
                  openDescriptors + 1);
             ASSERT_EQ(openDescriptors + 1, pfs.CountOpenFileDescriptors());
 
             hlog(HLOG_INFO, "Creating Second Process");
             boost::shared_ptr<ProcessFuture> ph2 = pm->CreateProcess("/bin/sleep 1");
-            hlog(HLOG_INFO, "Open file descriptor : %u, expected: %u", 
+            hlog(HLOG_INFO, "Open file descriptor : %u, expected: %u",
                  pfs.CountOpenFileDescriptors(),
                  openDescriptors + 2);
             ASSERT_EQ(openDescriptors + 2, pfs.CountOpenFileDescriptors());
 
             hlog(HLOG_INFO, "Creating Third Process");
             boost::shared_ptr<ProcessFuture> ph3 = pm->CreateProcess("/bin/sleep 3");
-            hlog(HLOG_INFO, "Open file descriptor : %u, expected: %u", 
+            hlog(HLOG_INFO, "Open file descriptor : %u, expected: %u",
                  pfs.CountOpenFileDescriptors(),
                  openDescriptors + 3);
             ASSERT_EQ(openDescriptors + 3, pfs.CountOpenFileDescriptors());
@@ -208,7 +208,7 @@ TEST_F(ProcessManagerTest, FDLeak)
             ASSERT_FALSE(ph2->IsRunning());
             ph2.reset();
             sleep(1); // needed because Proc filsystem takes some time to remove the fd
-            hlog(HLOG_INFO, "Open file descriptor : %u, expected: %u", 
+            hlog(HLOG_INFO, "Open file descriptor : %u, expected: %u",
                  pfs.CountOpenFileDescriptors(),
                  openDescriptors + 2);
             ASSERT_EQ(openDescriptors + 2, pfs.CountOpenFileDescriptors());
@@ -217,7 +217,7 @@ TEST_F(ProcessManagerTest, FDLeak)
             ASSERT_FALSE(ph3->IsRunning());
             ph3.reset();
             sleep(1); // needed because Proc filsystem takes some time to remove the fd
-            hlog(HLOG_INFO, "Open file descriptor : %u, expected: %u", 
+            hlog(HLOG_INFO, "Open file descriptor : %u, expected: %u",
                  pfs.CountOpenFileDescriptors(),
                  openDescriptors + 1);
             ASSERT_EQ(openDescriptors + 1, pfs.CountOpenFileDescriptors());
@@ -226,7 +226,7 @@ TEST_F(ProcessManagerTest, FDLeak)
             ASSERT_FALSE(ph1->IsRunning());
             ph1.reset();
             sleep(1); // needed because Proc filsystem takes some time to remove the fd
-            hlog(HLOG_INFO, "Open file descriptor : %u, expected: %u", 
+            hlog(HLOG_INFO, "Open file descriptor : %u, expected: %u",
                  pfs.CountOpenFileDescriptors(),
                  openDescriptors);
             ASSERT_EQ(openDescriptors, pfs.CountOpenFileDescriptors());
@@ -295,7 +295,7 @@ TEST_F(ProcessManagerTest, ErrorOutput)
 
         hlog(HLOG_INFO, "Run Process");
         boost::shared_ptr<ProcessFuture> ph = pm->CreateProcess(
-            "/bin/echo Error: file already exists. >&2", "/", 
+            "/bin/echo Error: file already exists. >&2", "/",
             "/dev/null", "/tmp/pmuinttesterrorout.tmp");
 
         ASSERT_NO_THROW(ph->GetResult());
@@ -327,7 +327,7 @@ TEST_F(ProcessManagerTest, ErrorOutputNonZero)
 
         hlog(HLOG_INFO, "Run Process");
         boost::shared_ptr<ProcessFuture> ph = pm->CreateProcess(
-            "/bin/echo Error: file already exists. >&2; /bin/false", "/", 
+            "/bin/echo Error: file already exists. >&2; /bin/false", "/",
             "/dev/null", "/tmp/pmuinttesterrorout.tmp");
 
         ASSERT_THROW(ph->GetResult(), EProcessFutureTerminatedWithNonZeroStatus);
@@ -367,7 +367,7 @@ TEST_F(ProcessManagerTest, RunMultipleProcess)
     try
     {
         boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
-        
+
         sleep(3);
 
         boost::shared_ptr<ProcessFuture> ph1 = pm->CreateProcess("/bin/sleep 3");
@@ -397,7 +397,7 @@ TEST_F(ProcessManagerTest, Exceptions)
         hlog(HLOG_INFO, "GetProcessTerminationType");
         ASSERT_THROW(ph->GetProcessTerminationType(), EProcessFutureNotStarted);
         hlog(HLOG_INFO, "GetStatusCode");
-        ASSERT_THROW(ph->GetStatusCode(), EProcessFutureNotStarted);    
+        ASSERT_THROW(ph->GetStatusCode(), EProcessFutureNotStarted);
         hlog(HLOG_INFO, "GetOutputString");
         ASSERT_THROW(ph->GetOutputString(), EProcessFutureNotStarted);
 
@@ -406,7 +406,7 @@ TEST_F(ProcessManagerTest, Exceptions)
 
         pm->RunProcess(ph);
         ASSERT_THROW(ph->GetProcessTerminationType(), EProcessFutureNotFinished);
-        ASSERT_THROW(ph->GetStatusCode(), EProcessFutureNotFinished);    
+        ASSERT_THROW(ph->GetStatusCode(), EProcessFutureNotFinished);
         ASSERT_THROW(ph->GetOutputString(), EProcessFutureNotFinished);
 
         ASSERT_THROW(ph->SetProcessCompleteCallback(NULL), EProcessFutureStarted);
@@ -455,7 +455,7 @@ TEST_F(ProcessManagerTest, CancelProcess)
     {
         hlog(HLOG_ERR, "std::exception: %s", e.what());
         FAIL();
-    }    
+    }
 }
 
 
@@ -504,11 +504,11 @@ TEST_F(ProcessManagerTest, FileIO)
         ph->SetOutputFilename("/foo/bar/baz");
         pm->RunProcess(ph);
         ASSERT_THROW(ph->GetResult(), EProcessFutureUnableToOpenOutputFile);
-        
+
 
         hlog(HLOG_DEBUG, "getting ready to try some output");
 
-        // check that when we can create an output file that we can get 
+        // check that when we can create an output file that we can get
         // the contents
         boost::shared_ptr<ProcessFuture> ph2 = pm->CreateProcess("/bin/ls", "/", "temp.out");
         ph2->GetResult();
@@ -586,7 +586,7 @@ TEST_F(ProcessManagerTest, ProcmonRunning)
         ASSERT_TRUE(monitorPid != -1);
         hlog(HLOG_INFO, "Going to check if monitor process %d is still running", monitorPid);
         // check if the monitor pid is still running
-        FString filename(FStringFC(), 
+        FString filename(FStringFC(),
                          "/proc/%d/cmdline", monitorPid);
         hlog(HLOG_INFO, "monitor proc location %s", filename.c_str());
         AutoFD fd;
@@ -626,7 +626,7 @@ TEST_F(ProcessManagerTest, ProcessTimeout)
     {
         hlog(HLOG_ERR, "std::exception: %s", e.what());
         FAIL();
-    }    
+    }
 }
 
 TEST_F(ProcessManagerTest, CommandLineEscape)
@@ -671,7 +671,7 @@ TEST_F(ProcessManagerTest, ProcessManagerCanRunHost)
     using namespace boost;
     try
     {
-        shared_ptr<ProcessManagerImpl> processManagerPtr = 
+        shared_ptr<ProcessManagerImpl> processManagerPtr =
             make_shared<ProcessManagerImpl>();
 
         ProcessManagerImpl& processManager = *processManagerPtr;
@@ -684,13 +684,13 @@ TEST_F(ProcessManagerTest, ProcessManagerCanRunHost)
     }
     catch (Exception &e)
     {
-        hlogstream(HLOG_ERR, "Exception: " << 
+        hlogstream(HLOG_ERR, "Exception: " <<
                    typeid(e).name() << " " << e.what());
         FAIL();
     }
     catch (std::exception &e)
     {
-        hlogstream(HLOG_ERR, "std_exception: " << 
+        hlogstream(HLOG_ERR, "std_exception: " <<
                    typeid(e).name() << " " << e.what());
         FAIL();
     }

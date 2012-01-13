@@ -25,7 +25,7 @@ namespace Forte
         friend class Forte::ProcessManagerImpl;
     public:
         typedef boost::function<void (boost::shared_ptr<ProcessFuture>)> ProcessCompleteCallback;
-        
+
     protected:
         /**
          * Construct a ProcessFuture object. Instantiating the object does
@@ -45,7 +45,7 @@ namespace Forte
                           const FString &command,
                           const FString &currentWorkingDirectory = "/",
                           const FString &outputFilename = "/dev/null",
-                          const FString &errorFilename = "/dev/null",  
+                          const FString &errorFilename = "/dev/null",
                           const FString &inputFilename = "/dev/null",
                           const StrStrMap *environment = NULL);
 
@@ -55,7 +55,7 @@ namespace Forte
          */
         virtual ~ProcessFutureImpl();
 
-        
+
         /**
          * set the callback function that should be executed when the
          * process is complete.
@@ -73,7 +73,7 @@ namespace Forte
          * @return ProcessCompleteCallback object
          */
         ProcessCompleteCallback GetProcessCompleteCallback() { return mProcessCompleteCallback; }
-  
+
         /**
          * SetCurrentWorkingDirectory() sets the current working
          * directory the child process should use. This can only be
@@ -118,7 +118,7 @@ namespace Forte
         virtual void SetOutputFilename(const FString &outfile);
 
         /**
-         * SetErrorFilename() sets the output file to use. 
+         * SetErrorFilename() sets the output file to use.
          * stderr is redirected here.  Can only be called
          * on a process not yet run.
          *
@@ -159,8 +159,8 @@ namespace Forte
          *
          * @return pid_t holding the child process id
          */
-        virtual pid_t GetProcessPID() { return mProcessPid; }
-  
+         virtual pid_t GetProcessPID() { return mProcessPid; }
+
         /**
          * GetStatusCode() returns the status code from the terminated
          * process.  If the process was terminated abnormally via
@@ -171,14 +171,14 @@ namespace Forte
          * @return unisgned int holding the child status code
          */
         virtual unsigned int GetStatusCode();
-  
+
         /**
          * GetProcessTerminationType() returns the way the child process was terminated:
          *   ProcessExited
          *   ProcessKilled
          *   ProcessStopped
          *   ProcessUnknownTermination
-         * GetProcessTerminationType() will throw an exception if it is called before 
+         * GetProcessTerminationType() will throw an exception if it is called before
          * the child process is finished.
          *
          * @throw EProcessFutureNotFinished
@@ -213,7 +213,7 @@ namespace Forte
 
         /**
          * Cancel() sends signal 15 to the running process.
-         * 
+         *
          * @throw EProcessFutureNotRunning
          */
         virtual void Cancel();
@@ -231,13 +231,13 @@ namespace Forte
         }
 
         virtual FString GetCommand() { return mCommand; }
-                
+
     protected:
 
 
-        /** 
+        /**
          * Get a shared pointer to the ProcessManager for this handle.
-         * 
+         *
          * @return shared_ptr to the process manager
          */
         boost::shared_ptr<ProcessManagerImpl> getProcessManager(void);
@@ -269,52 +269,52 @@ namespace Forte
          */
         void abandon();
 
-        /** 
+        /**
          * Set the internal state of the process handle.  This will
          * wake up anyone waiting for a state change.
-         * 
-         * @param state 
+         *
+         * @param state
          */
         void setState(int state);
 
-        bool isInTerminalState(void) { 
+        bool isInTerminalState(void) {
             return (mState == STATE_ERROR ||
                     mState == STATE_EXITED ||
                     mState == STATE_KILLED ||
                     mState == STATE_ABANDONED);
         }
 
-        /** 
+        /**
          * Return true if the process is in an 'active' state, where
          * active is defined as the process possibly existing
          * (possibly because it may not have been created yet if in
          * STATE_STARTING, but it will be created shortly).
-         * 
+         *
          * @return bool
          */
-        bool isInActiveState(void) { 
+        bool isInActiveState(void) {
             return (mState == STATE_STARTING ||
                     mState == STATE_RUNNING ||
                     mState == STATE_STOPPED);
         }
 
-        /** 
+        /**
          * Return true if the process is definitively in a 'running'
          * state, where running is defined as the process has already
          * started, and has not yet terminated in any way.
-         * 
+         *
          * @return bool
          */
-        bool isInRunningState(void) { 
+        bool isInRunningState(void) {
             return (mState == STATE_RUNNING ||
                     mState == STATE_STOPPED);
         }
 
-        /** 
+        /**
          * Return the file descriptor of the connection to the monitor
          * process.
-         * 
-         * 
+         *
+         *
          * @return file descriptor
          */
         int getManagementFD(void) {
@@ -323,27 +323,27 @@ namespace Forte
             return mManagementChannel->GetFD();
         }
 
-        /** 
+        /**
          * Handle an incoming PDU
-         * 
-         * @param peer 
+         *
+         * @param peer
          */
         void handlePDU(PDUPeer &peer);
 
         void handleControlRes(PDUPeer &peer, const PDU &pdu);
         void handleStatus(PDUPeer &peer, const PDU &pdu);
 
-        /** 
+        /**
          * Called when an unrecoverable error has occurred on the
          * connection to a peer.
-         * 
-         * @param peer 
+         *
+         * @param peer
          */
         void handleError(PDUPeer &peer);
 
     private:
         boost::weak_ptr<ProcessManagerImpl> mProcessManagerPtr;
-        
+
         boost::shared_ptr<PDUPeer> mManagementChannel;
 
         FString mCommand;
