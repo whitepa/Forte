@@ -176,7 +176,11 @@ void Forte::ProcessManagerImpl::startMonitor(
             pthread_sigmask(SIG_SETMASK, &set, NULL);
 
             // create a new process group / session
-            daemon(1, 0); // (redirects 0,1,2 to /dev/null)
+            // (redirects 0,1,2 to /dev/null, forks, parent calls _exit)
+            if (daemon(1, 0) == -1)
+            {
+                hlog(HLOG_ERR, "failed to daemonize");
+            }
             setsid();
             FString childfdStr(childfd);
             char **vargs = new char* [3];
@@ -201,7 +205,20 @@ void Forte::ProcessManagerImpl::startMonitor(
             // if we don't do this we will leave
             // behind zombie processes
             int child_status;
-            waitpid(-1, &child_status, WNOHANG);
+            int retCode;
+            // while this pid still exists to be waited on
+            while ((retCode = waitpid(childPid, &child_status, 0)) == 0
+                   || (retCode == -1 && errno == EINTR))
+            {
+                usleep(100000);
+            }
+
+            if (retCode != childPid && errno != ECHILD)
+            {
+                hlog(HLOG_ERR,
+                     "err waiting on child pid: %d, %d (%s)",
+                     childPid, errno, strerror(errno));
+            }
         }
     }
     catch (EProcessManagerUnableToCreateSocket &e)

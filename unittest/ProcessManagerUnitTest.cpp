@@ -98,7 +98,7 @@ TEST_F(ProcessManagerTest, Runs100ProcessesInUnder10Seconds)
             ASSERT_EQ(ProcessFuture::ProcessExited, ph->GetProcessTerminationType());
         }
         Forte::Timespec finish = Forte::MonotonicClock().GetTime();
-        ASSERT_TRUE(finish - start < Forte::Timespec::FromSeconds(10));
+        ASSERT_LT(finish - start, Forte::Timespec::FromSeconds(10));
     }
     catch (std::exception& e)
     {
@@ -472,7 +472,7 @@ TEST_F(ProcessManagerTest, AbandonProcess)
             ASSERT_TRUE(ph->IsRunning());
         }
         // make sure the process still exists:
-        ASSERT_TRUE(kill(pid, 0) == 0);
+        ASSERT_EQ(0, kill(pid, 0));
     }
     catch (Exception &e)
     {
