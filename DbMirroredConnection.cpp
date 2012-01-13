@@ -44,11 +44,11 @@ bool DbMirroredConnection::setActiveSecondary()
 
         if(! mDbConnectionSecondary)
         {
-            hlogstream(HLOG_INFO, "create a secondary DB connection");
+            hlogstream(HLOG_DEBUG, "create a secondary DB connection");
             mDbConnectionSecondary.reset(mSecondaryDbConnectionFactory->create());
         }
 
-        hlogstream(HLOG_INFO, "try to init secondary DB connection to " << mAltDbName);
+        hlogstream(HLOG_DEBUG, "try to init secondary DB connection to " << mAltDbName);
         const bool ok(mDbConnectionSecondary->Init(mAltDbName, mDbConnection->mUser, mDbConnection->mPassword,
                       mDbConnection->mHost, mDbConnection->mSocket, 3));
 
@@ -101,7 +101,7 @@ bool DbMirroredConnection::Init(const FString& db, const FString& user, const FS
     }
     else
     {
-        hlogstream(HLOG_DEBUG, "attempt init primary DB connection");
+        hlogstream(HLOG_DEBUG, "attempt to init primary DB connection");
 
         try
         {
@@ -124,14 +124,17 @@ bool DbMirroredConnection::Init(const FString& db, const FString& user, const FS
         }
         catch(EDbConnectionConnectFailed& e)
         {
-            hlogstream(HLOG_WARN, e.what());
+            if (hlog_ratelimit(60))
+                hlogstream(HLOG_WARN, e.what());
         }
         catch(EDbConnectionIoError& e)
         {
-            hlogstream(HLOG_WARN, e.what());
+            if (hlog_ratelimit(60))
+                hlogstream(HLOG_WARN, e.what());
         }
-
-        hlogstream(HLOG_WARN, "failed to init primary DB Connection");
+        if (hlog_ratelimit(60))
+            hlog(HLOG_WARN, "failed to init primary DB Connection: '%s'",
+                 db.c_str());
 
         return setActiveSecondary();
     }

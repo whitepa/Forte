@@ -17,7 +17,7 @@ namespace Forte
         GUIDGenerator();
         virtual ~GUIDGenerator() {};
 
-        FString & GenerateGUID(FString &out);
+        virtual FString & GenerateGUID(FString &out);
 
     private:
         Mutex mLock;
