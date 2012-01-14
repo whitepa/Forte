@@ -97,7 +97,7 @@ protected:
 
     virtual size_t PopulateData(DbConnection& db)
     {
-        const size_t rows(100);
+        const size_t rows(10);
         for (int i = 0; i < rows; i++)
         {
             FString insertSql;
@@ -184,7 +184,8 @@ public: // drawback, bind requires these be public
     {
         try
         {
-            return ((executeCommand("/bin/mountpoint -q /fsscale0") == 0) && (executeCommand("/bin/mountpoint -q /fs0") == 0));
+            return ((executeCommand("/bin/mountpoint -q /fsscale0") == 0) &&
+                    (executeCommand("/bin/mountpoint -q /fs0") == 0));
         }
         catch(Forte::Exception& e)
         {
@@ -194,7 +195,7 @@ public: // drawback, bind requires these be public
 
     void restoreMounts()
     {
-        for(unsigned long i = 0 ; i < 30 ; i++)
+        for(unsigned long i = 0 ; i < 60 ; i++)
         {
             if(! checkMounts())
             {
@@ -210,7 +211,7 @@ public: // drawback, bind requires these be public
             {
                 break;
             }
-            sleep(10);
+            sleep(1);
         }
     }
 
@@ -401,5 +402,3 @@ TEST_F(DbMirroredConnectionTest, SqliteFailedGPFSPrimaryDbUnderHotDbConnectionDa
     resAfterUnmount = dbConnection->Store("SELECT * FROM test");
     ASSERT_EQ(resAfterUnmount.GetNumRows(), rows);
 }
-
-
