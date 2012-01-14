@@ -75,7 +75,9 @@ TEST_F (ContextPredicateTest, s_test1)
     c1.Set("int2", ObjectPtr(new CheckedInt32()));
     Forte::ContextPredicate cp5(Forte::ContextPredicate::CHECKED_INT_GTE,
                                 "int2", 0);
-    EXPECT_THROW( cp5.Evaluate(c1), ECheckedValueUninitialized );
+    EXPECT_THROW( cp5.Evaluate(c1, Timespec::FromSeconds(-1)),
+                  ECheckedValueUninitialized );
+
     c1.Get<CheckedInt32>("int2")->Set(0);
     EXPECT_TRUE( cp5.Evaluate(c1) );
 
