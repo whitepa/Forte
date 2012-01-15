@@ -211,6 +211,28 @@ namespace Forte
     };
 
     /**
+     *The DeadlineClock class is used to set a time in the future,
+     *then be able to know if the the current time is past the deadline.
+     **/
+    class DeadlineClock : public MonotonicClock
+    {
+    public:
+        DeadlineClock() {}
+        //DeadlineClock(const struct timespec& deadlineTimespec) :
+        //mDeadlineTimespec(deadlineTimespec) {}
+        virtual ~DeadlineClock() {}
+
+        virtual bool Expired() const;
+        //TODO: virtual bool SetExpired(struct timespec &ts);
+        virtual void ExpiresInSeconds(long long int sec);
+        virtual void ExpiresInMillisec(int millisec);
+
+        //TODO: virtual void GetTimeLeft(struct timespec &ts) const;
+    protected:
+        Timespec mDeadlineTimespec;
+    };
+
+    /**
      *The RealtimeClock class is used to create clocks where the value of time is the same as the system clock.
      *Time in a RealtimeClock object is best for measuring accurate system times and is susceptible to any
      *system clock changes.
@@ -242,6 +264,7 @@ namespace std
 
     template <>
     const Forte::Timespec& max (const Forte::Timespec& a, const Forte::Timespec& b);
+
 }
 
 #endif

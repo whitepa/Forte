@@ -137,4 +137,24 @@ TEST_F(ClockUnitTest, TimespecStdMaxOperatorReturnLhs)
     ASSERT_EQ (a, std::max(a, b));
 }
 
+TEST_F(ClockUnitTest, DeadlineClockExpiresAfterXSeconds)
+{
+    DeadlineClock expiresInOneSecond;
+    expiresInOneSecond.ExpiresInSeconds(1);
 
+    EXPECT_FALSE(expiresInOneSecond.Expired());
+    sleep(1);
+    usleep(100);
+    EXPECT_TRUE(expiresInOneSecond.Expired());
+}
+
+TEST_F(ClockUnitTest, DeadlineClockExpiresAfterXMillisec)
+{
+    DeadlineClock expiresIn500Millisec;
+    expiresIn500Millisec.ExpiresInMillisec(500);
+
+    EXPECT_FALSE(expiresIn500Millisec.Expired());
+    //usleep(500001);
+    usleep(600000); //Testing Deadline functionality, not hw functionality
+    EXPECT_TRUE(expiresIn500Millisec.Expired());
+}

@@ -2,6 +2,7 @@
 #include <time.h>
 #include <errno.h>
 #include "Util.h"
+#include "LogManager.h"
 
 using namespace Forte;
 
@@ -37,6 +38,24 @@ bool Timespec::operator<(const Timespec& other) const
 {
     return (mTimespec < other.mTimespec);
 }
+
+bool DeadlineClock::Expired() const
+{
+    //hlogstream(HLOG_DEBUG, "deadline:" << mDeadlineTimespec
+    //<< " time: " << GetTime());
+    return mDeadlineTimespec < GetTime(); // <= ?
+}
+
+void DeadlineClock::ExpiresInSeconds(long long int sec)
+{
+    mDeadlineTimespec = GetTime() + Timespec::FromSeconds(sec);
+}
+
+void DeadlineClock::ExpiresInMillisec(int millisec)
+{
+    mDeadlineTimespec = GetTime() + Timespec::FromMillisec(millisec);
+}
+
 
 namespace Forte
 {
