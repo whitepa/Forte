@@ -13,19 +13,19 @@ namespace Forte
     EXCEPTION_SUBCLASS2(ETimespec, ETimespecInvalid, "Invalid timespec");
 
     /**
-     *The Timespec class is used to handle different representations of time. You use this class to 
-     *convert from one representation of time to another, for example converting to time in seconds or 
-     *milliseconds. You can create a Timespec object that handles @ref MonotonicClock time or 
+     *The Timespec class is used to handle different representations of time. You use this class to
+     *convert from one representation of time to another, for example converting to time in seconds or
+     *milliseconds. You can create a Timespec object that handles @ref MonotonicClock time or
      *@ref RealtimeClock time. The class also provides methods for adding time values together or examining
      *time values to determine if they are equal to zero or positive.
-     **/    
+     **/
     class Timespec : public Object
     {
     public:
         /**
          *Sets the Timespec object to zero.
          **/
-        Timespec() { 
+        Timespec() {
             Clear();
         };
         Timespec(const Timespec &ts) {
@@ -77,8 +77,8 @@ namespace Forte
         bool operator<(const Timespec& other) const;
 
         /**
-         *Returns the current value of your Timespec object. 
-         **/    
+         *Returns the current value of your Timespec object.
+         **/
         operator const struct timespec () const { return mTimespec; }
 
         /**
@@ -172,7 +172,7 @@ namespace Forte
     public:
         Clock() {};
         virtual ~Clock() {};
-        
+
         /**
          *This is a pure virtual function that fills in the Timespec object with the current time dependent
          *upon the derived class (MonotonicClock or RealtimeClock).
@@ -182,7 +182,7 @@ namespace Forte
         /**
          *Returns the time as a Timespec object.
          **/
-        Timespec GetTime(void) const { 
+        Timespec GetTime(void) const {
             struct timespec ts;
             GetTime(ts);
             return ts;
@@ -205,7 +205,7 @@ namespace Forte
          *This is a virtual function that fills in the Timespec object with the current monotonic time.
          **/
         virtual void GetTime(struct timespec &ts) const;
-        Timespec GetTime(void) const { 
+        Timespec GetTime(void) const {
             return Clock::GetTime();
         };
     };
@@ -226,7 +226,7 @@ namespace Forte
          *clock.
          **/
         virtual void GetTime(struct timespec &ts) const;
-        Timespec GetTime(void) const { 
+        Timespec GetTime(void) const {
             return Clock::GetTime();
         };
     };
