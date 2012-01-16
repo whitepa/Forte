@@ -57,6 +57,9 @@ GSRCS = CheckedValueStoreUnitTest.cpp \
 	ClockUnitTest.cpp \
 	ClusterLockUnitTest.cpp \
 	ConditionUnitTest.cpp \
+	ConditionFileLoggerUnitTest.cpp \
+	ConditionAsyncLoggerUnitTest.cpp \
+	ConditionDeltaLoggerUnitTest.cpp \
 	ContextPredicateUnitTest.cpp \
 	DbLiteConnectionUnitTest.cpp \
 	DbConnectionPoolUnitTest.cpp \
@@ -133,6 +136,18 @@ $(TARGETDIR)/ClockUnitTest: ClockUnitTest.cpp $(FORTE)
 $(TARGETDIR)/ClusterLockUnitTest: ClusterLockUnitTest.cpp $(FORTE)
 
 $(TARGETDIR)/ConditionUnitTest: ConditionUnitTest.cpp $(FORTE)
+
+$(TARGETDIR)/ConditionFileLoggerUnitTest: ConditionFileLoggerUnitTest.cpp \
+	../$(TARGETDIR)/ConditionFileLogger.o \
+	../$(TARGETDIR)/ConditionLogEntry.o \
+
+$(TARGETDIR)/ConditionAsyncLoggerUnitTest: ConditionAsyncLoggerUnitTest.cpp \
+	../$(TARGETDIR)/ConditionAsyncLogger.o \
+	../$(TARGETDIR)/ConditionLogEntry.o \
+
+$(TARGETDIR)/ConditionDeltaLoggerUnitTest: ConditionDeltaLoggerUnitTest.cpp \
+	../$(TARGETDIR)/ConditionDeltaLogger.o \
+	../$(TARGETDIR)/ConditionLogEntry.o \
 
 $(TARGETDIR)/ActiveObjectUnitTest: ActiveObjectUnitTest.cpp $(FORTE)
 

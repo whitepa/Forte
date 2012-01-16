@@ -29,6 +29,10 @@ SRCS =	\
 	Clock.cpp \
 	Collector.cpp \
 	Condition.cpp \
+	ConditionFileLogger.cpp \
+	ConditionAsyncLogger.cpp \
+	ConditionDeltaLogger.cpp \
+	ConditionLogEntry.cpp \
 	Context.cpp \
 	ContextPredicate.cpp \
 	Curl.cpp \
