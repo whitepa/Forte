@@ -85,6 +85,90 @@ namespace Forte
         FString Get(const char *key);
         int GetInteger(const char *key);
 
+        template <typename ValueType>
+        ValueType getValueByRegexKey(const Forte::FString &key)
+        {
+            ValueType value;
+        
+            FString rootChild(key);
+            rootChild.LeftString(".");
+        
+            FString leafName(key);
+            leafName.RightString(".");
+        
+            FString middleStuff(key);
+            middleStuff.ChopRight(".");
+            middleStuff.ChopLeft(".");
+        
+            FString propertyKey;
+        
+            try
+            {
+                propertyKey = GetFirstMatchingRegexExpressionKey(rootChild, middleStuff);
+            }
+            catch (EServiceConfigNoKey &e)
+            {
+                hlog(HLOG_DEBUG, "Can't find regex match for (%s) under rootChild (%s)", 
+                        middleStuff.c_str(), rootChild.c_str());
+                throw;
+            }
+        
+            propertyKey.append(FString("/"));
+            propertyKey.append(leafName);
+        
+            try
+            {
+                //value = Get<std::string>(boost::property_tree::ptree::path_type(propertyKey.c_str(), '/'));
+                value = Get<ValueType>(boost::property_tree::ptree::path_type(propertyKey.c_str(), '/'));
+                return value;
+            }
+            catch (boost::property_tree::ptree_bad_path &e)
+            {
+                hlog(HLOG_DEBUG, "No value for key: %s", key.c_str());
+                boost::throw_exception(EServiceConfigNoKey(key));
+            }
+            catch (boost::property_tree::ptree_error &e)
+            {
+                hlog(HLOG_ERR, "Error in query, conf file, or data: key(%s), error(%s)",
+                     key.c_str(), e.what());
+                boost::throw_exception(EServiceConfigNoKey(key));
+            }
+        }
+
+        template <typename ValueType>
+        ValueType Resolve(const Forte::FString &key)
+        {
+            ValueType value;
+            FString default_key_string(key);
+        
+            FString leafName(key);
+            leafName.RightString(".");
+        
+            try
+            {
+                value = ServiceConfig::getValueByRegexKey<ValueType>(key);
+                return value;
+            }
+            catch (EServiceConfigNoKey &e)
+            {
+                default_key_string.LeftString(".").append(".default.").append(leafName);
+                try
+                {
+                    value = ServiceConfig::Get<ValueType>(default_key_string);
+                    return value;
+                }
+                catch (EServiceConfigNoKey &e)
+                {
+                    // if this doesn't succeed, we have no legitimate value
+                    hlog(HLOG_WARN, "Conf resolver cannot get legit value for (%s)", 
+                            default_key_string.c_str());
+                    throw;
+                }
+            }
+        }
+
+
+
         /**
          * Get() this is templated, and also throws an exception
          * if the key does not exist
@@ -170,6 +254,12 @@ namespace Forte
         std::string mConfigFileName;
         Mutex mMutex;
         boost::property_tree::ptree mPTree;
+
+        int getInt(const char *key);
+        int resolveInt(const Forte::FString &key);
+
+        FString getString(const char *key);
+        FString resolveString(const Forte::FString &key);
     };
     typedef boost::shared_ptr<ServiceConfig> ServiceConfigPtr;
 };

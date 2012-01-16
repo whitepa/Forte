@@ -191,6 +191,64 @@ FString& FString::TrimRight(const char* strip_chars)
     return *this;
 }
 
+// a lot of symmetry in Chop/String/Right/Left below
+FString& FString::ChopRight(const char* delimiters)
+{
+    if (! IsDelimited())
+        return *this;
+    std::string::size_type trim;
+    trim = find_last_of(delimiters);
+    erase(trim);
+    return *this;
+}
+
+FString& FString::ChopLeft(const char* delimiters)
+{
+    if (! IsDelimited())
+        return *this;
+    std::string::size_type trim;
+    trim = find_first_of(delimiters);
+    erase(0, trim + 1);
+    return *this;
+}
+
+FString& FString::RightString(const char* delimiters)
+{
+    if (! IsDelimited())
+        return *this;
+    std::string::size_type trim;
+    trim = find_last_of(delimiters);
+    erase(0, trim + 1);
+    return *this;
+}
+
+FString& FString::LeftString(const char* delimiters)
+{
+    if (! IsDelimited())
+        return *this;
+    std::string::size_type trim;
+    trim = find_first_of(delimiters);
+    erase(trim);
+    return *this;
+}
+
+bool FString::IsDelimited(const char* delimiters)
+{
+    std::string::size_type location;
+    location = find_last_of(delimiters);
+    if (location == npos)
+        return false;
+    return true;
+}
+
+int FString::NumDelimiters(const char* delimiters)
+{
+    int num;
+    std::string s = *this;
+    num = std::count(s.begin(), s.end(), delimiters[0]);
+    return num;
+}
+
 
 FString& FString::MakeUpper()
 {

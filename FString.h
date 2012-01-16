@@ -205,6 +205,33 @@ namespace Forte
         FString& TrimRight(const char* strip_chars = " \t\r\n");
 
         /**
+         *Removes string following last delimiter
+         **/
+        FString& ChopRight(const char* delimiters = ".");
+
+        /**
+         *Removes string preceding first delimiter
+         **/
+        FString& ChopLeft(const char* delimiters = ".");
+
+        /**
+         *Removes string preceding last delimiter
+         **/
+        FString& RightString(const char* delimiters = ".");
+
+        /**
+         *Removes string following first delimiter
+         **/
+        FString& LeftString(const char* delimiters = ".");
+
+        /**
+         *Check for delimiter
+         **/
+        bool IsDelimited(const char* delimiters = ".");
+        bool NotDelimited(const char* delimiters = ".");
+        int NumDelimiters(const char* delimiters = ".");
+
+        /**
          *Makes a string all uppercase. Overwrites existing value.
          **/
         FString& MakeUpper();

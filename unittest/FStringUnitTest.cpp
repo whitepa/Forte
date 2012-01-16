@@ -54,6 +54,60 @@ TEST_F(FStringTest, FStringTrimTest)
 
 }
 
+TEST_F(FStringTest, FStringRightLeftStringChop)
+{
+    FString s, d;
+
+    s = "abcd.efg.hijk.lmnop";
+    d = s; d.RightString(".");
+    ASSERT_EQ(d, "lmnop");
+
+    d = s; d.LeftString(".");
+    ASSERT_EQ(d, "abcd");
+
+    d = s; d.ChopLeft(".");
+    ASSERT_EQ(d, "efg.hijk.lmnop");
+
+    d = s; d.ChopRight(".");
+    ASSERT_EQ(d, "abcd.efg.hijk");
+
+    d = s; d.ChopRight(".").ChopLeft(".");
+    ASSERT_EQ(d, "efg.hijk");
+
+    d = "."; d.ChopLeft(".");
+    ASSERT_EQ(d, "");
+ 
+    d = ""; d.ChopLeft(".");
+    ASSERT_EQ(d, "");
+
+    d = "......"; d.ChopLeft(".");
+    ASSERT_EQ(d, ".....");
+
+    hlog(HLOG_DEBUG, "ChopLeft Insanity");
+    d = s; d.ChopLeft(".").ChopLeft(".").ChopLeft(".").ChopLeft(".").ChopLeft(".").ChopLeft(".");
+    ASSERT_EQ(d, "lmnop");
+
+    d = s; 
+    ASSERT_TRUE(d.IsDelimited("."));
+
+    d = "no delimiter";
+    ASSERT_FALSE(d.IsDelimited("."));
+
+try {
+    hlog(HLOG_DEBUG, "ChopRight Insanity");
+    d = s; d.ChopRight(".").ChopRight(".").ChopRight(".").ChopRight(".").ChopRight(".").ChopRight(".");
+    ASSERT_EQ(d, "abcd");
+} catch (std::exception &e) { hlog(HLOG_DEBUG, "chopright exception: (%s)", e.what()); }
+
+    hlog(HLOG_DEBUG, "RightString Insanity");
+    d = s; d.RightString(".").RightString(".").RightString(".").RightString(".").RightString(".").RightString(".");
+    ASSERT_EQ(d, "lmnop");
+
+    hlog(HLOG_DEBUG, "LeftString Insanity");
+    d = s; d.LeftString(".").LeftString(".").LeftString(".").LeftString(".").LeftString(".").LeftString(".");
+    ASSERT_EQ(d, "abcd");
+}
+
 TEST_F(FStringTest, FStringReplace)
 {
     FString s, d;

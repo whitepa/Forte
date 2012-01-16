@@ -102,7 +102,6 @@ void ServiceConfig::GetVectorSubKey(const char *key,     // nodes
                                     const char *subkey,  // backplane
                                     FStringVector &vec)
 {
-    FTRACE;
     vec.clear();
     AutoUnlockMutex lock(mMutex);
     try
@@ -110,7 +109,6 @@ void ServiceConfig::GetVectorSubKey(const char *key,     // nodes
         foreach(const boost::property_tree::ptree::value_type &v, mPTree.get_child(key))
         {
             FString s1(v.first);
-            hlog(HLOG_DEBUG, "found %s", s1.c_str());
             vec.push_back(v.second.get<FString>(subkey));
         }
     }
@@ -132,6 +130,162 @@ int ServiceConfig::GetInteger(const char *key)
         hlog(HLOG_ERR, "error getting key %s : %s",
              key, e.what());
         boost::throw_exception(EServiceConfigNoKey(key));
+    }
+}
+
+int ServiceConfig::getInt(const char *key)
+{
+    int value;
+
+    FString rootChild(key);
+    rootChild.LeftString(".");
+
+    FString leafName(key);
+    leafName.RightString(".");
+
+    FString middleStuff(key);
+    middleStuff.ChopRight(".");
+    middleStuff.ChopLeft(".");
+
+    FString propertyKey;
+
+    try
+    {
+        propertyKey = GetFirstMatchingRegexExpressionKey(rootChild, middleStuff);
+    }
+    catch (EServiceConfigNoKey &e)
+    {
+        hlog(HLOG_DEBUG, "Can't find regex match for (%s) under rootChild (%s)", middleStuff.c_str(), rootChild.c_str());
+        throw;
+    }
+
+    propertyKey.append(FString("/"));
+    propertyKey.append(leafName);
+
+    try
+    {
+        value = Get<int>(boost::property_tree::ptree::path_type(propertyKey.c_str(), '/'));
+        return value;
+    }
+    catch (boost::property_tree::ptree_bad_path &e)
+    {
+        hlog(HLOG_DEBUG, "No value for key: %s", key);
+        boost::throw_exception(EServiceConfigNoKey(key));
+    }
+    catch (boost::property_tree::ptree_error &e)
+    {
+        hlog(HLOG_ERR, "Error in query, conf file, or data: key(%s), error(%s)",
+             key, e.what());
+        boost::throw_exception(EServiceConfigNoKey(key));
+    }
+}
+
+FString ServiceConfig::getString(const char *key)
+{
+    FString value;
+
+    FString rootChild(key);
+    rootChild.LeftString(".");
+
+    FString leafName(key);
+    leafName.RightString(".");
+
+    FString middleStuff(key);
+    middleStuff.ChopRight(".");
+    middleStuff.ChopLeft(".");
+
+    FString propertyKey;
+
+    try
+    {
+        propertyKey = GetFirstMatchingRegexExpressionKey(rootChild, middleStuff);
+    }
+    catch (EServiceConfigNoKey &e)
+    {
+        hlog(HLOG_DEBUG, "Can't find regex match for (%s) under rootChild (%s)", middleStuff.c_str(), rootChild.c_str());
+        throw;
+    }
+
+    propertyKey.append(FString("/"));
+    propertyKey.append(leafName);
+
+    try
+    {
+        value = Get<std::string>(boost::property_tree::ptree::path_type(propertyKey.c_str(), '/'));
+        return value;
+    }
+    catch (boost::property_tree::ptree_bad_path &e)
+    {
+        hlog(HLOG_DEBUG, "No value for key: %s", key);
+        boost::throw_exception(EServiceConfigNoKey(key));
+    }
+    catch (boost::property_tree::ptree_error &e)
+    {
+        hlog(HLOG_ERR, "Error in query, conf file, or data: key(%s), error(%s)",
+             key, e.what());
+        boost::throw_exception(EServiceConfigNoKey(key));
+    }
+}
+
+FString ServiceConfig::resolveString(const Forte::FString &key)
+{
+    FString value;
+    FString default_key_string(key);
+
+    FString leafName(key);
+    leafName.RightString(".");
+
+    try
+    {
+        value = ServiceConfig::getString(key);
+        return value;
+    }
+    catch (EServiceConfigNoKey &e)
+    {
+        default_key_string.LeftString(".").append(".default.").append(leafName);
+        try
+        {
+            value = ServiceConfig::getString(default_key_string);
+            hlog(HLOG_DEBUG, "Found default value (%s) at location: (%s)", value.c_str(), default_key_string.c_str());
+            return value;
+        }
+        catch (EServiceConfigNoKey &e)
+        {
+            // if this doesn't succeed, we have no legitimate value
+            hlog(HLOG_WARN, "Serious error, conf variable resolver cannot return a legitimate value for key (%s)", default_key_string.c_str());
+            throw;
+        }
+    }
+}
+
+int ServiceConfig::resolveInt(const Forte::FString &key)
+{
+    int value;
+    FString default_key_string(key);
+
+    FString leafName(key);
+    leafName.RightString(".");
+
+    try
+    {
+        value = ServiceConfig::getInt(key);
+        return value;
+    }
+    catch (EServiceConfigNoKey &e)
+    {
+        default_key_string.LeftString(".").append(".default.").append(leafName);
+        try
+        {
+            value = ServiceConfig::getInt(default_key_string);
+            hlog(HLOG_DEBUG, "Found default value (%i) at location: (%s)", value, default_key_string.c_str());
+            return value;
+        }
+        catch (EServiceConfigNoKey &e)
+        {
+            // if this doesn't succeed, we have no legitimate value
+            hlog(HLOG_WARN, "Serious error, conf variable resolver cannot return a legitimate value for key (%s)", default_key_string.c_str());
+            throw;
+        }
     }
 }
 
@@ -210,24 +364,16 @@ Forte::FString ServiceConfig::GetFirstMatchingRegexExpressionKey(
         const char* parentKey,
         const char* childToMatch)
 {
-    FTRACE;
-
     Forte::FStringVector subKeyVector;
     GetVectorKeys(parentKey, subKeyVector);
 
     foreach (const FString &key, subKeyVector)
     {
-        // Forte::FString key = v.first;
-        hlog(HLOG_DEBUG, "parentKey: %s, : childToMatch %s",
-                parentKey, childToMatch);
-
-        // we need to do a regex kind of compare
         boost::regex e(key);
         if (regex_match(childToMatch, e))
         {
             return FString(FStringFC(), "%s/%s", parentKey, key.c_str());
         }
     }
-
     boost::throw_exception(EServiceConfigNoKey());
 }
