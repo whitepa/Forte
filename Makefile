@@ -92,6 +92,7 @@ SRCS =	\
 	State.cpp \
 	StateHistoryLogger.cpp \
 	StateMachine.cpp \
+	StateMachineTestHarness.cpp \
 	StateRegion.cpp \
 	Thread.cpp \
 	ThreadKey.cpp \

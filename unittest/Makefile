@@ -74,6 +74,7 @@ GSRCS = ActiveObjectUnitTest.cpp \
 	SCSIUtilUnitTest.cpp \
 	StateMachineDoIntervalUnitTest.cpp \
 	StateMachineSetStateUnitTest.cpp \
+	StateMachineTestHarnessUnitTest.cpp \
 
 GPROGS = $(GSRCS:%.cpp=$(TARGETDIR)/%)
 BPROGS = $(BSRCS:%.cpp=$(TARGETDIR)/%)
@@ -141,6 +142,9 @@ $(TARGETDIR)/RunLoopUnitTest: RunLoopUnitTest.cpp $(FORTE)
 
 $(TARGETDIR)/StateMachineSetStateUnitTest: StateMachineSetStateUnitTest.cpp \
 	../$(TARGETDIR)/StateHistoryLogger.o \
+	$(FORTE)
+
+$(TARGETDIR)/StateMachineTestHarnessUnitTest: StateMachineTestHarnessUnitTest.cpp \
 	$(FORTE)
 
 $(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp $(FORTE)
