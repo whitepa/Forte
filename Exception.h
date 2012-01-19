@@ -28,6 +28,7 @@
 #define PARAMETER_VECTOR_PUSH_BACK(s, data, elem) result.push_back(Forte::FString(PARAMETER_NAME_DATA(~, s, mParameter)))
 
 
+#define EXCEPTION_MAX_STACK_DEPTH 32
 /*
  * Declare Parametric exceptions
  * DESC: format string: all substitution tokes must be of %s.
@@ -175,7 +176,11 @@ namespace Forte
         std::string ExtendedDescription();
         FString mDescription;
 
-        std::list<void *> mStack;
+    protected:
+        void getStack();
+        void formatStack(Forte::FString &formattedStack);
+        void * mStack[EXCEPTION_MAX_STACK_DEPTH];
+        unsigned int mStackSize;
     };
 
 
