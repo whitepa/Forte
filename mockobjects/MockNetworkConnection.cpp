@@ -28,6 +28,7 @@ protected:
         }
         catch(std::exception &e)
         {
+            hlog(HLOG_WARN, "Got exception in runAndCloseFD: %s", e.what());
             mHasException = true;
         }
 
@@ -98,6 +99,11 @@ void MockNetworkConnection::RunMockNetwork()
 
         if (thread.mHasException)
         {
+            // wait for all child pids to finish and then throw
+            kill(childPid, SIGINT);
+            int status;
+            ::wait(&status);
+
             throw ENodeHasException();
         }
         // wait for all child pids to finish
