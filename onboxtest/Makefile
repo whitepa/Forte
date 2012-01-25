@@ -18,54 +18,36 @@ COMMON_INCLUDE = \
 COMMON_LIBS = \
 	$(GTEST_LIB) \
 	$(FORTE_LIBS) \
-	$(LIBSCALE_LIBS) \
 	$(OS_LIBS) \
 	$(SSH2_LIBS) \
+	$(DB_LIBS) \
+	$(BOOST_FS_LIB) \
 	-lpthread -lrt
 
-PROGS=$(TARGETDIR)/SCSIUtilUnitTest $(TARGETDIR)/DbMirroredConnectionUnitTest $(TARGETDIR)/INotifyUnitTest
+PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
+	$(TARGETDIR)/DbMirroredConnectionUnitTest \
+	$(TARGETDIR)/INotifyUnitTest \
+	$(TARGETDIR)/ProcessManagerOnBoxTest \
+	$(TARGETDIR)/RunLoopUnitTest \
+	$(TARGETDIR)/SCSIUtilUnitTest \
 
 # define LIBDIRS for distclean
 LIBDIRS=$(FORTE_DIR)
 
 ###  RULES  ###
-
 all: $(GTEST) $(PROGS) 
 
-$(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp
-	echo "Building $@..."
-	$(CCC) SCSIUtilUnitTest.cpp \
-	-o $(TARGETDIR)/SCSIUtilUnitTest \
-	$(SCALE_SERVICE_CLIENT_LIBS)  \
-	$(COMMON_INCLUDE) \
-	$(COMMON_LIBS)
-	
-$(TARGETDIR)/DbMirroredConnectionUnitTest: DbMirroredConnectionUnitTest.cpp $(FORTE)
-	@echo "Building $@..."
-	$(QUIET)$(CCC) DbMirroredConnectionUnitTest.cpp \
-	-o $(TARGETDIR)/DbMirroredConnectionUnitTest \
-	$(SCALE_SERVICE_CLIENT_LIBS) \
+$(PROGS) : $(TARGETDIR)/% : %.cpp
+	@echo "Building $@ from $*.cpp ..."
+	$(QUIET)$(CCC) $*.cpp \
+	-o $@ \
 	$(COMMON_INCLUDE) \
 	$(COMMON_LIBS) \
-	$(BOOST_FS_LIB) \
-	$(DB_LIBS) \
-	-lsqlite3
-	
-$(TARGETDIR)/INotifyUnitTest: INotifyUnitTest.cpp $(FORTE)
-	@echo "Building $@..."
-	$(QUIET)$(CCC) INotifyUnitTest.cpp \
-	-o $(TARGETDIR)/INotifyUnitTest \
-	$(SCALE_SERVICE_CLIENT_LIBS) \
-	$(COMMON_INCLUDE) \
-	$(COMMON_LIBS) \
-	$(BOOST_FS_LIB)
 
 install: all 
-	@echo "Creating paths under $(PREFIX)"
 	@$(MKDIR) $(PREFIX)/opt/scale/lib/qa/onbox
 	@echo "Copying files to $(PREFIX)"
-	@$(CP) $(TARGETDIR)/DbMirroredConnectionUnitTest $(PREFIX)/opt/scale/lib/qa/onbox
-	@$(CP) $(TARGETDIR)/INotifyUnitTest $(PREFIX)/opt/scale/lib/qa/onbox
+	$(QUIET)for f in $(PROGS); do $(CP) $$f $(PREFIX)/opt/scale/lib/qa/onbox/; done
 
 include $(BUILDROOT)/re/make/tail.mk
 

@@ -24,6 +24,15 @@ void Forte::RealtimeClock::GetTime(struct timespec &ts) const
         throw EClock("Bad address");
 }
 
+void Forte::ProcessCPUClock::GetTime(struct timespec &ts) const
+{
+    int err = clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts);
+    if (err == -EINVAL)
+        throw EClockInvalid();
+    else if (err == -EFAULT)
+        throw EClock("Bad address");
+}
+
 Timespec Timespec::operator + (const Timespec &other) const
 {
     return Timespec(mTimespec + other.mTimespec);

@@ -52,7 +52,7 @@ protected:
 
     virtual void SetUp()
     {
-        mLogManager.BeginLogging("//stderr");
+        mLogManager.BeginLogging(__FILE__ ".log");
 
         {
             hlog(HLOG_TRACE, "{");
@@ -396,7 +396,7 @@ TEST_F(BasicDatabaseTest, AutoBackupAutoFailoverDbMirroredConnectionTest)
         res = dbConnection->Store(SelectDbSqlStatement(SELECT_TEST_TABLE));
     }
 
-    EXPECT_EQ(res.GetNumRows(), rows);
+    EXPECT_EQ(rows, res.GetNumRows());
 }
 
 

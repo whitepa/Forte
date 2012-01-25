@@ -66,7 +66,9 @@ int INotify::AddWatch(const std::string& path, const int& mask)
 
     if(watchFd < 0)
     {
-        throw EINotifyAddWatchFailed(FStringFC(),"inotify_add_watch error: %d on %s", watchFd, path.c_str());
+        throw EINotifyAddWatchFailed(FStringFC(),
+                                     "inotify_add_watch error: %d on %s", 
+                                     watchFd, path.c_str());
     }
 
     mWatchFds.insert(watchFd);

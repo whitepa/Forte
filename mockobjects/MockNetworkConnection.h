@@ -41,9 +41,16 @@ namespace Forte
              */
             void runAndCloseFD(int fd, bool exit) 
             {
-                DoNetworkActivity(fd);
-            
-                close(fd);
+                try
+                {
+                    DoNetworkActivity(fd);
+                    close(fd);
+                }
+                catch (...)
+                {
+                    close(fd);
+                    throw;
+                }
 
                 if (exit)
                 {

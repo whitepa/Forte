@@ -233,6 +233,22 @@ namespace Forte
     };
 
     /**
+     * The Process CPU clock measures the amount of cpu time for this process
+     */
+    class ProcessCPUClock : public Clock
+    {
+    public:
+        ProcessCPUClock() {}
+        virtual ~ProcessCPUClock() {}
+
+        virtual void GetTime(struct timespec& ts) const;
+        Timespec GetTime(void) const {
+            return Clock::GetTime();
+        }
+
+    };
+
+    /**
      *The RealtimeClock class is used to create clocks where the value of time is the same as the system clock.
      *Time in a RealtimeClock object is best for measuring accurate system times and is susceptible to any
      *system clock changes.

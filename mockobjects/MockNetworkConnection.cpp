@@ -81,7 +81,6 @@ void MockNetworkConnection::RunMockNetwork()
         // create the MockThread
         // now run the network node
         MockThread thread(mNodeWhoseStateIsLost, childfd, true);
-        
         thread.WaitForShutdown();
     }
     else
@@ -99,15 +98,24 @@ void MockNetworkConnection::RunMockNetwork()
 
         if (thread.mHasException)
         {
+            hlog(HLOG_DEBUG, 
+                 "Got exception in thread.  Sending %d SIGINT...", childPid);
+
             // wait for all child pids to finish and then throw
-            kill(childPid, SIGINT);
+            kill(childPid, SIGTERM);
+            hlog(HLOG_DEBUG, "Child pid %d killed. Waiting for it to finish", 
+                 childPid);
             int status;
             ::wait(&status);
+            hlog(HLOG_DEBUG, "Done waiting for child pid %d", childPid);
+
 
             throw ENodeHasException();
         }
+        hlog(HLOG_DEBUG, "Waiting for all children to finish");
         // wait for all child pids to finish
         int status;
         ::wait(&status);
+        hlog(HLOG_DEBUG, "All children have finished");
     }
 }

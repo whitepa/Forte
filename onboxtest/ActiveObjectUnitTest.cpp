@@ -21,7 +21,7 @@ class ActiveObjectTest : public ::testing::Test
 {
 protected:
     static void SetUpTestCase() {
-        logManager.BeginLogging("//stdout", HLOG_ALL);
+        logManager.BeginLogging(__FILE__ ".log", HLOG_ALL);
     };
     static void TearDownTestCase() {
 

@@ -52,8 +52,7 @@ BSRCS = ContextUnitTest.cpp \
 	StateMachineUnitTest7.cpp \
 	StateMachineUnitTest8.cpp
 
-GSRCS = ActiveObjectUnitTest.cpp \
-	CheckedValueStoreUnitTest.cpp \
+GSRCS = CheckedValueStoreUnitTest.cpp \
 	CheckedValueUnitTest.cpp \
 	ClockUnitTest.cpp \
 	ClusterLockUnitTest.cpp \
@@ -70,7 +69,6 @@ GSRCS = ActiveObjectUnitTest.cpp \
 	PidFileUnitTest.cpp \
 	PDUPeerUnitTest.cpp \
 	ProcessManagerUnitTest.cpp \
-	RunLoopUnitTest.cpp \
 	SCSIUtilUnitTest.cpp \
 	StateMachineDoIntervalUnitTest.cpp \
 	StateMachineSetStateUnitTest.cpp \
@@ -137,8 +135,6 @@ $(TARGETDIR)/ClusterLockUnitTest: ClusterLockUnitTest.cpp $(FORTE)
 $(TARGETDIR)/ConditionUnitTest: ConditionUnitTest.cpp $(FORTE)
 
 $(TARGETDIR)/ActiveObjectUnitTest: ActiveObjectUnitTest.cpp $(FORTE)
-
-$(TARGETDIR)/RunLoopUnitTest: RunLoopUnitTest.cpp $(FORTE)
 
 $(TARGETDIR)/StateMachineSetStateUnitTest: StateMachineSetStateUnitTest.cpp \
 	../$(TARGETDIR)/StateHistoryLogger.o \
