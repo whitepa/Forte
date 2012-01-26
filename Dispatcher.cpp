@@ -21,5 +21,5 @@ DispatcherThread::DispatcherThread(Dispatcher &dispatcher) :
 {}
 DispatcherThread::~DispatcherThread()
 {
-    deleting();
+
 }

@@ -86,6 +86,11 @@ void Thread::initialized()
 
 void Thread::deleting()
 {
+    if (mDeletingCalled)
+    {
+        hlog(HLOG_ERR, "deleting() called more than once");
+        return;
+    }
     // tell the thread to shut down
     Shutdown();
     // Join the pthread

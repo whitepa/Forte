@@ -3,6 +3,8 @@
 #include "Foreach.h"
 #include "Clock.h"
 #include <boost/scoped_ptr.hpp>
+#include "FTrace.h"
+
 using namespace boost;
 using namespace Forte;
 
@@ -16,8 +18,11 @@ Forte::ThreadPoolDispatcherManager::ThreadPoolDispatcherManager(ThreadPoolDispat
 
 void * Forte::ThreadPoolDispatcherManager::run(void)
 {
+    FTRACE;
+
     ThreadPoolDispatcher &disp(dynamic_cast<ThreadPoolDispatcher&>(mDispatcher));
-    mThreadName.Format("%s-disp-%u", disp.mDispatcherName.c_str(), GetThreadID());
+    mThreadName.Format("%s-disp-%u", disp.mDispatcherName.c_str(), 
+                       GetThreadID());
     
     // start initial worker threads
     for (unsigned int i = 0; i < disp.mMinThreads; ++i)
@@ -25,13 +30,15 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
         disp.mThreadSem.Wait();
         try
         {
+            hlog(HLOG_DEBUG2, "%s: Creating %i (of %i) thread pool worker ...", 
+                 disp.mDispatcherName.c_str(), i, disp.mMinThreads);
             AutoUnlockMutex lock(disp.mThreadsLock);
             disp.mThreads.push_back(shared_ptr<ThreadPoolDispatcherWorker>(
                                         new ThreadPoolDispatcherWorker(disp)));
         }
         catch (...)
         {
-            // XXX log
+            hlog(HLOG_WARN, "Error while creating new thread pool worker");
             disp.mThreadSem.Post();
             break;
         }
@@ -49,14 +56,18 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
         int numNew = 0;
         if (newThreadsNeeded < (int)disp.mMinThreads - currentThreads)
             newThreadsNeeded = (int)disp.mMinThreads - currentThreads;
-//        hlog(HLOG_DEBUG4, "ThreadPool Manager Loop: %d threads; %d spare; %d needed",
+//        hlog(HLOG_DEBUG4, 
+//             "ThreadPool Manager Loop: %d threads; %d spare; %d needed",
 //             currentThreads, spareThreads, newThreadsNeeded);
         if (!disp.mShutdown && newThreadsNeeded > 0)
         {
             numNew = (lastNew == 0) ? 1 : lastNew * 2;
+
             // we must now create numNew threads
             for (int i = 0; i < numNew; ++i)
             {
+                hlog(HLOG_DEBUG2, "%s: Creating %i thread pool worker", 
+                     disp.mDispatcherName.c_str(), i);
                 if (disp.mThreadSem.TryWait() == -1 && errno == EAGAIN)
                 {
                     numNew = 0;
@@ -65,12 +76,18 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
                 else
                 {
                     // create a new worker thread
-                    try {
+                    try 
+                    {
                         AutoUnlockMutex lock(disp.mThreadsLock);
-                        disp.mThreads.push_back(shared_ptr<ThreadPoolDispatcherWorker>(
-                                                    new ThreadPoolDispatcherWorker(disp)));
-                    } catch (...) {
+                        disp.mThreads.push_back(
+                            shared_ptr<ThreadPoolDispatcherWorker>(
+                                new ThreadPoolDispatcherWorker(disp)));
+                    } 
+                    catch (...) 
+                    {
                         // XXX log err
+                        hlog(HLOG_WARN, 
+                             "Error occurred while creating new worker");
                         disp.mThreadSem.Post();
                         numNew = 0;
                         break;
@@ -84,7 +101,8 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
             // too many spare threads, shut one down
             hlog(HLOG_DEBUG, "shutting down a thread");
             AutoUnlockMutex lock(disp.mThreadsLock);
-            std::vector<shared_ptr<DispatcherThread> >::iterator i = disp.mThreads.begin();
+            std::vector<shared_ptr<DispatcherThread> >::iterator i = 
+                disp.mThreads.begin();
             if (*i)
             {
                 (*i)->Shutdown();
@@ -95,13 +113,15 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
     }
 
     // shut down
-    hlog(HLOG_DEBUG, "'%s' dispatcher shutting down, handling final queued requests...",
+    hlog(HLOG_DEBUG, 
+         "'%s' dispatcher shutting down, handling final queued requests...",
          disp.mDispatcherName.c_str());
 
     // wait until all requests are processed
     disp.mEventQueue.WaitUntilEmpty();
     
-    hlog(HLOG_DEBUG, "'%s' dispatcher shutting down, waiting for threads to exit...",
+    hlog(HLOG_DEBUG, 
+         "'%s' dispatcher shutting down, waiting for threads to exit...",
          disp.mDispatcherName.c_str());
 
     // tell all workers to shutdown
@@ -111,11 +131,13 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
         {
             if (thr)
             {
-                hlog(HLOG_DEBUG3, "notifying thread %s of shutdown", thr->mThreadName.c_str());
+                hlog(HLOG_DEBUG3, "notifying thread %s of shutdown", 
+                     thr->mThreadName.c_str());
                 thr->Shutdown();
             }
             else
-                hlog(HLOG_ERR, "invalid thread pointer in dispatcher thread vector");
+                hlog(HLOG_ERR, 
+                     "invalid thread pointer in dispatcher thread vector");
         }
     }
     // since the threads may now be waiting on the main dispatcher
@@ -140,10 +162,13 @@ Forte::ThreadPoolDispatcherWorker::ThreadPoolDispatcherWorker(ThreadPoolDispatch
     mMonotonicClock(),
     mLastPeriodicCall(mMonotonicClock.GetTime().AsSeconds())
 {
+    FTRACE;
     initialized();
 }
 Forte::ThreadPoolDispatcherWorker::~ThreadPoolDispatcherWorker()
 {
+    FTRACE;
+
     // This method will be called in the thread which is destroying
     // the worker, NOT by the worker thread itself.
 //    hlog(HLOG_DEBUG3, "worker cleanup");
@@ -155,11 +180,16 @@ Forte::ThreadPoolDispatcherWorker::~ThreadPoolDispatcherWorker()
     // TODO: move to manager?  or remove threadSem altogether, since
     //the size of the thread vector should now be an accurate
     //representation of the number of threads.
+
+    deleting();
 }
 void * Forte::ThreadPoolDispatcherWorker::run(void)
 {
+    FTRACE;
+
     ThreadPoolDispatcher &disp(dynamic_cast<ThreadPoolDispatcher&>(mDispatcher));
-    mThreadName.Format("%s-pool-%u", mDispatcher.mDispatcherName.c_str(), GetThreadID());
+    mThreadName.Format("%s-pool-%u", mDispatcher.mDispatcherName.c_str(), 
+                       GetThreadID());
     hlog(HLOG_DEBUG3, "initializing...");
     // call the request handler's initialization hook
     disp.mRequestHandler->Init();
@@ -214,6 +244,7 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
             mLastPeriodicCall = now.tv_sec;
         }
     }
+    hlog(HLOG_DEBUG2, "Thread shutdown");
     return NULL;
 }
 

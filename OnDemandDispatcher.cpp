@@ -91,6 +91,8 @@ Forte::OnDemandDispatcherWorker::~OnDemandDispatcherWorker()
     OnDemandDispatcher &disp(dynamic_cast<OnDemandDispatcher&>(mDispatcher));
     disp.mRequestHandler->Cleanup();
     disp.mThreadSem.Post();
+
+    deleting();
 }
 
 void * Forte::OnDemandDispatcherWorker::run()

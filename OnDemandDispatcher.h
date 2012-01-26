@@ -12,7 +12,7 @@ namespace Forte
     {
     public:
         OnDemandDispatcherManager(OnDemandDispatcher &disp);
-        virtual ~OnDemandDispatcherManager() {};
+        virtual ~OnDemandDispatcherManager() { deleting();};
     protected:
         virtual void *run(void);
     };
@@ -20,7 +20,7 @@ namespace Forte
     {
     public:
         OnDemandDispatcherWorker(OnDemandDispatcher &disp, shared_ptr<Event> event);
-        ~OnDemandDispatcherWorker();
+        virtual ~OnDemandDispatcherWorker();
     protected:
         virtual void *run(void);
     };
