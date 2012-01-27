@@ -6,6 +6,8 @@
 #include "ServiceConfig.h"
 #include "AutoMutex.h"
 #include "Exception.h"
+#include "PidFile.h"
+
 #include <set>
 
 namespace Forte
@@ -34,7 +36,6 @@ namespace Forte
 
         virtual void MainLoop();
         virtual void Usage();
-        void WritePidFile();
         virtual void PrepareSigmask();
  
         /**
@@ -47,7 +48,7 @@ namespace Forte
         FString mConfigFile;
         FString mDaemonName;
         FString mLogFile;
-        FString mPidFile;
+        boost::shared_ptr<PidFile> mPidFile;
         bool mDaemon;
         LogManager mLogManager;
         Context mContext;

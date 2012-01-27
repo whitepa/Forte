@@ -19,7 +19,8 @@ namespace Forte
         ///  Desired directory for pidfile does not exist or cannot be written
         ///
         ///
-        PidFile(FileSystemPtr fs, const char *path);
+        PidFile(FileSystemPtr fs, const FString &path,
+                const FString &name = FString());
         virtual ~PidFile();
 
         /*
@@ -48,6 +49,8 @@ namespace Forte
     protected:
         FString mPath;
         FileSystemPtr mFileSystem;
+        FString mName;
+
         /*
          * Flag to indicate that this pid file was created and should be
          * removed when this object is destructed

@@ -23,7 +23,8 @@ namespace Forte
         void SetFDForFileOpen(unsigned int fd);
         virtual void FileOpen(AutoFD &autoFd, const FString& path, int flags, 
                               int mode);
-        virtual void FilePutContents(int fd, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
+        virtual void FilePutContents(const FString &path, int flags,
+                int mode, const char *fmt, ...) __attribute__((format(printf, 5, 6)));
 
         void FileAppend(const FString& from, const FString& to);
 

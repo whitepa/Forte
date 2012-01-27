@@ -85,9 +85,10 @@ void MockFileSystem::FileOpen(AutoFD &autoFd, const FString &path, int flags,
     autoFd = mFDForFileOpen;
 }
 
-void MockFileSystem::FilePutContents(int fd, const char *fmt, ...)
+void MockFileSystem::FilePutContents(const FString &path, int flags,
+        int mode, const char *fmt, ...)
 {
-    FTRACE2("%i", fd);
+    FTRACE2("%s, %i, %i, %s", path.c_str(), flags, mode, fmt);
 
     char contents[1024];
     va_list args;
@@ -99,7 +100,8 @@ void MockFileSystem::FilePutContents(int fd, const char *fmt, ...)
     }
     va_end(args);
     
-    mFilesByFD[fd] = FString(contents);
+    FilePutContents(path, FString(contents));
+
     hlog(HLOG_DEBUG, "contents of file is %s", contents);
 }
 

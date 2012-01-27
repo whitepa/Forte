@@ -22,6 +22,7 @@ COMMON_LIBS = \
 	$(SSH2_LIBS) \
 	$(DB_LIBS) \
 	$(BOOST_FS_LIB) \
+	$(BOOST_REGEX_LIB) \
 	-lpthread -lrt
 
 PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
@@ -30,6 +31,7 @@ PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
 	$(TARGETDIR)/ProcessManagerOnBoxTest \
 	$(TARGETDIR)/RunLoopUnitTest \
 	$(TARGETDIR)/SCSIUtilUnitTest \
+	$(TARGETDIR)/ServerMainOnboxTest
 
 # define LIBDIRS for distclean
 LIBDIRS=$(FORTE_DIR)
@@ -47,7 +49,8 @@ $(PROGS) : $(TARGETDIR)/% : %.cpp
 install: all 
 	@$(MKDIR) $(PREFIX)/opt/scale/lib/qa/onbox
 	@echo "Copying files to $(PREFIX)"
-	$(QUIET)for f in $(PROGS); do $(CP) $$f $(PREFIX)/opt/scale/lib/qa/onbox/; done
+	@$(CP) $(PROGS) $(PREFIX)/opt/scale/lib/qa/onbox
+	@$(CP) ServerMainOnboxTest.info $(PREFIX)/opt/scale/lib/qa/onbox
 
 include $(BUILDROOT)/re/make/tail.mk
 

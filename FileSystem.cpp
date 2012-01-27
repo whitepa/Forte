@@ -42,38 +42,32 @@ FString FileSystem::StrError(int err) const
 FString FileSystem::Basename(const FString& filename,
                              const FString& suffix)
 {
-    FString result(filename);
-    FStringVector pathComponents;
-    int count = filename.Explode("/", pathComponents);
-    if (count)
+    size_t pos = filename.find_last_of("/");
+    FString result;
+    if (pos == NOPOS)
+        result = filename;
+    else
+        result = filename.Right(filename.length() - (pos + 1));
+
+    if (!suffix.empty())
     {
-        FString base = pathComponents[count-1];
-        if (!suffix.empty())
-        {
-            FString end = base.Right(suffix.length());
-            if (end.Compare(suffix) == 0)
-                result = base.Left(base.length() - suffix.length());
-            else
-                result = base;
-        }
-        else
-        {
-            result = base;
-        }
+        FString end = result.Right(suffix.length());
+        if (end.Compare(suffix) == 0)
+            result = result.Left(result.length() - suffix.length());
     }
+
     return result;
 }
 
 FString FileSystem::Dirname(const FString& filename)
 {
-    FString result(".");
-    FStringVector pathComponents;
-    int count = filename.Explode("/", pathComponents);
-    if (count)
-    {
-        pathComponents.pop_back();
-        result = result.Implode("/", pathComponents);
-    }
+    size_t pos = filename.find_last_of("/");
+    FString result;
+    if (pos == NOPOS)
+        result = ".";
+    else
+        result = filename.Left(pos);
+
     return result;
 }
 
@@ -877,21 +871,27 @@ void FileSystem::FileOpen(AutoFD &autoFd, const FString& path, int flags, int mo
     }
 }
 
-void FileSystem::FilePutContents(int fd, const char* fmt, ...)
+void FileSystem::FilePutContents(const FString& path, int flags, int mode, const char* fmt, ...)
 {
-    FTRACE2("%i", fd);
+    FTRACE2("%s, %i, %i, %s", path.c_str(), flags, mode, fmt);
+
+    int fd = ::open(path, flags, mode);
+    if (fd < 0)
+        SystemCallUtil::ThrowErrNoException(errno);
+
+    FILE *file = fdopen(fd, "w");
+    if (file == NULL)
+    {
+        close(fd);
+        SystemCallUtil::ThrowErrNoException(errno);
+    }
 
     va_list args;
     va_start(args, fmt);
-    FILE *file=fdopen(fd, "w");
-    if (file == NULL)
-    {
-        SystemCallUtil::ThrowErrNoException(errno);
-    }
     vfprintf(file, fmt, args);
     va_end(args);
 
-    // @TODO fclose(file) ??
+    fclose(file); // we must use fclose if open and fdopen succceeded
 }
 
 void FileSystem::FilePutContents(const FString& filename, const FString& data, 

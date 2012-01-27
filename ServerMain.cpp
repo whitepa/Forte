@@ -4,6 +4,8 @@
 #include "ServerMain.h"
 #include "FTrace.h"
 #include "VersionManager.h"
+#include "FileSystem.h"
+
 using namespace Forte;
 using namespace boost;
 
@@ -69,6 +71,7 @@ void ServerMain::init(const FString& defaultConfig,
 {
     // setup the config
     CNEW("forte.ServiceConfig", ServiceConfig);
+    CGETNEWPTR("forte.FileSystem", FileSystem, fs);
 
     mLogManager.SetGlobalLogMask(logMask);
 
@@ -86,8 +89,12 @@ void ServerMain::init(const FString& defaultConfig,
         sc.ReadConfigFile(mConfigFile);
 
     // pid file
-    mPidFile = sc.Get("pidfile");
-    if (!mPidFile.empty()) WritePidFile();
+    FString pidPath = sc.Get("pidfile");
+    if (!pidPath.empty())
+    {
+        mPidFile = boost::make_shared<PidFile>(fs, pidPath, mDaemonName);
+        mPidFile->Create();
+    }
 
     initLogging();
     hlog(HLOG_INFO, "%s is starting up", mDaemonName.c_str());
@@ -181,65 +188,13 @@ void ServerMain::initLogging()
 ServerMain::~ServerMain()
 {
     // delete the pidfile
-    unlink(mPidFile.c_str());
     mContext.Remove("forte.ServiceConfig");
+    mContext.Remove("forte.FileSystem");
 }
 
 void ServerMain::Usage()
 {
     cout << "Incorrect usage." << endl;
-}
-void ServerMain::WritePidFile()
-{
-    // \TODO:  get rid of this method.  See Forte::PidFile
-    FILE *file;
-    if ((file = fopen(mPidFile.c_str(), "r")) != NULL)
-    {
-        int old_pid;
-        if (fscanf(file, "%u", &old_pid) == 1)
-        {
-            char procfile[32];
-            fclose(file);
-            
-            // make sure the pid is different
-            // (if it's the same as our pid, 
-            // this is obviously a stale pid file)
-            if (getpid() != old_pid)
-            {
-                sprintf(procfile, "/proc/%u/cmdline", old_pid);
-                if ((file = fopen(procfile, "r"))
-                    != NULL)
-                {
-                    char cmdbuf[100];
-                    fgets(cmdbuf, sizeof(cmdbuf), file);
-                    fclose(file);
-                    // @TODO fix this
-                    if (strstr(cmdbuf, "forte_process"))
-                    {
-                        // process is running
-                        FString err;
-                        err.Format("forte process already running on pid %u\n",
-                                   old_pid);
-                        throw EServerMain(err);
-                    }
-                }
-            }
-        }
-        else
-            fclose(file);
-    }
-    // create PID file
-    if ((file = fopen(mPidFile.c_str(), "w")) == NULL)
-    {
-        FString err;
-        err.Format("Unable to write to pid file %s\n", mPidFile.c_str());
-        throw EServerMain(err);
-    }
-    else
-    {
-        fprintf(file, "%u", getpid());
-        fclose(file);
-    }
 }
 
 void ServerMain::PrepareSigmask()

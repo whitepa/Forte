@@ -106,7 +106,9 @@ namespace Forte
                                      bool throwOnError=false);
         virtual void FileOpen(AutoFD &autoFd, const FString &path, int flags, 
                               int mode);
-        virtual void FilePutContents(int fd, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
+        virtual void FilePutContents(const FString &path, int flags,
+                int mode, const char *fmt, ...) __attribute__((format(printf, 5, 6)));
+
         virtual void FileAppend(const FString& from, const FString& to);
 
         /// deep_copy copies a directory tree from 'source' to 'dest'.

@@ -115,3 +115,33 @@ TEST_F(FileSystemUnitTest, TestFileAppend)
     ASSERT_EQ(contents3, (contents1 + contents2));
 }
 
+
+TEST_F(FileSystemUnitTest, DirName)
+{
+    hlog(HLOG_INFO, "DireName");
+
+    FileSystem f;
+    FString file1 = "/level1/level2/level3/level4.tmp";
+
+    ASSERT_STREQ("/level1/level2/level3", f.Dirname(file1));
+
+    FString file2 = "test.tmp";
+    ASSERT_STREQ(".", f.Dirname(file2));
+}
+
+TEST_F(FileSystemUnitTest, Basename)
+{
+    hlog(HLOG_INFO, "Basename");
+
+    FileSystem f;
+    FString file1 = "/level1/level2/level3/level4.tmp";
+
+    ASSERT_STREQ("level4.tmp", f.Basename(file1));
+    ASSERT_STREQ("level4", f.Basename(file1, ".tmp"));
+
+    FString file2 = "test.tmp";
+    ASSERT_STREQ("test.tmp", f.Basename(file2));
+    ASSERT_STREQ("test", f.Basename(file2, ".tmp"));
+}
+
+

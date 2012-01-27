@@ -85,16 +85,13 @@ TEST_F(PidFileTest, CreateHappyPath)
     MockFileSystemPtr mfs = boost::make_shared<MockFileSystem>();
 
     // set up the mock file system
-    mfs->SetFileExistsResult("/var/run/my.pid", false);
-    mfs->SetFDForFileOpen(999);
+    mfs->SetFileExistsResult("/var/run/my.pid", false);;
     unsigned int pid = 5555;
     {
         PidFile p(mfs, "/var/run/my.pid");
         p.Create(pid);
     }
     FString pidFileContents(FStringFC(), "%u", pid);  // \n?
-    hlog(HLOG_DEBUG, "Expected '%s'.  Stored '%s'", 
-         pidFileContents.c_str(), mfs->mFilesByFD[999].c_str());
-    ASSERT_TRUE(mfs->mFilesByFD[999] == pidFileContents);
+    ASSERT_STREQ(pidFileContents, mfs->FileGetContents("/var/run/my.pid"));
     ASSERT_TRUE(mfs->FileWasUnlinked("/var/run/my.pid"));
 }
