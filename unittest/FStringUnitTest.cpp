@@ -9,14 +9,14 @@ LogManager logManager;
 class FStringTest : public ::testing::Test
 {
 protected:
-    static void SetUpTestCase() 
+    static void SetUpTestCase()
     {
         logManager.BeginLogging("//stdout");
         logManager.SetLogMask("//stdout", HLOG_ALL);
         hlog(HLOG_DEBUG, "Starting test...");
     }
 
-    static void TearDownTestCase() 
+    static void TearDownTestCase()
     {
         logManager.EndLogging("//stdout");
     }
@@ -29,27 +29,27 @@ TEST_F(FStringTest, FStringTrimTest)
 
     s = "abcd";
     d = s; d.Trim();
-    ASSERT_EQ(d, "abcd"); 
+    ASSERT_EQ(d, "abcd");
 
     s = " abcd   ";
     d = s; d.Trim();
-    ASSERT_EQ(d, "abcd"); 
+    ASSERT_EQ(d, "abcd");
 
     s = " ab cd";
     d = s; d.Trim();
-    ASSERT_EQ(d, "ab cd"); 
+    ASSERT_EQ(d, "ab cd");
 
     s = "          ";
     d = s; d.Trim();
-    ASSERT_EQ(d, ""); 
+    ASSERT_EQ(d, "");
 
     s = "";
     d = s; d.Trim();
-    ASSERT_EQ(d, ""); 
+    ASSERT_EQ(d, "");
 
     s = " abcdx";
     d = s; d.Trim("x");
-    ASSERT_EQ(d, " abcd"); 
+    ASSERT_EQ(d, " abcd");
 
 
 }
@@ -76,7 +76,7 @@ TEST_F(FStringTest, FStringRightLeftStringChop)
 
     d = "."; d.ChopLeft(".");
     ASSERT_EQ(d, "");
- 
+
     d = ""; d.ChopLeft(".");
     ASSERT_EQ(d, "");
 
@@ -87,7 +87,7 @@ TEST_F(FStringTest, FStringRightLeftStringChop)
     d = s; d.ChopLeft(".").ChopLeft(".").ChopLeft(".").ChopLeft(".").ChopLeft(".").ChopLeft(".");
     ASSERT_EQ(d, "lmnop");
 
-    d = s; 
+    d = s;
     ASSERT_TRUE(d.IsDelimited("."));
 
     d = "no delimiter";
@@ -111,7 +111,7 @@ try {
 TEST_F(FStringTest, FStringReplace)
 {
     FString s, d;
-    
+
     s = "quite";
     d = s; d.Replace("te", "et");
     ASSERT_EQ(d, "quiet");
@@ -137,7 +137,7 @@ TEST_F(FStringTest, FStringLineSplit)
 {
     FString s;
     std::vector<FString> lines;
-    
+
     s = "ab\ncd\n ef";
     s.LineSplit(lines);
     ASSERT_EQ(lines.size(), 3);
@@ -211,30 +211,30 @@ TEST_F(FStringTest, TokenizeFStringTest)
     std::vector<FString> tokens;
 
     s = "this is a test";
-    d = s; 
+    d = s;
     d.Tokenize(" ", tokens);
     ASSERT_EQ(tokens.size(), 4);
     ASSERT_EQ(tokens[1], "is");
 
     s = "1this234is56a78test90";
-    d = s; 
+    d = s;
     d.Tokenize("1234567890", tokens);
     ASSERT_EQ(tokens.size(), 4);
     ASSERT_EQ(tokens[3], "test");
 
     s = " this is   a    test  ";
-    d = s; 
+    d = s;
     d.Tokenize(" ", tokens);
     ASSERT_EQ(tokens.size(), 4);
     ASSERT_EQ(tokens[0], "this");
     ASSERT_EQ(tokens[1], "is");
 
     s = " this is   a    test  ";
-    d = s; 
+    d = s;
     d.Tokenize("Z12345\n", tokens);
     ASSERT_EQ(tokens.size(), 1);
     ASSERT_EQ(tokens[0], " this is   a    test  ");
-    
+
     s = " this is    a     test  ";
     d = s;
     d.Tokenize(" ", tokens, 2);

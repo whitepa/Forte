@@ -71,7 +71,7 @@
  * to have broken the attribute.
  *
  */
-        //            __attribute__((format(printf,3,4)))               
+        //            __attribute__((format(printf,3,4)))
 
 #define EXCEPTION_CLASS(NAME)                                           \
     class NAME : public Forte::Exception                                \
@@ -142,7 +142,7 @@
 
 namespace Forte
 {
-    class Exception : public Object, 
+    class Exception : public Object,
                       public virtual std::exception,
                       public virtual boost::exception
     {
@@ -152,11 +152,11 @@ namespace Forte
         Exception(const FStringFC &fc, const char *format, ...);//  __attribute__((format(printf,5,6)));
         Exception(const Exception& other);
         virtual ~Exception() throw();
-        const std::string &GetDescription() const throw() { 
-            return mDescription; 
+        const std::string &GetDescription() const throw() {
+            return mDescription;
         }
 
-        virtual const char *what() const throw() { 
+        virtual const char *what() const throw() {
             return mDescription;
         }
 
@@ -193,7 +193,7 @@ namespace Forte
     // exceptions here
     EXCEPTION_SUBCLASS2(Exception, EFString, "FString");
     EXCEPTION_SUBCLASS2(EFString, EFStringLoadFile, "LoadFile");
-    EXCEPTION_SUBCLASS2(EFString, EFStringUnknownAddressFamily, 
+    EXCEPTION_SUBCLASS2(EFString, EFStringUnknownAddressFamily,
                         "Unknown address family");
 
     EXCEPTION_PARAM_SUBCLASS(EFString, ParamException, "%s %s", (FString)(FString));
