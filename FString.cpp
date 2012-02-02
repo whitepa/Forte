@@ -194,7 +194,7 @@ FString& FString::TrimRight(const char* strip_chars)
 // a lot of symmetry in Chop/String/Right/Left below
 FString& FString::ChopRight(const char* delimiters)
 {
-    if (! IsDelimited())
+    if (! IsDelimited(delimiters))
         return *this;
     std::string::size_type trim;
     trim = find_last_of(delimiters);
@@ -204,7 +204,7 @@ FString& FString::ChopRight(const char* delimiters)
 
 FString& FString::ChopLeft(const char* delimiters)
 {
-    if (! IsDelimited())
+    if (! IsDelimited(delimiters))
         return *this;
     std::string::size_type trim;
     trim = find_first_of(delimiters);
@@ -214,7 +214,7 @@ FString& FString::ChopLeft(const char* delimiters)
 
 FString& FString::RightString(const char* delimiters)
 {
-    if (! IsDelimited())
+    if (! IsDelimited(delimiters))
         return *this;
     std::string::size_type trim;
     trim = find_last_of(delimiters);
@@ -224,7 +224,7 @@ FString& FString::RightString(const char* delimiters)
 
 FString& FString::LeftString(const char* delimiters)
 {
-    if (! IsDelimited())
+    if (! IsDelimited(delimiters))
         return *this;
     std::string::size_type trim;
     trim = find_first_of(delimiters);

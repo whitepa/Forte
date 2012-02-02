@@ -348,7 +348,20 @@ void MockFileSystem::AddFileToFileSystem(const FString& path, bool createPath)
 
 void MockFileSystem::SymLink(const FString& from, const FString& to)
 {
+    hlog(HLOG_DEBUG, "setting symlink (%s) to (%s)", from.c_str(), to.c_str());
     mSymLinksCreated[from] = to;
+}
+
+FString MockFileSystem::ResolveSymLink(const FString& from)
+{
+    FTRACE2("%s", from.c_str());
+
+    StrStrMap::const_iterator i;
+    if ((i = mSymLinksCreated.find(from)) == mSymLinksCreated.end())
+    {
+        return false;
+    }
+    return (*i).second;
 }
 
 bool MockFileSystem::SymLinkWasCreated(const FString& from, const FString& to)

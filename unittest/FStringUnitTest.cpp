@@ -107,6 +107,21 @@ try {
     hlog(HLOG_DEBUG, "LeftString Insanity");
     d = s; d.LeftString(".").LeftString(".").LeftString(".").LeftString(".").LeftString(".").LeftString(".");
     ASSERT_EQ(d, "abcd");
+
+    hlog(HLOG_DEBUG, "non-. delimiter");
+    d = "dev.scale.slot5p4";
+    ASSERT_NE(d.LeftString("v"), "dev");
+
+    d = "/dev/scale/slot5p4";
+    d.RightString("'t'");
+    hlog(HLOG_DEBUG, "d value: (%s)", d.c_str());
+    ASSERT_EQ(d, "5p4");
+
+    d.LeftString("p");
+    ASSERT_EQ(d, "5");
+
+    d = "/dev/scale/slot5p4";
+    ASSERT_EQ(d.RightString("t").LeftString("p"), "5");
 }
 
 TEST_F(FStringTest, FStringReplace)

@@ -66,6 +66,7 @@ namespace Forte
         void AddFileToFileSystem(const FString& path, bool createPath);
 
         void SymLink(const FString& from, const FString& to);
+        Forte::FString ResolveSymLink(const FString& from);
         bool SymLinkWasCreated(const FString& from, const FString& to);
         StrStrMap mSymLinksCreated;
 
