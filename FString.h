@@ -361,6 +361,25 @@ namespace Forte
         int Explode(const char *delim, std::vector<std::string> &components,
                     bool trim=false, const char* strip_chars = " \t\r\n") const;
 
+        /**
+         * Append to a passed in set of FStrings by splitting the
+         * string on the delimiter you specify.
+         *
+         * NOTE: Unlike Explode API's, this does not clear the set.
+         *
+         * @param trim when true calls Trim(strip_chars) on each of
+         * the resulting strings.
+         **/
+        int DelimitedListToSet(const char *delim,
+                               std::set<FString> &components,
+                               bool trim=false,
+                               const char* strip_chars = " \t\r\n") const;
+
+        int DelimitedListToSet(const char *delim,
+                               std::set<std::string> &components,
+                               bool trim=false,
+                               const char* strip_chars = " \t\r\n") const;
+
         //Similar to Explode, but does the actual tokenizing by skipping
         //contiguous delimiter characters. Also, unlike Explode, each character
         //in delim can be a delimiter.

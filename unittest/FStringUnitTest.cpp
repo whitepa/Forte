@@ -3,6 +3,7 @@
 #include "LogManager.h"
 
 using namespace Forte;
+using namespace boost;
 
 LogManager logManager;
 
@@ -181,6 +182,57 @@ TEST_F(FStringTest, ExplodeFStringTest)
     ASSERT_EQ(shards.size(), 2);
     ASSERT_EQ(shards[1], "world");
 }
+
+TEST_F(FStringTest, DelimitedListToSet_FString)
+{
+    FString s;
+    std::set<FString> shards;
+    std::set<FString> desiredShards;
+
+    desiredShards.insert("this");
+    desiredShards.insert("is");
+    desiredShards.insert("a");
+    desiredShards.insert("test");
+
+    s = "this is a test";
+    s.DelimitedListToSet(" ", shards);
+    EXPECT_TRUE(desiredShards == shards);
+
+    s = "thisXXXisXXXaXXXtest";
+    shards.clear();
+    s.DelimitedListToSet("XXX", shards);
+    EXPECT_TRUE(desiredShards == shards);
+
+    shards.clear();
+    s = "xxxthisx,is ,a, testxxxy";
+    s.DelimitedListToSet(",", shards, true, " xy");
+    EXPECT_TRUE(desiredShards == shards);
+}
+
+TEST_F(FStringTest, DelimitedListToSet_StdString)
+{
+    FString s;
+    std::set<std::string> shards;
+    std::set<std::string> desiredShards;
+
+    desiredShards.insert("this");
+    desiredShards.insert("is");
+    desiredShards.insert("a");
+    desiredShards.insert("test");
+
+    s = "this is a test";
+    s.DelimitedListToSet(" ", shards);
+    EXPECT_TRUE(desiredShards == shards);
+
+    s = "thisXXXisXXXaXXXtest";
+    s.DelimitedListToSet("XXX", shards);
+    EXPECT_TRUE(desiredShards == shards);
+
+    s = "xxxthisx,is ,a, testxxxy";
+    s.DelimitedListToSet(",", shards, true, " xy");
+    EXPECT_TRUE(desiredShards == shards);
+}
+
 
 TEST_F(FStringTest, ImplodeExplodeBinaryFStringTest)
 {

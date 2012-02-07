@@ -347,6 +347,50 @@ int FString::Explode(const char *delim, std::vector<FString> &components, bool t
     return components.size();
 }
 
+int FString::DelimitedListToSet(const char *delim,
+                                std::set<FString> &components,
+                                bool trim,
+                                const char* strip_chars) const
+{
+    size_t cur=0,next=0, dlen = strlen(delim);
+    while ((next = find(delim, cur))!=std::string::npos)
+    {
+        if (trim)
+            components.insert(Mid(cur, next-cur).Trim(strip_chars));
+        else
+            components.insert(Mid(cur, next-cur));
+
+        cur += next-cur+dlen;
+    }
+    if (trim)
+        components.insert(Mid(cur).Trim(strip_chars));
+    else
+        components.insert(Mid(cur));
+    return components.size();
+}
+
+int FString::DelimitedListToSet(const char *delim,
+                                std::set<std::string> &components,
+                                bool trim,
+                                const char* strip_chars) const
+{
+    size_t cur=0,next=0, dlen = strlen(delim);
+    components.clear();
+    while ((next = find(delim, cur))!=std::string::npos)
+    {
+        if (trim)
+            components.insert(Mid(cur, next-cur).Trim(strip_chars));
+        else
+            components.insert(Mid(cur, next-cur));
+
+        cur += next-cur+dlen;
+    }
+    if (trim)
+        components.insert(Mid(cur).Trim(strip_chars));
+    else
+        components.insert(Mid(cur));
+    return components.size();
+}
 
 int FString::Tokenize(const char *delim, std::vector<FString> &components, size_t max_parts) const
 {
@@ -373,8 +417,7 @@ int FString::Tokenize(const char *delim, std::vector<FString> &components, size_
         start = end;
     }
 
-    if (max_parts != 0 &&
-        i == max_parts)
+    if (max_parts != 0 && i == max_parts)
     {
         // we reached the max parts and breaked
         components.push_back(Mid(start));
@@ -667,8 +710,8 @@ void FString::SaveFile(const char *filename, const FString &in)
     fclose(file);
     if (status < 1)
     {
-        throw EFString(FStringFC(), 
-                       "failed to write to file '%s': %s", 
+        throw EFString(FStringFC(),
+                       "failed to write to file '%s': %s",
                        filename, strerror(err));
     }
 }
