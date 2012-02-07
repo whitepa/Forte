@@ -12,7 +12,7 @@ namespace Forte
     {
     public:
         ThreadPoolDispatcherManager(ThreadPoolDispatcher &disp);
-        virtual ~ThreadPoolDispatcherManager() {};
+        virtual ~ThreadPoolDispatcherManager() { deleting(); };
     protected:
         virtual void *run(void);
     };

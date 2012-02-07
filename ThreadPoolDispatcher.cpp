@@ -66,8 +66,6 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
             // we must now create numNew threads
             for (int i = 0; i < numNew; ++i)
             {
-                hlog(HLOG_DEBUG2, "%s: Creating %i thread pool worker", 
-                     disp.mDispatcherName.c_str(), i);
                 if (disp.mThreadSem.TryWait() == -1 && errno == EAGAIN)
                 {
                     numNew = 0;
@@ -78,6 +76,9 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
                     // create a new worker thread
                     try 
                     {
+                        hlog(HLOG_DEBUG2, "%s: Creating %i thread pool worker", 
+                             disp.mDispatcherName.c_str(), i);
+
                         AutoUnlockMutex lock(disp.mThreadsLock);
                         disp.mThreads.push_back(
                             shared_ptr<ThreadPoolDispatcherWorker>(
