@@ -179,7 +179,8 @@ void Forte::ProcessManagerImpl::startMonitor(
             // (redirects 0,1,2 to /dev/null, forks, parent calls _exit)
             if (daemon(1, 0) == -1)
             {
-                hlog(HLOG_ERR, "failed to daemonize");
+                fprintf(stderr, "procmon child, daemon() failed: %d %s\n", errno, strerror(errno));
+                exit(-1);
             }
             setsid();
             FString childfdStr(childfd);
@@ -189,7 +190,7 @@ void Forte::ProcessManagerImpl::startMonitor(
             vargs[2] = 0;
 //        fprintf(stderr, "procmon child, exec '%s' '%s'\n", mProcmonPath.c_str(), vargs[1]);
             execv(mProcmonPath, vargs);
-//        fprintf(stderr, "procmon child, exec failed: %d %s\n", errno, strerror(errno));
+            fprintf(stderr, "procmon child, exec() failed: %d %s\n", errno, strerror(errno));
             exit(-1);
         }
         else
@@ -204,10 +205,10 @@ void Forte::ProcessManagerImpl::startMonitor(
             // wait for process to deamonise
             // if we don't do this we will leave
             // behind zombie processes
-            int child_status;
+            int childStatus;
             int retCode;
             // while this pid still exists to be waited on
-            while ((retCode = waitpid(childPid, &child_status, 0)) == 0
+            while ((retCode = waitpid(childPid, &childStatus, 0)) == 0
                    || (retCode == -1 && errno == EINTR))
             {
                 usleep(100000);
@@ -215,9 +216,19 @@ void Forte::ProcessManagerImpl::startMonitor(
 
             if (retCode != childPid && errno != ECHILD)
             {
-                hlog(HLOG_ERR,
-                     "err waiting on child pid: %d, %d (%s)",
-                     childPid, errno, strerror(errno));
+                hlog_and_throw(HLOG_ERR,
+                               EProcessManagerUnableToCreateProcmon(
+                                   FStringFC(),
+                                   "err waiting on child pid: %d, %d (%s)",
+                                   childPid, errno, strerror(errno)));
+            }
+            else if (WIFEXITED(childStatus) && WEXITSTATUS(childStatus) != 0)
+            {
+                hlog_and_throw(HLOG_ERR,
+                               EProcessManagerUnableToCreateProcmon(
+                                   FStringFC(),
+                                   "procmon child failed with status %d",
+                                   WEXITSTATUS(childStatus)));
             }
         }
     }

@@ -19,6 +19,8 @@ namespace Forte
     EXCEPTION_CLASS(EProcessManager);
     EXCEPTION_SUBCLASS2(EProcessManager, EProcessManagerUnableToFork,
                         "Unable to fork a child process");
+    EXCEPTION_SUBCLASS2(EProcessManager, EProcessManagerUnableToCreateProcmon,
+                        "Unable to create a procmon process");
     EXCEPTION_SUBCLASS2(EProcessManager, EProcessManagerInvalidPeer,
                         "Received message from an invalid peer");
     EXCEPTION_SUBCLASS2(EProcessManager, EProcessManagerNoSharedPtr,
