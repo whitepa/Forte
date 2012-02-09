@@ -165,8 +165,9 @@ namespace Forte
     };
 
     /**
-     *The Clock class is an interface for implementing subclasses @ref MonotonicClock and @ref RealtimeClock.
-     **/
+     * The Clock class is an interface for implementing subclasses
+     * @ref MonotonicClock and @ref RealtimeClock.
+     */
     class Clock : public Object
     {
     public:
@@ -174,8 +175,9 @@ namespace Forte
         virtual ~Clock() {};
 
         /**
-         *This is a pure virtual function that fills in the Timespec object with the current time dependent
-         *upon the derived class (MonotonicClock or RealtimeClock).
+         * This is a pure virtual function that fills in the Timespec
+         * object with the current time dependent upon the derived
+         * class (MonotonicClock or RealtimeClock).
          **/
         virtual void GetTime(struct timespec &ts) const = 0;
 
@@ -188,13 +190,26 @@ namespace Forte
             return ts;
         };
 
+        /**
+         * If the clock can be converted to a realtime value,
+         * this method will do so, or else throw EUnimplemented.
+         */
+        virtual Timespec ConvertToRealtime(const struct timespec &ts) const = 0;
+        /**
+         * If the clock can be converted to a realtime value, this
+         * method will do so (preserving zero timespecs), or else
+         * throw EUnimplemented.
+         */
+        virtual Timespec ConvertToRealtimePreserveZero(const struct timespec &ts) const = 0;
     };
 
     /**
-     *The MonotonicClock class is used to create clocks where the value of the time always increases even if
-     *the system time changes. Time in a MonotonicClock object increases at a consistent rate regardless of
-     *the system time changing. It is an ideal class to use if you want to measure time intervals.
-     **/
+     * The MonotonicClock class is used to create clocks where the
+     * value of the time always increases even if the system time
+     * changes. Time in a MonotonicClock object increases at a
+     * consistent rate regardless of the system time changing. It is an
+     * ideal class to use if you want to measure time intervals.
+     */
     class MonotonicClock : public Clock
     {
     public:
@@ -208,6 +223,8 @@ namespace Forte
         Timespec GetTime(void) const {
             return Clock::GetTime();
         };
+        virtual Timespec ConvertToRealtime(const struct timespec &ts) const;
+        virtual Timespec ConvertToRealtimePreserveZero(const struct timespec &ts) const;
     };
 
     /**
@@ -245,14 +262,20 @@ namespace Forte
         Timespec GetTime(void) const {
             return Clock::GetTime();
         }
-
+        virtual Timespec ConvertToRealtime(const struct timespec &ts) const {
+            throw EUnimplemented();
+        }
+        virtual Timespec ConvertToRealtimePreserveZero(const struct timespec &ts) const {
+            throw EUnimplemented();
+        }
     };
 
     /**
-     *The RealtimeClock class is used to create clocks where the value of time is the same as the system clock.
-     *Time in a RealtimeClock object is best for measuring accurate system times and is susceptible to any
-     *system clock changes.
-     **/
+     * The RealtimeClock class is used to create clocks where the value
+     * of time is the same as the system clock.  Time in a
+     * RealtimeClock object is best for measuring accurate system times
+     * and is susceptible to any system clock changes.
+     */
     class RealtimeClock : public Clock
     {
     public:
@@ -260,13 +283,20 @@ namespace Forte
         virtual ~RealtimeClock() {};
 
         /**
-         *This is a virtual function that fills in the Timespec object with the current time on the system
-         *clock.
-         **/
+         * This is a virtual function that fills in the Timespec object
+         * with the current time on the system clock.
+         */
         virtual void GetTime(struct timespec &ts) const;
         Timespec GetTime(void) const {
             return Clock::GetTime();
-        };
+        }
+        virtual Timespec ConvertToRealtime(const struct timespec &ts) const {
+            return ts;
+        }
+        virtual Timespec ConvertToRealtimePreserveZero(const struct timespec &ts) const {
+            return ts;
+        }
+
     };
 
     std::ostream& operator<<(std::ostream& os, const Timespec& obj);

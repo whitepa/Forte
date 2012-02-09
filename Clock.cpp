@@ -14,6 +14,17 @@ void Forte::MonotonicClock::GetTime(struct timespec &ts) const
     else if (err == -EFAULT)
         throw EClock("Bad address");
 }
+Timespec Forte::MonotonicClock::ConvertToRealtime(const struct timespec &ts) const
+{
+    return ts + (RealtimeClock().GetTime() - GetTime());
+}
+Timespec Forte::MonotonicClock::ConvertToRealtimePreserveZero(const struct timespec &ts) const
+{
+    Timespec tSpec(ts);
+    if (tSpec.IsZero())
+        return tSpec;
+    return tSpec + (RealtimeClock().GetTime() - GetTime());
+}
 
 void Forte::RealtimeClock::GetTime(struct timespec &ts) const
 {
