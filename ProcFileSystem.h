@@ -49,10 +49,6 @@ namespace Forte
 
         virtual unsigned int CountOpenFileDescriptors(pid_t pid = getpid() );
 
-        virtual pid_t GetPidForProcess(const FString &procName) const; 
-
-        virtual void SetOOMScore(pid_t pid, const FString &score);
-
     protected:
         // TODO: need a context pointer
         const Context &mContext;

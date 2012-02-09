@@ -4,8 +4,6 @@
 #include "Foreach.h"
 
 #include <boost/regex.hpp>
-#include <stdio.h>
-#include <errno.h>
 
 using namespace boost;
 using namespace Forte;
@@ -111,64 +109,6 @@ unsigned int ProcFileSystem::CountOpenFileDescriptors(pid_t pid)
     fs.GetChildren("/proc/" + FString(pid) + "/fd", children);
 
     return children.size();
-}
-
-pid_t ProcFileSystem::GetPidForProcess(const FString &procName) const
-{
-    FString command(FStringFC(), "pgrep %s", procName.c_str());
-    FILE *fp = popen(command, "r");
-    if (!fp)
-    {
-        hlog(LOG_ERR,"unable to open stream");
-        return -1;
-    }
-    char pid[10], c, *pp=pid;
-    while (((pp - pid) < 10) && (c = fgetc(fp)) != EOF)
-    {
-        if (c != '\n')
-            *pp++ = c;
-    }
-    *pp=0;
-    pclose(fp);
-
-    if (strlen(pid) == 0)
-    {
-        hlog(LOG_ERR,"error reading pid from stream");
-        return -1;
-    }
-    hlog(LOG_DEBUG,"pid of process:%s", pid);
-
-    return strtol(pid, NULL, 0);
-}
-
-
-void ProcFileSystem::SetOOMScore(pid_t pid, const FString &score)
-{
-    FString procFileName(FStringFC(), "/proc/%d/oom_score_adj", pid);
-    hlog(LOG_DEBUG,"opening proc file %s", procFileName.c_str());
-
-    AutoFD  fd;
-    char errmsg[256];
-    char const *errstr;
-    if ((fd = ::open(procFileName.c_str(), O_WRONLY)) < 0)
-    {
-        errstr = strerror_r(errno, errmsg, 256);
-        hlog(LOG_ERR,"error opening %s, error :%s",
-             procFileName.c_str(), errstr);
-
-        throw EProcFileSystem(errstr);
-    }
-    if ((size_t)::write(fd, score.c_str(), score.length()) != score.length())
-    {
-        errstr = strerror_r(errno, errmsg, 256);
-        hlog(LOG_ERR,"error writing %s, error :%s",
-             procFileName.c_str(),errstr);
-
-        throw EProcFileSystem(errstr);
-    }
-
-    hlog(LOG_DEBUG, "Sucessfully changed the oom score of %d process",
-         pid);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
