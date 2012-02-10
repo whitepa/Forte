@@ -111,12 +111,7 @@ TEST_F(ProcessManagerTest, FDLeak)
     {
         hlog(HLOG_INFO, "new ProcessManager");
 
-        Context c;
-        // setup
-        boost::shared_ptr<FileSystem> fsptr(new FileSystemImpl());
-        c.Set("forte.FileSystem", fsptr);
-
-        ProcFileSystem pfs(c);
+        ProcFileSystem pfs(boost::make_shared<Forte::FileSystemImpl>());
 
         boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
         hlog(HLOG_INFO, "CreateProcess");

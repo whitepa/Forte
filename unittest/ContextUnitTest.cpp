@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(UptimeMockContents)
     c.Set("forte.FileSystem", fsptr);
 
     // construct
-    ProcFileSystem procFileSystem(c);
+    ProcFileSystem procFileSystem(fsptr);
 
     // test uptime
     ProcFileSystem::Uptime uptime;
