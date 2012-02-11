@@ -12,7 +12,7 @@ namespace Forte
     EXCEPTION_SUBCLASS(Exception, EProcFileSystem);
 
     /**
-     * \class ProcFileSystem 
+     * \class ProcFileSystem
      *
      * This class will be used to read and parse various info from the
      * /proc virtual filesystem on linux, throwing exceptions as
@@ -52,7 +52,7 @@ namespace Forte
     protected:
         // TODO: need a context pointer
         const Context &mContext;
-        void getProcFileContents(const FString& pathInSlashProc, 
+        void getProcFileContents(const FString& pathInSlashProc,
                                  FString& contents);
 
     };
