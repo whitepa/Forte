@@ -50,7 +50,7 @@ FString MockFileSystem::FileGetContents(const FString& filename) const
     }
 }
 
-void MockFileSystem::FilePutContents(const FString& filename, 
+void MockFileSystem::FilePutContents(const FString& filename,
                                      const FString& data,
                                      bool append,
                                      bool throwOnError)
@@ -76,17 +76,17 @@ void MockFileSystem::SetFDForFileOpen(unsigned int fd)
     mFDForFileOpen=fd;
 }
 
-void MockFileSystem::FileOpen(AutoFD &autoFd, const FString &path, int flags, 
+void MockFileSystem::FileOpen(AutoFD &autoFd, const FString &path, int flags,
                               int mode)
 {
     FTRACE2("%s, %i, %i", path.c_str(), flags, mode);
-    
+
     // don't do anything for now.  we'll need a MockAutoFD or something like that
     autoFd = mFDForFileOpen;
 }
 
 void MockFileSystem::FilePutContents(const FString &path, int flags,
-        int mode, const char *fmt, ...)
+                                     int mode, const char *fmt, ...)
 {
     FTRACE2("%s, %i, %i, %s", path.c_str(), flags, mode, fmt);
 
@@ -99,7 +99,7 @@ void MockFileSystem::FilePutContents(const FString &path, int flags,
         hlog_and_throw(HLOG_ERR, Exception("Unable to add file contents"));
     }
     va_end(args);
-    
+
     FilePutContents(path, FString(contents));
 
     hlog(HLOG_DEBUG, "contents of file is %s", contents);
@@ -224,7 +224,7 @@ FString MockFileSystem::ReadLink(const FString& path)
     throw EErrNoEINVAL(FStringFC(), "%s is not a symlink", path.c_str());
 }
 
-void MockFileSystem::SetReadLinkResult(const FString& path, 
+void MockFileSystem::SetReadLinkResult(const FString& path,
                                        const FString& result)
 {
     FTRACE2("%s --> %s", path.c_str(), result.c_str());
@@ -258,22 +258,19 @@ void MockFileSystem::SetIsDirResult(const FString& path, bool result)
 
 int MockFileSystem::ScanDir(const FString& path, vector<FString> *namelist)
 {
+    *namelist = m_scanDirResultsMap[path];
 
-
-
-	*namelist = m_scanDirResultsMap[path];
-
-	return (int)m_scanDirResultsMap[path].size();
+    return (int)m_scanDirResultsMap[path].size();
 }
 
 
 void MockFileSystem::AddScanDirResult(const FString& path, FString name)
 {
-	hlog(HLOG_DEBUG4, "AddScanDirResult: %s", path.c_str());
+    hlog(HLOG_DEBUG4, "AddScanDirResult: %s", path.c_str());
 
-	m_scanDirResultsMap[path].push_back(name);
+    m_scanDirResultsMap[path].push_back(name);
 
-	hlog(HLOG_DEBUG4, "AddScanDirResult resulting size: %d", (int)m_scanDirResultsMap[path].size());
+    hlog(HLOG_DEBUG4, "AddScanDirResult resulting size: %d", (int)m_scanDirResultsMap[path].size());
 
 }
 
@@ -282,75 +279,71 @@ void MockFileSystem::AddDirectoryPathToFileSystem(const FString& path)
 {
 
 
-	FString curPath = "";
+    FString curPath = "";
 
-	hlog(HLOG_DEBUG4, "MockFileSystem::%s(%s)", __FUNCTION__, path.c_str());
+    hlog(HLOG_DEBUG4, "MockFileSystem::%s(%s)", __FUNCTION__, path.c_str());
 
-	vector<FString> pathsplit = path.split("/");
-	int curindex = 0;
-	foreach(FString curSplit, pathsplit)
-	{
-		hlog(HLOG_DEBUG4, "curPath: %s", curPath.c_str());
-		hlog(HLOG_DEBUG4, "curSplit: %s", curSplit.c_str());
-		if (curPath == "" || curPath.substr(curPath.size() -1 ,1) != "/")
-		{
-			curPath.append("/");
-		}
-		curPath.append(curSplit);
+    vector<FString> pathsplit = path.split("/");
+    int curindex = 0;
+    foreach(FString curSplit, pathsplit)
+    {
+        hlog(HLOG_DEBUG4, "curPath: %s", curPath.c_str());
+        hlog(HLOG_DEBUG4, "curSplit: %s", curSplit.c_str());
+        if (curPath == "" || curPath.substr(curPath.size() -1 ,1) != "/")
+        {
+            curPath.append("/");
+        }
+        curPath.append(curSplit);
 
-		if (curindex < ((int)pathsplit.size() - 1))
-		{
+        if (curindex < ((int)pathsplit.size() - 1))
+        {
 
-			AddScanDirResult(curPath, pathsplit[curindex+1]);
+            AddScanDirResult(curPath, pathsplit[curindex+1]);
 
-			curindex++;
-
-
-		}
-
-		//setup filexists
-		SetFileExistsResult(curPath,true);
-
-		//setup stat
-		struct stat newst;
-		newst.st_ino = mStatMap.size() + 1223;
-		newst.st_nlink = 1;
-
-		SetStatResult(curPath,newst,true);
-		SetIsDirResult(curPath,true);
+            curindex++;
 
 
+        }
 
-	}
+        //setup filexists
+        SetFileExistsResult(curPath,true);
+
+        //setup stat
+        struct stat newst;
+        newst.st_ino = mStatMap.size() + 1223;
+        newst.st_nlink = 1;
+
+        SetStatResult(curPath,newst,true);
+        SetIsDirResult(curPath,true);
+
+
+
+    }
 
 }
 void MockFileSystem::AddFileToFileSystem(const FString& path, bool createPath)
 {
-	//do a foreach on the split of the path
-	FString curPath;
-	hlog(HLOG_DEBUG4, "MockFileSystem::%s(%s)", __FUNCTION__, path.c_str());
+    //do a foreach on the split of the path
+    FString curPath;
+    hlog(HLOG_DEBUG4, "MockFileSystem::%s(%s)", __FUNCTION__, path.c_str());
 
-	foreach(FString curSplit, path.split("/"))
-	{
-		if (curSplit != "")
-		{
+    foreach(FString curSplit, path.split("/"))
+    {
+        if (curSplit != "")
+        {
+            curPath.append("/");
+            curPath.append(curSplit.c_str());
 
+            hlog(HLOG_DEBUG4, "curPath: %s", curPath.c_str());
+            hlog(HLOG_DEBUG4, "curSplit: %s", curSplit.c_str());
+            //setup filexists
+            SetFileExistsResult(curPath,true);
 
-			curPath.append("/");
-			curPath.append(curSplit.c_str());
+            //setup stat
 
-			hlog(HLOG_DEBUG4, "curPath: %s", curPath.c_str());
-			hlog(HLOG_DEBUG4, "curSplit: %s", curSplit.c_str());
-			//setup filexists
-			SetFileExistsResult(curPath,true);
-
-			//setup stat
-
-			//setup scan dir
-
-		}
-
-	}
+            //setup scan dir
+        }
+    }
 }
 
 
@@ -367,7 +360,7 @@ bool MockFileSystem::SymLinkWasCreated(const FString& from, const FString& to)
     if ((i = mSymLinksCreated.find(from)) == mSymLinksCreated.end())
     {
         return false;
-    } 
+    }
     else if ((*i).second == to) // make sure the to matches
     {
         return true;
@@ -377,7 +370,7 @@ bool MockFileSystem::SymLinkWasCreated(const FString& from, const FString& to)
 }
 
 void MockFileSystem::Unlink(const FString& path, bool unlink_children,
-        const ProgressCallback &progressCallback)
+                            const ProgressCallback &progressCallback)
 {
     FTRACE2("%s", path.c_str());
 
@@ -403,7 +396,7 @@ void MockFileSystem::AddChild(const FString& parentPath, const FString& child)
     mChildren[parentPath].push_back(child);
 }
 
-void MockFileSystem::RemoveChild(const FString& parentPath, 
+void MockFileSystem::RemoveChild(const FString& parentPath,
                                  const FString& child)
 {
     FTRACE2("%s, %s", parentPath.c_str(), child.c_str());
@@ -419,7 +412,7 @@ void MockFileSystem::RemoveChild(const FString& parentPath,
     childIt=std::find<std::vector<FString>::iterator, FString>(children.begin(), children.end(), child);
     if (childIt != children.end())
     {
-        hlog(HLOG_DEBUG, "Removing %s from %s", child.c_str(), 
+        hlog(HLOG_DEBUG, "Removing %s from %s", child.c_str(),
              parentPath.c_str());
         children.erase(childIt);
     }
@@ -436,9 +429,9 @@ void MockFileSystem::SetChildren(const FString &parentPath,
     }
 }
 
-void MockFileSystem::GetChildren(const FString& path, 
+void MockFileSystem::GetChildren(const FString& path,
                                  std::vector<Forte::FString> &children,
-                                 bool recurse, 
+                                 bool recurse,
                                  bool includePathInChildNames) const
 {
     FTRACE2("%s", path.c_str());
@@ -448,7 +441,7 @@ void MockFileSystem::GetChildren(const FString& path,
     {
         return;
     }
-    
+
     foreach (const FString &child, i->second)
     {
         children.push_back(child);
