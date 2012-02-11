@@ -10,6 +10,8 @@ namespace Forte
 {
     // typed exceptions
     EXCEPTION_SUBCLASS(Exception, EProcFileSystem);
+    EXCEPTION_SUBCLASS2(EProcFileSystem, EProcFileSystemProcessNotFound,
+                        "Could not find pid for requested process");
 
     /**
      * \class ProcFileSystem
@@ -48,6 +50,10 @@ namespace Forte
         virtual void MemoryInfoRead(Forte::StrDoubleMap& meminfo);
 
         virtual unsigned int CountOpenFileDescriptors(pid_t pid = getpid() );
+
+
+        virtual void PidOf(const FString& runningProg, std::vector<pid_t>& pids);
+        virtual bool ProcessIsRunning(const FString& runningProg);
 
     protected:
         // TODO: need a context pointer
