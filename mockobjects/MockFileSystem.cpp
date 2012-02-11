@@ -255,8 +255,7 @@ void MockFileSystem::SetIsDirResult(const FString& path, bool result)
     mIsDirResultMap[path] = result;
 }
 
-
-int MockFileSystem::ScanDir(const FString& path, vector<FString> *namelist)
+int MockFileSystem::ScanDir(const FString& path, std::vector<FString> &namelist)
 {
     *namelist = m_scanDirResultsMap[path];
 
