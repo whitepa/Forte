@@ -14,14 +14,14 @@ namespace Forte
         void StatFS(const FString& path, struct statfs *st);
 
         Forte::FString FileGetContents(const Forte::FString& filename) const;
-        void FilePutContents(const Forte::FString& filename,
-                             const Forte::FString& data,
+        void FilePutContents(const Forte::FString& filename, 
+                             const Forte::FString& data, 
                              bool append=false,
                              bool throwOnError=false);
         void FileClearContents(const Forte::FString& filename);
         map<int, FString> mFilesByFD;
         void SetFDForFileOpen(unsigned int fd);
-        virtual void FileOpen(AutoFD &autoFd, const FString& path, int flags,
+        virtual void FileOpen(AutoFD &autoFd, const FString& path, int flags, 
                               int mode);
         virtual void FilePutContents(const FString &path, int flags,
                 int mode, const char *fmt, ...) __attribute__((format(printf, 5, 6)));
@@ -68,7 +68,7 @@ namespace Forte
         void SymLink(const FString& from, const FString& to);
         bool SymLinkWasCreated(const FString& from, const FString& to);
         StrStrMap mSymLinksCreated;
-
+        
         void Unlink(const FString& path, bool unlink_children = false,
                     const ProgressCallback &progressCallback = ProgressCallback());
         map<FString, bool> mFilesUnlinked;
@@ -76,15 +76,15 @@ namespace Forte
         void ClearFilesUnlinked();
 
         map<FString, vector<FString> > mChildren;
-        void SetChildren(const FString& parentPath,
+        void SetChildren(const FString& parentPath, 
                          std::vector<Forte::FString> &children);
         void AddChild(const FString& parentPath, const FString& child);
         void RemoveChild(const FString& parentPath, const FString& child);
-        void GetChildren(const FString& path,
+        void GetChildren(const FString& path, 
                          std::vector<Forte::FString> &children,
                          bool recurse = false,
                          bool includePathInChildNames = true) const;
-
+        
 
         map<FString, FString> mReadLinkResults;
         virtual FString ReadLink(const FString& path);

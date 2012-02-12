@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(UptimeMockContents)
     // test uptime
     ProcFileSystem::Uptime uptime;
     procFileSystem.UptimeRead(uptime);
-
+    
     BOOST_CHECK_EQUAL(uptime.mSecondsUp, 30782.38);
     BOOST_CHECK_EQUAL(uptime.mSecondsIdle, 29768.69);
 }
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(UptimeVerifyRealOutput)
     // test uptime
     ProcFileSystem::Uptime uptime;
     procFileSystem.UptimeRead(uptime);
-
+    
     BOOST_CHECK_GT(uptime.mSecondsUp, 100); // just want to make sure
                                             // we got a number
 
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(MemoryInfoReadMock)
     Context c;
 
     shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
-    fsptr->FilePutContents("/proc/meminfo",
+    fsptr->FilePutContents("/proc/meminfo", 
                            "MemTotal:      1015276 kB\n"
                            "MemFree:         16868 kB\n"
                            "Buffers:         68840 kB\n"
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(MemoryInfoReadMock)
     BOOST_CHECK_EQUAL(memoryInfo["HugePages_Total"], 0);
     BOOST_CHECK_EQUAL(memoryInfo["HugePages_Free"], 0);
     BOOST_CHECK_EQUAL(memoryInfo["HugePages_Rsvd"], 0);
-    BOOST_CHECK_EQUAL(memoryInfo["Hugepagesize"], 2048);
+    BOOST_CHECK_EQUAL(memoryInfo["Hugepagesize"], 2048);    
 }
 
 

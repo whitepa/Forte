@@ -34,7 +34,7 @@ void ProcFileSystem::UptimeRead(Uptime& uptime)
     {
         secondsUp.assign(m[1].first, m[1].second);
         secondsIdle.assign(m[2].first, m[2].second);
-        hlog(HLOG_DEBUG4, "found %s -> %s",
+        hlog(HLOG_DEBUG4, "found %s -> %s", 
              secondsUp.c_str(), secondsIdle.c_str());
 
         uptime.mSecondsUp = secondsUp.AsDouble();
@@ -77,7 +77,7 @@ void ProcFileSystem::MemoryInfoRead(Forte::StrDoubleMap& meminfo)
             if (components[1].Trim() == "0")
             {
                 // handling HugePages_Total:     0
-                hlog(LOG_DEBUG,
+                hlog(LOG_DEBUG, 
                      "non standard parse from /proc/meminfo; mem value is '%s'",
                      components[1].c_str());
             }
@@ -85,7 +85,7 @@ void ProcFileSystem::MemoryInfoRead(Forte::StrDoubleMap& meminfo)
             {
                 hlog(LOG_ERR, "bad parse from /proc/meminfo; mem value is '%s'",
                      components[1].c_str());
-                continue;
+                continue;                
             }
         }
 
@@ -115,7 +115,7 @@ unsigned int ProcFileSystem::CountOpenFileDescriptors(pid_t pid)
 // helpers
 ////////////////////////////////////////////////////////////////////////////////
 
-void ProcFileSystem::getProcFileContents(const FString& pathInSlashProc,
+void ProcFileSystem::getProcFileContents(const FString& pathInSlashProc, 
                                          FString& contents)
 {
     FileSystemPtr fsptr;
