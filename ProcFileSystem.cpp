@@ -2,12 +2,9 @@
 #include "ProcFileSystem.h"
 #include "FileSystem.h"
 #include "Foreach.h"
-#include "FTrace.h"
-#include "LogManager.h"
 
 #include <boost/regex.hpp>
 
-using namespace std;
 using namespace boost;
 using namespace Forte;
 
@@ -112,55 +109,6 @@ unsigned int ProcFileSystem::CountOpenFileDescriptors(pid_t pid)
     fs.GetChildren("/proc/" + FString(pid) + "/fd", children);
 
     return children.size();
-}
-
-void ProcFileSystem::PidOf(const FString& runningProg, vector<pid_t>& pids)
-{
-    FTRACE2("%s", runningProg.c_str());
-
-    CGET("forte.FileSystem", FileSystem, fs);
-
-    Forte::FStringVector children;
-    fs.ScanDir("/proc", children);
-    bool found;
-    FString cmdlinePath, cmdline, programName;
-
-    foreach (const FString& child, children)
-    {
-        cmdlinePath = "/proc/" + child + "/cmdline";
-
-        if (child.IsNumeric() && fs.FileExists(cmdlinePath))
-        {
-            cmdline = fs.FileGetContents(cmdlinePath).c_str();
-            programName = fs.Basename(cmdline);
-
-            if (programName == runningProg)
-            {
-                hlog(HLOG_DEBUG, "found match");
-                found = true;
-                pids.push_back((pid_t) child.AsInteger());
-            }
-        }
-    }
-
-    if (!found)
-    {
-        hlog_and_throw(HLOG_DEBUG, EProcFileSystemProcessNotFound());
-    }
-}
-
-bool ProcFileSystem::ProcessIsRunning(const FString& runningProg)
-{
-    try
-    {
-        vector<pid_t> pids;
-        PidOf(runningProg, pids);
-        return true;
-    }
-    catch (EProcFileSystemProcessNotFound &e)
-    {
-        return false;
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

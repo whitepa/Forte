@@ -58,7 +58,7 @@ namespace Forte
 		void SetIsDirResult(const Forte::FString& path, bool result);
 
 
-        int ScanDir(const FString& path, std::vector<FString> &namelist);
+        int ScanDir(const FString& path, vector<FString> *namelist);
         map<Forte::FString, vector<FString> > m_scanDirResultsMap;
         void AddScanDirResult(const FString& path, FString name);
 
