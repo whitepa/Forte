@@ -128,6 +128,8 @@ namespace Forte
          * unlink just one path (no recursion)
          **/
         virtual void unlinkHelper(const FString& path);
+
+        virtual FString MakeTemporaryFile(const FString& nameTemplate) const;
     };
 };
 #endif

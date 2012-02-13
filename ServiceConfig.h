@@ -49,7 +49,8 @@ namespace Forte
          *
          * @param configFile
          */
-        void ReadConfigFile(const char *configFile, ServiceConfigFileType type = INFO);
+        virtual void ReadConfigFile(const char *configFile, 
+                                    ServiceConfigFileType type = INFO);
 
         /**
          * Set a given key to the given value.  Previous information
@@ -60,7 +61,7 @@ namespace Forte
          * @param key
          * @param value
          */
-        void Set(const char *key, const char *value);
+        virtual void Set(const char *key, const char *value);
 
         /**
          * Set a given key to the given value.  If previous
@@ -71,7 +72,7 @@ namespace Forte
          * @param key
          * @param value
          */
-        void Add(const char *key, const char *value);
+        virtual void Add(const char *key, const char *value);
 
         /* 
          * Removes a given key.
@@ -80,10 +81,10 @@ namespace Forte
          *
          * @param key
          */
-        void Erase(const char *key);
-
-        FString Get(const char *key) const;
-        int GetInteger(const char *key) const;
+        virtual void Erase(const char *key);
+        
+        virtual FString Get(const char *key) const;
+        virtual int GetInteger(const char *key) const;
 
         template <typename ValueType>
         ValueType getValueByRegexKey(const Forte::FString &key)
@@ -192,8 +193,7 @@ namespace Forte
             }
         }
 
-        void Display(void);
-        void Clear();
+        virtual void Clear();
 
         /**
          * GetVectorKeys will retrieve a vector of subkeys for a given key
@@ -201,10 +201,10 @@ namespace Forte
          * @param key the config key which contains subtrees
          * @param vec the output vector of the subkeys under key
          */
-        void GetVectorKeys(
+        virtual void GetVectorKeys(
             const char *key,
             FStringVector &vec /*OUT*/) const;
-        void GetVectorKeys(
+        virtual void GetVectorKeys(
             const boost::property_tree::ptree::path_type &key,
             FStringVector &vec /*OUT*/) const;
 
@@ -215,22 +215,22 @@ namespace Forte
          * @param subkey the key within each subtree to retrieve.
          * @param vec the output vector of string config values.
          */
-        void GetVectorSubKey(const char *key,
-                             const char *subkey,
-                             FStringVector &vec) const;
+        virtual void GetVectorSubKey(const char *key,
+                                     const char *subkey,
+                                     FStringVector &vec) const;
 
         /**
          * Write the configuration back to the service config
          * file that it read from
          */
-        void WriteToConfigFile(void);
+        virtual void WriteToConfigFile(void);
 
         /**
          * Write the configuration to a new config file
          *
          * @param newConfigFile the new config file to write.
          */
-        void WriteToConfigFile(const char *newConfigFile);
+        virtual void WriteToConfigFile(const char *newConfigFile);
 
         /**
          * Gets the first property containing a regex expression that
@@ -240,26 +240,25 @@ namespace Forte
          * @param parentKey key containing subkeys that are regular expressions
          * @param childToMatch key to actually match
          */
-        FString GetFirstMatchingRegexExpressionKey(const char *parentKey,
-                                                   const char* childToMatch);
+        virtual FString GetFirstMatchingRegexExpressionKey(
+            const char *parentKey, const char* childToMatch);
 
 
-        FString GetConfigFileName() const {
+        virtual FString GetConfigFileName() const {
             return mConfigFileName;
         }
 
     protected:
-
         ServiceConfigFileType mConfigFileType;
         std::string mConfigFileName;
         mutable Mutex mMutex;
         boost::property_tree::ptree mPTree;
 
-        int getInt(const char *key);
-        int resolveInt(const Forte::FString &key);
+        virtual int getInt(const char *key);
+        virtual int resolveInt(const Forte::FString &key);
 
-        FString getString(const char *key);
-        FString resolveString(const Forte::FString &key);
+        virtual FString getString(const char *key);
+        virtual FString resolveString(const Forte::FString &key);
     };
     typedef boost::shared_ptr<ServiceConfig> ServiceConfigPtr;
 };

@@ -1190,3 +1190,21 @@ void FileSystemImpl::copyHelper(const FString& from_path,
     // progress
     if (progressCallback) progressCallback(size_copied);
 }
+
+FString FileSystemImpl::MakeTemporaryFile(const FString& nameTemplate) const
+{
+    FTRACE;
+
+    FString fileName(nameTemplate);
+    if (fileName.Right(6) != "XXXXXX")
+    {
+        fileName.append("XXXXXX");
+    }
+
+    if (mkstemp((char *)fileName.c_str()) == -1)
+    {
+        SystemCallUtil::ThrowErrNoException(errno);
+    }
+
+    return fileName;
+}

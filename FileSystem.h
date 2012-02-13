@@ -121,6 +121,8 @@ namespace Forte
             const ProgressCallback &progressCallback = ProgressCallback()) = 0;
 
         virtual FString StrError(int err /*errno*/) const = 0;
+
+        virtual FString MakeTemporaryFile(const FString& nameTemplate) const = 0;
     };
 
     typedef boost::shared_ptr<FileSystem> FileSystemPtr;
