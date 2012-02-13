@@ -29,15 +29,18 @@
 using namespace boost;
 using namespace Forte;
 
-Forte::ProcessFutureImpl::ProcessFutureImpl(const boost::shared_ptr<ProcessManagerImpl> &mgr,
-                        const FString &command, 
-                        const FString &currentWorkingDirectory, 
-                        const FString &outputFilename, 
-                        const FString &errorFilename, 
-                        const FString &inputFilename, 
-                        const StrStrMap *environment) : 
+Forte::ProcessFutureImpl::ProcessFutureImpl(
+    const boost::shared_ptr<ProcessManagerImpl> &mgr,
+    const FString &command, 
+    const FString &currentWorkingDirectory, 
+    const FString &outputFilename, 
+    const FString &errorFilename, 
+    const FString &inputFilename, 
+    const StrStrMap *environment,
+    const FString &commandToLog) :
     mProcessManagerPtr(mgr),
     mCommand(command), 
+    mCommandToLog(commandToLog),
     mCurrentWorkingDirectory(currentWorkingDirectory),
     mOutputFilename(outputFilename),
     mErrorFilename(errorFilename),
@@ -177,6 +180,11 @@ void Forte::ProcessFutureImpl::run()
         // too long)
         strncpy(param->str, mCommand.c_str(), sizeof(param->str));
         param->param = ProcessCmdline;
+        mManagementChannel->SendPDU(paramPDU);
+
+        // PDU: command to log
+        strncpy(param->str, mCommandToLog.c_str(), sizeof(param->str));
+        param->param = ProcessCmdlineToLog;
         mManagementChannel->SendPDU(paramPDU);
 
         strncpy(param->str, mCurrentWorkingDirectory.c_str(), sizeof(param->str));

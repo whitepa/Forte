@@ -33,7 +33,8 @@ namespace Forte
         ProcessCwd,
         ProcessInfile,
         ProcessOutfile,
-        ProcessErrfile
+        ProcessErrfile,
+        ProcessCmdlineToLog
     };
 
     struct ProcessParamPDU

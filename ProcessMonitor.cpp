@@ -126,6 +126,9 @@ void Forte::ProcessMonitor::handleParam(const PDUPeer &peer, const PDU &pdu)
         mCmdline.assign(paramPDU->str);
         mState = STATE_READY;
         break;
+    case ProcessCmdlineToLog:
+        mCmdlineToLog.assign(paramPDU->str);
+        break;
     case ProcessCwd:
         mCWD.assign(paramPDU->str);
         break;
@@ -272,6 +275,19 @@ void Forte::ProcessMonitor::doWait(void)
             hlog(HLOG_ERR, "unknown child exit status (0x%x)", child_status);
             mState = STATE_EXITED;
         }
+        if (status->statusCode != 0)
+        {
+            if (mCmdlineToLog.empty())
+            {
+                hlog(HLOG_INFO, "[%s] exit code is %i", mCmdline.c_str(), 
+                     status->statusCode);
+            }
+            else
+            {
+                hlog(HLOG_INFO, "[%s] exit code is %i", mCmdlineToLog.c_str(), 
+                     status->statusCode);
+            }
+        }
         // Send the status PDU to all peer connections
         mPeerSet.SendAll(p);
     }
@@ -315,7 +331,14 @@ void Forte::ProcessMonitor::startProcess(void)
     }
     while (errorfd == -1 && errno == EINTR);
 
-    hlog(HLOG_INFO, "running command: %s", mCmdline.c_str());
+    if (mCmdlineToLog.empty())
+    {
+        hlog(HLOG_INFO, "running command: %s", mCmdline.c_str());
+    }
+    else
+    {
+        hlog(HLOG_INFO, "running command: %s", mCmdlineToLog.c_str());
+    }
 
     pid_t pid;
     if ((pid = DaemonUtil::ForkSafely()) == 0)

@@ -160,6 +160,7 @@ namespace Forte
         int mState;
 
         FString mCmdline;
+        FString mCmdlineToLog;
         FString mCWD;
         FString mInputFilename;
         FString mOutputFilename;

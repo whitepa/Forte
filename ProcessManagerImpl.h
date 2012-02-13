@@ -94,7 +94,8 @@ namespace Forte
             const FString &outputFilename = "/dev/null",
             const FString &errorFilename = "/dev/null",
             const FString &inputFilename = "/dev/null",
-            const StrStrMap *environment = NULL);
+            const StrStrMap *environment = NULL,
+            const FString &commandToLog = "");
 
         virtual boost::shared_ptr<ProcessFuture> CreateProcessDontRun(
             const FString &command,
@@ -102,7 +103,8 @@ namespace Forte
             const FString &outputFilename = "/dev/null",
             const FString &errorFilename = "/dev/null",
             const FString &inputFilename = "/dev/null",
-            const StrStrMap *environment = NULL);
+            const StrStrMap *environment = NULL,
+            const FString &commandToLog = "");
 
         virtual void RunProcess(boost::shared_ptr<ProcessFuture> ph);
 
@@ -114,7 +116,8 @@ namespace Forte
                                               Forte::FString& output, 
                                               const Timespec &timeout = Timespec::FromSeconds(-1),
                                               const FString &inputFilename = "/dev/null",
-                                              const StrStrMap *environment = NULL);
+                                              const StrStrMap *environment = NULL,
+                                              const FString &commandToLog = "");
     protected:
 
         /**
@@ -178,6 +181,7 @@ namespace Forte
         PDUPeerSet mPeerSet;
 
         FString mProcmonPath;
+
     };
     typedef boost::shared_ptr<ProcessManager> ProcessManagerPtr;
 };

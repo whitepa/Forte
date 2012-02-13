@@ -94,7 +94,8 @@ boost::shared_ptr<ProcessFuture> MockProcessManager::CreateProcess(
     const FString &outputFilename,
     const FString &errorFilename,
     const FString &inputFilename,
-    const StrStrMap *environment)
+    const StrStrMap *environment,
+    const FString &commandToLog)
 {
     FTRACE2("%s", command.c_str());
 
@@ -119,7 +120,8 @@ boost::shared_ptr<ProcessFuture> MockProcessManager::CreateProcessDontRun(
     const FString &outputFilename,
     const FString &errorFilename,
     const FString &inputFilename,
-    const StrStrMap *environment)
+    const StrStrMap *environment,
+    const FString &commandToLog)
 {
     FTRACE2("%s", command.c_str());
     throw EUnimplemented();
@@ -131,7 +133,8 @@ int MockProcessManager::CreateProcessAndGetResult(const FString& command,
                                                   FString& output, 
                                                   const Timespec &timeout,
                                                   const FString &inputFileName,
-                                                  const StrStrMap *environment)
+                                                  const StrStrMap *environment,
+                                                  const FString &commandToLog)
 {
     FTRACE2("%s", command.c_str());
     ExpectedCommandResponsePtr expectedResponse = lookupExpectedResponse(command);
