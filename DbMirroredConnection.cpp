@@ -390,6 +390,11 @@ void DbMirroredConnection::Commit()
 
     if(isActiveSecondary())
     {
+        // @TODO we don't always need to throw in this case, as it is
+        // feasible the database user may have done several select
+        // calls (reading only) in a transaction, and is calling
+        // commit to end the transaction.  Let's think some more about
+        // this before changing the behavior.
         throw EDbConnectionReadOnly();
     }
     else

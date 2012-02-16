@@ -4,6 +4,7 @@
 #include "Foreach.h"
 #include "FTrace.h"
 #include "LogManager.h"
+#include "Types.h"
 #include <stdarg.h>
 #include <sys/time.h>
 
@@ -88,11 +89,11 @@ FString Logfile::GetLevelStr(int level)
 
 void Logfile::FilterSet(const LogFilter &filter)
 {
-    mFileMasks[filter.mSourceFile] = filter.mMask;
+    mFileMasks[LogManager::SourceFileBasename(filter.mSourceFile)] = filter.mMask;
 }
 void Logfile::FilterDelete(const char *filename)
 {
-    mFileMasks.erase(filename);
+    mFileMasks.erase(LogManager::SourceFileBasename(filename));
 }
 void Logfile::FilterDeleteAll(void)
 {
@@ -374,12 +375,12 @@ unsigned int LogManager::GetLogMask(const char *path)
 void LogManager::SetSourceFileLogMask(const char *filename, unsigned int mask)
 {
     AutoUnlockMutex lock(mLogMutex);
-    mFileMasks[filename] = mask;
+    mFileMasks[SourceFileBasename(filename)] = mask;
 }
 void LogManager::ClearSourceFileLogMask(const char *filename)
 {
     AutoUnlockMutex lock(mLogMutex);
-    mFileMasks.erase(filename);
+    mFileMasks.erase(SourceFileBasename(filename));
 }
 
 
@@ -388,13 +389,13 @@ void LogManager::PathSetSourceFileLogMask(const char *path, const char *filename
 {
     AutoUnlockMutex lock(mLogMutex);
     Logfile &logfile(getLogfile(path));
-    logfile.FilterSet(LogFilter(filename, mask));
+    logfile.FilterSet(LogFilter(SourceFileBasename(filename), mask));
 }
 void LogManager::PathClearSourceFileLogMask(const char *path, const char *filename)
 {
     AutoUnlockMutex lock(mLogMutex);
     Logfile &logfile(getLogfile(path));
-    logfile.FilterDelete(filename);
+    logfile.FilterDelete(SourceFileBasename(filename));
 }
 void LogManager::PathClearAllSourceFiles(const char *path)
 {
@@ -447,11 +448,12 @@ void LogManager::LogMsgVa(const char * func, const char * file, int line, int le
     free(amsg);
 }
 
-void LogManager::LogMsgString(const char * func, const char * file, int line, int level, const std::string& message)
+void LogManager::LogMsgString(const char * func, const char * fullfile, int line, int level, const std::string& message)
 {
     char tmp[128];
     tmp[0] = 0;
     LogMsg msg;
+    FString file(SourceFileBasename(fullfile));
     if (level < HLOG_MIN)
     {
         // convert syslog level to HLOG level
@@ -666,4 +668,29 @@ int LogManager::GetSingleLevelFromString(const FString &str) const
             return 1 << i;
     }
     throw ELogLevelStringUnknown(str);
+}
+
+FString LogManager::SourceFileBasename(const FString& filename,
+                                       const FString& suffix)
+{
+    FString result(filename);
+    FStringVector pathComponents;
+    int count = filename.Explode("/", pathComponents);
+    if (count)
+    {
+        FString base = pathComponents[count-1];
+        if (!suffix.empty())
+        {
+            FString end = base.Right(suffix.length());
+            if (end.Compare(suffix) == 0)
+                result = base.Left(base.length() - suffix.length());
+            else
+                result = base;
+        }
+        else
+        {
+            result = base;
+        }
+    }
+    return result;
 }

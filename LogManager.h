@@ -338,6 +338,14 @@ namespace Forte
          *called a variation of BeginLogging on.   
          **/
         void PathList(std::vector<FString> &paths);
+
+        /**
+         * Compute the basename of the filename given. This is needed
+         * as the __FILE__ macro often includes the full path to
+         * header files (if hlog() is called from within a header).
+         */
+        static FString SourceFileBasename(const FString& filename,
+                                          const FString& suffix = "");
     
         /**
          *Log(int level, const char *fmt,…) attribute((format(printf 
