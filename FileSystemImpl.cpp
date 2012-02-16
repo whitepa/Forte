@@ -449,6 +449,11 @@ void FileSystemImpl::MakeDir(const FString& path, mode_t mode, bool make_parents
     }
     else
     {
+        err = errno;
+        if (err != ENOENT && err != ENOTDIR)
+        {
+            hlog(HLOG_WARN, "error: %s", SystemCallUtil::GetErrorDescription(err).c_str());
+        }
         // create parent?
         if (make_parents)
         {
