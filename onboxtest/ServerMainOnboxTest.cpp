@@ -54,7 +54,7 @@ TEST_F(ServerMainOnboxTest, TestPIDFile)
     FileSystem fs;
 
     int pid = getpid();
-    FString cmdline = fs.FileGetContents(FString(FStringFC(), 
+    FString cmdline = fs.FileGetContents(FString(FStringFC(),
                                                  "/proc/%d/cmdline", pid));
     size_t pos = cmdline.find_first_of('\0');
     FString processName = cmdline.Left(pos);

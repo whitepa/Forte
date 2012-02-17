@@ -16,7 +16,7 @@ namespace Forte{
 
     EXCEPTION_CLASS(EClusterLock);
 
-    EXCEPTION_SUBCLASS(EClusterLock, 
+    EXCEPTION_SUBCLASS(EClusterLock,
                        EClusterLockTimeout);
 
     EXCEPTION_SUBCLASS(EClusterLock,
@@ -46,8 +46,8 @@ namespace Forte{
          * @return unsigned integer number of locks held
          */
         static unsigned int NumLocks(void) { AutoUnlockMutex lock(sMutex); return sMutexMap.size(); }
-            
-    
+
+
         // constants
         static const char *LOCK_PATH;
         static const unsigned DEFAULT_TIMEOUT;

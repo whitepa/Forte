@@ -641,11 +641,11 @@ bool DbMirroredConnection::HasPendingQueries() const
 const FString& DbMirroredConnection::GetCurrentQuery() const
 {
     AutoUnlockMutex guard(mMutex);
-    
+
     if (mDbConnection)
     {
         return mDbConnection->GetCurrentQuery();
     }
-    
+
     return mCurrentQuery;
 }

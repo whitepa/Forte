@@ -18,17 +18,17 @@ namespace Forte
     public:
         PosixTimer();
         virtual ~PosixTimer();
-    
+
         void Init(sigevent_t& se);
         timer_t PosixTimerID();
-    
+
     protected:
         //TODO: pull this from the application context
         FileSystem mFileSystem;
         timer_t mPosixTimer;
         bool mValidPosixTimer;
     };
-    
+
 }
 
 #endif
