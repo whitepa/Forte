@@ -1,6 +1,6 @@
 #include "Clock.h"
 #include "EventQueue.h"
-#include "FileSystem.h"
+#include "FileSystemImpl.h"
 #include "FTrace.h"
 #include "LogManager.h"
 #include "ProcRunner.h"
@@ -28,7 +28,7 @@ protected:
     static void SetUpTestCase() {
         logManager.BeginLogging("//stdout", HLOG_ALL);
 
-        FileSystem fs;
+        FileSystemImpl fs;
 
         if (fs.FileExists("/fsscale0/lock"))
         {
@@ -45,7 +45,7 @@ protected:
 
         if (ClusterLock::LOCK_PATH == "./lock")
         {
-            FileSystem fs;
+            FileSystemImpl fs;
             fs.Unlink("./lock", true);
         }
     }
@@ -186,7 +186,7 @@ TEST_F(ClusterLockTest, LockFileCouldNotOpen)
                     "%s/%s",
                     ClusterLock::LOCK_PATH,
                     name.c_str());
-    FileSystem fs;
+    FileSystemImpl fs;
     FString dir(FStringFC(),
                 "%s/%s",
                 ClusterLock::LOCK_PATH,

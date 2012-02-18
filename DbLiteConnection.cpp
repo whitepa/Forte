@@ -6,7 +6,7 @@
 #include "DbLiteResult.h"
 #include "DbException.h"
 #include "LogManager.h"
-#include "FileSystem.h"
+#include "FileSystemImpl.h"
 #include "Util.h"
 #include "AutoDoUndo.h"
 #include "FTrace.h"
@@ -313,7 +313,7 @@ void DbLiteConnection::removeTmpBackup(const FString &targetPath)
 
     try
     {
-        FileSystem fs;
+        FileSystemImpl fs;
         const FString tmpTargetPath(getTmpBackupPath(targetPath));
         if(fs.FileExists(tmpTargetPath))
         {
@@ -330,7 +330,7 @@ void DbLiteConnection::removeTmpBackup(const FString &targetPath)
 
 FString DbLiteConnection::getTmpBackupPath(const FString& targetPath) const
 {
-    FileSystem fs;
+    FileSystemImpl fs;
     FString tmpTargetPath(targetPath);
     tmpTargetPath += ".tmp";
     hlog(HLOG_DEBUG, "'%s' -> '%s'", targetPath.c_str(), tmpTargetPath.c_str());
@@ -379,7 +379,7 @@ void DbLiteConnection::backupDatabase(const FString &targetPath)
     }
 
     // @TODO: these file system objects should be passed in
-    FileSystem fs;
+    FileSystemImpl fs;
     hlog(HLOG_DEBUG, "Renaming '%s' to '%s'", tmpTargetPath.c_str(),
          targetPath.c_str());
     fs.Rename(tmpTargetPath, targetPath);

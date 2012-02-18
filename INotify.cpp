@@ -1,5 +1,5 @@
 #include "INotify.h"
-#include "FileSystem.h"
+#include "FileSystemImpl.h"
 #include <sys/inotify.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
@@ -54,7 +54,7 @@ INotify::~INotify()
         mWatchFds.erase(fd);
     }
 
-    FileSystem fs;
+    FileSystemImpl fs;
     fs.Unlink(mKickerPath);
 }
 
@@ -171,7 +171,7 @@ INotify::EventVector INotify::Read(const unsigned long& ms)
 
 void INotify::Interrupt()
 {
-    FileSystem fs;
+    FileSystemImpl fs;
     fs.Touch(mKickerPath);
 }
 

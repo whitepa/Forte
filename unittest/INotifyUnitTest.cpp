@@ -4,6 +4,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/filesystem/convenience.hpp>
+#include "FileSystemImpl.h"
 #include "LogManager.h"
 #include "INotify.h"
 
@@ -41,7 +42,7 @@ protected:
 
     void touch()
     {
-        FileSystem fs;
+        FileSystemImpl fs;
         fs.Touch(getWatchedFilePath());
     }
 

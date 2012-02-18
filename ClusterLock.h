@@ -5,7 +5,7 @@
 #include "AutoMutex.h"
 #include "AdvisoryLock.h"
 #include "AutoFD.h"
-#include "FileSystem.h"
+#include "FileSystemImpl.h"
 #include "PosixTimer.h"
 #include "ThreadKey.h"
 #include <csignal>
@@ -61,7 +61,7 @@ namespace Forte{
         Forte::PosixTimer mTimer;
         boost::shared_ptr<Forte::Mutex> mMutex;
 
-        Forte::FileSystem  mFileSystem;
+        Forte::FileSystemImpl mFileSystem;
 
         // helpers
         void init();

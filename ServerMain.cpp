@@ -4,12 +4,12 @@
 #include "ServerMain.h"
 #include "FTrace.h"
 #include "VersionManager.h"
-#include "FileSystem.h"
+#include "FileSystemImpl.h"
 
 using namespace Forte;
 using namespace boost;
 
-ServerMain::ServerMain(int argc, char * const argv[], 
+ServerMain::ServerMain(int argc, char * const argv[],
                        const char *getoptstr, const char *defaultConfig,
                        bool daemonize) :
     mShutdown(false),
@@ -57,7 +57,7 @@ ServerMain::ServerMain(const FString& defaultConfig,
                        int logMask,
                        const FString& daemonName,
                        bool daemonize)
-    : mShutdown(false), 
+    : mShutdown(false),
       mConfigFile(defaultConfig),
       mDaemonName(daemonName),
       mDaemon(daemonize),
@@ -71,7 +71,7 @@ void ServerMain::init(const FString& defaultConfig,
 {
     // setup the config
     CNEW("forte.ServiceConfig", ServiceConfig);
-    CGETNEWPTR("forte.FileSystem", FileSystem, fs);
+    CGETNEWPTR("forte.FileSystem", FileSystemImpl, fs);
 
     mLogManager.SetGlobalLogMask(logMask);
 
@@ -107,7 +107,7 @@ void ServerMain::initHostname()
 {
     // get the hostname
     {
-        char hn[128];    
+        char hn[128];
         if (gethostname(hn, sizeof(hn)) < 0)
         {
             fprintf(stderr, "Unable to get hostname: %s\n", strerror(errno));
@@ -216,7 +216,7 @@ void ServerMain::PrepareSigmask()
 void ServerMain::Shutdown()
 {
     FTRACE;
-    
+
     mShutdown = true;
 }
 
@@ -233,7 +233,7 @@ void ServerMain::MainLoop()
     timeout.tv_sec=0;
     timeout.tv_nsec=100000000; // 100 ms
 
-    hlog(HLOG_DEBUG, "quit=%i, mShutdown=%s", quit, 
+    hlog(HLOG_DEBUG, "quit=%i, mShutdown=%s", quit,
          (mShutdown) ? "true" : "false");
 
     while (!quit && !mShutdown)
@@ -267,9 +267,9 @@ void ServerMain::MainLoop()
         else if (errno != EAGAIN) // EAGAIN when timeout occurs
         {
             // should only be EINVAL (invalid timeout)
-            hlog(HLOG_ERR, "Error while calling sigtimedwait (%s)", 
+            hlog(HLOG_ERR, "Error while calling sigtimedwait (%s)",
                  strerror(errno));
-     
+
         }
-    } 
+    }
 }

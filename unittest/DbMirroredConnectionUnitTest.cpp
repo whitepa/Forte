@@ -4,6 +4,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/filesystem/convenience.hpp>
 #include "LogManager.h"
+#include "FileSystemImpl.h"
 #include "DbLiteConnection.h"
 #include "DbSqlStatement.h"
 #include "DbConnectionPool.h"
@@ -173,7 +174,7 @@ TEST_F(BasicDatabaseTest, SqliteDbBackupManagerThreadWhenNoInitialDatabaseTest)
 
     RemoveDatabases();
 
-    FileSystem fs;
+    FileSystemImpl fs;
 
     ASSERT_FALSE(fs.FileExists(getDatabaseName()));
     ASSERT_FALSE(fs.FileExists(getBackupDatabaseName()));

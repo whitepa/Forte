@@ -1,14 +1,14 @@
 
 #include <gtest/gtest.h>
 #include "LogManager.h"
-#include "FileSystem.h"
+#include "FileSystemImpl.h"
 #include "SystemCallUtil.h"
 
 using namespace Forte;
 
 LogManager logManager;
 
-class FileSystemUnitTest : public ::testing::Test
+class FileSystemImplUnitTest : public ::testing::Test
 {
 protected:
     static void SetUpTestCase() {
@@ -17,43 +17,43 @@ protected:
         hlog(HLOG_DEBUG, "Starting test...");
     }
 };
-TEST_F(FileSystemUnitTest, StatFS)
+TEST_F(FileSystemImplUnitTest, StatFS)
 {
     hlog(HLOG_INFO, "StatFS");
-    FileSystem f;
+    FileSystemImpl f;
     struct statfs st;
     f.StatFS("/", &st);
 }
 
-TEST_F(FileSystemUnitTest, StatFSPathDoesNotExist)
+TEST_F(FileSystemImplUnitTest, StatFSPathDoesNotExist)
 {
     hlog(HLOG_INFO, "StatFSPathDoesNotExist");
-    FileSystem f;
+    FileSystemImpl f;
     struct statfs st;
     ASSERT_THROW(f.StatFS("pathdoesnotexist", &st), EErrNoENOENT);
 }
 
-TEST_F(FileSystemUnitTest, ScanDirReplacement)
+TEST_F(FileSystemImplUnitTest, ScanDirReplacement)
 {
     hlog(HLOG_INFO, "ScanDirReplacement");
-    FileSystem f;
+    FileSystemImpl f;
 
     vector<FString> names;
     f.ScanDir("/",names);
     ASSERT_NE(names.size(), 0);
 }
 
-TEST_F(FileSystemUnitTest, TouchFileAndTestTimes)
+TEST_F(FileSystemImplUnitTest, TouchFileAndTestTimes)
 {
     hlog(HLOG_INFO, "TouchFileAndTestTimes");
-    FileSystem f;
+    FileSystemImpl f;
     FString fileName = "/tmp/TouchFileAndTestTimes_unittest_file";
 
     struct stat st;
     long long int currTime = (int64_t)time(0);
     f.Touch(fileName);
 
-    if (f.Stat(fileName, &st)) 
+    if (f.Stat(fileName, &st))
     {
         hlog(HLOG_ERR, "Stat failed on %s, err = %d", fileName.c_str(), errno);
     }
@@ -66,10 +66,10 @@ TEST_F(FileSystemUnitTest, TouchFileAndTestTimes)
     }
 }
 
-TEST_F(FileSystemUnitTest, TestFileCopy)
+TEST_F(FileSystemImplUnitTest, TestFileCopy)
 {
     hlog(HLOG_INFO, "TestFileCopy");
-    FileSystem f;
+    FileSystemImpl f;
 
     FString fileName1 = "/tmp/TestFileCopy_unittest_file1";
     FString fileName2 = "/tmp/TestFileCopy_unittest_file2";
@@ -91,11 +91,11 @@ TEST_F(FileSystemUnitTest, TestFileCopy)
 
 }
 
-TEST_F(FileSystemUnitTest, TestFileAppend)
+TEST_F(FileSystemImplUnitTest, TestFileAppend)
 {
     hlog(HLOG_INFO, "TestFileAppend");
 
-    FileSystem f;
+    FileSystemImpl f;
     FString fileName1 = "/tmp/TestFileConcatonation_unittest_file1";
     FString fileName2 = "/tmp/TestFileConcatonation_unittest_file2";
 
@@ -116,11 +116,11 @@ TEST_F(FileSystemUnitTest, TestFileAppend)
 }
 
 
-TEST_F(FileSystemUnitTest, DirName)
+TEST_F(FileSystemImplUnitTest, DirName)
 {
     hlog(HLOG_INFO, "DireName");
 
-    FileSystem f;
+    FileSystemImpl f;
     FString file1 = "/level1/level2/level3/level4.tmp";
 
     ASSERT_STREQ("/level1/level2/level3", f.Dirname(file1));
@@ -129,11 +129,11 @@ TEST_F(FileSystemUnitTest, DirName)
     ASSERT_STREQ(".", f.Dirname(file2));
 }
 
-TEST_F(FileSystemUnitTest, Basename)
+TEST_F(FileSystemImplUnitTest, Basename)
 {
     hlog(HLOG_INFO, "Basename");
 
-    FileSystem f;
+    FileSystemImpl f;
     FString file1 = "/level1/level2/level3/level4.tmp";
 
     ASSERT_STREQ("level4.tmp", f.Basename(file1));

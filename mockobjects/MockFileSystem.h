@@ -1,6 +1,7 @@
 #ifndef _MockFileSystem_h
 #define _MockFileSystem_h
 
+#include "FTrace.h"
 #include "FileSystem.h"
 
 namespace Forte
@@ -23,9 +24,6 @@ namespace Forte
         void SetFDForFileOpen(unsigned int fd);
         virtual void FileOpen(AutoFD &autoFd, const FString& path, int flags,
                               int mode);
-        virtual void FilePutContents(const FString &path, int flags,
-                int mode, const char *fmt, ...) __attribute__((format(printf, 5, 6)));
-
         void FileAppend(const FString& from, const FString& to);
 
         void clearFileMap();
@@ -53,7 +51,7 @@ namespace Forte
         map<Forte::FString, bool> mFileExistsResultMap;
         void SetFileExistsResult(const Forte::FString& path, bool result);
 
-        bool IsDir(const Forte::FString& path);
+        bool IsDir(const Forte::FString& path) const;
 		map<Forte::FString, bool> mIsDirResultMap;
 		void SetIsDirResult(const Forte::FString& path, bool result);
 
@@ -90,6 +88,62 @@ namespace Forte
         virtual FString ReadLink(const FString& path);
         void SetReadLinkResult(const FString& path, const FString& result);
         void ClearReadLinkResult(const FString& path);
+
+        FString Basename(const FString& filename, const FString& suffix = "");
+
+        FString Dirname(const FString& filename)
+            { FTRACE; throw EUnimplemented(); }
+        FString GetCWD()
+            { FTRACE; throw EUnimplemented(); }
+        void Touch(const FString& file)
+            { FTRACE; throw EUnimplemented(); }
+        uint64_t CountChildren(const FString& path, bool recurse) const
+            { FTRACE; throw EUnimplemented(); }
+        int LStat(const FString& path, struct stat *st)
+            { FTRACE; throw EUnimplemented(); }
+        int StatAt(int dir_fd, const FString& path, struct stat *st)
+            { FTRACE; throw EUnimplemented(); }
+        int LStatAt(int dir_fd, const FString& path, struct stat *st)
+            { FTRACE; throw EUnimplemented(); }
+        int FStatAt(int dir_fd, const FString& path, struct stat *st, int flags = 0)
+            { FTRACE; throw EUnimplemented(); }
+        void UnlinkAt(int dir_fd, const FString& path)
+            { FTRACE; throw EUnimplemented(); }
+        void Rename(const FString& from, const FString& to)
+            { FTRACE; throw EUnimplemented(); }
+        void RenameAt(int dir_from_fd, const FString& from, int dir_to_fd, const FString& to)
+            { FTRACE; throw EUnimplemented(); }
+        void MakeDirAt(int dir_fd, const FString& path, mode_t mode = 0777)
+            { FTRACE; throw EUnimplemented(); }
+        void MakeFullPath(const FString& path, mode_t mode = 0777)
+            { FTRACE; throw EUnimplemented(); }
+        FString MakeRelativePath(const FString& base, const FString& path)
+            { FTRACE; throw EUnimplemented(); }
+        FString ResolveRelativePath(const FString& base, const FString& path)
+            { FTRACE; throw EUnimplemented(); }
+        void Link(const FString& from, const FString& to)
+            { FTRACE; throw EUnimplemented(); }
+        void LinkAt(int dir_from_fd, const FString& from, int dir_to_fd, const FString& to)
+            { FTRACE; throw EUnimplemented(); }
+        void SymLinkAt(const FString& from, int dir_to_fd, const FString& to)
+            { FTRACE; throw EUnimplemented(); }
+        FString ResolveSymLink(const FString& path)
+            { FTRACE; throw EUnimplemented(); }
+        FString FullyResolveSymLink(const FString& path)
+            { FTRACE; throw EUnimplemented(); }
+        void DeepCopy(const FString& source, const FString& dest, const ProgressCallback &progressCallback = ProgressCallback())
+            { FTRACE; throw EUnimplemented(); }
+        void Copy(const FString& from_path, const FString& to_path, const ProgressCallback &progressCallback = ProgressCallback())
+            { FTRACE; throw EUnimplemented(); }
+        FString StrError(int err) const
+            { FTRACE; throw EUnimplemented(); }
+
+        virtual void FilePutContentsWithPerms(
+            const FString& filename,
+            const FString& data,
+            int flags,
+            int mode)
+            { FTRACE; throw EUnimplemented(); }
 
     protected:
         StrStrMap mFiles;

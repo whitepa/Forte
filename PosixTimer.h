@@ -4,7 +4,7 @@
 #include "Object.h"
 #include "Types.h"
 #include "AutoMutex.h"
-#include "FileSystem.h"
+#include "FileSystemImpl.h"
 #include <csignal>
 #include <ctime>
 
@@ -24,7 +24,7 @@ namespace Forte
 
     protected:
         //TODO: pull this from the application context
-        FileSystem mFileSystem;
+        FileSystemImpl mFileSystem;
         timer_t mPosixTimer;
         bool mValidPosixTimer;
     };

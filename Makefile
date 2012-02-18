@@ -59,7 +59,7 @@ SRCS =	\
 	EventPredicate.cpp \
 	Exception.cpp \
 	ExpDecayingAvg.cpp \
-	FileSystem.cpp \
+	FileSystemImpl.cpp \
 	FileSystemUtil.cpp \
 	FString.cpp \
 	FTime.cpp \

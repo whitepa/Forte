@@ -8,7 +8,7 @@
 #include "ProcessFuture.h"
 #include "Future.h"
 #include "AutoFD.h"
-#include "FileSystem.h"
+#include "FileSystemImpl.h"
 #include "ProcFileSystem.h"
 #include "AutoDoUndo.h"
 #include <boost/bind.hpp>
@@ -28,7 +28,7 @@ public:
         logManager.SetLogMask("//stdout", HLOG_ALL);
         logManager.BeginLogging("//stdout");
 
-        FileSystem fs;
+        FileSystemImpl fs;
         // check all the possible dirs
         mProcMonLocation = "";
         if (fs.FileExists("../obj/SC001-x86_64-opt/procmon"))
@@ -113,7 +113,7 @@ TEST_F(ProcessManagerTest, FDLeak)
 
         Context c;
         // setup
-        boost::shared_ptr<FileSystem> fsptr(new FileSystem());
+        boost::shared_ptr<FileSystem> fsptr(new FileSystemImpl());
         c.Set("forte.FileSystem", fsptr);
 
         ProcFileSystem pfs(c);

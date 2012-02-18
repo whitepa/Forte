@@ -7,6 +7,7 @@
 #include "ProcFileSystem.h"
 #include "MockFileSystem.h"
 #include "FileSystem.h"
+#include "FileSystemImpl.h"
 #include "Foreach.h"
 
 using namespace boost;
@@ -18,8 +19,8 @@ class ProcFileSystemUnitTest : public ::testing::Test
 {
 protected:
     static void SetUpTestCase() {
-        //logManager.BeginLogging(__FILE__ ".log");
-        logManager.BeginLogging("//stdout");
+        logManager.BeginLogging(__FILE__ ".log", HLOG_ALL);
+        //logManager.BeginLogging("//stdout", HLOG_ALL);
         hlog(HLOG_DEBUG, "Starting test...");
     }
 
@@ -52,7 +53,7 @@ TEST_F(ProcFileSystemUnitTest, UptimeVerifyRealOutput)
     FTRACE;
 
     // setup
-    shared_ptr<FileSystem> fsptr(new FileSystem());
+    shared_ptr<FileSystem> fsptr(new FileSystemImpl());
     mContext.Set("forte.FileSystem", fsptr);
 
     // construct
@@ -147,7 +148,7 @@ TEST_F(ProcFileSystemUnitTest, MemoryInfoReadReal)
 {
     FTRACE;
 
-    shared_ptr<FileSystem> fsptr(new FileSystem());
+    shared_ptr<FileSystem> fsptr(new FileSystemImpl());
     mContext.Set("forte.FileSystem", fsptr);
     ProcFileSystem procFileSystem(mContext);
 
@@ -213,7 +214,7 @@ TEST_F(ProcFileSystemUnitTest, PidOfInitReturns1)
 {
     FTRACE;
 
-    shared_ptr<FileSystem> fsptr(new FileSystem());
+    shared_ptr<FileSystem> fsptr(new FileSystemImpl());
 
     mContext.Set("forte.FileSystem", fsptr);
 

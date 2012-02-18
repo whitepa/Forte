@@ -3,7 +3,7 @@
 #include <boost/test/unit_test.hpp>
 #include "LogManager.h"
 #include "Context.h"
-#include "FileSystem.h"
+#include "FileSystemImpl.h"
 #include "ServiceConfig.h"
 #include "ProcFileSystem.h"
 #include "MockFileSystem.h"
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(ContextSetGetObject)
 
 BOOST_AUTO_TEST_CASE(ContextSetGetFileSystem)
 {
-    shared_ptr<FileSystem> fsptr(new FileSystem());
+    shared_ptr<FileSystem> fsptr(new FileSystemImpl());
     c.Set("filesystemtest", fsptr);
     contextGetFileSystem(c);
 }

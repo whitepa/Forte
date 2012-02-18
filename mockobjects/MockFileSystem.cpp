@@ -1,4 +1,5 @@
 #include "MockFileSystem.h"
+#include "FileSystemImpl.h"
 #include "FTrace.h"
 #include "SystemCallUtil.h"
 
@@ -83,26 +84,6 @@ void MockFileSystem::FileOpen(AutoFD &autoFd, const FString &path, int flags,
 
     // don't do anything for now.  we'll need a MockAutoFD or something like that
     autoFd = mFDForFileOpen;
-}
-
-void MockFileSystem::FilePutContents(const FString &path, int flags,
-                                     int mode, const char *fmt, ...)
-{
-    FTRACE2("%s, %i, %i, %s", path.c_str(), flags, mode, fmt);
-
-    char contents[1024];
-    va_list args;
-    va_start(args, fmt);
-    if (vsnprintf(contents, sizeof(contents), fmt, args) < 0)
-    {
-        va_end(args);
-        hlog_and_throw(HLOG_ERR, Exception("Unable to add file contents"));
-    }
-    va_end(args);
-
-    FilePutContents(path, FString(contents));
-
-    hlog(HLOG_DEBUG, "contents of file is %s", contents);
 }
 
 
@@ -245,9 +226,17 @@ void MockFileSystem::ClearReadLinkResult(const FString& path)
     }
 }
 
-bool MockFileSystem::IsDir(const FString& path)
+bool MockFileSystem::IsDir(const FString& path) const
 {
-    return mIsDirResultMap[path];
+    map<Forte::FString, bool>::const_iterator i;
+    if ((i = mIsDirResultMap.find(path)) == mIsDirResultMap.end())
+    {
+        return false;
+    }
+    else
+    {
+        return (*i).second;
+    }
 }
 
 void MockFileSystem::SetIsDirResult(const FString& path, bool result)
@@ -445,4 +434,23 @@ void MockFileSystem::GetChildren(const FString& path,
     {
         children.push_back(child);
     }
+}
+
+FString MockFileSystem::Basename(const FString& filename, const FString& suffix)
+{
+    size_t pos = filename.find_last_of("/");
+    FString result;
+    if (pos == NOPOS)
+        result = filename;
+    else
+        result = filename.Right(filename.length() - (pos + 1));
+
+    if (!suffix.empty())
+    {
+        FString end = result.Right(suffix.length());
+        if (end.Compare(suffix) == 0)
+            result = result.Left(result.length() - suffix.length());
+    }
+
+    return result;
 }

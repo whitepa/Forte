@@ -11,7 +11,6 @@
 #include "Util.h"
 #include "FTrace.h"
 #include "GUIDGenerator.h"
-#include "FileSystem.h"
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
@@ -82,7 +81,7 @@ Forte::ProcessManagerImpl::CreateProcess(const FString &command,
                               outputFilename,
                               errorFilename,
                               inputFilename,
-                              environment, 
+                              environment,
                               commandToLog));
     startMonitor(ph);
     {

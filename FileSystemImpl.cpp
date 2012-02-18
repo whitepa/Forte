@@ -1,6 +1,6 @@
-// FileSystem.cpp
+// FileSystemImpl.cpp
 
-#include "FileSystem.h"
+#include "FileSystemImpl.h"
 #include "LogManager.h"
 #include <boost/filesystem.hpp>
 #include <fstream>
@@ -17,17 +17,17 @@ namespace boostfs = boost::filesystem;
 const unsigned MAX_RESOLVE = 1000;
 
 // ctor/dtor
-FileSystem::FileSystem()
+FileSystemImpl::FileSystemImpl()
 {
 }
 
 
-FileSystem::~FileSystem()
+FileSystemImpl::~FileSystemImpl()
 {
 }
 
 // helpers
-FString FileSystem::StrError(int err) const
+FString FileSystemImpl::StrError(int err) const
 {
     char buf[256], *str;
     FString ret;
@@ -39,8 +39,8 @@ FString FileSystem::StrError(int err) const
 
 
 // interface
-FString FileSystem::Basename(const FString& filename,
-                             const FString& suffix)
+FString FileSystemImpl::Basename(const FString& filename,
+                                 const FString& suffix)
 {
     size_t pos = filename.find_last_of("/");
     FString result;
@@ -59,7 +59,7 @@ FString FileSystem::Basename(const FString& filename,
     return result;
 }
 
-FString FileSystem::Dirname(const FString& filename)
+FString FileSystemImpl::Dirname(const FString& filename)
 {
     size_t pos = filename.find_last_of("/");
     FString result;
@@ -71,7 +71,7 @@ FString FileSystem::Dirname(const FString& filename)
     return result;
 }
 
-FString FileSystem::GetCWD()
+FString FileSystemImpl::GetCWD()
 {
     FString ret;
     char buf[1024];  // MAXPATHLEN + 1
@@ -83,43 +83,43 @@ FString FileSystem::GetCWD()
 }
 
 
-void FileSystem::Touch(const FString& file)
+void FileSystemImpl::Touch(const FString& file)
 {
     AutoFD fd;
     struct timeval tv[2];
     struct stat st;
 
     /*
-     * If the file doesn't exist, then create it using open  which 
+     * If the file doesn't exist, then create it using open  which
      * should automatically set ctime, mtime & atime to be the same.
      * Otherwise, just update the mtime & atime via utimes()
      */
     if (stat(file, &st) < 0) {
         if (errno != ENOENT) {
-	    SystemCallUtil::ThrowErrNoException(errno);
-	}
-	if ((fd = ::open(file, O_WRONLY | O_CREAT, 0666)) == AutoFD::NONE) {
-	    SystemCallUtil::ThrowErrNoException(errno);
-	}
+            SystemCallUtil::ThrowErrNoException(errno);
+        }
+        if ((fd = ::open(file, O_WRONLY | O_CREAT, 0666)) == AutoFD::NONE) {
+            SystemCallUtil::ThrowErrNoException(errno);
+        }
     } else {
         time_t timeInSecondsSinceEpoch = time(NULL);
 
-	tv[0].tv_sec = timeInSecondsSinceEpoch;
-	tv[0].tv_usec = 0;
+        tv[0].tv_sec = timeInSecondsSinceEpoch;
+        tv[0].tv_usec = 0;
 
-	tv[1].tv_sec = timeInSecondsSinceEpoch;
-	tv[1].tv_usec = 0;
+        tv[1].tv_sec = timeInSecondsSinceEpoch;
+        tv[1].tv_usec = 0;
 
-	if (::utimes(file, tv) == -1) {
-	    SystemCallUtil::ThrowErrNoException(errno);
-	}
+        if (::utimes(file, tv) == -1) {
+            SystemCallUtil::ThrowErrNoException(errno);
+        }
     }
 }
 
 
-bool FileSystem::FileExists(const FString& filename) const
+bool FileSystemImpl::FileExists(const FString& filename) const
 {
-    hlog(HLOG_DEBUG4, "FileSystem::%s(%s)", __FUNCTION__, filename.c_str());
+    hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%s)", __FUNCTION__, filename.c_str());
     struct stat st;
     // NOTE: I think this will fix a sporadic bug seen on GPFS filesystems
     //       where we are deleting an iSCSI LUN file (i.e. moving it to the
@@ -130,11 +130,11 @@ bool FileSystem::FileExists(const FString& filename) const
     return (stat(filename, &st) == 0);
 }
 
-bool FileSystem::IsDir(const FString& path) const
+bool FileSystemImpl::IsDir(const FString& path) const
 {
-    hlog(HLOG_DEBUG4, "FileSystem::%s(%s)", __FUNCTION__, path.c_str());
+    hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%s)", __FUNCTION__, path.c_str());
     struct stat st;
-    
+
     if (lstat(path, &st) == 0 && S_ISDIR(st.st_mode))
     {
         return true;
@@ -145,9 +145,9 @@ bool FileSystem::IsDir(const FString& path) const
     }
 }
 
-void FileSystem::StatFS(const FString& path, struct statfs *st)
+void FileSystemImpl::StatFS(const FString& path, struct statfs *st)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::%s(%s)", __FUNCTION__, path.c_str());
+    hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%s)", __FUNCTION__, path.c_str());
     //TODO: check return codes, return appropriate values
 
     if (::statfs(path.c_str(), st) == 0)
@@ -158,44 +158,44 @@ void FileSystem::StatFS(const FString& path, struct statfs *st)
     SystemCallUtil::ThrowErrNoException(errno);
 }
 
-int FileSystem::Stat(const FString& path, struct stat *st)
+int FileSystemImpl::Stat(const FString& path, struct stat *st)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::%s(%s)", __FUNCTION__, path.c_str());
+    hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%s)", __FUNCTION__, path.c_str());
     return ::stat(path.c_str(), st);
 }
 
 
-int FileSystem::LStat(const FString& path, struct stat *st)
+int FileSystemImpl::LStat(const FString& path, struct stat *st)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::%s(%s)", __FUNCTION__, path.c_str());
+    hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%s)", __FUNCTION__, path.c_str());
     return ::lstat(path.c_str(), st);
 }
 
 
-int FileSystem::StatAt(int dir_fd, const FString& path, struct stat *st)
+int FileSystemImpl::StatAt(int dir_fd, const FString& path, struct stat *st)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::%s(%d, %s)", __FUNCTION__, dir_fd, path.c_str());
+    hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%d, %s)", __FUNCTION__, dir_fd, path.c_str());
     return ::fstatat(dir_fd, path.c_str(), st, 0);
 }
 
 
-int FileSystem::LStatAt(int dir_fd, const FString& path, struct stat *st)
+int FileSystemImpl::LStatAt(int dir_fd, const FString& path, struct stat *st)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::%s(%d, %s)", __FUNCTION__, dir_fd, path.c_str());
+    hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%d, %s)", __FUNCTION__, dir_fd, path.c_str());
     return ::fstatat(dir_fd, path.c_str(), st, AT_SYMLINK_NOFOLLOW);
 }
 
 
-int FileSystem::FStatAt(int dir_fd, const FString& path, struct stat *st, int flags)
+int FileSystemImpl::FStatAt(int dir_fd, const FString& path, struct stat *st, int flags)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::%s(%d, %s)", __FUNCTION__, dir_fd, path.c_str());
+    hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%d, %s)", __FUNCTION__, dir_fd, path.c_str());
     return ::fstatat(dir_fd, path.c_str(), st, flags);
 }
 
-void FileSystem::GetChildren(const FString& path, 
-                             std::vector<Forte::FString> &children,
-                             bool recurse,
-                             bool includePathInChildNames) const
+void FileSystemImpl::GetChildren(const FString& path,
+                                 std::vector<Forte::FString> &children,
+                                 bool recurse,
+                                 bool includePathInChildNames) const
 {
     FTRACE2("%s, %s, %s", path.c_str(), (recurse ? "true" : "false"),
             (includePathInChildNames ? "true" : "false"));
@@ -214,7 +214,7 @@ void FileSystem::GetChildren(const FString& path,
            && result != NULL)
     {
         stmp = entry.d_name;
-        
+
         if (stmp != "." && stmp != "..")
         {
             if (IsDir(path + "/" + stmp))
@@ -225,7 +225,7 @@ void FileSystem::GetChildren(const FString& path,
                 }
                 else
                 {
-                    hlog(HLOG_DEBUG, "Skipping %s (not recursing)", 
+                    hlog(HLOG_DEBUG, "Skipping %s (not recursing)",
                          stmp.c_str());
                 }
             }
@@ -241,11 +241,11 @@ void FileSystem::GetChildren(const FString& path,
                 }
             }
         }
-    }    
+    }
 }
 
-uint64_t FileSystem::CountChildren(const FString& path,
-                             bool recurse) const
+uint64_t FileSystemImpl::CountChildren(const FString& path,
+                                       bool recurse) const
 {
     FTRACE2("%s, %s", path.c_str(), (recurse ? "true" : "false"));
 
@@ -288,10 +288,10 @@ uint64_t FileSystem::CountChildren(const FString& path,
     return count;
 }
 
-void FileSystem::Unlink(const FString& path, bool unlink_children,
-        const ProgressCallback &progressCallback)
+void FileSystemImpl::Unlink(const FString& path, bool unlink_children,
+                            const ProgressCallback &progressCallback)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::%s(%s, %s)", __FUNCTION__,
+    hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%s, %s)", __FUNCTION__,
          path.c_str(), (unlink_children ? "true" : "false"));
     FString stmp;
 
@@ -359,9 +359,9 @@ void FileSystem::Unlink(const FString& path, bool unlink_children,
 }
 
 
-void FileSystem::UnlinkAt(int dir_fd, const FString& path)
+void FileSystemImpl::UnlinkAt(int dir_fd, const FString& path)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::%s(%d, %s)", __FUNCTION__, dir_fd, path.c_str());
+    hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%d, %s)", __FUNCTION__, dir_fd, path.c_str());
     FString stmp;
     int err;
 
@@ -379,9 +379,9 @@ void FileSystem::UnlinkAt(int dir_fd, const FString& path)
 }
 
 
-void FileSystem::unlinkHelper(const FString& path)
+void FileSystemImpl::unlinkHelper(const FString& path)
 {
-    // hlog(HLOG_DEBUG4, "FileSystem::%s(%s)", __FUNCTION__, path.c_str());
+    // hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%s)", __FUNCTION__, path.c_str());
     int err;
 
     if ((err = ::unlink(path)) != 0)
@@ -397,9 +397,9 @@ void FileSystem::unlinkHelper(const FString& path)
 }
 
 
-void FileSystem::Rename(const FString& from, const FString& to)
+void FileSystemImpl::Rename(const FString& from, const FString& to)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::%s(%s, %s)", __FUNCTION__, from.c_str(), to.c_str());
+    hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%s, %s)", __FUNCTION__, from.c_str(), to.c_str());
 
     if (::rename(from.c_str(), to.c_str()) != 0)
     {
@@ -408,10 +408,10 @@ void FileSystem::Rename(const FString& from, const FString& to)
 }
 
 
-void FileSystem::RenameAt(int dir_from_fd, const FString& from,
-                          int dir_to_fd, const FString& to)
+void FileSystemImpl::RenameAt(int dir_from_fd, const FString& from,
+                              int dir_to_fd, const FString& to)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::%s(%d, %s, %d, %s)", __FUNCTION__,
+    hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%d, %s, %d, %s)", __FUNCTION__,
          dir_from_fd, from.c_str(), dir_to_fd, to.c_str());
 
     if (::renameat(dir_from_fd, from.c_str(), dir_to_fd, to.c_str()) != 0)
@@ -421,9 +421,9 @@ void FileSystem::RenameAt(int dir_from_fd, const FString& from,
 }
 
 
-void FileSystem::MakeDir(const FString& path, mode_t mode, bool make_parents)
+void FileSystemImpl::MakeDir(const FString& path, mode_t mode, bool make_parents)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::%s(%s, %04o, %s)", __FUNCTION__,
+    hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%s, %04o, %s)", __FUNCTION__,
          path.c_str(), mode, (make_parents ? "true" : "false"));
     FString stmp, parent;
     struct stat st;
@@ -436,13 +436,13 @@ void FileSystem::MakeDir(const FString& path, mode_t mode, bool make_parents)
     if (stat(path, &st) == 0)
     {
         // early exit?
-        if (S_ISDIR(st.st_mode)) 
+        if (S_ISDIR(st.st_mode))
         {
             return;
         }
-        else 
+        else
         {
-            stmp.Format("FORTE_MAKEDIR_FAIL_IN_THE_WAY|||%s", 
+            stmp.Format("FORTE_MAKEDIR_FAIL_IN_THE_WAY|||%s",
                         path.c_str());
             throw EFileSystemMakeDir(stmp);
         }
@@ -465,7 +465,7 @@ void FileSystem::MakeDir(const FString& path, mode_t mode, bool make_parents)
         {
             if (err == 0)
             {
-                throw EFileSystemMakeDir(FStringFC(), 
+                throw EFileSystemMakeDir(FStringFC(),
                                          "FORTE_MAKEDIR_SUBSEQUENTLY_DELETED|||%s",
                                          path.c_str());
             }
@@ -475,7 +475,7 @@ void FileSystem::MakeDir(const FString& path, mode_t mode, bool make_parents)
     }
 }
 
-int FileSystem::ScanDir(const FString& path, std::vector<FString> &namelist)
+int FileSystemImpl::ScanDir(const FString& path, std::vector<FString> &namelist)
 {
     if (boostfs::exists(path.c_str()))
     {
@@ -491,9 +491,9 @@ int FileSystem::ScanDir(const FString& path, std::vector<FString> &namelist)
     return (int)namelist.size();
 }
 
-void FileSystem::MakeDirAt(int dir_fd, const FString& path, mode_t mode)
+void FileSystemImpl::MakeDirAt(int dir_fd, const FString& path, mode_t mode)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::%s(%d, %s, %04o)", __FUNCTION__, dir_fd, path.c_str(), mode);
+    hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%d, %s, %04o)", __FUNCTION__, dir_fd, path.c_str(), mode);
     struct stat st;
     int err;
 
@@ -506,7 +506,7 @@ void FileSystem::MakeDirAt(int dir_fd, const FString& path, mode_t mode)
     {
         if (err == 0)
         {
-            throw EFileSystemMakeDir(FStringFC(), 
+            throw EFileSystemMakeDir(FStringFC(),
                                      "FORTE_MAKEDIR_SUBSEQUENTLY_DELETED|||%s",
                                      path.c_str());
         }
@@ -516,9 +516,9 @@ void FileSystem::MakeDirAt(int dir_fd, const FString& path, mode_t mode)
 }
 
 
-void FileSystem::Link(const FString& from, const FString& to)
+void FileSystemImpl::Link(const FString& from, const FString& to)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::%s(%s, %s)", __FUNCTION__, from.c_str(), to.c_str());
+    hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%s, %s)", __FUNCTION__, from.c_str(), to.c_str());
 
     if (::link(from.c_str(), to.c_str()) != 0)
     {
@@ -527,9 +527,9 @@ void FileSystem::Link(const FString& from, const FString& to)
 }
 
 
-void FileSystem::LinkAt(int dir_from_fd, const FString& from, int dir_to_fd, const FString& to)
+void FileSystemImpl::LinkAt(int dir_from_fd, const FString& from, int dir_to_fd, const FString& to)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::%s(%d, %s, %d, %s)", __FUNCTION__,
+    hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%d, %s, %d, %s)", __FUNCTION__,
          dir_from_fd, from.c_str(), dir_to_fd, to.c_str());
 
     if (::linkat(dir_from_fd, from.c_str(), dir_to_fd, to.c_str(), 0) != 0)
@@ -539,9 +539,9 @@ void FileSystem::LinkAt(int dir_from_fd, const FString& from, int dir_to_fd, con
 }
 
 
-void FileSystem::SymLink(const FString& from, const FString& to)
+void FileSystemImpl::SymLink(const FString& from, const FString& to)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::%s(%s, %s)", __FUNCTION__, from.c_str(), to.c_str());
+    hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%s, %s)", __FUNCTION__, from.c_str(), to.c_str());
 
     if (::symlink(from.c_str(), to.c_str()) != 0)
     {
@@ -550,9 +550,9 @@ void FileSystem::SymLink(const FString& from, const FString& to)
 }
 
 
-void FileSystem::SymLinkAt(const FString& from, int dir_to_fd, const FString& to)
+void FileSystemImpl::SymLinkAt(const FString& from, int dir_to_fd, const FString& to)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::%s(%s, %d, %s)", __FUNCTION__,
+    hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%s, %d, %s)", __FUNCTION__,
          from.c_str(), dir_to_fd, to.c_str());
 
     if (::symlinkat(from.c_str(), dir_to_fd, to.c_str()) != 0)
@@ -562,9 +562,9 @@ void FileSystem::SymLinkAt(const FString& from, int dir_to_fd, const FString& to
 }
 
 
-FString FileSystem::ReadLink(const FString& path)
+FString FileSystemImpl::ReadLink(const FString& path)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::%s(%s)", __FUNCTION__, path.c_str());
+    hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%s)", __FUNCTION__, path.c_str());
     FString ret;
     char buf[1024];  // MAXPATHLEN + 1
     int rc;
@@ -580,9 +580,9 @@ FString FileSystem::ReadLink(const FString& path)
 }
 
 
-FString FileSystem::ResolveSymLink(const FString& path)
+FString FileSystemImpl::ResolveSymLink(const FString& path)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::%s(%s)", __FUNCTION__, path.c_str());
+    hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%s)", __FUNCTION__, path.c_str());
     struct stat st;
     char buf[1024];  // MAXPATHLEN + 1
     FString stmp, base(GetCWD()), ret(path);
@@ -596,7 +596,7 @@ FString FileSystem::ResolveSymLink(const FString& path)
         // check visited map
         if (visited.find(ret) != visited.end())
         {
-            stmp.Format("FORTE_RESOLVE_SYMLINK_LOOP|||%s|||%s", 
+            stmp.Format("FORTE_RESOLVE_SYMLINK_LOOP|||%s|||%s",
                         path.c_str(), ret.c_str());
             throw EFileSystemResolveSymLink(stmp);
         }
@@ -607,7 +607,7 @@ FString FileSystem::ResolveSymLink(const FString& path)
         if (LStat(ret, &st) != 0)
         {
             rc = errno;
-            hlog(HLOG_DEBUG4, "FileSystem::%s(): unable to stat %s", __FUNCTION__, ret.c_str());
+            hlog(HLOG_DEBUG4, "FileSystemImpl::%s(): unable to stat %s", __FUNCTION__, ret.c_str());
             stmp.Format("FORTE_RESOLVE_SYMLINK_BROKEN|||%s|||%s", path.c_str(), ret.c_str());
             throw EFileSystemResolveSymLink(stmp);
         }
@@ -632,15 +632,15 @@ FString FileSystem::ResolveSymLink(const FString& path)
     }
 
     // too many iterations
-    stmp.Format("FORTE_RESOLVE_SYMLINK_TOO_MANY|||%s|||%u", path.c_str(), 
+    stmp.Format("FORTE_RESOLVE_SYMLINK_TOO_MANY|||%s|||%u", path.c_str(),
                 MAX_RESOLVE);
     throw EFileSystemResolveSymLink(stmp);
 }
 
 
-FString FileSystem::FullyResolveSymLink(const FString& path)
+FString FileSystemImpl::FullyResolveSymLink(const FString& path)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::%s(%s)", __FUNCTION__, path.c_str());
+    hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%s)", __FUNCTION__, path.c_str());
     std::vector<FString>::iterator pi;
     std::vector<FString> parts;
     std::map<FString, bool> visited, good;
@@ -659,7 +659,7 @@ FString FileSystem::FullyResolveSymLink(const FString& path)
         // check visited map
         if (visited.find(ret) != visited.end())
         {
-            stmp.Format("FORTE_RESOLVE_SYMLINK_LOOP|||%s|||%s", 
+            stmp.Format("FORTE_RESOLVE_SYMLINK_LOOP|||%s|||%s",
                         path.c_str(), ret.c_str());
             throw EFileSystemResolveSymLink(stmp);
         }
@@ -669,7 +669,7 @@ FString FileSystem::FullyResolveSymLink(const FString& path)
         // check for too many recursions
         if (i++ > MAX_RESOLVE)
         {
-            stmp.Format("FORTE_RESOLVE_SYMLINK_TOO_MANY|||%s|||%u", 
+            stmp.Format("FORTE_RESOLVE_SYMLINK_TOO_MANY|||%s|||%u",
                         path.c_str(), MAX_RESOLVE);
             throw EFileSystemResolveSymLink(stmp);
         }
@@ -734,7 +734,7 @@ FString FileSystem::FullyResolveSymLink(const FString& path)
 }
 
 
-FString FileSystem::MakeRelativePath(const FString& base, const FString& path)
+FString FileSystemImpl::MakeRelativePath(const FString& base, const FString& path)
 {
     std::vector<FString>::iterator bi, pi;
     std::vector<FString> b, p;
@@ -774,8 +774,8 @@ FString FileSystem::MakeRelativePath(const FString& base, const FString& path)
 }
 
 
-FString FileSystem::ResolveRelativePath(const FString& base, 
-                                        const FString& path)
+FString FileSystemImpl::ResolveRelativePath(const FString& base,
+                                            const FString& path)
 {
     std::vector<FString>::reverse_iterator br;
     std::vector<FString>::iterator bi, pi;
@@ -818,9 +818,9 @@ FString FileSystem::ResolveRelativePath(const FString& base,
 }
 
 
-void FileSystem::FileCopy(const FString& from, const FString& to, mode_t mode)
+void FileSystemImpl::FileCopy(const FString& from, const FString& to, mode_t mode)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::file_copy(%s, %s, %4o)",
+    hlog(HLOG_DEBUG4, "FileSystemImpl::file_copy(%s, %s, %4o)",
          from.c_str(), to.c_str(), mode);
     FString command, to_dir, stmp;
 
@@ -831,21 +831,21 @@ void FileSystem::FileCopy(const FString& from, const FString& to, mode_t mode)
     try
     {
         boostfs::copy_file(static_cast<const string&>(from),
-                static_cast<const string&>(to),
-                boostfs::copy_option::overwrite_if_exists);
+                           static_cast<const string&>(to),
+                           boostfs::copy_option::overwrite_if_exists);
     }
     catch (boostfs::filesystem_error &e)
     {
         stmp.Format("FORTE_COPY_FAIL|||%s|||%s|||%s", from.c_str(), to.c_str(),
-                e.what());
-                throw EFileSystemCopy(stmp);
+                    e.what());
+        throw EFileSystemCopy(stmp);
     }
 }
 
 
-FString FileSystem::FileGetContents(const FString& filename) const
+FString FileSystemImpl::FileGetContents(const FString& filename) const
 {
-    hlog(HLOG_DEBUG4, "FileSystem::file_get_contents(%s)", filename.c_str());
+    hlog(HLOG_DEBUG4, "FileSystemImpl::file_get_contents(%s)", filename.c_str());
     ifstream in(filename, ios::in | ios::binary);
     FString ret, stmp;
     char buf[16384];
@@ -860,20 +860,21 @@ FString FileSystem::FileGetContents(const FString& filename) const
     return ret;
 }
 
-void FileSystem::FileOpen(AutoFD &autoFd, const FString& path, int flags, int mode)
+void FileSystemImpl::FileOpen(AutoFD &autoFd, const FString& path, int flags, int mode)
 {
     FTRACE2("%s, %i, %i", path.c_str(), flags, mode);
 
     autoFd = ::open(path, flags, mode);
-    if (autoFd == AutoFD::NONE) 
+    if (autoFd == AutoFD::NONE)
     {
         SystemCallUtil::ThrowErrNoException(errno);
     }
 }
 
-void FileSystem::FilePutContents(const FString& path, int flags, int mode, const char* fmt, ...)
+void FileSystemImpl::FilePutContentsWithPerms(
+    const FString& path, const FString& data, int flags, int mode)
 {
-    FTRACE2("%s, %i, %i, %s", path.c_str(), flags, mode, fmt);
+    FTRACE2("%s, %i, %i", path.c_str(), flags, mode);
 
     int fd = ::open(path, flags, mode);
     if (fd < 0)
@@ -886,33 +887,30 @@ void FileSystem::FilePutContents(const FString& path, int flags, int mode, const
         SystemCallUtil::ThrowErrNoException(errno);
     }
 
-    va_list args;
-    va_start(args, fmt);
-    vfprintf(file, fmt, args);
-    va_end(args);
+    fprintf(file, "%s", data.c_str());
 
     fclose(file); // we must use fclose if open and fdopen succceeded
 }
 
-void FileSystem::FilePutContents(const FString& filename, const FString& data, 
-                                 bool append, bool throwOnError)
+void FileSystemImpl::FilePutContents(
+    const FString& filename, const FString& data, bool append, bool throwOnError)
 {
-    FTRACE2("%s, [data], %s, %s", filename.c_str(), 
+    FTRACE2("%s, [data], %s, %s", filename.c_str(),
             (append ? "APPEND" : "DON'T APPEND"),
             (throwOnError ? "THROW ON ERROR" : "DON'T THROW ON ERROR"));
 
     ios_base::openmode mode=ios::out | ios::binary;
 
-    if (append) 
+    if (append)
     {
         mode=mode | ios::app;
     }
 
     ofstream out(filename, mode);
-    if (out.good()) 
+    if (out.good())
     {
         hlog(HLOG_DEBUG, "Writing data to %s", filename.c_str());
-        if (throwOnError) 
+        if (throwOnError)
         {
             out.exceptions( ofstream::failbit | ofstream::badbit );
         }
@@ -920,7 +918,7 @@ void FileSystem::FilePutContents(const FString& filename, const FString& data,
     }
     else if (throwOnError)
     {
-        hlog_and_throw(HLOG_ERR, 
+        hlog_and_throw(HLOG_ERR,
                        EFileSystem(FStringFC(), "%s not available for writing",
                                    filename.c_str()));
     }
@@ -930,9 +928,9 @@ void FileSystem::FilePutContents(const FString& filename, const FString& data,
     }
 }
 
-void FileSystem::FileAppend(const FString& from, const FString& to)
+void FileSystemImpl::FileAppend(const FString& from, const FString& to)
 {
-    hlog(HLOG_DEBUG4, "FileSystem::file_append(%s, %s)",
+    hlog(HLOG_DEBUG4, "FileSystemImpl::file_append(%s, %s)",
          from.c_str(), to.c_str());
     FString to_dir, stmp;
 
@@ -947,22 +945,22 @@ void FileSystem::FileAppend(const FString& from, const FString& to)
     }
 }
 
-void FileSystem::DeepCopy(const FString& source, const FString& dest, 
-        const ProgressCallback &progressCallback)
+void FileSystemImpl::DeepCopy(const FString& source, const FString& dest,
+                              const ProgressCallback &progressCallback)
 {
     InodeMap inode_map;
     uint64_t size_copied = 0;
-    deepCopyHelper(source, dest, source, inode_map, size_copied, 
+    deepCopyHelper(source, dest, source, inode_map, size_copied,
                    progressCallback);
 }
 
 
-void FileSystem::deepCopyHelper(const FString& base_from, 
-                                const FString& base_to, 
-                                const FString& dir,
-                                InodeMap &inode_map,
-                                uint64_t &size_copied,
-                                const ProgressCallback &progressCallback)
+void FileSystemImpl::deepCopyHelper(const FString& base_from,
+                                    const FString& base_to,
+                                    const FString& dir,
+                                    InodeMap &inode_map,
+                                    uint64_t &size_copied,
+                                    const ProgressCallback &progressCallback)
 {
     hlog(HLOG_DEBUG4, "Filesystem::%s(%s, %s, %s)", __FUNCTION__,
          base_from.c_str(), base_to.c_str(), dir.c_str());
@@ -1021,7 +1019,7 @@ void FileSystem::deepCopyHelper(const FString& base_from,
         }
         else if (S_ISDIR(st.st_mode))
         {
-            deepCopyHelper(base_from, base_to, path, inode_map, size_copied, 
+            deepCopyHelper(base_from, base_to, path, inode_map, size_copied,
                            progressCallback);
         }
         else
@@ -1044,9 +1042,9 @@ void FileSystem::deepCopyHelper(const FString& base_from,
 }
 
 
-void FileSystem::Copy(const FString &from_path,
-                      const FString &to_path,
-                      const ProgressCallback &progressCallback)
+void FileSystemImpl::Copy(const FString &from_path,
+                          const FString &to_path,
+                          const ProgressCallback &progressCallback)
 {
     InodeMap inode_map;
     uint64_t size_copied = 0;
@@ -1062,12 +1060,12 @@ void FileSystem::Copy(const FString &from_path,
 }
 
 
-void FileSystem::copyHelper(const FString& from_path, 
-                            const FString& to_path,
-                            const struct stat& st,
-                            InodeMap &inode_map,
-                            uint64_t &size_copied,
-                            const ProgressCallback &progressCallback)
+void FileSystemImpl::copyHelper(const FString& from_path,
+                                const FString& to_path,
+                                const struct stat& st,
+                                InodeMap &inode_map,
+                                uint64_t &size_copied,
+                                const ProgressCallback &progressCallback)
 {
     struct timeval times[2];
 
@@ -1142,7 +1140,7 @@ void FileSystem::copyHelper(const FString& from_path,
                 // TODO: replace this as g_shutdown has been removed!
                 // if (g_shutdown)
                 // {
-                //     throw EFileSystemCopy("FORTE_COPY_FAIL_SHUTDOWN|||" + 
+                //     throw EFileSystemCopy("FORTE_COPY_FAIL_SHUTDOWN|||" +
                 //                           from_path + "|||" + to_path);
                 // }
             }
@@ -1187,4 +1185,3 @@ void FileSystem::copyHelper(const FString& from_path,
     // progress
     if (progressCallback) progressCallback(size_copied);
 }
-

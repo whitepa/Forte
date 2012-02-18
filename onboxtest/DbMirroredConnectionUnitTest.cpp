@@ -7,7 +7,7 @@
 #include "DbConnectionPool.h"
 #include "ProcRunner.h"
 #include "AutoDoUndo.h"
-#include "FileSystem.h"
+#include "FileSystemImpl.h"
 #include "DbSqlStatement.h"
 #include "DbAutoConnection.h"
 #include "DbBackupManagerThread.h"
@@ -154,7 +154,7 @@ public: // drawback, bind requires these be public
 
     void unmountDatabase()
     {
-        FileSystem fs;
+        FileSystemImpl fs;
 
         ASSERT_TRUE(fs.FileExists(getDatabaseName())) << getDatabaseName();
 
@@ -219,7 +219,7 @@ public: // drawback, bind requires these be public
     {
         FTRACE;
 
-        FileSystem fs;
+        FileSystemImpl fs;
 
         ASSERT_FALSE(fs.FileExists(getDatabaseName())) << getDatabaseName();
 
@@ -248,13 +248,13 @@ public: // drawback, bind requires these be public
         }
         else if (!output.empty())
         {
-            hlog(HLOG_INFO, "Command %s succeeded with output (%s)", 
-                 cmd.c_str(), 
+            hlog(HLOG_INFO, "Command %s succeeded with output (%s)",
+                 cmd.c_str(),
                  output.c_str());
         }
         else
         {
-            hlog(HLOG_INFO, "Command %s succeeded with no output", 
+            hlog(HLOG_INFO, "Command %s succeeded with no output",
                  cmd.c_str());
         }
 

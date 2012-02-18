@@ -64,7 +64,7 @@ GSRCS = CheckedValueStoreUnitTest.cpp \
 	DbConnectionPoolUnitTest.cpp \
 	DbMirroredConnectionUnitTest.cpp \
 	ExceptionUnitTest.cpp \
-	FileSystemUnitTest.cpp \
+	FileSystemImplUnitTest.cpp \
 	FileSystemUtilUnitTest.cpp \
 	FStringUnitTest.cpp \
 	INotifyUnitTest.cpp \
@@ -102,13 +102,13 @@ $(BPROGS): $(TARGETDIR)/%: $(FORTE) $(FORTE_MOCK) %.cpp $(TARGETDIR)/%.o
 # the dependencies in this rule are wrong:
 $(TARGETDIR)/ContextPredicateUnitTest: ContextPredicateUnitTest.cpp
 
-$(TARGETDIR)/FileSystemUnitTest: FileSystemUnitTest.cpp \
-	../$(TARGETDIR)/FileSystem.o 
+$(TARGETDIR)/FileSystemImplUnitTest: FileSystemImplUnitTest.cpp \
+	../$(TARGETDIR)/FileSystemImpl.o 
 
 $(TARGETDIR)/FileSystemUtilUnitTest: FileSystemUtilUnitTest.cpp \
 	 ../$(TARGETDIR)/FileSystemUtil.o \
 	../$(TARGETDIR)/FileSystemUtil.o \
-	../$(TARGETDIR)/FileSystem.o
+	../$(TARGETDIR)/FileSystemImpl.o
 
 $(TARGETDIR)/ExceptionUnitTest: ExceptionUnitTest.cpp \
 	../$(TARGETDIR)/Exception.o
@@ -178,6 +178,7 @@ $(GPROGS):
 	$(FORTE_MOCK_LIBS) \
 	$(LIBS) \
 	$(FORTE_MOCK_INCLUDE) \
+	$(GMOCK_LIBS) \
 	$(GTEST_LIB)
 
 
