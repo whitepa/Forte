@@ -57,6 +57,12 @@ void ActiveObjectThread::CancelRunning(void)
     if (mCurrentAsyncInvocation)
         mCurrentAsyncInvocation->Cancel();
 }
+
+void ActiveObjectThread::WaitUntilQueueEmpty(void)
+{
+    mQueue.WaitUntilEmpty();
+}
+
 void * ActiveObjectThread::run(void)
 {
     FTRACE;

@@ -19,13 +19,14 @@ namespace Forte
     {
     public:
         ActiveObject() : 
-            mActiveObjectThreadPtr(new Forte::ActiveObjectThread()) {};
+            mActiveObjectThreadPtr(new Forte::ActiveObjectThread()), 
+            mIsShutdown(false) {};
         virtual ~ActiveObject() {Shutdown(true,false);}
 
         template<typename ResultType>
         shared_ptr<Forte::Future<ResultType> > InvokeAsync(
             boost::function<ResultType(void)> callback) {
-            if (!mActiveObjectThreadPtr)
+            if (mIsShutdown || (!mActiveObjectThreadPtr))
                 throw_exception(EActiveObjectShuttingDown());
             shared_ptr<Future<ResultType> > future(make_shared<Future<ResultType> >());
             mActiveObjectThreadPtr->Enqueue(
@@ -46,11 +47,15 @@ namespace Forte
 
         void Shutdown(bool waitForQueueDrain = true, 
                       bool cancelRunning = false) {
+            if (mIsShutdown) return; // @TODO: should we throw?
+            mIsShutdown=true;
             if (!mActiveObjectThreadPtr)
                 return;
-            mActiveObjectThreadPtr->Shutdown();
-            if (!waitForQueueDrain)
+            if (waitForQueueDrain)
+                mActiveObjectThreadPtr->WaitUntilQueueEmpty();
+            else
                 mActiveObjectThreadPtr->DropQueue();
+            mActiveObjectThreadPtr->Shutdown();
             if (cancelRunning)
                 mActiveObjectThreadPtr->CancelRunning();
             mActiveObjectThreadPtr->WaitForShutdown();
@@ -58,6 +63,7 @@ namespace Forte
         }
     private:
         boost::scoped_ptr<Forte::ActiveObjectThread> mActiveObjectThreadPtr;
+        bool mIsShutdown;
     };
 
 };

@@ -34,6 +34,8 @@ namespace Forte
 
         virtual void DropQueue(void);
 
+        virtual void WaitUntilQueueEmpty(void);
+
     private:
         Forte::EventQueue mQueue;
         Forte::Mutex mLock;

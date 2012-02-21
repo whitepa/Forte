@@ -147,6 +147,15 @@ TEST_F(ActiveObjectTest, ShutdownAndWaitForDrainDefaultParameters)
     shared_ptr<Future<int> > future3;
     ASSERT_THROW(future3 = a.PerformAddTwoNumbersVerySlowlyCancellable(1,2), EActiveObjectShuttingDown);
 }
+TEST_F(ActiveObjectTest, ShutdownThenInvokeShouldThrow)
+{
+    ActiveTester a;
+    shared_ptr<Future<int> > future1 = a.PerformAddTwoNumbersVerySlowlyCancellable(1,2);
+    a.Shutdown();
+    shared_ptr<Future<int> > future3;
+    ASSERT_THROW(future3 = a.PerformAddTwoNumbersVerySlowlyCancellable(1,2), 
+                 EActiveObjectShuttingDown);
+}
 TEST_F(ActiveObjectTest, ShutdownAndClearQueue)
 {
     ActiveTester a;
