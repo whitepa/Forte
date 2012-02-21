@@ -12,28 +12,31 @@ namespace Forte
         GMockProcessManager() {}
         virtual ~GMockProcessManager() {}
 
-        MOCK_METHOD6(CreateProcess, boost::shared_ptr<ProcessFuture> (
+        MOCK_METHOD7(CreateProcess, boost::shared_ptr<ProcessFuture> (
                          const FString &command,
                          const FString &currentWorkingDirectory,
                          const FString &outputFilename,
                          const FString &errorFilename,
                          const FString &inputFilename,
-                         const StrStrMap *environment));
+                         const StrStrMap *environment,
+                         const FString &commandToLog));
 
-        MOCK_METHOD6(CreateProcessDontRun, boost::shared_ptr<ProcessFuture> (
+        MOCK_METHOD7(CreateProcessDontRun, boost::shared_ptr<ProcessFuture> (
                          const FString &command,
                          const FString &currentWorkingDirectory,
                          const FString &outputFilename,
                          const FString &errorFilename,
                          const FString &inputFilename,
-                         const StrStrMap *environment));
+                         const StrStrMap *environment,
+                         const FString &commandToLog));
 
-        MOCK_METHOD5(CreateProcessAndGetResult, int (
+        MOCK_METHOD6(CreateProcessAndGetResult, int (
                          const Forte::FString& command,
                          Forte::FString& output,
                          const Timespec &timeout,
                          const FString &inputFilename,
-                         const StrStrMap *environment));
+                         const StrStrMap *environment,
+                         const FString &commandToLog));
 
         MOCK_METHOD1(RunProcess, void (boost::shared_ptr<ProcessFuture> ph));
 

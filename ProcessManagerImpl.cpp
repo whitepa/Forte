@@ -69,7 +69,8 @@ Forte::ProcessManagerImpl::CreateProcess(const FString &command,
                                          const FString &outputFilename,
                                          const FString &errorFilename,
                                          const FString &inputFilename,
-                                         const StrStrMap *environment)
+                                         const StrStrMap *environment,
+                                         const FString &commandToLog)
 {
     FTRACE;
     boost::shared_ptr<ProcessManagerImpl> mgr =
@@ -81,7 +82,8 @@ Forte::ProcessManagerImpl::CreateProcess(const FString &command,
                               outputFilename,
                               errorFilename,
                               inputFilename,
-                              environment));
+                              environment, 
+                              commandToLog));
     startMonitor(ph);
     {
         AutoUnlockMutex lock(mProcessesLock);
@@ -98,7 +100,8 @@ Forte::ProcessManagerImpl::CreateProcessDontRun(const FString &command,
                                                 const FString &outputFilename,
                                                 const FString &errorFilename,
                                                 const FString &inputFilename,
-                                                const StrStrMap *environment)
+                                                const StrStrMap *environment,
+                                                const FString &commandToLog)
 {
     FTRACE;
     boost::shared_ptr<ProcessManagerImpl> mgr =
@@ -110,7 +113,8 @@ Forte::ProcessManagerImpl::CreateProcessDontRun(const FString &command,
                               outputFilename,
                               errorFilename,
                               inputFilename,
-                              environment));
+                              environment,
+                              commandToLog));
     startMonitor(ph);
     AutoUnlockMutex lock(mProcessesLock);
     mProcesses[ph->getManagementFD()] = ph;
@@ -259,7 +263,8 @@ int ProcessManagerImpl::CreateProcessAndGetResult(const FString& command,
                                                   FString& output,
                                                   const Timespec &timeout,
                                                   const FString &inputFilename,
-                                                  const StrStrMap *environment)
+                                                  const StrStrMap *environment,
+                                                  const FString &commandToLog)
 {
     FTRACE;
     FString randomSuffix;
@@ -274,7 +279,7 @@ int ProcessManagerImpl::CreateProcessAndGetResult(const FString& command,
          command.c_str(), timeout.AsSeconds(), outputFilename.c_str());
     boost::shared_ptr<ProcessFuture> future =
         CreateProcess(command, "/", outputFilename,
-                      errorFilename, inputFilename, environment);
+                      errorFilename, inputFilename, environment, commandToLog);
 
     try
     {

@@ -49,7 +49,7 @@ void * Thread::startThread(void *obj)
     // run the thread
     try
     {
-        retval = thr->run();
+        if (!thr->mThreadShutdown) retval = thr->run();
     }
     catch (EThreadShutdown &e)
     {

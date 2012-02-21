@@ -42,7 +42,6 @@ LIBS = \
 BSRCS = ContextUnitTest.cpp \
 	ExpDecayingAvgUnitTest.cpp \
 	GUIDGeneratorUnitTest.cpp \
-	ProcFileSystemUnitTest.cpp \
 	StateMachineUnitTest1.cpp \
 	StateMachineUnitTest2.cpp \
 	StateMachineUnitTest3.cpp \
@@ -72,6 +71,7 @@ GSRCS = CheckedValueStoreUnitTest.cpp \
 	PidFileUnitTest.cpp \
 	PDUPeerUnitTest.cpp \
 	ProcessManagerUnitTest.cpp \
+	ProcFileSystemUnitTest.cpp \
 	SCSIUtilUnitTest.cpp \
 	StateMachineDoIntervalUnitTest.cpp \
 	StateMachineSetStateUnitTest.cpp \
@@ -128,6 +128,9 @@ $(TARGETDIR)/FStringUnitTest: FStringUnitTest.cpp \
 $(TARGETDIR)/ProcessManagerUnitTest: ProcessManagerUnitTest.cpp \
 	../$(TARGETDIR)/ProcessManagerImpl.o \
 	../$(TARGETDIR)/ProcessFutureImpl.o \
+
+$(TARGETDIR)/ProcFileSystemUnitTest: ProcFileSystemUnitTest.cpp \
+	../$(TARGETDIR)/ProcFileSystem.o \
 
 $(TARGETDIR)/PDUPeerUnitTest: PDUPeerUnitTest.cpp $(FORTE)
 

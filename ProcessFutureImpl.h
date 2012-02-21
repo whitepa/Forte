@@ -40,6 +40,7 @@ namespace Forte
          * directory for the forked process.
          * @param environment a map of the environment to apply to the command
          * @param inputFilename name of the file to use for input.
+         * @param commandToLog is the command that should be logged instead of the command that was run (to hide sensitive information, for example)
          */
         ProcessFutureImpl(const boost::shared_ptr<Forte::ProcessManagerImpl> &mgr,
                           const FString &command,
@@ -47,7 +48,8 @@ namespace Forte
                           const FString &outputFilename = "/dev/null",
                           const FString &errorFilename = "/dev/null",
                           const FString &inputFilename = "/dev/null",
-                          const StrStrMap *environment = NULL);
+                          const StrStrMap *environment = NULL,
+                          const FString &commandToLog = "");
 
     public:
         /**
@@ -347,6 +349,7 @@ namespace Forte
         boost::shared_ptr<PDUPeer> mManagementChannel;
 
         FString mCommand;
+        FString mCommandToLog;
         ProcessCompleteCallback mProcessCompleteCallback;
         FString mCurrentWorkingDirectory;
 

@@ -98,6 +98,8 @@ namespace Forte
          * @param environment a string-string map holding environment
          * variables that will be applied to the child process.  Note
          * that these variables are ADDED to the current environment.
+         * @param commandToLog the command string to log in a log file
+         * if different than the command
          *
          * @return a shared pointer holding a Process object.
          */
@@ -107,7 +109,8 @@ namespace Forte
             const FString &outputFilename = "/dev/null",
             const FString &errorFilename = "/dev/null",
             const FString &inputFilename = "/dev/null",
-            const StrStrMap *environment = NULL) = 0;
+            const StrStrMap *environment = NULL,
+            const FString &commandToLog = "") = 0;
 
         virtual boost::shared_ptr<ProcessFuture> CreateProcessDontRun(
             const FString &command,
@@ -115,7 +118,8 @@ namespace Forte
             const FString &outputFilename = "/dev/null",
             const FString &errorFilename = "/dev/null",
             const FString &inputFilename = "/dev/null",
-            const StrStrMap *environment = NULL) = 0;
+            const StrStrMap *environment = NULL,
+            const FString &commandToLog = "") = 0;
 
         virtual void RunProcess(boost::shared_ptr<ProcessFuture> ph) = 0;
 
@@ -125,7 +129,8 @@ namespace Forte
                                               Forte::FString& output, 
                                               const Timespec &timeout = Timespec::FromSeconds(-1),
                                               const FString &inputFilename = "/dev/null",
-                                              const StrStrMap *environment = NULL) = 0;
+                                              const StrStrMap *environment = NULL,
+                                              const Forte::FString& commandToLog= "") = 0;
     };
     typedef boost::shared_ptr<ProcessManager> ProcessManagerPtr;
 };
