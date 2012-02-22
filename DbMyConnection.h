@@ -21,10 +21,10 @@ namespace Forte
         virtual ~DbMyConnection();
 
         // initialization
-        virtual bool Init(const FString& db, 
-                          const FString& user, 
+        virtual bool Init(const FString& db,
+                          const FString& user,
                           const FString& pass,
-                          const FString& host = "localhost", 
+                          const FString& host = "localhost",
                           const FString& socket = "",
                           unsigned int retries = 3);
         virtual bool Init(MYSQL *mysql);
@@ -40,7 +40,7 @@ namespace Forte
 
         // error info
         virtual bool IsTemporaryError() const;
-    
+
         // misc.
         virtual uint64_t InsertID() { return mysql_insert_id(mDB); }
         virtual uint64_t AffectedRows() { return mysql_affected_rows(mDB); }

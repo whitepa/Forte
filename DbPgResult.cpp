@@ -70,7 +70,7 @@ bool DbPgResult::PgData::IsOkay() const
             break;
         }
     }
-    
+
     return ret;
 }
 

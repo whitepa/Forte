@@ -32,7 +32,7 @@ namespace Forte
 
         // error info
         virtual bool IsTemporaryError() const;
-    
+
         // misc.
         virtual uint64_t InsertID() { return mLastRes.InsertID(); }
         virtual uint64_t AffectedRows() { return strtoull(PQcmdTuples(mLastRes), NULL, 0); }

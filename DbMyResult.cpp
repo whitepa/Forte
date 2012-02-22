@@ -71,7 +71,7 @@ bool DbMyResult::MyData::FetchRow(DbResultRow& row /*OUT*/)
     {
         row.push_back(mRow[i]);
     }
-    
+
     return ret;
 }
 

@@ -133,7 +133,7 @@ bool DbLiteResult::LiteData::FetchRow(DbResultRow& row /*OUT*/)
     ++mNextRow;
     row.clear();
     row.reserve(mCurrentRow->size());
-    
+
     for (ri = mCurrentRow->begin(); ri != mCurrentRow->end(); ++ri)
     {
         if (ri->second) row.push_back(NULL);
