@@ -98,7 +98,7 @@ protected:
     virtual size_t PopulateData(DbConnection& db)
     {
         const size_t rows(10);
-        for (int i = 0; i < rows; i++)
+        for (int i = 0; i < (int)rows; i++)
         {
             FString insertSql;
             insertSql.Format("INSERT INTO test VALUES (%d, %d)", i, rand());
@@ -168,7 +168,7 @@ public: // drawback, bind requires these be public
         ASSERT_FALSE(fs.FileExists(getDatabaseName())) << getDatabaseName();
     }
 
-    bool waitMountsDown()
+    void waitMountsDown()
     {
         for(unsigned long i = 0 ; i < 12 ; i++)
         {
@@ -243,7 +243,7 @@ public: // drawback, bind requires these be public
             FString err;
             err.Format("Unable to run '%s' [return code: %i] (%s)", cmd.c_str(),
                     ret, output.c_str());
-            hlog(HLOG_ERROR, err);
+            hlogstream(HLOG_ERROR, err);
             throw EUmountGPFS(err);
         }
         else if (!output.empty())
@@ -276,7 +276,7 @@ TEST_F(DbMirroredConnectionTest, SqliteBackupDatabaseTest)
 {
     FTRACE;
 
-    const size_t rows = PopulateData();
+    const size_t __attribute__((unused)) rows = PopulateData();
     DbConnectionPool pool("sqlite_mirrored", getDatabaseName());
     DbConnection& dbConnection(pool.GetDbConnection());
 

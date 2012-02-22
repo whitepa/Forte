@@ -12,7 +12,7 @@
 // Macro to allow easy scoping of objects out of the context
 #define CGET(key, type, name)                                   \
     shared_ptr<type> name ## _Ptr = mContext.Get<type>(key);    \
-    type &name(* name ## _Ptr)
+    type __attribute__((unused)) &name(* name ## _Ptr)
 
 #define CGETPTR(key, type, name)                                \
     shared_ptr<type> name = mContext.Get<type>(key);
@@ -23,7 +23,7 @@
 #define CGETNEW(key, type, name, args...)               \
     shared_ptr<type> name ## _Ptr(new type( args ));    \
     mContext.Set(key, name ## _Ptr);                    \
-    type &name(* name ## _Ptr)
+    type __attribute__((unused)) &name(* name ## _Ptr)
 
 #define CGETNEWPTR(key, type, name, args...)                    \
     shared_ptr<type> name(new type( args ));                    \

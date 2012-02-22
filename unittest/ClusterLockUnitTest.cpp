@@ -43,7 +43,7 @@ protected:
 
     static void TearDownTestCase() {
 
-        if (ClusterLock::LOCK_PATH == "./lock")
+        if (!strcmp(ClusterLock::LOCK_PATH, "./lock"))
         {
             FileSystemImpl fs;
             fs.Unlink("./lock", true);

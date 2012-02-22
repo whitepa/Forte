@@ -101,7 +101,7 @@ protected:
     virtual size_t PopulateData(DbConnection& db)
     {
         const size_t rows(100);
-        for (int i = 0; i < rows; i++)
+        for (int i = 0; i < (int)rows; i++)
         {
             FString insertSql;
             insertSql.Format("INSERT INTO test VALUES (%d, %d)", i, rand());
@@ -271,7 +271,6 @@ TEST_F(BasicDatabaseTest, SqliteManualFailoverAndManualBackupDatabaseTest)
 
 TEST_F(BasicDatabaseTest, SqliteNoPathToBackupTargetDatabaseTest)
 {
-    size_t rows(0);
     DbResult res;
 
     shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), "/tmp/tmp/tmp/backup.db"));
@@ -283,7 +282,6 @@ TEST_F(BasicDatabaseTest, SqliteNoPathToBackupTargetDatabaseTest)
 
 TEST_F(BasicDatabaseTest, SqliteNoPrimaryOnAutoBackupDatabaseTest)
 {
-    size_t rows(0);
     DbResult res;
 
     shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
