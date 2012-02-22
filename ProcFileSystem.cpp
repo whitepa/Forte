@@ -109,7 +109,6 @@ void ProcFileSystem::PidOf(const FString& runningProg, std::vector<pid_t>& pids)
 
     Forte::FStringVector children;
     mFileSystemPtr->ScanDir("/proc", children);
-    bool found;
     FString cmdlinePath, cmdline, programName, pid;
 
     foreach (const FString& child, children)
@@ -125,13 +124,11 @@ void ProcFileSystem::PidOf(const FString& runningProg, std::vector<pid_t>& pids)
             if (programName == runningProg)
             {
                 hlog(HLOG_DEBUG, "found match");
-                found = true;
                 pids.push_back((pid_t) pid.AsInteger());
             }
         }
     }
-
-    if (!found)
+    if (pids.empty())
     {
         hlog_and_throw(HLOG_DEBUG, EProcFileSystemProcessNotFound());
     }
