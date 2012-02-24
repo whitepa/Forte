@@ -3,6 +3,7 @@
 
 #include "XMLDoc.h"
 #include "LogManager.h"
+#include <libxml/xmlsave.h>
 
 using namespace Forte;
 
@@ -54,12 +55,22 @@ XMLNode XMLDoc::CreateDocument(const FString& root_name)
 FString XMLDoc::ToString() const
 {
     FString ret;
-    xmlChar *buf;
-    int bufsize;
+    xmlBufferPtr buf = xmlBufferCreate();
+    if (!buf)
+        throw ForteXMLDocException("Could Not Allocate buffer");
 
-    xmlDocDumpFormatMemoryEnc(mDoc, &buf, &bufsize, "UTF-8", 0);
-    ret.assign((const char *)buf, bufsize);
-    xmlFree(buf);
+    xmlSaveCtxtPtr savePtr = xmlSaveToBuffer(buf, "UTF-8", XML_SAVE_FORMAT | XML_SAVE_NO_DECL);
+    if (!savePtr)
+    {
+        xmlBufferFree(buf);
+        throw ForteXMLDocException("Could Not Save");
+    }
+
+    xmlSaveDoc(savePtr, mDoc);
+    xmlSaveClose(savePtr);
+    ret.assign((const char *) buf->content, buf->use);
+
+    xmlBufferFree(buf);
     return ret;
 }
 
