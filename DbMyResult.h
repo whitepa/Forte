@@ -2,7 +2,7 @@
 #define __DbMyResult__h
 
 #ifndef FORTE_NO_DB
-#ifndef FORTE_NO_MYSQL
+#ifdef FORTE_WITH_MYSQL
 
 #include "DbResult.h"
 #include <mysql.h>

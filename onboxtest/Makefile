@@ -5,24 +5,25 @@ BUILDROOT:=$(shell echo 'while [ ! -d re ]; do cd ..; done; pwd' | sh)
 include $(BUILDROOT)/re/make/head.mk
 $(make-targetdir)
 
-CCARGS += -Wall -ggdb
+CCARGS += -ggdb
+DEFS += -DFORTE_WITH_SQLITE
 
-COMMON_INCLUDE = \
+INCLUDE = \
 	-I. \
-	-I.. \
 	-I../mockobjects \
 	$(GTEST_INCLUDE) \
 	$(FORTE_INCLUDE) \
 	$(SSH2_INCLUDE)
 
-COMMON_LIBS = \
-	$(GTEST_LIB) \
+LIBS = \
+	$(FORTE_DB_SQLITE) \
 	$(FORTE_LIBS) \
 	$(OS_LIBS) \
 	$(SSH2_LIBS) \
-	$(DB_LIBS) \
 	$(BOOST_FS_LIB) \
 	$(BOOST_REGEX_LIB) \
+	$(GTEST_LIB) \
+	$(SQLITE_LIBS) \
 	-lpthread -lrt
 
 PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
@@ -37,16 +38,15 @@ PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
 LIBDIRS=$(FORTE_DIR)
 
 ###  RULES  ###
-all: $(GTEST) $(PROGS) 
+all: $(GTEST) $(PROGS)
 
 $(PROGS) : $(TARGETDIR)/% : %.cpp
 	@echo "Building $@ from $*.cpp ..."
-	$(QUIET)$(CCC) $*.cpp \
+	$(QUIET)$(CCC) $(CCCARGS) $*.cpp \
 	-o $@ \
-	$(COMMON_INCLUDE) \
-	$(COMMON_LIBS) \
+	$(LIBS) \
 
-install: all 
+install: all
 	@$(MKDIR) $(PREFIX)/opt/scale/lib/qa/onbox
 	@echo "Copying files to $(PREFIX)"
 	@$(CP) $(PROGS) $(PREFIX)/opt/scale/lib/qa/onbox

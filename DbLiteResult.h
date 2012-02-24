@@ -2,7 +2,7 @@
 #define __DbLiteResult__h
 
 #ifndef FORTE_NO_DB
-#ifndef FORTE_NO_SQLITE
+#ifdef FORTE_WITH_SQLITE
 
 #include "DbResult.h"
 #include <sqlite3.h>

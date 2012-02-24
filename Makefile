@@ -13,12 +13,30 @@ PREFIX ?= $(INSTALL_ROOT)/usr/local
 HEADER_INSTALL_PATH = $(PREFIX)/include
 LIB_INSTALL_PATH = $(PREFIX)/lib
 
+FORTE_DB_VARIANTS = MYSQL SQLITE MYSQL_SQLITE #PGSQL
+
+define VARIANT_OBJS
+OBJS_$(1) = $(DB_SRCS:%.cpp=$(TARGETDIR)/$(1)/%.o)
+endef
+
+define VARIANT_COMPILE_RULE
+$(TARGETDIR)/$(1)/%.o: %.cpp $(MAKEFILE_DEPS)
+	@$(MKDIR) $$(@D)
+	$(QUIET)$(call CHECKSUM_TEST_EVAL,$$@,$(PREPROCESS.CCC.EVAL) $(foreach v,$(subst _, ,$(1)),-DFORTE_WITH_$(v)) $(DB_INCLUDE),echo "Compiling $(1) $$<";$(COMPILE.CCC.EVAL)  $(foreach v,$(subst _, ,$(1)),-DFORTE_WITH_$(v)) $(DB_INCLUDE))
+endef
+
+define VARIANT_LINK_RULE
+$(TARGETDIR)/$(1)/libforte_db.a: $(OBJS_$(1)) $(MAKEFILE_DEPS)
+	@echo "Linking $$@: $(OBJS_$(1))"
+	$(QUIET)ar rcs $$@ $(OBJS_$(1))
+endef
+
 SUBDIRS = dbc mockobjects unittest onboxtest
 
+INCLUDE = -I. $(XML_INCLUDE) $(BOOST_INCLUDE) $(SSH2_INCLUDE)
 
-INCLUDE = $(DB_INCLUDE) $(XML_INCLUDE) $(BOOST_INCLUDE) $(SSH2_INCLUDE) -I. $(MYSQL_INCLUDE)
+DEFS += -DFORTE_FUNCTION_TRACING
 
-CCARGS += -Wall -DFORTE_FUNCTION_TRACING
 SRCS =	\
 	ActiveObjectThread.cpp \
 	Base64.cpp \
@@ -37,23 +55,6 @@ SRCS =	\
 	ContextPredicate.cpp \
 	Curl.cpp \
 	DaemonUtil.cpp \
-	DbConnection.cpp \
-	DbMyConnection.cpp \
-	DbPgConnection.cpp \
-	DbLiteConnection.cpp \
-	DbLiteConnectionFactory.cpp \
-	DbMirroredConnection.cpp \
-	DbMirroredConnectionFactory.cpp \
-	DbConnectionPool.cpp \
-	DbSqlStatement.cpp \
-	DbBackupManager.cpp \
-	DbBackupManagerThread.cpp \
-	DbException.cpp \
-	DbRow.cpp \
-	DbResult.cpp \
-	DbMyResult.cpp \
-	DbPgResult.cpp \
-	DbLiteResult.cpp \
 	Dispatcher.cpp \
 	EventQueue.cpp \
 	EventPredicate.cpp \
@@ -108,7 +109,27 @@ SRCS =	\
 	XMLBlob.cpp \
 	XMLDoc.cpp \
 	XMLNode.cpp \
-	XMLTextNode.cpp 
+	XMLTextNode.cpp
+
+DB_SRCS = \
+	DbConnection.cpp \
+	DbConnectionPool.cpp \
+	DbMyConnection.cpp \
+	DbPgConnection.cpp \
+	DbLiteConnection.cpp \
+	DbLiteConnectionFactory.cpp \
+	DbMirroredConnection.cpp \
+	DbMirroredConnectionFactory.cpp \
+	DbSqlStatement.cpp \
+	DbBackupManager.cpp \
+	DbBackupManagerThread.cpp \
+	DbException.cpp \
+	DbRow.cpp \
+	DbResult.cpp \
+	DbMyResult.cpp \
+	DbPgResult.cpp \
+	DbLiteResult.cpp \
+	$(NULL)
 
 HEADERS = \
 	AnyPtr.h \
@@ -195,7 +216,6 @@ LIB_PERM = 644
 
 OBJS = $(SRCS:%.cpp=$(TARGETDIR)/%.o)
 LIB = $(TARGETDIR)/libforte.a
-LIBDEPS = $(REVISION_H)
 
 TSRCS = \
 	UtilTest.cpp
@@ -205,7 +225,11 @@ TLIBS = -L$(TARGETDIR) -lforte -lpthread
 
 INSTALL = $(if $(RPM), @install $(1) $< $@, @install $(1) $(2) $< $@)
 
-all: $(LIB) $(TARGETDIR)/procmon
+$(foreach v,$(FORTE_DB_VARIANTS),$(eval $(call VARIANT_OBJS,$v)))
+
+LIB_DB_VARIANTS = $(foreach v,$(FORTE_DB_VARIANTS),$(TARGETDIR)/${v}/libforte_db.a)
+
+all: $(LIB) $(LIB_DB_VARIANTS) $(TARGETDIR)/procmon
 	$(MAKE_SUBDIRS)
 
 $(TARGETDIR)/procmon: $(TARGETDIR)/procmon.o $(TARGETDIR)/ProcessMonitor.o $(LIB)
@@ -225,6 +249,10 @@ $(HEADER_INSTALL_PATH)/%: %
 $(INSTALL_LIB): $(LIB)
 	@echo Installing $@
 	$(call INSTALL,-D,-m $(LIB_PERM))
+
+$(foreach v,$(FORTE_DB_VARIANTS),$(eval $(call VARIANT_COMPILE_RULE,$v)))
+
+$(foreach v,$(FORTE_DB_VARIANTS),$(eval $(call VARIANT_LINK_RULE,$v)))
 
 include $(BUILDROOT)/re/make/tail.mk
 

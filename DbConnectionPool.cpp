@@ -7,11 +7,11 @@
 #include "DbMirroredConnection.h"
 #include "DbMirroredConnectionFactory.h"
 
-#ifndef FORTE_NO_MYSQL
+#ifdef FORTE_WITH_MYSQL
 #include "DbMyConnection.h"
 #endif
 
-#ifndef FORTE_NO_POSTGRESQL
+#ifdef FORTE_WITH_PGSQL
 #include "DbPgConnection.h"
 #endif
 
@@ -38,21 +38,21 @@ DbConnectionPool::DbConnectionPool(const char *dbType,
         throw EDbConnectionPool("'db_type' must be specified in the database configuration");
 
     if (false) { }
-#ifndef FORTE_NO_MYSQL
+#ifdef FORTE_WITH_MYSQL
     else if (!mDbType.CompareNoCase("mysql"))
     {
         typedef DbConnectionFactoryBase<DbMyConnection> DbMyConnectionFactory;
         mDbConnectionFactory.reset(new DbMyConnectionFactory());
     }
 #endif
-#ifndef FORTE_NO_POSTGRESQL
+#ifdef FORTE_WITH_PGSQL
     else if (!mDbType.CompareNoCase("postgresql"))
     {
         typedef DbConnectionFactoryBase<DbPgConnection> DbPgConnectionFactory;
         mDbConnectionFactory.reset(new DbPgConnectionFactory());
     }
 #endif
-#ifndef FORTE_NO_SQLITE
+#ifdef FORTE_WITH_SQLITE
     else if (!mDbType.CompareNoCase("sqlite"))
     {
         mDbConnectionFactory = shared_ptr<DbConnectionFactory>(new DbLiteConnectionFactory());

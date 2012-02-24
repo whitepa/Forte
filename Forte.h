@@ -49,15 +49,15 @@ namespace Forte {};
 #include "DbResult.h"
 #include "DbRow.h"
 #include "DbUtil.h"
-#ifndef FORTE_NO_MYSQL
+#ifdef FORTE_WITH_MYSQL
 #include "DbMyConnection.h"
 #include "DbMyResult.h"
 #endif
-#ifdef FORTE_WITH_POSTGRESQL
+#ifdef FORTE_WITH_PGSQL
 #include "DbPgConnection.h"
 #include "DbPgResult.h"
 #endif
-#ifndef FORTE_NO_SQLITE
+#ifdef FORTE_WITH_SQLITE
 #include "DbLiteConnection.h"
 #include "DbLiteResult.h"
 #endif

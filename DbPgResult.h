@@ -2,7 +2,7 @@
 #define __DbPgResult__h
 
 #ifndef FORTE_NO_DB
-#ifndef FORTE_NO_POSTGRESQL
+#ifdef FORTE_WITH_PGSQL
 
 #include "DbResult.h"
 #include "Exception.h"

@@ -2,7 +2,7 @@
 #define __DbPgConnection_h
 
 #ifndef FORTE_NO_DB
-#ifndef FORTE_NO_POSTGRESQL
+#ifdef FORTE_WITH_PGSQL
 
 #include <libpq-fe.h>
 #include "FString.h"

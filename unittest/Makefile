@@ -15,29 +15,30 @@ include $(BUILDROOT)/re/make/head.mk
 $(make-targetdir)
 
 CCARGS += -Wall -ggdb
+DEFS += -DFORTE_WITH_SQLITE
 
 INCLUDE = \
 	-I. \
-	-I.. \
 	-I../mockobjects \
-	$(XML_INCLUDE) \
-	$(BOOST_INCLUDE) \
+	$(FORTE_INCLUDE) \
 	$(GTEST_INCLUDE) \
 	$(DB_INCLUDE)
 
 LIBS = \
 	-L$(TARGETDIR) \
-	$(FORTE_LIBS) \
 	$(FORTE_MOCK_LIBS) \
+	$(FORTE_DB_SQLITE) \
+	$(FORTE_LIBS) \
+	$(FORTE_DB_SQLITE) \
 	$(BOOST_LIBS) \
 	$(BOOST_FS_LIB) \
 	$(BOOST_SYSTEM_LIB) \
 	$(BOOST_REGEX_LIB) \
 	$(CURL_LIBS) \
-	$(DB_LIBS) \
 	$(OS_LIBS) \
 	$(XML_LIBS) \
-	$(SQLITE_LIBS)
+	$(SQLITE_LIBS) \
+	$(NULL)
 
 BSRCS = ContextUnitTest.cpp \
 	ExpDecayingAvgUnitTest.cpp \
@@ -86,12 +87,12 @@ LIBDIRS=$(FORTE_DIR)
 
 ###  RULES  ###
 
-all: $(PROGS) 
+all: $(PROGS)
 
 # progs
 $(BPROGS): $(TARGETDIR)/%: $(FORTE) $(FORTE_MOCK) %.cpp $(TARGETDIR)/%.o
 	@echo "Linking $@ ..."
-	@$(CCC) -o $@ $@.o \
+	@$(CCC) $(CCCARGS) -o $@ $@.o \
 	$(FORTE) \
 	$(FORTE_MOCK) \
 	$(INCLUDE) \
@@ -103,7 +104,7 @@ $(BPROGS): $(TARGETDIR)/%: $(FORTE) $(FORTE_MOCK) %.cpp $(TARGETDIR)/%.o
 $(TARGETDIR)/ContextPredicateUnitTest: ContextPredicateUnitTest.cpp
 
 $(TARGETDIR)/FileSystemImplUnitTest: FileSystemImplUnitTest.cpp \
-	../$(TARGETDIR)/FileSystemImpl.o 
+	../$(TARGETDIR)/FileSystemImpl.o
 
 $(TARGETDIR)/FileSystemUtilUnitTest: FileSystemUtilUnitTest.cpp \
 	 ../$(TARGETDIR)/FileSystemUtil.o \
@@ -123,7 +124,7 @@ $(TARGETDIR)/INotifyUnitTest: INotifyUnitTest.cpp \
 	../$(TARGETDIR)/INotify.o
 
 $(TARGETDIR)/FStringUnitTest: FStringUnitTest.cpp \
-	../$(TARGETDIR)/FString.o 
+	../$(TARGETDIR)/FString.o
 
 $(TARGETDIR)/ProcessManagerUnitTest: ProcessManagerUnitTest.cpp \
 	../$(TARGETDIR)/ProcessManagerImpl.o \
@@ -165,15 +166,15 @@ $(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp $(FORTE)
 
 $(TARGETDIR)/StateMachineDoIntervalUnitTest: StateMachineDoIntervalUnitTest.cpp $(FORTE)
 
-$(TARGETDIR)/CheckedValueStoreUnitTest: CheckedValueStoreUnitTest.cpp ../$(TARGETDIR)/CheckedValueStore.o 
+$(TARGETDIR)/CheckedValueStoreUnitTest: CheckedValueStoreUnitTest.cpp ../$(TARGETDIR)/CheckedValueStore.o
 
-$(TARGETDIR)/CheckedValueUnitTest: CheckedValueUnitTest.cpp ../$(TARGETDIR)/CheckedValue.o 
+$(TARGETDIR)/CheckedValueUnitTest: CheckedValueUnitTest.cpp ../$(TARGETDIR)/CheckedValue.o
 
-$(TARGETDIR)/PidFileUnitTest: PidFileUnitTest.cpp ../$(TARGETDIR)/PidFile.o 
+$(TARGETDIR)/PidFileUnitTest: PidFileUnitTest.cpp ../$(TARGETDIR)/PidFile.o
 
-$(GPROGS): 
+$(GPROGS):
 	@echo "Building $@ from $<..."
-	$(QUIET)$(CCC) $^ -o $@ \
+	$(QUIET)$(CCC) $(CCCARGS) $^ -o $@ \
 	$(INCLUDE) \
 	$(FORTE_MOCK_LIBS) \
 	$(LIBS) \

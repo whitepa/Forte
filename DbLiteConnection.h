@@ -2,7 +2,7 @@
 #define __DbLiteConnection_h
 
 #ifndef FORTE_NO_DB
-#ifndef FORTE_NO_SQLITE
+#ifdef FORTE_WITH_SQLITE
 
 #include <sqlite3.h>
 #include "FString.h"

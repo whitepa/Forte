@@ -1,5 +1,5 @@
 #ifndef FORTE_NO_DB
-#ifndef FORTE_NO_MYSQL
+#ifdef FORTE_WITH_MYSQL
 
 // DbMyResult.cpp
 #include "DbMyResult.h"
