@@ -7,11 +7,11 @@
 #include "DbMirroredConnection.h"
 #include "DbMirroredConnectionFactory.h"
 
-#ifndef FORTE_NO_MYSQL
+#ifdef FORTE_WITH_MYSQL
 #include "DbMyConnection.h"
 #endif
 
-#ifndef FORTE_NO_POSTGRESQL
+#ifdef FORTE_WITH_PGSQL
 #include "DbPgConnection.h"
 #endif
 
@@ -38,21 +38,21 @@ DbConnectionPool::DbConnectionPool(const char *dbType,
         throw EDbConnectionPool("'db_type' must be specified in the database configuration");
 
     if (false) { }
-#ifndef FORTE_NO_MYSQL
+#ifdef FORTE_WITH_MYSQL
     else if (!mDbType.CompareNoCase("mysql"))
     {
         typedef DbConnectionFactoryBase<DbMyConnection> DbMyConnectionFactory;
         mDbConnectionFactory.reset(new DbMyConnectionFactory());
     }
 #endif
-#ifndef FORTE_NO_POSTGRESQL
+#ifdef FORTE_WITH_PGSQL
     else if (!mDbType.CompareNoCase("postgresql"))
     {
         typedef DbConnectionFactoryBase<DbPgConnection> DbPgConnectionFactory;
         mDbConnectionFactory.reset(new DbPgConnectionFactory());
     }
 #endif
-#ifndef FORTE_NO_SQLITE
+#ifdef FORTE_WITH_SQLITE
     else if (!mDbType.CompareNoCase("sqlite"))
     {
         mDbConnectionFactory = shared_ptr<DbConnectionFactory>(new DbLiteConnectionFactory());
@@ -106,7 +106,7 @@ DbConnection& DbConnectionPool::GetDbConnection() {
     {
         hlog(HLOG_DEBUG2, "[%s] Creating new connection", mDbName.c_str());
         auto_ptr<DbConnection> pNewDb(mDbConnectionFactory->create());
-        
+
         if (mDbSock.empty())
         {
             if (!pNewDb->Init(mDbName, mDbUser, mDbPassword, mDbHost)) {
@@ -157,7 +157,7 @@ void DbConnectionPool::ReleaseDbConnection(DbConnection& db)
         }
         catch (EDbConnection& e)
         {
-            hlog(HLOG_ERR, "[%s] Failed to rollback: %s.  Continuing to release." , 
+            hlog(HLOG_ERR, "[%s] Failed to rollback: %s.  Continuing to release." ,
                  db.GetDbName().c_str(), e.what());
         }
         catch (...)
@@ -167,13 +167,13 @@ void DbConnectionPool::ReleaseDbConnection(DbConnection& db)
         }
     }
     AutoUnlockMutex lock(mPoolMutex);
-    
+
     // place this connection in the free pool, and remove it from the in-use pool
     set<DbConnection*>::iterator iConnection = mUsedConnections.find(&db);
 
     if(iConnection != mUsedConnections.end())
     {
-        hlog(HLOG_DEBUG2, 
+        hlog(HLOG_DEBUG2,
              "[%s] BEFORE:Free connections=%zu, Used connections=%zu",
              mDbName.c_str(), mFreeConnections.size(), mUsedConnections.size());
         mFreeConnections.push_back(*iConnection);
@@ -184,12 +184,12 @@ void DbConnectionPool::ReleaseDbConnection(DbConnection& db)
             DbConnection * pOldConnection = mFreeConnections.front();
 
             hlog(HLOG_DEBUG2, "[%s] Deleting connection %p (%zu > %u)",
-                 mDbName.c_str(), pOldConnection, 
+                 mDbName.c_str(), pOldConnection,
                  mFreeConnections.size(), mPoolSize);
             mFreeConnections.pop_front();
             delete pOldConnection;
         }
-        hlog(HLOG_DEBUG2, 
+        hlog(HLOG_DEBUG2,
              "[%s] AFTER:Free connections=%zu, Used connections=%zu",
              mDbName.c_str(), mFreeConnections.size(), mUsedConnections.size());
     }
@@ -225,7 +225,7 @@ void DbConnectionPool::OutputUsedConnectionStatus()
 
     foreach (const DbConnection *pConn, mUsedConnections)
     {
-        FString line(FStringFC(), 
+        FString line(FStringFC(),
                      "%p: %s\n", pConn, pConn->GetCurrentQuery().c_str());
         stuff.append(line);
     }

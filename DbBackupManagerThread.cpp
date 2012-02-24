@@ -1,7 +1,7 @@
 #include "DbBackupManagerThread.h"
 #include "DbConnectionPool.h"
 #include "DbAutoConnection.h"
-#include "FileSystem.h"
+#include "FileSystemImpl.h"
 #include "INotify.h"
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
@@ -31,7 +31,7 @@ DbBackupManagerThread::DbBackupManagerThread(boost::shared_ptr<DbConnectionPool>
 
 void DbBackupManagerThread::addWatchDbParentDir()
 {
-    FileSystem fs;
+    FileSystemImpl fs;
     const string parentPath(fs.Dirname(mPool->GetDbName()));
 
     try
@@ -54,7 +54,7 @@ void DbBackupManagerThread::addWatchDb()
 
     try
     {
-        FileSystem fs;
+        FileSystemImpl fs;
         if(fs.FileExists(dbPath))
         {
             mDbWatch = mInotify->AddWatch(dbPath, IN_MODIFY | IN_ATTRIB);
@@ -108,7 +108,7 @@ void DbBackupManagerThread::backupDb()
 
 void DbBackupManagerThread::resetWatchDbParentDir()
 {
-    FileSystem fs;
+    FileSystemImpl fs;
     hlogstream(HLOG_DEBUG, "watch removed for parent" << fs.Dirname(mPool->GetDbName()));
     mDbParentDirWatch = -1;
 }
@@ -131,7 +131,7 @@ bool DbBackupManagerThread::hasWatchDb() const
 
 void* DbBackupManagerThread::run()
 {
-    FileSystem fs;
+    FileSystemImpl fs;
 
     backupDb();
 
@@ -220,6 +220,5 @@ void* DbBackupManagerThread::run()
 void DbBackupManagerThread::Shutdown()
 {
     Thread::Shutdown();
-    FileSystem fs;
     mInotify->Interrupt();
 }

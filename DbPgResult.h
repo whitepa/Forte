@@ -2,7 +2,7 @@
 #define __DbPgResult__h
 
 #ifndef FORTE_NO_DB
-#ifndef FORTE_NO_POSTGRESQL
+#ifdef FORTE_WITH_PGSQL
 
 #include "DbResult.h"
 #include "Exception.h"
@@ -27,7 +27,7 @@ namespace Forte
             virtual size_t GetNumColumns();
             virtual FString GetColumnName(size_t i);
             virtual size_t GetFieldLength(size_t i);
-            virtual size_t GetNumRows() { 
+            virtual size_t GetNumRows() {
                 throw Exception("DbPgResult::getNumRows not implemented");
             }
             virtual bool Seek(size_t offset) {

@@ -1,5 +1,5 @@
 #ifndef FORTE_NO_DB
-#ifndef FORTE_NO_MYSQL
+#ifdef FORTE_WITH_MYSQL
 
 #include "DbMyConnection.h"
 #include "DbMyResult.h"
@@ -30,7 +30,7 @@ DbMyConnection::DbMyConnection(const MySQLOptionArray& options)
     mysql_init(&mMySQL);
     mDBType = "mysql";
     mDB = NULL;
-    
+
     // plus des options
     for (i=0; i<n; i++)
     {
@@ -53,8 +53,8 @@ bool DbMyConnection::Init(MYSQL *mysql)
     return true;
 }
 
-bool DbMyConnection::Init(const FString& db, 
-                          const FString& user, 
+bool DbMyConnection::Init(const FString& db,
+                          const FString& user,
                           const FString& pass,
                           const FString& host,
                           const FString& socket,

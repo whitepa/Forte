@@ -9,6 +9,7 @@
 
 #include "Forte.h"
 #include "Context.h"
+#include "FileSystemImpl.h"
 
 using namespace Forte;
 
@@ -36,7 +37,7 @@ protected:
 
     bool existsWatchedFileDir() const
     {
-        FileSystem fs;
+        FileSystemImpl fs;
         return fs.FileExists(getWatchedFileDir());
     }
 
@@ -58,7 +59,7 @@ protected:
 
     void touch()
     {
-        FileSystem fs;
+        FileSystemImpl fs;
         fs.Touch(getWatchedFilePath());
         mTouched = true;
     }
@@ -67,7 +68,7 @@ protected:
     {
         if(mTouched)
         {
-            FileSystem fs;
+            FileSystemImpl fs;
             fs.Unlink(getWatchedFilePath());
         }
     }

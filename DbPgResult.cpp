@@ -1,5 +1,5 @@
 #ifndef FORTE_NO_DB
-#ifndef FORTE_NO_POSTGRESQL
+#ifdef FORTE_WITH_PGSQL
 
 // DbPgResult.cpp
 #include "DbPgResult.h"
@@ -70,7 +70,7 @@ bool DbPgResult::PgData::IsOkay() const
             break;
         }
     }
-    
+
     return ret;
 }
 

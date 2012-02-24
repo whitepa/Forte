@@ -82,8 +82,8 @@ namespace Forte
          */
         void Erase(const char *key);
 
-        FString Get(const char *key);
-        int GetInteger(const char *key);
+        FString Get(const char *key) const;
+        int GetInteger(const char *key) const;
 
         template <typename ValueType>
         ValueType getValueByRegexKey(const Forte::FString &key)
@@ -179,7 +179,7 @@ namespace Forte
          *         converting the value to ValueType
          */
         template <typename ValueType>
-        ValueType Get(const boost::property_tree::ptree::path_type &key)
+        ValueType Get(const boost::property_tree::ptree::path_type &key) const
         {
             AutoUnlockMutex lock(mMutex);
             try
@@ -203,10 +203,10 @@ namespace Forte
          */
         void GetVectorKeys(
             const char *key,
-            FStringVector &vec /*OUT*/);
+            FStringVector &vec /*OUT*/) const;
         void GetVectorKeys(
             const boost::property_tree::ptree::path_type &key,
-            FStringVector &vec /*OUT*/);
+            FStringVector &vec /*OUT*/) const;
 
         /**
          * GetVectorSubKey will retrieve a vector of values from the configuration.
@@ -217,7 +217,7 @@ namespace Forte
          */
         void GetVectorSubKey(const char *key,
                              const char *subkey,
-                             FStringVector &vec);
+                             FStringVector &vec) const;
 
         /**
          * Write the configuration back to the service config
@@ -241,10 +241,10 @@ namespace Forte
          * @param childToMatch key to actually match
          */
         FString GetFirstMatchingRegexExpressionKey(const char *parentKey,
-                const char* childToMatch);
+                                                   const char* childToMatch);
 
 
-        FString GetConfigFileName() {
+        FString GetConfigFileName() const {
             return mConfigFileName;
         }
 
@@ -252,7 +252,7 @@ namespace Forte
 
         ServiceConfigFileType mConfigFileType;
         std::string mConfigFileName;
-        Mutex mMutex;
+        mutable Mutex mMutex;
         boost::property_tree::ptree mPTree;
 
         int getInt(const char *key);

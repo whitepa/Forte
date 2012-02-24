@@ -2,6 +2,7 @@
 #define __forte_ProcFileSystem_h
 
 #include "Exception.h"
+#include "FileSystem.h"
 #include "Context.h"
 #include "Types.h"
 #include <boost/shared_ptr.hpp>
@@ -24,8 +25,9 @@ namespace Forte
     class ProcFileSystem : public Object
     {
     public:
-        ProcFileSystem(const Context& ctxt);
-        virtual ~ProcFileSystem();
+        ProcFileSystem(const Forte::FileSystemPtr &fsPtr) :
+            mFileSystemPtr(fsPtr) {}
+        virtual ~ProcFileSystem() {};
 
         /**
          * \class Uptime information on the amount of time a system
@@ -51,16 +53,16 @@ namespace Forte
 
         virtual unsigned int CountOpenFileDescriptors(pid_t pid = getpid() );
 
-
-        virtual void PidOf(const FString& runningProg, std::vector<pid_t>& pids);
-        virtual bool ProcessIsRunning(const FString& runningProg);
+        virtual void PidOf(const FString& runningProg, std::vector<pid_t>& pids) const;
+        virtual bool ProcessIsRunning(const FString& runningProg) const;
+        virtual void SetOOMScore(pid_t pid, const FString &score);
 
     protected:
-        // TODO: need a context pointer
-        const Context &mContext;
         void getProcFileContents(const FString& pathInSlashProc,
                                  FString& contents);
 
+
+        Forte::FileSystemPtr mFileSystemPtr;
     };
 
     typedef boost::shared_ptr<ProcFileSystem> ProcFileSystemPtr;

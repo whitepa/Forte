@@ -1,12 +1,12 @@
 #ifndef FORTE_NO_DB
-#ifndef FORTE_NO_SQLITE
+#ifdef FORTE_WITH_SQLITE
 
 #include <boost/bind.hpp>
 #include "DbLiteConnection.h"
 #include "DbLiteResult.h"
 #include "DbException.h"
 #include "LogManager.h"
-#include "FileSystem.h"
+#include "FileSystemImpl.h"
 #include "Util.h"
 #include "AutoDoUndo.h"
 #include "FTrace.h"
@@ -53,19 +53,19 @@ void DbLiteConnection::setError()
 }
 
 
-bool DbLiteConnection::Init(const FString& db, 
-                            const FString& user, 
+bool DbLiteConnection::Init(const FString& db,
+                            const FString& user,
                             const FString& pass,
                             const FString& host,
                             const FString& socket,
                             unsigned int retries)
 {
-    FTRACE2("%s,%s,%s,%s,%s,%u", db.c_str(), user.c_str(), pass.c_str(), 
+    FTRACE2("%s,%s,%s,%s,%s,%u", db.c_str(), user.c_str(), pass.c_str(),
             host.c_str(), socket.c_str(), retries);
     return DbConnection::Init(db, user, pass, host, socket, retries);
 }
 
-bool DbLiteConnection::Init(const FString& dbPath, 
+bool DbLiteConnection::Init(const FString& dbPath,
                             unsigned int retries)
 {
     return DbConnection::Init(dbPath, "", "", "", "", retries);
@@ -165,7 +165,7 @@ DbResult DbLiteConnection::Query(const FString& sql)
         {
             hlog(HLOG_WARN, "[%s] sqlite3_prepare_v2 failed on [%s]. "
                  "Error was %d.  Try %d of %d.",
-                 mDBName.c_str(), sql.c_str(), mErrno, 
+                 mDBName.c_str(), sql.c_str(), mErrno,
                  (mRetries - tries_remaining + 1),
                  mRetries);
             mTries++;
@@ -204,7 +204,7 @@ DbResult DbLiteConnection::Query(const FString& sql)
                 res.Clear();
                 hlog(HLOG_WARN, "[%s] Load failed on [%s]. "
                  "Error was %d.  Try %d of %d.",
-                 mDBName.c_str(), sql.c_str(), mErrno, 
+                 mDBName.c_str(), sql.c_str(), mErrno,
                      (mRetries - tries_remaining + 1),
                      mRetries);
 
@@ -218,7 +218,7 @@ DbResult DbLiteConnection::Query(const FString& sql)
                     // you must rollback the entire transaction and start over
                     if (mInTransaction && (sql != "commit"))
                     {
-                        hlog(HLOG_DEBUG, 
+                        hlog(HLOG_DEBUG,
                              "[%s] In a transaction. [%s] will be rolled back",
                              mDBName.c_str(), sql.c_str());
                         tries_remaining=0;
@@ -313,11 +313,11 @@ void DbLiteConnection::removeTmpBackup(const FString &targetPath)
 
     try
     {
-        FileSystem fs;
+        FileSystemImpl fs;
         const FString tmpTargetPath(getTmpBackupPath(targetPath));
         if(fs.FileExists(tmpTargetPath))
         {
-            hlog(HLOG_DEBUG, "Removing temporary backup file '%s'", 
+            hlog(HLOG_DEBUG, "Removing temporary backup file '%s'",
                  tmpTargetPath.c_str());
             fs.Unlink(tmpTargetPath);
         }
@@ -330,7 +330,7 @@ void DbLiteConnection::removeTmpBackup(const FString &targetPath)
 
 FString DbLiteConnection::getTmpBackupPath(const FString& targetPath) const
 {
-    FileSystem fs;
+    FileSystemImpl fs;
     FString tmpTargetPath(targetPath);
     tmpTargetPath += ".tmp";
     hlog(HLOG_DEBUG, "'%s' -> '%s'", targetPath.c_str(), tmpTargetPath.c_str());
@@ -374,12 +374,12 @@ void DbLiteConnection::backupDatabase(const FString &targetPath)
     /* Release resources allocated by backup_init(). */
     if(sqlite3_backup_finish(pBackup) != SQLITE_OK)
     {
-        hlog(HLOG_ERROR, "failed to finish backup to %s", 
+        hlog(HLOG_ERROR, "failed to finish backup to %s",
              tmpTargetPath.c_str());
     }
 
     // @TODO: these file system objects should be passed in
-    FileSystem fs;
+    FileSystemImpl fs;
     hlog(HLOG_DEBUG, "Renaming '%s' to '%s'", tmpTargetPath.c_str(),
          targetPath.c_str());
     fs.Rename(tmpTargetPath, targetPath);

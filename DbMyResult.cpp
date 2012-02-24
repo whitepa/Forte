@@ -1,5 +1,5 @@
 #ifndef FORTE_NO_DB
-#ifndef FORTE_NO_MYSQL
+#ifdef FORTE_WITH_MYSQL
 
 // DbMyResult.cpp
 #include "DbMyResult.h"
@@ -71,7 +71,7 @@ bool DbMyResult::MyData::FetchRow(DbResultRow& row /*OUT*/)
     {
         row.push_back(mRow[i]);
     }
-    
+
     return ret;
 }
 

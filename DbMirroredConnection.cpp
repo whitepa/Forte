@@ -2,7 +2,7 @@
 #include "DbConnectionFactory.h"
 #include "DbSqlStatement.h"
 #include "LogManager.h"
-#include "FileSystem.h"
+#include "FileSystemImpl.h"
 #include <sys/inotify.h>
 #include <sqlite3.h> //todo: remove after add exceptions to sqliteconnection
 #include <boost/shared_ptr.hpp>
@@ -108,7 +108,7 @@ bool DbMirroredConnection::Init(const FString& db, const FString& user, const FS
             const bool ret(mDbConnection->Init(db, user, pass, host, socket, retries));
             if(ret)
             {
-                FileSystem fs;
+                FileSystemImpl fs;
                 if(! mAltDbName.empty() && ! fs.FileExists(mAltDbName))
                 {
                     const string dirName(fs.Dirname(mAltDbName));
@@ -641,11 +641,11 @@ bool DbMirroredConnection::HasPendingQueries() const
 const FString& DbMirroredConnection::GetCurrentQuery() const
 {
     AutoUnlockMutex guard(mMutex);
-    
+
     if (mDbConnection)
     {
         return mDbConnection->GetCurrentQuery();
     }
-    
+
     return mCurrentQuery;
 }

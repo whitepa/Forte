@@ -12,10 +12,10 @@
 // Macro to allow easy scoping of objects out of the context
 #define CGET(key, type, name)                                   \
     shared_ptr<type> name ## _Ptr = mContext.Get<type>(key);    \
-    type &name(* name ## _Ptr)
+    type __attribute__((unused)) &name(* name ## _Ptr)
 
 #define CGETPTR(key, type, name)                                \
-    shared_ptr<type> name = mContext.Get<type>(key); 
+    shared_ptr<type> name = mContext.Get<type>(key);
 
 #define CNEW(key, type, args...)                                \
     mContext.Set(key, shared_ptr<type>(new type( args )))
@@ -23,11 +23,11 @@
 #define CGETNEW(key, type, name, args...)               \
     shared_ptr<type> name ## _Ptr(new type( args ));    \
     mContext.Set(key, name ## _Ptr);                    \
-    type &name(* name ## _Ptr)
+    type __attribute__((unused)) &name(* name ## _Ptr)
 
 #define CGETNEWPTR(key, type, name, args...)                    \
     shared_ptr<type> name(new type( args ));                    \
-    mContext.Set(key, name);                            
+    mContext.Set(key, name);
 
 #define CSET(key, type, obj)                    \
     mContext.Set(key, shared_ptr<type>( obj ))
@@ -38,7 +38,7 @@ namespace Forte
     EXCEPTION_SUBCLASS2(EContext, EContextInvalidKey, "Invalid Key");
     EXCEPTION_SUBCLASS2(EContext, EContextEmptyPointer, "Empty Pointer");
     EXCEPTION_SUBCLASS2(EContext, EContextTypeMismatch, "Context Type Mismatch");
- 
+
     /**
      * This class implements a 'context' which may be passed into
      * various constructors.  The context contains references to other
@@ -93,12 +93,12 @@ namespace Forte
                 boost::dynamic_pointer_cast<ValueType>((*i).second));
             if (!ptr)
             {
-                hlog_and_throw(HLOG_ERR, EContextTypeMismatch(FStringFC(), "Invalid type for '%s': asked for %s, but %s was found", key, typeid(ValueType).name(), typeid((*i).second).name())); 
+                hlog_and_throw(HLOG_ERR, EContextTypeMismatch(FStringFC(), "Invalid type for '%s': asked for %s, but %s was found", key, typeid(ValueType).name(), typeid((*i).second).name()));
             }
             return ptr;
         }
 
-        
+
         /**
          * Set() stores a reference to an object in the Context.  Any
          * previous entry with the same key will be replaced.

@@ -4,6 +4,7 @@
 #include <boost/make_shared.hpp>
 #include "LogManager.h"
 #include "ServerMain.h"
+#include "FileSystemImpl.h"
 
 #include "Forte.h"
 #include "Context.h"
@@ -17,7 +18,7 @@ class ServerMainOnboxTest : public ::testing::Test
 {
 protected:
     static void SetUpTestCase() {
-        FileSystem fs;
+        FileSystemImpl fs;
         if (!fs.FileExists(sConfigFile))
             sConfigFile = "/opt/scale/lib/qa/onbox/" + sConfigFile;
     }
@@ -51,10 +52,10 @@ public:
 TEST_F(ServerMainOnboxTest, TestPIDFile)
 {
     FTRACE;
-    FileSystem fs;
+    FileSystemImpl fs;
 
     int pid = getpid();
-    FString cmdline = fs.FileGetContents(FString(FStringFC(), 
+    FString cmdline = fs.FileGetContents(FString(FStringFC(),
                                                  "/proc/%d/cmdline", pid));
     size_t pos = cmdline.find_first_of('\0');
     FString processName = cmdline.Left(pos);
@@ -68,7 +69,7 @@ TEST_F(ServerMainOnboxTest, TestPIDFile)
 TEST_F(ServerMainOnboxTest, TestPIDFileThrows)
 {
     FTRACE;
-    FileSystem fs;
+    FileSystemImpl fs;
 
     // parent is probably there
     int pid = getppid();
@@ -87,7 +88,7 @@ TEST_F(ServerMainOnboxTest, TestPIDFileThrows)
 TEST_F(ServerMainOnboxTest, TestPIDFileDoesntThrowIfProcessDifferent)
 {
     FTRACE;
-    FileSystem fs;
+    FileSystemImpl fs;
 
     // parent is probably there
     int parentPid = getppid();

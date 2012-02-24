@@ -2,7 +2,7 @@
 #define __DbPgConnection_h
 
 #ifndef FORTE_NO_DB
-#ifndef FORTE_NO_POSTGRESQL
+#ifdef FORTE_WITH_PGSQL
 
 #include <libpq-fe.h>
 #include "FString.h"
@@ -32,7 +32,7 @@ namespace Forte
 
         // error info
         virtual bool IsTemporaryError() const;
-    
+
         // misc.
         virtual uint64_t InsertID() { return mLastRes.InsertID(); }
         virtual uint64_t AffectedRows() { return strtoull(PQcmdTuples(mLastRes), NULL, 0); }

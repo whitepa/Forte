@@ -1,12 +1,13 @@
 #include <gtest/gtest.h>
 
-#include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include "FTrace.h"
 #include "LogManager.h"
 #include "Context.h"
 #include "ProcFileSystem.h"
 #include "MockFileSystem.h"
 #include "FileSystem.h"
+#include "FileSystemImpl.h"
 #include "Foreach.h"
 
 using namespace boost;
@@ -18,12 +19,10 @@ class ProcFileSystemUnitTest : public ::testing::Test
 {
 protected:
     static void SetUpTestCase() {
-        //logManager.BeginLogging(__FILE__ ".log");
-        logManager.BeginLogging("//stdout");
+        logManager.BeginLogging(__FILE__ ".log", HLOG_ALL);
+        //logManager.BeginLogging("//stdout", HLOG_ALL);
         hlog(HLOG_DEBUG, "Starting test...");
     }
-
-    Forte::Context mContext;
 };
 
 
@@ -34,10 +33,9 @@ TEST_F(ProcFileSystemUnitTest, UptimeMockContents)
     // setup
     shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
     fsptr->FilePutContents("/proc/uptime", "30782.38 29768.69\n");
-    mContext.Set("forte.FileSystem", fsptr);
 
     // construct
-    ProcFileSystem procFileSystem(mContext);
+    ProcFileSystem procFileSystem(fsptr);
 
     // test uptime
     ProcFileSystem::Uptime uptime;
@@ -52,11 +50,10 @@ TEST_F(ProcFileSystemUnitTest, UptimeVerifyRealOutput)
     FTRACE;
 
     // setup
-    shared_ptr<FileSystem> fsptr(new FileSystem());
-    mContext.Set("forte.FileSystem", fsptr);
+    shared_ptr<FileSystem> fsptr(new FileSystemImpl());
 
     // construct
-    ProcFileSystem procFileSystem(mContext);
+    ProcFileSystem procFileSystem(fsptr);
 
     // test uptime
     ProcFileSystem::Uptime uptime;
@@ -104,8 +101,7 @@ TEST_F(ProcFileSystemUnitTest, MemoryInfoReadMock)
                            "HugePages_Free:      0\n"
                            "HugePages_Rsvd:      0\n"
                            "Hugepagesize:     2048 kB\n");
-    mContext.Set("forte.FileSystem", fsptr);
-    ProcFileSystem procFileSystem(mContext);
+    ProcFileSystem procFileSystem(fsptr);
 
     Forte::StrDoubleMap memoryInfo;
     procFileSystem.MemoryInfoRead(memoryInfo);
@@ -147,9 +143,8 @@ TEST_F(ProcFileSystemUnitTest, MemoryInfoReadReal)
 {
     FTRACE;
 
-    shared_ptr<FileSystem> fsptr(new FileSystem());
-    mContext.Set("forte.FileSystem", fsptr);
-    ProcFileSystem procFileSystem(mContext);
+    shared_ptr<FileSystem> fsptr(new FileSystemImpl());
+    ProcFileSystem procFileSystem(fsptr);
 
     Forte::StrDoubleMap memoryInfo;
     procFileSystem.MemoryInfoRead(memoryInfo);
@@ -188,8 +183,7 @@ TEST_F(ProcFileSystemUnitTest, PidOfReturnsMatchingsPidsForProcess)
     fsptr->SetFileExistsResult("/proc/4/cmdline", true);
     fsptr->SetFileExistsResult("/proc/5/cmdline", true);
 
-    mContext.Set("forte.FileSystem", fsptr);
-    ProcFileSystem procFileSystem(mContext);
+    ProcFileSystem procFileSystem(fsptr);
 
     vector<pid_t> pids;
     procFileSystem.PidOf("init", pids);
@@ -213,11 +207,7 @@ TEST_F(ProcFileSystemUnitTest, PidOfInitReturns1)
 {
     FTRACE;
 
-    shared_ptr<FileSystem> fsptr(new FileSystem());
-
-    mContext.Set("forte.FileSystem", fsptr);
-
-    ProcFileSystem procFileSystem(mContext);
+    ProcFileSystem procFileSystem(make_shared<FileSystemImpl>());
 
     vector<pid_t> pids;
     procFileSystem.PidOf("init", pids);

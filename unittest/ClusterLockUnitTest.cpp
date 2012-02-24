@@ -1,6 +1,6 @@
 #include "Clock.h"
 #include "EventQueue.h"
-#include "FileSystem.h"
+#include "FileSystemImpl.h"
 #include "FTrace.h"
 #include "LogManager.h"
 #include "ProcRunner.h"
@@ -28,7 +28,7 @@ protected:
     static void SetUpTestCase() {
         logManager.BeginLogging("//stdout", HLOG_ALL);
 
-        FileSystem fs;
+        FileSystemImpl fs;
 
         if (fs.FileExists("/fsscale0/lock"))
         {
@@ -38,14 +38,14 @@ protected:
         {
             ClusterLock::LOCK_PATH = "./lock";
             fs.MakeDir("./lock");
-        }       
+        }
     }
 
     static void TearDownTestCase() {
 
-        if (ClusterLock::LOCK_PATH == "./lock")
+        if (!strcmp(ClusterLock::LOCK_PATH, "./lock"))
         {
-            FileSystem fs;
+            FileSystemImpl fs;
             fs.Unlink("./lock", true);
         }
     }
@@ -60,7 +60,7 @@ void verifyFileHasEntryInProcLocks(const FString& theFile)
 
     struct stat st;
     stat(theFile, &st);
-        
+
     //1: POSIX  ADVISORY  WRITE 3725 fd:00:7758628 0 0
     int PID_ENTRY = 6;
     int FILEID_ENTRY = 7;
@@ -124,7 +124,7 @@ TEST_F(ClusterLockTest, HoldLockFor2Seconds)
 
     hlog(HLOG_INFO, "ATTEMPTING TO LOCK %s", name.c_str());
     ClusterLock theLock(name, 5);
-    hlog(HLOG_INFO, "GOT LOCK %s", name.c_str()); 
+    hlog(HLOG_INFO, "GOT LOCK %s", name.c_str());
     verifyFileHasEntryInProcLocks(theFile);
     sleep(2);
     verifyFileHasEntryInProcLocks(theFile);
@@ -145,7 +145,7 @@ TEST_F(ClusterLockTest, AnInProcessLockTimeoutDoesNotReleaseYourLock)
 
     hlog(HLOG_INFO, "ATTEMPTING TO LOCK %s", name.c_str());
     ClusterLock theLock(name, 5);
-    hlog(HLOG_INFO, "GOT LOCK %s", name.c_str()); 
+    hlog(HLOG_INFO, "GOT LOCK %s", name.c_str());
     verifyFileHasEntryInProcLocks(theFile);
 
     ASSERT_THROW(ClusterLock theSameLock(name, 1),
@@ -186,7 +186,7 @@ TEST_F(ClusterLockTest, LockFileCouldNotOpen)
                     "%s/%s",
                     ClusterLock::LOCK_PATH,
                     name.c_str());
-    FileSystem fs;
+    FileSystemImpl fs;
     FString dir(FStringFC(),
                 "%s/%s",
                 ClusterLock::LOCK_PATH,
@@ -195,17 +195,17 @@ TEST_F(ClusterLockTest, LockFileCouldNotOpen)
     // delete the dir if it exists first
     if (fs.FileExists(dir))
     {
-        fs.Unlink(dir, true);        
-    }    
-    
+        fs.Unlink(dir, true);
+    }
+
     hlog(HLOG_INFO, "attempting to lock %s", name.c_str());
 
     ASSERT_THROW(ClusterLock theLock(name, 1),
                  EClusterLockFile);
-    
+
     // create the dir
     fs.MakeDir(dir);
-    
+
     ClusterLock theSameLock(name, 1);
 
     verifyFileHasEntryInProcLocks(theFile);

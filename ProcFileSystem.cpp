@@ -1,24 +1,15 @@
-
 #include "ProcFileSystem.h"
 #include "FileSystem.h"
 #include "Foreach.h"
 #include "FTrace.h"
 #include "LogManager.h"
-
 #include <boost/regex.hpp>
+#include <stdio.h>
+#include <errno.h>
 
 using namespace std;
 using namespace boost;
 using namespace Forte;
-
-ProcFileSystem::ProcFileSystem(const Context& ctxt)
-    : mContext(ctxt)
-{
-}
-
-ProcFileSystem::~ProcFileSystem()
-{
-}
 
 void ProcFileSystem::UptimeRead(Uptime& uptime)
 {
@@ -106,51 +97,44 @@ void ProcFileSystem::MemoryInfoRead(Forte::StrDoubleMap& meminfo)
 
 unsigned int ProcFileSystem::CountOpenFileDescriptors(pid_t pid)
 {
-    CGET("forte.FileSystem", FileSystem, fs);
-
     Forte::FStringVector children;
-    fs.GetChildren("/proc/" + FString(pid) + "/fd", children);
+    mFileSystemPtr->GetChildren("/proc/" + FString(pid) + "/fd", children);
 
     return children.size();
 }
 
-void ProcFileSystem::PidOf(const FString& runningProg, vector<pid_t>& pids)
+void ProcFileSystem::PidOf(const FString& runningProg, std::vector<pid_t>& pids) const
 {
     FTRACE2("%s", runningProg.c_str());
 
-    CGET("forte.FileSystem", FileSystem, fs);
-
     Forte::FStringVector children;
-    fs.ScanDir("/proc", children);
-    bool found;
+    mFileSystemPtr->ScanDir("/proc", children);
     FString cmdlinePath, cmdline, programName, pid;
 
     foreach (const FString& child, children)
     {
         cmdlinePath = "/proc/" + child + "/cmdline";
-        pid = fs.Basename(child);
+        pid = mFileSystemPtr->Basename(child);
 
-        if (pid.IsNumeric() && fs.FileExists(cmdlinePath))
+        if (pid.IsNumeric() && mFileSystemPtr->FileExists(cmdlinePath))
         {
-            cmdline = fs.FileGetContents(cmdlinePath).c_str();
-            programName = fs.Basename(cmdline);
+            cmdline = mFileSystemPtr->FileGetContents(cmdlinePath).c_str();
+            programName = mFileSystemPtr->Basename(cmdline);
 
             if (programName == runningProg)
             {
                 hlog(HLOG_DEBUG, "found match");
-                found = true;
                 pids.push_back((pid_t) pid.AsInteger());
             }
         }
     }
-
-    if (!found)
+    if (pids.empty())
     {
         hlog_and_throw(HLOG_DEBUG, EProcFileSystemProcessNotFound());
     }
 }
 
-bool ProcFileSystem::ProcessIsRunning(const FString& runningProg)
+bool ProcFileSystem::ProcessIsRunning(const FString& runningProg) const
 {
     try
     {
@@ -164,6 +148,35 @@ bool ProcFileSystem::ProcessIsRunning(const FString& runningProg)
     }
 }
 
+void ProcFileSystem::SetOOMScore(pid_t pid, const FString &score)
+{
+    FString procFileName(FStringFC(), "/proc/%d/oom_score_adj", pid);
+    hlog(LOG_DEBUG,"opening proc file %s", procFileName.c_str());
+
+    AutoFD  fd;
+    char errmsg[256];
+    char const *errstr;
+    if ((fd = ::open(procFileName.c_str(), O_WRONLY)) < 0)
+    {
+        errstr = strerror_r(errno, errmsg, 256);
+        hlog(LOG_ERR,"error opening %s, error :%s",
+             procFileName.c_str(), errstr);
+
+        throw EProcFileSystem(errstr);
+    }
+    if ((size_t)::write(fd, score.c_str(), score.length()) != score.length())
+    {
+        errstr = strerror_r(errno, errmsg, 256);
+        hlog(LOG_ERR,"error writing %s, error :%s",
+             procFileName.c_str(),errstr);
+
+        throw EProcFileSystem(errstr);
+    }
+
+    hlog(LOG_DEBUG, "Sucessfully changed the oom score of %d process",
+         pid);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // helpers
 ////////////////////////////////////////////////////////////////////////////////
@@ -171,7 +184,5 @@ bool ProcFileSystem::ProcessIsRunning(const FString& runningProg)
 void ProcFileSystem::getProcFileContents(const FString& pathInSlashProc,
                                          FString& contents)
 {
-    FileSystemPtr fsptr;
-    fsptr = mContext.Get<FileSystem>("forte.FileSystem");
-    contents = fsptr->FileGetContents("/proc/" + pathInSlashProc).Trim();
+    contents = mFileSystemPtr->FileGetContents("/proc/" + pathInSlashProc).Trim();
 }

@@ -1,5 +1,5 @@
 #include "INotify.h"
-#include "FileSystem.h"
+#include "FileSystemImpl.h"
 #include <sys/inotify.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
@@ -54,7 +54,7 @@ INotify::~INotify()
         mWatchFds.erase(fd);
     }
 
-    FileSystem fs;
+    FileSystemImpl fs;
     fs.Unlink(mKickerPath);
 }
 
@@ -67,7 +67,7 @@ int INotify::AddWatch(const std::string& path, const int& mask)
     if(watchFd < 0)
     {
         throw EINotifyAddWatchFailed(FStringFC(),
-                                     "inotify_add_watch error: %d on %s", 
+                                     "inotify_add_watch error: %d on %s",
                                      watchFd, path.c_str());
     }
 
@@ -171,7 +171,7 @@ INotify::EventVector INotify::Read(const unsigned long& ms)
 
 void INotify::Interrupt()
 {
-    FileSystem fs;
+    FileSystemImpl fs;
     fs.Touch(mKickerPath);
 }
 

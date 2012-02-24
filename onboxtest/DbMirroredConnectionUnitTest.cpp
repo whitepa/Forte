@@ -7,7 +7,7 @@
 #include "DbConnectionPool.h"
 #include "ProcRunner.h"
 #include "AutoDoUndo.h"
-#include "FileSystem.h"
+#include "FileSystemImpl.h"
 #include "DbSqlStatement.h"
 #include "DbAutoConnection.h"
 #include "DbBackupManagerThread.h"
@@ -98,7 +98,7 @@ protected:
     virtual size_t PopulateData(DbConnection& db)
     {
         const size_t rows(10);
-        for (int i = 0; i < rows; i++)
+        for (int i = 0; i < (int)rows; i++)
         {
             FString insertSql;
             insertSql.Format("INSERT INTO test VALUES (%d, %d)", i, rand());
@@ -154,7 +154,7 @@ public: // drawback, bind requires these be public
 
     void unmountDatabase()
     {
-        FileSystem fs;
+        FileSystemImpl fs;
 
         ASSERT_TRUE(fs.FileExists(getDatabaseName())) << getDatabaseName();
 
@@ -168,7 +168,7 @@ public: // drawback, bind requires these be public
         ASSERT_FALSE(fs.FileExists(getDatabaseName())) << getDatabaseName();
     }
 
-    bool waitMountsDown()
+    void waitMountsDown()
     {
         for(unsigned long i = 0 ; i < 12 ; i++)
         {
@@ -219,7 +219,7 @@ public: // drawback, bind requires these be public
     {
         FTRACE;
 
-        FileSystem fs;
+        FileSystemImpl fs;
 
         ASSERT_FALSE(fs.FileExists(getDatabaseName())) << getDatabaseName();
 
@@ -243,18 +243,18 @@ public: // drawback, bind requires these be public
             FString err;
             err.Format("Unable to run '%s' [return code: %i] (%s)", cmd.c_str(),
                     ret, output.c_str());
-            hlog(HLOG_ERROR, err);
+            hlogstream(HLOG_ERROR, err);
             throw EUmountGPFS(err);
         }
         else if (!output.empty())
         {
-            hlog(HLOG_INFO, "Command %s succeeded with output (%s)", 
-                 cmd.c_str(), 
+            hlog(HLOG_INFO, "Command %s succeeded with output (%s)",
+                 cmd.c_str(),
                  output.c_str());
         }
         else
         {
-            hlog(HLOG_INFO, "Command %s succeeded with no output", 
+            hlog(HLOG_INFO, "Command %s succeeded with no output",
                  cmd.c_str());
         }
 
@@ -276,7 +276,7 @@ TEST_F(DbMirroredConnectionTest, SqliteBackupDatabaseTest)
 {
     FTRACE;
 
-    const size_t rows = PopulateData();
+    const size_t __attribute__((unused)) rows = PopulateData();
     DbConnectionPool pool("sqlite_mirrored", getDatabaseName());
     DbConnection& dbConnection(pool.GetDbConnection());
 

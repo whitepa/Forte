@@ -3,7 +3,7 @@
 #include <boost/test/unit_test.hpp>
 #include "LogManager.h"
 #include "Context.h"
-#include "FileSystem.h"
+#include "FileSystemImpl.h"
 #include "ServiceConfig.h"
 #include "ProcFileSystem.h"
 #include "MockFileSystem.h"
@@ -43,7 +43,7 @@ void contextGetObject(const Forte::Context &context)
 void contextGetFileSystem(const Forte::Context &context)
 {
     shared_ptr<FileSystem> fsptr;
-    
+
     fsptr = context.Get<FileSystem>("filesystemtest");
     fsptr->GetCWD();
 }
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(ContextSetGetObject)
 
 BOOST_AUTO_TEST_CASE(ContextSetGetFileSystem)
 {
-    shared_ptr<FileSystem> fsptr(new FileSystem());
+    shared_ptr<FileSystem> fsptr(new FileSystemImpl());
     c.Set("filesystemtest", fsptr);
     contextGetFileSystem(c);
 }
@@ -91,12 +91,12 @@ BOOST_AUTO_TEST_CASE(UptimeMockContents)
     c.Set("forte.FileSystem", fsptr);
 
     // construct
-    ProcFileSystem procFileSystem(c);
+    ProcFileSystem procFileSystem(fsptr);
 
     // test uptime
     ProcFileSystem::Uptime uptime;
     procFileSystem.UptimeRead(uptime);
-    
+
     BOOST_CHECK_EQUAL(uptime.mSecondsUp, 30782.38);
     BOOST_CHECK_EQUAL(uptime.mSecondsIdle, 29768.69);
 }
@@ -126,12 +126,12 @@ BOOST_AUTO_TEST_CASE(PointerCastPreservesReference)
                 BOOST_CHECK(ptr3.use_count() == 3);
                 BOOST_CHECK(ptr.use_count() == 3);
             }
-            BOOST_CHECK(TestClass::sCount == 1);            
-            BOOST_CHECK(ptr.use_count() == 2);            
+            BOOST_CHECK(TestClass::sCount == 1);
+            BOOST_CHECK(ptr.use_count() == 2);
         }
         // context is out of scope
         BOOST_CHECK(TestClass::sCount == 1);
-        BOOST_CHECK(ptr.use_count() == 1);            
+        BOOST_CHECK(ptr.use_count() == 1);
     }
     BOOST_CHECK(TestClass::sCount == 0);
 }

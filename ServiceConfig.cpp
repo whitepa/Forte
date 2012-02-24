@@ -92,7 +92,7 @@ void ServiceConfig::Add(const char *key, const char *value)
     }
 }
 
-FString ServiceConfig::Get(const char *key)
+FString ServiceConfig::Get(const char *key) const
 {
     AutoUnlockMutex lock(mMutex);
     return mPTree.get<FString>(key, "");
@@ -100,7 +100,7 @@ FString ServiceConfig::Get(const char *key)
 
 void ServiceConfig::GetVectorSubKey(const char *key,     // nodes
                                     const char *subkey,  // backplane
-                                    FStringVector &vec)
+                                    FStringVector &vec) const
 {
     vec.clear();
     AutoUnlockMutex lock(mMutex);
@@ -118,7 +118,7 @@ void ServiceConfig::GetVectorSubKey(const char *key,     // nodes
     }
 }
 
-int ServiceConfig::GetInteger(const char *key)
+int ServiceConfig::GetInteger(const char *key) const
 {
     AutoUnlockMutex lock(mMutex);
     try
@@ -289,9 +289,8 @@ int ServiceConfig::resolveInt(const Forte::FString &key)
     }
 }
 
-void ServiceConfig::GetVectorKeys(
-    const char *key,
-    FStringVector &vec /*OUT*/)
+void ServiceConfig::GetVectorKeys(const char *key, 
+                                  FStringVector &vec /*OUT*/) const
 {
     vec.clear();
 
@@ -311,7 +310,7 @@ void ServiceConfig::GetVectorKeys(
 
 void ServiceConfig::GetVectorKeys(
     const boost::property_tree::ptree::path_type &key,
-    FStringVector &vec /*OUT*/)
+    FStringVector &vec /*OUT*/) const
 {
     vec.clear();
 

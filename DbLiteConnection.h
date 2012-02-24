@@ -2,7 +2,7 @@
 #define __DbLiteConnection_h
 
 #ifndef FORTE_NO_DB
-#ifndef FORTE_NO_SQLITE
+#ifdef FORTE_WITH_SQLITE
 
 #include <sqlite3.h>
 #include "FString.h"
@@ -21,14 +21,14 @@ namespace Forte
         virtual ~DbLiteConnection();
 
         // initialization
-        virtual bool Init(const FString& db, 
-                          const FString& user, 
+        virtual bool Init(const FString& db,
+                          const FString& user,
                           const FString& pass,
-                          const FString& host = "localhost", 
+                          const FString& host = "localhost",
                           const FString& socket = "",
                           unsigned int retries = 0);
 
-        bool Init(const FString& dbPath, 
+        bool Init(const FString& dbPath,
                   unsigned int retries = 0);
 
         bool Init(struct sqlite3 *db);
@@ -44,7 +44,7 @@ namespace Forte
 
         // error info
         virtual bool IsTemporaryError() const;
-    
+
         // misc.
         virtual uint64_t InsertID();
         virtual uint64_t AffectedRows();

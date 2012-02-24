@@ -49,15 +49,15 @@ namespace Forte {};
 #include "DbResult.h"
 #include "DbRow.h"
 #include "DbUtil.h"
-#ifndef FORTE_NO_MYSQL
+#ifdef FORTE_WITH_MYSQL
 #include "DbMyConnection.h"
 #include "DbMyResult.h"
 #endif
-#ifdef FORTE_WITH_POSTGRESQL
+#ifdef FORTE_WITH_PGSQL
 #include "DbPgConnection.h"
 #include "DbPgResult.h"
 #endif
-#ifndef FORTE_NO_SQLITE
+#ifdef FORTE_WITH_SQLITE
 #include "DbLiteConnection.h"
 #include "DbLiteResult.h"
 #endif
@@ -69,7 +69,7 @@ namespace Forte {};
 #include "EventQueue.h"
 #include "Exception.h"
 #include "ExpDecayingAvg.h"
-#include "FileSystem.h"
+#include "FileSystemImpl.h"
 #include "FileSystemUtil.h"
 #include "Foreach.h"
 #include "FString.h"

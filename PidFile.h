@@ -19,21 +19,23 @@ namespace Forte
         ///  Desired directory for pidfile does not exist or cannot be written
         ///
         ///
-        PidFile(FileSystemPtr fs, const FString &path,
-                const FString &name = FString());
+        PidFile(FileSystemPtr fs,
+                const FString &pidFilePath,
+                const FString &executableName);
         virtual ~PidFile();
 
         /*
-         * Checks that the PID found in the PID file provided is associated
-         * with a running process.
-         * NOTE: This does not currently check that the running process
-         *       is the *right* process.
+         * Checks that the PID found in the PID file provided is
+         * associated with a running process.  Also, verifies that the
+         * name of the running process matches the name of the
+         * executable.
+         *
          * @return true when a process is running with the PID found in mPath
          */
         bool IsProcessRunning();
 
         /*
-         * Creates the PID file with the PID provided 
+         * Creates the PID file with the PID provided
          * @param pid  the PID of the process to put in the file
          *             (use 0 to just use the current process' pid)
          * @throws EAlreadyRunning if the process is already running
@@ -47,9 +49,9 @@ namespace Forte
         void Delete(void);
 
     protected:
-        FString mPath;
+        FString mPidFilePath;
         FileSystemPtr mFileSystem;
-        FString mName;
+        FString mExecutableName;
 
         /*
          * Flag to indicate that this pid file was created and should be
