@@ -4,31 +4,30 @@
 # Proprietary and Confidential
 #
 
-BUILDROOT:=$(shell echo 'while [ ! -d buildtools ]; do cd ..; done; pwd' | sh)
+BUILDROOT:=$(shell echo 'while [ ! -d re ]; do cd ..; done; pwd' | sh)
 
-include $(BUILDROOT)/buildtools/common/head.mk
+include $(BUILDROOT)/re/make/head.mk
 $(make-targetdir)
 
-INCLUDE = -I. -I$(FORTE_DIR) $(PGSQL_INCLUDE) $(MYSQL_INCLUDE) $(SQLITE_INCLUDE) $(XML_INCLUDE)
-CCARGS += -Wall
+DEFS += -DFORTE_WITH_MYSQL -DFORTE_WITH_SQLITE
+
+INCLUDE = -I. -I$(FORTE_DIR) $(MYSQL_INCLUDE) $(SQLITE_INCLUDE) $(XML_INCLUDE)
+
 SRCS =	\
 	Test.cpp
 
 OBJS = $(SRCS:%.cpp=$(TARGETDIR)/%.o)
-LIBS = $(FORTE_LIBS) $(MYSQL_LIBS) $(PGSQL_LIBS) $(SQLITE_LIBS) $(OS_LIBS)
+LIBS = $(FORTE_DB_MYSQL_SQLITE) $(FORTE_LIBS) $(MYSQL_LIBS) $(SQLITE_LIBS) $(OS_LIBS)
 MYPROG = $(TARGETDIR)/Test
 
 all: $(MYPROG) runtest
 
-.NOTPARALLEL:
-
-$(MYPROG): $(OBJS) FORCE
-	@$(CCC) -o $@ $< $(LIBS)
-	@if [ ! -f $@ ]; then echo Test failed to compile; exit 1; fi
+$(eval $(call GENERATE_LINK_PROG_RULE,Test))
 
 runtest: FORCE
 	@echo Running test
 	@$(MYPROG) || /bin/true
 
-include $(BUILDROOT)/buildtools/common/tail.mk
+include $(BUILDROOT)/re/make/tail.mk
 
+.NOTPARALLEL:

@@ -7,7 +7,7 @@ $(make-targetdir)
 
 CCARGS += -Wall -ggdb
 
-COMMON_INCLUDE = \
+INCLUDE = \
 	-I. \
 	-I.. \
 	-I../gen-cpp \
@@ -18,7 +18,7 @@ COMMON_INCLUDE = \
 	$(SOAP_INCLUDE) \
 	$(BOOST_INCLUDE) \
 
-COMMON_LIBS = \
+LIBS = \
 	$(GTEST_LIB) \
 	$(FORTE_LIBS) \
 	$(LIBSCALE_LIBS) \
@@ -31,36 +31,18 @@ PROGS=$(TARGETDIR)/MockFileSystemUnitTest $(TARGETDIR)/MockProcessManagerUnitTes
 
 #	$(TARGETDIR)/TestRunInstanceUnitTest \
 
-# define LIBDIRS for distclean
-LIBDIRS=$(FORTE_DIR)
+
+PROG_DEPS_OBJS_MockFileSystemUnitTest = \
+	../$(TARGETDIR)/MockFileSystem.o \
+
+PROG_DEPS_OBJS_MockProcessManagerUnitTest = \
+	../$(TARGETDIR)/MockProcessManager.o \
 
 ###  RULES  ###
 
-all: parent $(FORTE_MOCK) $(THRIFT_LIB) $(GMOCK) $(GTEST) $(PROGS) 
+all: $(FORTE_MOCK) $(THRIFT_LIB) $(GMOCK) $(GTEST) $(PROGS)
 
-parent: mockobjects FORCE
-	$(MAKE) -C ../
-
-
-$(TARGETDIR)/MockFileSystemUnitTest: ../$(TARGETDIR)/MockFileSystem.o MockFileSystemUnitTest.cpp
-	echo "Building $@..."
-	$(CCC) MockFileSystemUnitTest.cpp \
-	-o $(TARGETDIR)/MockFileSystemUnitTest \
-	../$(TARGETDIR)/MockFileSystem.o \
-	$(COMMON_INCLUDE) \
-	$(COMMON_LIBS) \
-	$(FORTE_MOCK_INCLUDE) \
-	$(FORTE_MOCK_LIBS) \
-
-$(TARGETDIR)/MockProcessManagerUnitTest: ../$(TARGETDIR)/MockProcessManager.o MockProcessManagerUnitTest.cpp
-	echo "Building $@..."
-	$(CCC) MockProcessManagerUnitTest.cpp \
-	-o $(TARGETDIR)/MockProcessManagerUnitTest \
-	../$(TARGETDIR)/MockProcessManager.o \
-	$(COMMON_INCLUDE) \
-	$(COMMON_LIBS) \
-	$(FORTE_MOCK_INCLUDE) \
-	$(FORTE_MOCK_LIBS) \
+$(foreach p,$(subst $(TARGETDIR)/,,$(PROGS)),$(eval $(call GENERATE_LINK_TEST_RULE,$(p))))
 
 include $(BUILDROOT)/re/make/tail.mk
 

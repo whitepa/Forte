@@ -37,6 +37,8 @@ INCLUDE = -I. $(XML_INCLUDE) $(BOOST_INCLUDE) $(SSH2_INCLUDE)
 
 DEFS += -DFORTE_FUNCTION_TRACING
 
+CLEAN += $(TARGETDIR)/utiltest
+
 SRCS =	\
 	ActiveObjectThread.cpp \
 	Base64.cpp \
@@ -217,11 +219,13 @@ LIB_PERM = 644
 OBJS = $(SRCS:%.cpp=$(TARGETDIR)/%.o)
 LIB = $(TARGETDIR)/libforte.a
 
-TSRCS = \
-	UtilTest.cpp
-TOBJS = $(TSRCS:%.cpp=$(TARGETDIR)/%.o)
-TPROG = $(TARGETDIR)/utiltest
-TLIBS = -L$(TARGETDIR) -lforte -lpthread
+TPROGS = UtilTest procmon
+PROGS = $(addprefix $(TARGETDIR)/,$(TPROGS))
+
+PROG_DEPS = Makefile
+PROG_DEPS_OBJS_procmon = $(TARGETDIR)/ProcessMonitor.o
+LIBS_procmon = $(FORTE_LIBS) $(OS_LIBS) $(BOOST_REGEX_LIB)
+LIBS_UtilTest = $(FORTE_LIBS) $(OS_LIBS)
 
 INSTALL = $(if $(RPM), @install $(1) $< $@, @install $(1) $(2) $< $@)
 
@@ -232,13 +236,10 @@ LIB_DB_VARIANTS = $(foreach v,$(FORTE_DB_VARIANTS),$(TARGETDIR)/${v}/libforte_db
 all: $(LIB) $(LIB_DB_VARIANTS) $(TARGETDIR)/procmon
 	$(MAKE_SUBDIRS)
 
-$(TARGETDIR)/procmon: $(TARGETDIR)/procmon.o $(TARGETDIR)/ProcessMonitor.o $(LIB)
-	$(CCC) -o $@ $< $(TARGETDIR)/ProcessMonitor.o -L$(TARGETDIR) -lforte -lpthread $(BOOST_REGEX_LIB)
+$(foreach p,$(TPROGS),$(eval $(call GENERATE_LINK_TEST_RULE,$(p))))
 
-utiltest: $(TPROG)
-
-$(TPROG): $(LIB) $(TOBJS)
-	$(CCC) -o $@ $(TOBJS) $(TLIBS)
+utiltest: $(TARGETDIR)/UtilTest
+	ln -f $< $(TARGETDIR)/utiltest
 
 install:: $(LIB) $(INSTALL_HEADERS) $(INSTALL_LIB)
 

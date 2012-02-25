@@ -14,7 +14,6 @@ BUILDROOT:=$(shell echo 'while [ ! -d re ]; do cd ..; done; pwd' | sh)
 include $(BUILDROOT)/re/make/head.mk
 $(make-targetdir)
 
-CCARGS += -Wall -ggdb
 DEFS += -DFORTE_WITH_SQLITE
 
 INCLUDE = \
@@ -78,110 +77,88 @@ GSRCS = CheckedValueStoreUnitTest.cpp \
 	StateMachineSetStateUnitTest.cpp \
 	StateMachineTestHarnessUnitTest.cpp \
 
-GPROGS = $(GSRCS:%.cpp=$(TARGETDIR)/%)
-BPROGS = $(BSRCS:%.cpp=$(TARGETDIR)/%)
-PROGS=$(GPROGS) $(BPROGS)
+GPROGS = $(GSRCS:%.cpp=%)
+BPROGS = $(BSRCS:%.cpp=%)
+PROGS=$(addprefix $(TARGETDIR)/,$(GPROGS) $(BPROGS))
 
-# define LIBDIRS for distclean
-LIBDIRS=$(FORTE_DIR)
+PROG_DEPS = $(FORTE) $(FORTE_MOCK)
+
+PROG_DEPS_OBJS_ContextPredicateUnitTest =
+
+PROG_DEPS_OBJS_FileSystemImplUnitTest =  \
+	../$(TARGETDIR)/FileSystemImpl.o
+
+PROG_DEPS_OBJS_FileSystemUtilUnitTest =  \
+	../$(TARGETDIR)/FileSystemUtil.o \
+	../$(TARGETDIR)/FileSystemImpl.o
+
+PROG_DEPS_OBJS_ExceptionUnitTest =  \
+	../$(TARGETDIR)/Exception.o
+
+PROG_DEPS_OBJS_DbLiteConnectionUnitTest =
+
+PROG_DEPS_OBJS_DbConnectionPoolUnitTest =
+
+PROG_DEPS_OBJS_DbMirroredConnectionUnitTest =
+
+PROG_DEPS_OBJS_INotifyUnitTest =  \
+	../$(TARGETDIR)/INotify.o
+
+PROG_DEPS_OBJS_FStringUnitTest =  \
+	../$(TARGETDIR)/FString.o
+
+PROG_DEPS_OBJS_ProcessManagerUnitTest =  \
+	../$(TARGETDIR)/ProcessManagerImpl.o \
+	../$(TARGETDIR)/ProcessFutureImpl.o \
+
+PROG_DEPS_OBJS_ProcFileSystemUnitTest =  \
+	../$(TARGETDIR)/ProcFileSystem.o \
+
+PROG_DEPS_OBJS_PDUPeerUnitTest =
+
+PROG_DEPS_OBJS_ClockUnitTest =
+
+PROG_DEPS_OBJS_ClusterLockUnitTest =
+
+PROG_DEPS_OBJS_ConditionUnitTest =
+
+PROG_DEPS_OBJS_ConditionFileLoggerUnitTest =  \
+	../$(TARGETDIR)/ConditionFileLogger.o \
+	../$(TARGETDIR)/ConditionLogEntry.o \
+
+PROG_DEPS_OBJS_ConditionAsyncLoggerUnitTest =  \
+	../$(TARGETDIR)/ConditionAsyncLogger.o \
+	../$(TARGETDIR)/ConditionLogEntry.o \
+
+PROG_DEPS_OBJS_ConditionDeltaLoggerUnitTest =  \
+	../$(TARGETDIR)/ConditionDeltaLogger.o \
+	../$(TARGETDIR)/ConditionLogEntry.o \
+
+PROG_DEPS_OBJS_ActiveObjectUnitTest =
+
+PROG_DEPS_OBJS_StateMachineSetStateUnitTest =  \
+	../$(TARGETDIR)/StateHistoryLogger.o \
+
+PROG_DEPS_OBJS_StateMachineTestHarnessUnitTest =
+
+PROG_DEPS_OBJS_SCSIUtilUnitTest =
+
+PROG_DEPS_OBJS_StateMachineDoIntervalUnitTest =
+
+PROG_DEPS_OBJS_CheckedValueStoreUnitTest =  ../$(TARGETDIR)/CheckedValueStore.o
+
+PROG_DEPS_OBJS_CheckedValueUnitTest =  ../$(TARGETDIR)/CheckedValue.o
+
+PROG_DEPS_OBJS_PidFileUnitTest =  ../$(TARGETDIR)/PidFile.o
 
 ###  RULES  ###
 
 all: $(PROGS)
 
 # progs
-$(BPROGS): $(TARGETDIR)/%: $(FORTE) $(FORTE_MOCK) %.cpp $(TARGETDIR)/%.o
-	@echo "Linking $@ ..."
-	@$(CCC) $(CCCARGS) -o $@ $@.o \
-	$(FORTE) \
-	$(FORTE_MOCK) \
-	$(INCLUDE) \
-	$(LIBS) \
-	$(BOOST_UNIT_TEST_LIB_STATIC) \
+$(foreach p,$(BPROGS),$(eval $(call GENERATE_LINK_TEST_RULE,$(p),$(BOOST_UNIT_TEST_LIB_STATIC))))
 
-
-# the dependencies in this rule are wrong:
-$(TARGETDIR)/ContextPredicateUnitTest: ContextPredicateUnitTest.cpp
-
-$(TARGETDIR)/FileSystemImplUnitTest: FileSystemImplUnitTest.cpp \
-	../$(TARGETDIR)/FileSystemImpl.o
-
-$(TARGETDIR)/FileSystemUtilUnitTest: FileSystemUtilUnitTest.cpp \
-	 ../$(TARGETDIR)/FileSystemUtil.o \
-	../$(TARGETDIR)/FileSystemUtil.o \
-	../$(TARGETDIR)/FileSystemImpl.o
-
-$(TARGETDIR)/ExceptionUnitTest: ExceptionUnitTest.cpp \
-	../$(TARGETDIR)/Exception.o
-
-$(TARGETDIR)/DbLiteConnectionUnitTest: DbLiteConnectionUnitTest.cpp $(FORTE)
-
-$(TARGETDIR)/DbConnectionPoolUnitTest: DbConnectionPoolUnitTest.cpp $(FORTE)
-
-$(TARGETDIR)/DbMirroredConnectionUnitTest: DbMirroredConnectionUnitTest.cpp $(FORTE)
-
-$(TARGETDIR)/INotifyUnitTest: INotifyUnitTest.cpp \
-	../$(TARGETDIR)/INotify.o
-
-$(TARGETDIR)/FStringUnitTest: FStringUnitTest.cpp \
-	../$(TARGETDIR)/FString.o
-
-$(TARGETDIR)/ProcessManagerUnitTest: ProcessManagerUnitTest.cpp \
-	../$(TARGETDIR)/ProcessManagerImpl.o \
-	../$(TARGETDIR)/ProcessFutureImpl.o \
-
-$(TARGETDIR)/ProcFileSystemUnitTest: ProcFileSystemUnitTest.cpp \
-	../$(TARGETDIR)/ProcFileSystem.o \
-
-$(TARGETDIR)/PDUPeerUnitTest: PDUPeerUnitTest.cpp $(FORTE)
-
-$(TARGETDIR)/ClockUnitTest: ClockUnitTest.cpp $(FORTE)
-
-$(TARGETDIR)/ClusterLockUnitTest: ClusterLockUnitTest.cpp $(FORTE)
-
-$(TARGETDIR)/ConditionUnitTest: ConditionUnitTest.cpp $(FORTE)
-
-$(TARGETDIR)/ConditionFileLoggerUnitTest: ConditionFileLoggerUnitTest.cpp \
-	../$(TARGETDIR)/ConditionFileLogger.o \
-	../$(TARGETDIR)/ConditionLogEntry.o \
-
-$(TARGETDIR)/ConditionAsyncLoggerUnitTest: ConditionAsyncLoggerUnitTest.cpp \
-	../$(TARGETDIR)/ConditionAsyncLogger.o \
-	../$(TARGETDIR)/ConditionLogEntry.o \
-
-$(TARGETDIR)/ConditionDeltaLoggerUnitTest: ConditionDeltaLoggerUnitTest.cpp \
-	../$(TARGETDIR)/ConditionDeltaLogger.o \
-	../$(TARGETDIR)/ConditionLogEntry.o \
-
-$(TARGETDIR)/ActiveObjectUnitTest: ActiveObjectUnitTest.cpp $(FORTE)
-
-$(TARGETDIR)/StateMachineSetStateUnitTest: StateMachineSetStateUnitTest.cpp \
-	../$(TARGETDIR)/StateHistoryLogger.o \
-	$(FORTE)
-
-$(TARGETDIR)/StateMachineTestHarnessUnitTest: StateMachineTestHarnessUnitTest.cpp \
-	$(FORTE)
-
-$(TARGETDIR)/SCSIUtilUnitTest: SCSIUtilUnitTest.cpp $(FORTE)
-
-$(TARGETDIR)/StateMachineDoIntervalUnitTest: StateMachineDoIntervalUnitTest.cpp $(FORTE)
-
-$(TARGETDIR)/CheckedValueStoreUnitTest: CheckedValueStoreUnitTest.cpp ../$(TARGETDIR)/CheckedValueStore.o
-
-$(TARGETDIR)/CheckedValueUnitTest: CheckedValueUnitTest.cpp ../$(TARGETDIR)/CheckedValue.o
-
-$(TARGETDIR)/PidFileUnitTest: PidFileUnitTest.cpp ../$(TARGETDIR)/PidFile.o
-
-$(GPROGS):
-	@echo "Building $@ from $<..."
-	$(QUIET)$(CCC) $(CCCARGS) $^ -o $@ \
-	$(INCLUDE) \
-	$(FORTE_MOCK_LIBS) \
-	$(LIBS) \
-	$(FORTE_MOCK_INCLUDE) \
-	$(GMOCK_LIBS) \
-	$(GTEST_LIB)
-
+$(foreach p,$(GPROGS),$(eval $(call GENERATE_LINK_TEST_RULE,$(p),$(GMOCK_LIBS) $(GTEST_LIB))))
 
 # tail
 include $(BUILDROOT)/re/make/tail.mk

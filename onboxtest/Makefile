@@ -18,13 +18,12 @@ INCLUDE = \
 LIBS = \
 	$(FORTE_DB_SQLITE) \
 	$(FORTE_LIBS) \
-	$(OS_LIBS) \
 	$(SSH2_LIBS) \
 	$(BOOST_FS_LIB) \
 	$(BOOST_REGEX_LIB) \
 	$(GTEST_LIB) \
 	$(SQLITE_LIBS) \
-	-lpthread -lrt
+	$(OS_LIBS)
 
 PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
 	$(TARGETDIR)/DbMirroredConnectionUnitTest \
@@ -34,17 +33,10 @@ PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
 	$(TARGETDIR)/SCSIUtilUnitTest \
 	$(TARGETDIR)/ServerMainOnboxTest
 
-# define LIBDIRS for distclean
-LIBDIRS=$(FORTE_DIR)
-
 ###  RULES  ###
 all: $(GTEST) $(PROGS)
 
-$(PROGS) : $(TARGETDIR)/% : %.cpp
-	@echo "Building $@ from $*.cpp ..."
-	$(QUIET)$(CCC) $(CCCARGS) $*.cpp \
-	-o $@ \
-	$(LIBS) \
+$(foreach p,$(subst $(TARGETDIR)/,,$(PROGS)),$(eval $(call GENERATE_LINK_TEST_RULE,$(p))))
 
 install: all
 	@$(MKDIR) $(PREFIX)/opt/scale/lib/qa/onbox
@@ -54,4 +46,3 @@ install: all
 
 include $(BUILDROOT)/re/make/tail.mk
 
-.PHONY: parent all

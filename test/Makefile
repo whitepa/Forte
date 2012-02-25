@@ -10,8 +10,6 @@ BUILDROOT:=$(shell echo 'while [ ! -d re ]; do cd ..; done; pwd' | sh)
 include $(BUILDROOT)/re/make/head.mk
 $(make-targetdir)
 
-CCARGS += -Wall -ggdb
-
 INCLUDE = \
 	-I. \
 	$(FORTE_INCLUDE) \
@@ -22,7 +20,6 @@ INCLUDE = \
 LIBS = \
 	-L$(TARGETDIR) \
 	$(FORTE_LIBS) \
-	$(DB_LIBS) \
 	$(BOOST_LIBS) \
 	$(CURL_LIBS) \
 	$(OS_LIBS) \
@@ -33,16 +30,14 @@ SRCS = $(wildcard *.cpp)
 OBJS = $(SRCS:%.cpp=$(TARGETDIR)/%.o)
 PROGS = $(SRCS:%.cpp=$(TARGETDIR)/%)
 
-# define LIBDIRS for distclean
-LIBDIRS=$(FORTE2_DIR)
+PROG_DEPS = $(FORTE)
 
 ###  RULES  ###
 
 all: $(PROGS)
 
 # progs
-$(PROGS): $(FORTE2) $(OBJS)
-	$(CCC) -o $@ $@.o $(LIBS)
+$(foreach p,$(subst $(TARGETDIR)/,,$(PROGS)),$(eval $(call GENERATE_LINK_TEST_RULE,$(p))))
 
 # tail
 include $(BUILDROOT)/re/make/tail.mk
