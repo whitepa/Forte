@@ -226,6 +226,8 @@ PROG_DEPS = Makefile
 PROG_DEPS_OBJS_procmon = $(TARGETDIR)/ProcessMonitor.o
 LIBS_procmon = $(FORTE_LIBS) $(OS_LIBS) $(BOOST_REGEX_LIB)
 LIBS_UtilTest = $(FORTE_LIBS) $(OS_LIBS)
+PROG_DEPS_procmon = $(LIB)
+PROG_DEPS_UtilTest = $(LIB)
 
 INSTALL = $(if $(RPM), @install $(1) $< $@, @install $(1) $(2) $< $@)
 
