@@ -13,6 +13,9 @@ namespace Forte
 {
     EXCEPTION_SUBCLASS(Exception, ForteXMLDocException);
 
+    /**
+     * Make sure to construct XMLInitializer in main thread.
+     */
     class XMLDoc
     {
     public:
@@ -32,7 +35,6 @@ namespace Forte
         inline operator const xmlDocPtr() const { return mDoc; }
 
     protected:
-        static Mutex sMutex;  // lock for all libxml2 access
         xmlDocPtr mDoc;
     };
 };
