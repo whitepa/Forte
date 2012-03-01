@@ -108,6 +108,7 @@ SRCS =	\
 	VersionManager.cpp \
 	XMLBlob.cpp \
 	XMLDoc.cpp \
+	XMLInitializer.cpp \
 	XMLNode.cpp \
 	XMLTextNode.cpp
 
@@ -206,6 +207,7 @@ HEADERS = \
 	XMLBlob.h \
 	XMLDoc.h \
 	XMLNode.h \
+	XMLInitializer.h \
 	XMLTextNode.h
 
 INSTALL_HEADERS = $(HEADERS:%=$(HEADER_INSTALL_PATH)/%)
