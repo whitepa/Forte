@@ -2,8 +2,10 @@
 #ifndef FORTE_NO_XML
 
 #include "XMLDoc.h"
+
 #include "LogManager.h"
 #include <libxml/xmlsave.h>
+#include <boost/bind.hpp>
 
 using namespace Forte;
 
@@ -44,22 +46,18 @@ XMLNode XMLDoc::CreateDocument(const FString& root_name)
 FString XMLDoc::ToString() const
 {
     FString ret;
-    xmlBufferPtr buf = xmlBufferCreate();
+    boost::shared_ptr<xmlBuffer> buf(xmlBufferCreate(), boost::bind(xmlBufferFree, _1));
     if (!buf)
         throw ForteXMLDocException("Could Not Allocate buffer");
 
-    xmlSaveCtxtPtr savePtr = xmlSaveToBuffer(buf, "UTF-8", XML_SAVE_FORMAT | XML_SAVE_NO_DECL);
+    xmlSaveCtxtPtr savePtr = xmlSaveToBuffer(buf.get(), "UTF-8", XML_SAVE_FORMAT | XML_SAVE_NO_DECL);
     if (!savePtr)
     {
-        xmlBufferFree(buf);
         throw ForteXMLDocException("Could Not Save");
     }
-
     xmlSaveDoc(savePtr, mDoc);
     xmlSaveClose(savePtr);
     ret.assign((const char *) buf->content, buf->use);
-
-    xmlBufferFree(buf);
     return ret;
 }
 

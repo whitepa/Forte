@@ -77,6 +77,7 @@ GSRCS = CheckedValueStoreUnitTest.cpp \
 	StateMachineDoIntervalUnitTest.cpp \
 	StateMachineSetStateUnitTest.cpp \
 	StateMachineTestHarnessUnitTest.cpp \
+	XMLUnitTest.cpp \
 
 GPROGS = $(GSRCS:%.cpp=$(TARGETDIR)/%)
 BPROGS = $(BSRCS:%.cpp=$(TARGETDIR)/%)
@@ -171,6 +172,8 @@ $(TARGETDIR)/CheckedValueStoreUnitTest: CheckedValueStoreUnitTest.cpp ../$(TARGE
 $(TARGETDIR)/CheckedValueUnitTest: CheckedValueUnitTest.cpp ../$(TARGETDIR)/CheckedValue.o
 
 $(TARGETDIR)/PidFileUnitTest: PidFileUnitTest.cpp ../$(TARGETDIR)/PidFile.o
+
+$(TARGETDIR)/XMLUnitTest: XMLUnitTest.cpp $(Forte)
 
 $(GPROGS):
 	@echo "Building $@ from $<..."
