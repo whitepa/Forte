@@ -129,7 +129,7 @@ FString Logfile::FormatMsg(const LogMsg &msg)
     offset.append(depth * 3, ' ');
     formattedMsg.Format("%02d/%02d/%02d %02d:%02d:%02d.%03d %s%s%s|%s%s() %s%s\n",
                         lt.tm_mon + 1, lt.tm_mday, lt.tm_year % 100,
-                        lt.tm_hour, lt.tm_min, lt.tm_sec, 
+                        lt.tm_hour, lt.tm_min, lt.tm_sec,
                         (int)(msg.mTime.tv_usec/1000),
                         levelstr.c_str(),
                         thread.c_str(),
@@ -234,7 +234,7 @@ LogManager::LogManager() {
     else
         throw EGlobalLogManagerSet();
 }
- 
+
 LogManager::~LogManager() {
     Log(HLOG_DEBUG, "logging halted");
     EndLogging();
@@ -267,7 +267,7 @@ void LogManager::beginLogging(const char *path, int mask)  // helper - no lockin
     else if (!strcmp(path, "//stdout"))
         logfile = new Logfile(path, &cout, mask);
     else if (!strncmp(path, "//syslog/", 9))
-    {        
+    {
         logfile = new SysLogfile(path + 9, mask);
     }
     else
@@ -384,7 +384,7 @@ void LogManager::ClearSourceFileLogMask(const char *filename)
 }
 
 
-void LogManager::PathSetSourceFileLogMask(const char *path, const char *filename, 
+void LogManager::PathSetSourceFileLogMask(const char *path, const char *filename,
                                            unsigned int mask)
 {
     AutoUnlockMutex lock(mLogMutex);
@@ -408,7 +408,7 @@ void LogManager::PathFilterList(const char *path, std::vector<LogFilter> &filter
 {
     AutoUnlockMutex lock(mLogMutex);
     Logfile &logfile(getLogfile(path));
-    logfile.FilterList(filters);    
+    logfile.FilterList(filters);
 }
 
 void LogManager::PathList(std::vector<FString> &paths)
@@ -587,7 +587,7 @@ bool LogManager::LogRatelimit(const char *file, int line, int rate)
         return false;
 }
 
-static const char *levelstr[] = 
+static const char *levelstr[] =
 {
     "0",
     "1",
@@ -624,7 +624,7 @@ static const char *levelstr[] =
     NULL
 };
 
-    
+
 
 // helper to generate a string describing a log mask
 FString LogManager::LogMaskStr(int mask)
