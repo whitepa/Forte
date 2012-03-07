@@ -23,6 +23,19 @@ XMLNode::~XMLNode()
 {
 }
 
+FString XMLNode::GetPath() const
+{
+    FString ret;
+    xmlChar *str;
+
+    str = xmlGetNodePath(mNode);
+    if (str != NULL)
+    {
+        ret.assign( (const char*) str);
+        xmlFree(str);
+    }
+    return ret;
+}
 
 FString XMLNode::GetProp(const char *name) const
 {
