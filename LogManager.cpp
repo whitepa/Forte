@@ -5,6 +5,7 @@
 #include "FTrace.h"
 #include "LogManager.h"
 #include "Types.h"
+#include <boost/tuple/tuple.hpp>
 #include <stdarg.h>
 #include <sys/time.h>
 
@@ -15,11 +16,13 @@ LogManager *LogManager::sLogManager = NULL;
 Mutex LogManager::sLogManagerMutex;
 
 // Logfile
-Logfile::Logfile(const FString& path, ostream *str, unsigned logMask, bool delStream) :
+Logfile::Logfile(const FString& path, ostream *str, unsigned logMask, bool delStream,
+                 unsigned int formatMask) :
     mPath(path),
     mOut(str),
     mDelStream(delStream),
-    mLogMask(logMask)
+    mLogMask(logMask),
+    mFormatMask(formatMask)
 {
 //    mOut.tie(&str);
 }
@@ -109,6 +112,10 @@ void Logfile::FilterList(std::vector<LogFilter> &filters)
 
 FString Logfile::FormatMsg(const LogMsg &msg)
 {
+    if (mFormatMask)
+    {
+        return CustomFormatMsg(msg);
+    }
     FString levelstr, formattedMsg;
     struct tm lt;
     levelstr = GetLevelStr(msg.mLevel);
@@ -136,6 +143,100 @@ FString Logfile::FormatMsg(const LogMsg &msg)
                         fileLine.c_str(), offset.c_str(),
                         msg.mFunction.c_str(), msg.mPrefix.c_str(),
                         msg.mMsg.c_str());
+    return formattedMsg;
+}
+
+FString Logfile::CustomFormatMsg(const LogMsg &msg)
+{
+    FString formattedMsg, tmp;
+
+    if (mFormatMask & HLOG_FORMAT_TIMESTAMP)
+    {
+        struct tm lt;
+        localtime_r(&(msg.mTime.tv_sec), &lt);
+        tmp.Format("%02d/%02d/%02d %02d:%02d:%02d.%03d",
+                   lt.tm_mon + 1, lt.tm_mday, lt.tm_year % 100,
+                   lt.tm_hour, lt.tm_min, lt.tm_sec,
+                   (int)(msg.mTime.tv_usec/1000));
+
+        formattedMsg = tmp;
+    }
+
+    if (mFormatMask & HLOG_FORMAT_LEVEL)
+    {
+        if (!formattedMsg.empty())
+        {
+            formattedMsg += " ";
+        }
+        formattedMsg += GetLevelStr(msg.mLevel);
+    }
+
+    if (mFormatMask & HLOG_FORMAT_THREAD)
+    {
+        FString thread(FStringFC(), "[%d%s%s]",
+                       msg.mPID, (msg.mThread ?  "-" : ""),
+                       (msg.mThread ? msg.mThread->mThreadName.c_str() : ""));
+        int padT = 25-thread.size();
+        if (padT<0) padT=0;
+        thread.append(padT,' ');
+
+        if (!formattedMsg.empty())
+        {
+            formattedMsg += " ";
+        }
+        formattedMsg += thread;
+    }
+
+    if (mFormatMask & HLOG_FORMAT_FILE)
+    {
+        FString fileLine(FStringFC(), "%s:%d", msg.mFile.c_str(), msg.mLine);
+        int padFL = 35-fileLine.size();
+        if (padFL<0) padFL=0;
+        fileLine.append(padFL,' ');
+
+        if (!formattedMsg.empty())
+        {
+            formattedMsg += " ";
+        }
+        formattedMsg += fileLine;
+    }
+
+    if (mFormatMask & HLOG_FORMAT_DEPTH)
+    {
+        if (!formattedMsg.empty())
+        {
+            formattedMsg += " ";
+        }
+        unsigned int depth = FTrace::GetDepth();
+        FString offset;
+        offset.append(depth * 3, ' ');
+        formattedMsg += "|";
+        formattedMsg += offset;
+    }
+
+    if (mFormatMask & HLOG_FORMAT_FUNCTION)
+    {
+        if (!formattedMsg.empty())
+        {
+            formattedMsg += " ";
+        }
+
+        formattedMsg += msg.mFunction;
+        formattedMsg += "()";
+    }
+
+    if (mFormatMask & HLOG_FORMAT_MESSAGE)
+    {
+        if (!formattedMsg.empty())
+        {
+            formattedMsg += " ";
+        }
+
+        formattedMsg += msg.mPrefix + " " + msg.mMsg;
+    }
+
+    formattedMsg += "\n";
+
     return formattedMsg;
 }
 
@@ -250,22 +351,29 @@ void LogManager::BeginLogging()
 void LogManager::BeginLogging(const char *path)
 {
     AutoUnlockMutex lock(mLogMutex);
-    beginLogging(path, mLogMaskTemplate);
+    beginLogging(path, mLogMaskTemplate, HLOG_FORMAT_NONE);
 }
 
 void LogManager::BeginLogging(const char *path, int mask)
 {
     AutoUnlockMutex lock(mLogMutex);
-    beginLogging(path, mask);
+    beginLogging(path, mask, HLOG_FORMAT_NONE);
 }
 
-void LogManager::beginLogging(const char *path, int mask)  // helper - no locking
+void LogManager::BeginLogging(const char *path, int mask, unsigned int format)
+{
+    AutoUnlockMutex lock(mLogMutex);
+    beginLogging(path, mask, format);
+}
+
+// helper - no locking
+void LogManager::beginLogging(const char *path, int mask, unsigned int format)
 {
     Logfile *logfile;
     if (!strcmp(path, "//stderr"))
-        logfile = new Logfile(path, &cerr, mask);
+        logfile = new Logfile(path, &cerr, mask, false, format);
     else if (!strcmp(path, "//stdout"))
-        logfile = new Logfile(path, &cout, mask);
+        logfile = new Logfile(path, &cout, mask, false, format);
     else if (!strncmp(path, "//syslog/", 9))
     {
         logfile = new SysLogfile(path + 9, mask);
@@ -273,7 +381,7 @@ void LogManager::beginLogging(const char *path, int mask)  // helper - no lockin
     else
     {
         ofstream *out = new ofstream(path, ios::app | ios::out);
-        logfile = new Logfile(path, out, mask, true);
+        logfile = new Logfile(path, out, mask, true, format);
     }
     logfile->mPath = path;
     mLogfiles.push_back(logfile);
@@ -318,22 +426,28 @@ void LogManager::endLogging(const char *path)  // helper - no locking
 void LogManager::Reopen()  // re-open all log files
 {
     AutoUnlockMutex lock(mLogMutex);
-    std::vector<Logfile*>::iterator i;
-    typedef std::pair<FString,int> PathMaskPair;
-    std::list<PathMaskPair> recreate;
+    typedef boost::tuple<FString,int, unsigned int> PathMaskFormatData;
+    std::list<PathMaskFormatData> recreate;
 
-    // call Reopen()
+    std::vector<Logfile*>::iterator i;
     for (i = mLogfiles.begin(); i != mLogfiles.end(); i++)
     {
-        if (!(*i)->Reopen()) recreate.push_back(PathMaskPair((*i)->mPath, (*i)->mLogMask));
+        if (!(*i)->Reopen())
+        {
+            recreate.push_back(
+                PathMaskFormatData((*i)->mPath,
+                               (*i)->mLogMask,
+                               (*i)->mFormatMask));
+        }
     }
 
     // for anything that could not reopen, re-create it
-    foreach(const PathMaskPair &pm, recreate)
+    foreach(const PathMaskFormatData &pmf, recreate)
     {
-        endLogging(pm.first);
-        beginLogging(pm.first, pm.second);
+        endLogging(pmf.get<0>().c_str());
+        beginLogging(pmf.get<0>(), pmf.get<1>(), pmf.get<2>());
     }
+
 }
 
 void LogManager::SetGlobalLogMask(unsigned int mask)
