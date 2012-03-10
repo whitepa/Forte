@@ -12,7 +12,7 @@ namespace Forte
     public:
         AutoDoUndo(boost::function<T1()> dofunc,
                    boost::function<T2()> undofunc,
-                   bool autoDo = true) 
+                   bool autoDo = true)
         {
             if (autoDo)
             {
@@ -21,7 +21,7 @@ namespace Forte
             Undo = undofunc;
             Do = dofunc;
         }
-        virtual ~AutoDoUndo() 
+        virtual ~AutoDoUndo()
         {
             try
             {
