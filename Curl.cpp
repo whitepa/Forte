@@ -56,8 +56,7 @@ void Curl::Cleanup()
 
 
 // class methods
-Curl::Curl(Context &context) :
-    mContext(context), mHandle(NULL), mThrowOnHTTPError(false)
+Curl::Curl() : mHandle(NULL), mThrowOnHTTPError(false)
 {
     if (!sDidInit)
     {
@@ -93,6 +92,21 @@ void Curl::SetURL(const FString& url)
 {
     mURL = url;
     SET_CURL_OPT(CURLOPT_URL, mURL.c_str());
+}
+
+void Curl::SetPostFields(const Forte::FString& postFields)
+{
+    SET_CURL_OPT(CURLOPT_POSTFIELDS, postFields.c_str());
+}
+
+void Curl::SetUserName(const Forte::FString& username)
+{
+    SET_CURL_OPT(CURLOPT_USERNAME, username.c_str());
+}
+
+void Curl::SetPassword(const Forte::FString& password)
+{
+    SET_CURL_OPT(CURLOPT_PASSWORD, password.c_str());
 }
 
 void Curl::SetRecvHeaderCB(header_cb_t func, void *data)
@@ -188,10 +202,9 @@ void Curl::Reset()
 }
 
 //TODO: move to resolver manager class so this is only done once per thread
-void Curl::checkResolvConf()
+void Curl::checkResolvConf(Forte::FileSystem& fs)
 {
     struct stat st;
-    CGET("forte.FileSystem", FileSystem, fs);
     if (fs.Stat("/etc/resolv.conf", &st) == 0)
     {
         if (st.st_mtime != mLastMtime)

@@ -41,11 +41,14 @@ namespace Forte
 
     public:
         // ctor/dtor
-        Curl(Context &context);
+        Curl();
         ~Curl();
 
         // interface
         virtual void SetURL(const FString& url);
+        void SetPostFields(const Forte::FString& postFields);
+        void SetUserName(const Forte::FString& username);
+        void SetPassword(const Forte::FString& password);
         void SetRecvHeaderCB(header_cb_t func, void *data = NULL);
         void SetRecvCB(data_cb_t func, void *data = NULL);
         virtual void SetInternalCB(void);
@@ -69,12 +72,11 @@ namespace Forte
 
         FString mBuf;
      protected:
-        Context &mContext;
         CURL *mHandle;
         static bool sDidInit;
         char mErrorBuffer[CURL_ERROR_SIZE + 1];
 
-        void checkResolvConf();
+        void checkResolvConf(Forte::FileSystem& fs);
         FString mURL; // this needs to be saved for curl
         bool mThrowOnHTTPError;
         time_t mLastMtime;
