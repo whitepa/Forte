@@ -4,14 +4,11 @@ BUILDROOT:=$(shell echo 'while [ ! -d re ]; do cd ..; done; pwd' | sh)
 include $(BUILDROOT)/re/make/head.mk
 $(make-targetdir)
 
-LEX = flex
-YACC = bison -d -v --report=all
 CFLAGS = -DYYDEBUG=1
 
-INCLUDES = $(FORTE_INCLUDE) -I$(BOOST_INCLUDE)
+INCLUDE = $(FORTE_INCLUDE) -I$(BOOST_INCLUDE)
 
-CCARGS += $(INCLUDES) $(DEFS)
-CCCARGS = $(CCARGS) -Wno-unused-function
+CCCARGS += -Wno-unused-function
 
 LIBS = $(FORTE_LIBS) -lfl -lpthread
 
@@ -27,23 +24,13 @@ SRCS=   dbc.cpp \
 OBJS=$(SRCS:%.cpp=$(TARGETDIR)/%.o)
 
 PROG=$(TARGETDIR)/dbc
+PROG_DEPS = $(PARSER_SRC)
 
 all: $(PROG)
 
 parser: $(PARSER_SRC)
 
-$(PROG): $(PARSER_SRC) $(OBJS) Makefile $(OBJDEPS)
-	@echo Linking $@
-	$(CCC) -o $@ $(OBJS) $(LIBS) $(OS_LIBS)
-	$(export-bin)
-
-SQLParse.cpp: SQLParse.yy Makefile
-	$(YACC) -o $@ $<
-
-SQLScan.cpp: SQLScan.ll Makefile
-	$(LEX) -o$@ $<
-
-
+$(eval $(call GENERATE_LINK_PROG_RULE,dbc))
 
 include $(BUILDROOT)/re/make/tail.mk
 

@@ -12,9 +12,9 @@ namespace Forte
 {
     class FProfileData {
     public:
-        FProfileData(void *fn, const struct timeval &spent, const struct timeval &totalSpent) 
+        FProfileData(void *fn, const struct timeval &spent, const struct timeval &totalSpent)
         __attribute__ ((no_instrument_function));
-        void AddCall(const struct timeval &spent, const struct timeval &totalSpent) 
+        void AddCall(const struct timeval &spent, const struct timeval &totalSpent)
             __attribute__ ((no_instrument_function));
 
         const void *mFunction;
@@ -38,8 +38,8 @@ namespace Forte
         struct timeval entry[FTRACE_MAXDEPTH];
         struct timeval reentry[FTRACE_MAXDEPTH];
         struct timeval spent[FTRACE_MAXDEPTH];
-    
-        void StoreProfile(void *fn, struct timeval &spent, struct timeval &totalSpent) 
+
+        void StoreProfile(void *fn, struct timeval &spent, struct timeval &totalSpent)
             __attribute__ ((no_instrument_function));
         std::map<void*,FProfileData *> profileData;
     };
@@ -71,14 +71,14 @@ namespace Forte
         FunctionEntry(const char *functionName, const char *file, int line) : mFN(functionName), mFile(file), mLine(line), mArgumentBuffer(NULL) {
             _hlog(mFN.c_str(), mFile, mLine, HLOG_TRACE, "ENTER");
         }
-    
+
         FunctionEntry(const char *functionName, const char *file, int line, const char*fmt, ...) __attribute__((format(printf, 5, 6))): mFN(functionName), mFile(file), mLine(line) {
             va_list args;
             va_start(args, fmt);
             mArgumentBuffer = (char *)malloc(512);
             vsnprintf(mArgumentBuffer, 512, fmt, args);
 
-            _hlog(mFN.c_str(), mFile, mLine, 
+            _hlog(mFN.c_str(), mFile, mLine,
                   HLOG_TRACE, "ENTER (%s)", mArgumentBuffer);
             va_end(args);
         }
@@ -86,7 +86,7 @@ namespace Forte
         virtual ~FunctionEntry() {
             if (mArgumentBuffer)
             {
-                _hlog(mFN.c_str(), mFile, mLine, HLOG_TRACE, "EXIT (%s)", 
+                _hlog(mFN.c_str(), mFile, mLine, HLOG_TRACE, "EXIT (%s)",
                       mArgumentBuffer);
                 free(mArgumentBuffer);
                 mArgumentBuffer=NULL;
@@ -116,7 +116,7 @@ namespace Forte
  * as well.
  * Example:
  *    FTRACE2("%s, %i", arg1, arg2)
- * 
+ *
  *   Output (on enter):
  *     ENTER function(arg1, arg2)
  */
@@ -124,5 +124,5 @@ namespace Forte
 //#else
 //#define FTRACE
 //#endif
-    
+
 #endif

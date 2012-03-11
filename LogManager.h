@@ -79,8 +79,8 @@ namespace Forte
             mMode = rhs.mMode;
             return *this;
         }
-        
-           
+
+
         FString mSourceFile;
         int mMask;
         int mMode; ///< FUTURE USE:  include (only) / exclude
@@ -102,7 +102,7 @@ namespace Forte
         void FilterDelete(const char *filename);
         void FilterDeleteAll(void);
         void FilterList(std::vector<LogFilter> &filters);
-    
+
         virtual void Write(const LogMsg& msg);
         virtual FString FormatMsg(const LogMsg &msg);
         virtual bool Reopen() { return false; }  // true is reopened, false is not
@@ -128,19 +128,19 @@ namespace Forte
     public:
         LogThreadInfo(Thread &thr);
         virtual ~LogThreadInfo();
-    
+
     protected:
         Thread &mThread;
     };
     /**
      *The Forte LogManager allows you to control what log messages from an
-     *application are logged and where those messages are logged. 
+     *application are logged and where those messages are logged.
      *The BeginLogging() function controls where messages are logged.
      *You can call BeginLogging() for as many log outputs as you need.
-     *The EndLogging() function allows you to stop logging messages on a specific log 
-     *output file or all of them. Logging of messages is controlled by two filters, 
-     *a source file filter and a log level filter. The source file filter allows you 
-     *to select what file you will log messages for. 
+     *The EndLogging() function allows you to stop logging messages on a specific log
+     *output file or all of them. Logging of messages is controlled by two filters,
+     *a source file filter and a log level filter. The source file filter allows you
+     *to select what file you will log messages for.
      *
      *The log level filter allows you to choose what types of messages you will log using a bit mask that
      *specifies all levels to be included in the specific log file. There are 15 possible log levels:
@@ -160,13 +160,13 @@ namespace Forte
      *HLOG_WARN - For logging warning error messages. It is for errors you do notice and which might be
      *problematic.
      *
-     *HLOG_ERR - For logging error messages. It is for errors you do notice which pose a problem that you 
+     *HLOG_ERR - For logging error messages. It is for errors you do notice which pose a problem that you
      *want to correct.
      *
      *HLOG_CRIT - For logging critical error messages. It is for errors which are somewhat severe and require
      *attention.
      *
-     *HLOG_ALERT - For logging alert level error messages. It is for errors which are severe and require 
+     *HLOG_ALERT - For logging alert level error messages. It is for errors which are severe and require
      *immediate attention.
      *
      *HLOG_EMERG - For logging emergency level error messages. These are for the worst errors that absolutely
@@ -190,8 +190,8 @@ namespace Forte
         friend class LogThreadInfo;
     public:
         /**
-         *LogManager() is used to create a LogManager object. After creating this object, typically you 
-         *will call a variation of BeginLogging() and give it a filepath to start logging information for. 
+         *LogManager() is used to create a LogManager object. After creating this object, typically you
+         *will call a variation of BeginLogging() and give it a filepath to start logging information for.
          **/
         LogManager();
         virtual ~LogManager();
@@ -200,34 +200,34 @@ namespace Forte
          * NOTE: you MUST hold the sLogManagerMutex prior to calling these!
          */
         inline static LogManager* GetInstancePtr() { return sLogManager; }
-        inline static LogManager & GetInstance() { 
+        inline static LogManager & GetInstance() {
             if (sLogManager) return *sLogManager; else throw EEmptyReference("no log manager instance");
         }
 
         /**
          *BeginLogging() permits you to start logging error messages to //stderr.
-         *The types of messages logged are specified by SetGlobalLogMask. If 
-         *SetGlobalLogMask does not specify anything, by default all types of 
+         *The types of messages logged are specified by SetGlobalLogMask. If
+         *SetGlobalLogMask does not specify anything, by default all types of
          *error messages are logged. You can call BeginLogging() as many times as you want.
          **/
 
         void BeginLogging(); // start logging on stderr
 
         /**
-         *BeginLogging(const char *path) takes a file path you want to log to. Special cases 
-         *for the path can be //stdout or //stderr. The types of error messages logged 
-         *are specified by SetGlobalLogMask. If SetGlobalLogMask does not 
-         *specify anything, by default all types of error messages are logged. You can 
+         *BeginLogging(const char *path) takes a file path you want to log to. Special cases
+         *for the path can be //stdout or //stderr. The types of error messages logged
+         *are specified by SetGlobalLogMask. If SetGlobalLogMask does not
+         *specify anything, by default all types of error messages are logged. You can
          *call BeginLogging(const char *path) as many times as you want.
          **/
 
         void BeginLogging(const char *path);  // log to a file, can be '//stdout' or '//stderr'
 
         /**
-         *BeginLogging(const char *path, int mask) takes a file path to log to and 
-         *the types of error messages you want to log. For more information about 
-         *types of messages you can log see the list of defined int mask options. 
-         *Special cases for the selected file path can be //stdout or //stderr. 
+         *BeginLogging(const char *path, int mask) takes a file path to log to and
+         *the types of error messages you want to log. For more information about
+         *types of messages you can log see the list of defined int mask options.
+         *Special cases for the selected file path can be //stdout or //stderr.
          * You can call BeginLogging(const char *path, int mask) as many times as you want.
          **/
 
@@ -242,7 +242,7 @@ namespace Forte
         void BeginLogging(Logfile *logfile); // log to a custom Logfile object; takes ownership
 
         /**
-         *EndLogging() ends all logging on everything you called any variation of 
+         *EndLogging() ends all logging on everything you called any variation of
          *BeginLogging() on.
          **/
 
@@ -260,82 +260,82 @@ namespace Forte
         void Reopen();  // re-open all log files
 
         /**
-         *SetLogMask(const char *path, unsigned int mask) takes a path to a logfile 
-         *you want to log error messages in and an unsigned int mask which represents 
-         *all the types of error messages you want to log. The next time you call 
+         *SetLogMask(const char *path, unsigned int mask) takes a path to a logfile
+         *you want to log error messages in and an unsigned int mask which represents
+         *all the types of error messages you want to log. The next time you call
          *the BeginLogging() function it will use the settings you select here.
          **/
         void SetLogMask(const char *path, unsigned int mask); // bitmask of desired log levels
         unsigned int GetLogMask(const char *path);
- 
+
         /**
-         *SetGlobalLogMask(unsigned int mask) takes an unsigned int mask representing 
-         *different levels of error messages. The list of error messages you provide 
-         *will replace the settings for what error messages are being logged in every 
-         *logfile you’ve run a variation of BeginLogging on. For the next log that 
-         *comes in, these new settings will be used. Calling this function also resets 
-         *the default setting to be whatever it is you have specified. For example, 
-         *if you call a function such as BeginLogging and do not provide any arguments, 
-         *the default will match whatever you have set using 
+         *SetGlobalLogMask(unsigned int mask) takes an unsigned int mask representing
+         *different levels of error messages. The list of error messages you provide
+         *will replace the settings for what error messages are being logged in every
+         *logfile you’ve run a variation of BeginLogging on. For the next log that
+         *comes in, these new settings will be used. Calling this function also resets
+         *the default setting to be whatever it is you have specified. For example,
+         *if you call a function such as BeginLogging and do not provide any arguments,
+         *the default will match whatever you have set using
          *SetGlobalLogMask(unsigned int mask).
          **/
 
         void SetGlobalLogMask(unsigned int mask); // set log mask on ALL log files
 
         /**
-         *SetSourceFileLogMask(const char *filename, unsigned int mask) takes the 
-         *name of a source file and a list of levels of error messages you want 
-         *recorded for that source file. It replaces the existing info (if any) 
-         *regarding this source file you may have been logging for rather than 
+         *SetSourceFileLogMask(const char *filename, unsigned int mask) takes the
+         *name of a source file and a list of levels of error messages you want
+         *recorded for that source file. It replaces the existing info (if any)
+         *regarding this source file you may have been logging for rather than
          *adding to it.  This works globally, so all log files you called a variation
-         *of BeginLogging on will now have their levels reset to match whatever you 
-         *choose here.  
+         *of BeginLogging on will now have their levels reset to match whatever you
+         *choose here.
          **/
 
         void SetSourceFileLogMask(const char *filename, unsigned int mask);
 
         /**
-         *ClearSourceFileLogMask(const char filename) takes a filename and clears 
-         *the logging information for the source file specified but leaves other 
-         *logging information for any other source files in the logfile untouched. 
+         *ClearSourceFileLogMask(const char filename) takes a filename and clears
+         *the logging information for the source file specified but leaves other
+         *logging information for any other source files in the logfile untouched.
          **/
 
         void ClearSourceFileLogMask(const char *filename);
 
         /**
          *PathSetSourceFileLogMask(const char *path, const char *filename, unsigned int mask)
-         *writes levels of error messages you choose for a source file you choose for a 
-         *log file that you choose. 
+         *writes levels of error messages you choose for a source file you choose for a
+         *log file that you choose.
          **/
 
         void PathSetSourceFileLogMask(const char *path, const char *filename, unsigned int mask);
 
         /**
          *PathClearSourceFileLogMask(const char *path, const char *filename, unsigned int mask)
-         *works the same as ClearSourceFileLogMask but clears all levels of error 
-         *messages for a source file in a specific log file. 
+         *works the same as ClearSourceFileLogMask but clears all levels of error
+         *messages for a source file in a specific log file.
          **/
 
         void PathClearSourceFileLogMask(const char *path, const char *filename);
 
         /**
-         *PathClearAllSourceFiles(const char *path) takes the path to a specific 
+         *PathClearAllSourceFiles(const char *path) takes the path to a specific
          *logfile and clears all logging for source files in that specific logfile.x
          **/
 
         void PathClearAllSourceFiles(const char *path);
 
         /**
-         *PathFilterList(const char *path, std:vector<LogFilter> &filters) returns 
-         *a list of all source files and the error  levels its logged at in the 
-         *logfile specified. 
+         *PathFilterList(const char *path, std:vector<LogFilter> &filters) returns
+         *a list of all source files and the error  levels its logged at in the
+         *logfile specified.
          **/
 
         void PathFilterList(const char *path, std::vector<LogFilter> &filters);
-        
+
         /**
-         *PathList(std::vector<FString> &paths) returns a list of every path you 
-         *called a variation of BeginLogging on.   
+         *PathList(std::vector<FString> &paths) returns a list of every path you
+         *called a variation of BeginLogging on.
          **/
         void PathList(std::vector<FString> &paths);
 
@@ -346,20 +346,20 @@ namespace Forte
          */
         static FString SourceFileBasename(const FString& filename,
                                           const FString& suffix = "");
-    
+
         /**
-         *Log(int level, const char *fmt,…) attribute((format(printf 
-         *lets you log a message at one of many levels error (choose from the complete 
+         *Log(int level, const char *fmt,…) attribute((format(printf
+         *lets you log a message at one of many levels error (choose from the complete
          *list of defined HLOG values). It goes through every log you called a variation
-         *of BeginLogging on and asks if it should write messages of a certain level to 
+         *of BeginLogging on and asks if it should write messages of a certain level to
          *that file. If yes, it writes the messages to that file.
          **/
 
         void Log(int level, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
 
         /**
-         *LogMsgVa(int level, const char *fmt , va_list ap) is only for specific cases 
-         *where you have a variable argument list. This performs the same function as 
+         *LogMsgVa(int level, const char *fmt , va_list ap) is only for specific cases
+         *where you have a variable argument list. This performs the same function as
          *Log(). It is just a different way to call it.
          **/
 
@@ -367,7 +367,7 @@ namespace Forte
 
         /**
          *LogMsgVa(const char *func, const char *file, int line, int level, const char *fmt, va_list ap)
-         *performs the same function as Log() but it is a special case where 
+         *performs the same function as Log() but it is a special case where
          *it can take in more information. This function is only used by the trace (FTrace) routine.
          **/
 
@@ -405,7 +405,7 @@ namespace Forte
          * of the LogManager.
          */
         Mutex& GetMutex(void) { return mLogMutex; }
-        
+
         /*
          * Get a reference to the log singleton mutex to allow locking from
          * hlog()

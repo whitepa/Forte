@@ -144,6 +144,11 @@ namespace Forte
             int mode)
             { FTRACE; throw EUnimplemented(); }
 
+        virtual FString MakeTemporaryFile(const FString& nameTemplate) const {
+            FTRACE;
+            throw EUnimplemented();
+        }
+
     protected:
         StrStrMap mFiles;
         std::map<FString, struct statfs> mStatFSResponseMap;

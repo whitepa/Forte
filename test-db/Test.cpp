@@ -12,19 +12,19 @@ int main(int argc, char *argv[])
     CServerMain foo(3, fake_args, "dv", "");
     foo.mLogManager.BeginLogging("//stderr");
 
-#ifndef FORTE_NO_MYSQL
+#ifdef FORTE_WITH_MYSQL
     hlog(HLOG_INFO, "MySQL tests");
     setup_mysql();
     run_tests();
 #endif
 
-#ifndef FORTE_NO_POSTGRESQL
+#ifdef FORTE_WITH_POSTGRESQL
     hlog(HLOG_INFO, "PostgreSQL tests");
     setup_pgsql();
     run_tests();
 #endif
 
-#ifndef FORTE_NO_SQLITE
+#ifdef FORTE_WITH_SQLITE
     hlog(HLOG_INFO, "SQLite tests");
     setup_sqlite();
     run_tests();
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 }
 
 
-#ifndef FORTE_NO_MYSQL
+#ifdef FORTE_WITH_MYSQL
 void setup_mysql()
 {
     CServiceConfig config;
@@ -65,7 +65,7 @@ void setup_mysql()
 #endif
 
 
-#ifndef FORTE_NO_POSTGRESQL
+#ifdef FORTE_WITH_POSTGRESQL
 void setup_pgsql()
 {
     CServiceConfig config;
@@ -86,7 +86,7 @@ void setup_pgsql()
 #endif
 
 
-#ifndef FORTE_NO_SQLITE
+#ifdef FORTE_WITH_SQLITE
 void setup_sqlite()
 {
     CServiceConfig config;
