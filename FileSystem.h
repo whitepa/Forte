@@ -38,6 +38,7 @@ namespace Forte
                                  const FString& suffix = "") = 0;
         virtual FString Dirname(const FString& filename) = 0;
         virtual FString GetCWD() = 0;
+        virtual FString GetPathToCurrentProcess() = 0;
         virtual void Touch(const FString& file) = 0;
         virtual bool FileExists(const FString& filename) const = 0;
         virtual void StatFS(const FString& path, struct statfs *st) = 0;
