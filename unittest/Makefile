@@ -67,6 +67,7 @@ GSRCS = CheckedValueStoreUnitTest.cpp \
 	FileSystemImplUnitTest.cpp \
 	FileSystemUtilUnitTest.cpp \
 	FStringUnitTest.cpp \
+	LogManagerUnitTest.cpp \
 	INotifyUnitTest.cpp \
 	PidFileUnitTest.cpp \
 	PDUPeerUnitTest.cpp \

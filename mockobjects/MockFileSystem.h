@@ -96,6 +96,8 @@ namespace Forte
             { FTRACE; throw EUnimplemented(); }
         FString GetCWD()
             { FTRACE; throw EUnimplemented(); }
+        FString GetPathToCurrentProcess()
+            { FTRACE; throw EUnimplemented(); }
         void Touch(const FString& file)
             { FTRACE; throw EUnimplemented(); }
         uint64_t CountChildren(const FString& path, bool recurse) const

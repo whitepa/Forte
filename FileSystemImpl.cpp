@@ -82,6 +82,15 @@ FString FileSystemImpl::GetCWD()
     return ret;
 }
 
+FString FileSystemImpl::GetPathToCurrentProcess()
+{
+    FString procPath = ResolveSymLink("/proc/self/exe");
+    if (procPath.ComparePrefix("/", 1))
+    {
+        procPath = GetCWD() + "/" + procPath;
+    }
+    return procPath;
+}
 
 void FileSystemImpl::Touch(const FString& file)
 {

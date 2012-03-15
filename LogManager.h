@@ -44,6 +44,19 @@
 
 #define HLOG_ERRNO_BUF_LEN    256
 
+#define HLOG_FORMAT_NONE        0x00000000 // use default FormatMsg
+#define HLOG_FORMAT_TIMESTAMP   0x00000001
+#define HLOG_FORMAT_LEVEL       0x00000002
+#define HLOG_FORMAT_THREAD      0x00000004
+#define HLOG_FORMAT_FILE        0x00000008
+#define HLOG_FORMAT_DEPTH       0x00000010
+#define HLOG_FORMAT_FUNCTION    0x00000020
+#define HLOG_FORMAT_MESSAGE     0x00000040
+#define HLOG_FORMAT_ALL         0x00FFFFFF
+#define HLOG_FORMAT_SIMPLE      HLOG_FORMAT_TIMESTAMP | HLOG_FORMAT_LEVEL \
+                                | HLOG_FORMAT_FILE | HLOG_FORMAT_MESSAGE
+
+
 namespace Forte
 {
     EXCEPTION_CLASS(ELog);
@@ -88,13 +101,17 @@ namespace Forte
 
     class Logfile : public Object {
     public:
-        Logfile(const FString &path, std::ostream *stream,
-                unsigned logMask = HLOG_ALL, bool delStream = false);
+        Logfile(const FString &path,
+                std::ostream *stream,
+                unsigned int logMask = HLOG_ALL,
+                bool delStream = false,
+                unsigned int formatMask = HLOG_FORMAT_NONE);
         virtual ~Logfile();
         FString mPath;
         std::ostream *mOut;
         bool mDelStream;
         unsigned mLogMask; // bitmask of desired log levels
+        unsigned int mFormatMask; // bitmask of desired log fields
         // source file specific log masks
         std::map<FString,unsigned int> mFileMasks;
 
@@ -105,6 +122,7 @@ namespace Forte
 
         virtual void Write(const LogMsg& msg);
         virtual FString FormatMsg(const LogMsg &msg);
+        virtual FString CustomFormatMsg(const LogMsg &msg);
         virtual bool Reopen() { return false; }  // true is reopened, false is not
         static FString GetLevelStr(int level);
     };
@@ -232,6 +250,10 @@ namespace Forte
          **/
 
         void BeginLogging(const char *path, int mask);  // log to a file, can be '//stdout' or '//stderr'
+
+        // log to a file using a combination of the HLOG_FORMAT*
+        // columns. file can be '//stdout' or '//stderr'
+        void BeginLogging(const char *path, int mask, unsigned int format);
 
         /**
          *BeginLogging(Logfile *logfile) is a shortcut version of the BeginLogging()
@@ -439,7 +461,7 @@ namespace Forte
 
         std::map<FString,time_t> mRateLimitedTimestamps;
 
-        void beginLogging(const char *path, int mask);  // helper - no locking
+        void beginLogging(const char *path, int mask, unsigned int format); // helper - no locking
         void endLogging(const char *path);    // helper - no locking
 
         Logfile &getLogfile(const char *path); // get logfile object for a given path

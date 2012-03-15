@@ -589,7 +589,8 @@ void TableLookup::generateCPP(const Table &t, FILE *h, FILE *c)
     fprintf(c, "    Forte::DbResult res = Forte::DbUtil::DbStore(db, Forte::SelectDbSqlStatement(sql));\n");
     fprintf(c, "    Forte::DbResultRow row;\n");
     fprintf(c, "    if (!res.FetchRow(row))\n");
-    fprintf(c, "        boost::throw_exception(Forte::DbLookupFailedException(\"Unable to lookup '%s'\"));\n", mName.c_str());
+    fprintf(c, "        boost::throw_exception(Forte::DbLookupFailedException("
+            "Forte::FString(Forte::FStringFC(), \"unable to lookup value with: '%%s'\", sql.c_str())));\n");
     fprintf(c, "    return %s(row, 0);\n", retcol.cGetter().c_str());
     fprintf(c, "}\n");
 }
