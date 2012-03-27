@@ -434,7 +434,7 @@ namespace Forte
          * Special log levels of "ALL", "NODEBUG", and "MOST" are also
          * supported.
          */
-        int GetSingleLevelFromString(const FString &str) const;
+        static int GetSingleLevelFromString(const FString &str);
 
         /**
          * Get a reference to the log mutex to allow external locking

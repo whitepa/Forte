@@ -843,7 +843,7 @@ int LogManager::ComputeLogMaskFromString(const FString &str) const
     return result;
 }
 
-int LogManager::GetSingleLevelFromString(const FString &str) const
+int LogManager::GetSingleLevelFromString(const FString &str)
 {
     FString tmp(str);
     tmp.MakeUpper();
@@ -853,8 +853,24 @@ int LogManager::GetSingleLevelFromString(const FString &str) const
         return HLOG_NONE;
     else if (tmp == "NODEBUG")
         return HLOG_NODEBUG;
-    else if (tmp == "MOST")
-        return HLOG_ALL && ~HLOG_DEBUG4;
+    else if (tmp == "MOST" || tmp == "UPTO_DEBUG3")
+        return HLOG_DEBUG3 | HLOG_DEBUG2 | HLOG_DEBUG1 | HLOG_DEBUG
+            | HLOG_INFO | HLOG_NOTICE | HLOG_WARN | HLOG_ERR
+            | HLOG_CRIT | HLOG_ALERT | HLOG_EMERG;
+    else if (tmp == "UPTO_DEBUG2")
+        return HLOG_DEBUG2 | HLOG_DEBUG1 | HLOG_DEBUG
+            | HLOG_INFO | HLOG_NOTICE | HLOG_WARN | HLOG_ERR
+            | HLOG_CRIT | HLOG_ALERT | HLOG_EMERG;
+    else if (tmp == "UPTO_DEBUG1")
+        return HLOG_DEBUG1 | HLOG_DEBUG
+            | HLOG_INFO | HLOG_NOTICE | HLOG_WARN | HLOG_ERR
+            | HLOG_CRIT | HLOG_ALERT | HLOG_EMERG;
+    else if (tmp == "UPTO_DEBUG")
+        return HLOG_DEBUG
+            | HLOG_INFO | HLOG_NOTICE | HLOG_WARN | HLOG_ERR
+            | HLOG_CRIT | HLOG_ALERT | HLOG_EMERG;
+
+
     for (int i = 0; i < 32; i++)
     {
         if (!str.Compare(levelstr[i]))
