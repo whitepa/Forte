@@ -107,13 +107,6 @@ namespace Forte
                 bool delStream = false,
                 unsigned int formatMask = HLOG_FORMAT_NONE);
         virtual ~Logfile();
-        FString mPath;
-        std::ostream *mOut;
-        bool mDelStream;
-        unsigned mLogMask; // bitmask of desired log levels
-        unsigned int mFormatMask; // bitmask of desired log fields
-        // source file specific log masks
-        std::map<FString,unsigned int> mFileMasks;
 
         void FilterSet(const LogFilter &filter);
         void FilterDelete(const char *filename);
@@ -125,6 +118,24 @@ namespace Forte
         virtual FString CustomFormatMsg(const LogMsg &msg);
         virtual bool Reopen() { return false; }  // true is reopened, false is not
         static FString GetLevelStr(int level);
+
+        bool IsPath(const Forte::FString& path) const;
+        unsigned int GetLogMask() const;
+        void SetLogMask(const unsigned int& mask);
+        unsigned int GetFormatMask() const;
+        void SetFormatMask(const unsigned int& mask);
+        std::pair<bool, unsigned int> GetFileMask(const Forte::FString& file) const;
+
+    public:
+        const FString mPath;
+        std::ostream * const mOut;
+        const bool mDelStream;
+    private:
+        unsigned mLogMask; // bitmask of desired log levels
+        unsigned int mFormatMask; // bitmask of desired log fields
+        // source file specific log masks
+        std::map<FString,unsigned int> mFileMasks;
+        mutable Forte::RecursiveMutex mMutex;
     };
 
     class SysLogfile : public Logfile {
@@ -207,6 +218,9 @@ namespace Forte
     class LogManager : public Object {
         friend class LogThreadInfo;
     public:
+        typedef boost::shared_ptr<Logfile> LogfilePtr;
+        typedef std::vector<LogfilePtr> LogfileVector;
+
         /**
          *LogManager() is used to create a LogManager object. After creating this object, typically you
          *will call a variation of BeginLogging() and give it a filepath to start logging information for.
@@ -261,7 +275,7 @@ namespace Forte
          *for you. You can call BeginLogging(Logfile *logfile) as many times as you want.
          **/
 
-        void BeginLogging(Logfile *logfile); // log to a custom Logfile object; takes ownership
+        void BeginLogging(LogfilePtr logfile); // log to a custom Logfile object; takes ownership
 
         /**
          *EndLogging() ends all logging on everything you called any variation of
@@ -449,7 +463,9 @@ namespace Forte
 
     protected:
         friend class Mutex;
-        std::vector<Logfile*> mLogfiles;
+        typedef std::vector<boost::weak_ptr<LogfileVector::value_type::value_type> > LogfileWeakVector;
+
+        LogfileVector mLogfiles;
         ThreadKey mThreadInfoKey;
         Mutex mLogMutex;
         unsigned mLogMaskTemplate;

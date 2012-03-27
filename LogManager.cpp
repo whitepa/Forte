@@ -6,6 +6,8 @@
 #include "LogManager.h"
 #include "Types.h"
 #include <boost/tuple/tuple.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/bind.hpp>
 #include <stdarg.h>
 #include <sys/time.h>
 
@@ -92,30 +94,42 @@ FString Logfile::GetLevelStr(int level)
 
 void Logfile::FilterSet(const LogFilter &filter)
 {
+    AutoUnlockMutex lock(mMutex);
     mFileMasks[LogManager::SourceFileBasename(filter.mSourceFile)] = filter.mMask;
 }
+
 void Logfile::FilterDelete(const char *filename)
 {
+    AutoUnlockMutex lock(mMutex);
     mFileMasks.erase(LogManager::SourceFileBasename(filename));
 }
+
 void Logfile::FilterDeleteAll(void)
 {
+    AutoUnlockMutex lock(mMutex);
     mFileMasks.clear();
 }
+
 void Logfile::FilterList(std::vector<LogFilter> &filters)
 {
     filters.clear();
     typedef std::pair<FString, unsigned int> FileMaskPair;
+
+    AutoUnlockMutex lock(mMutex);
     foreach(const FileMaskPair &fp, mFileMasks)
         filters.push_back(LogFilter(fp.first, fp.second));
 }
 
 FString Logfile::FormatMsg(const LogMsg &msg)
 {
-    if (mFormatMask)
     {
-        return CustomFormatMsg(msg);
+        AutoUnlockMutex lock(mMutex);
+        if (mFormatMask)
+        {
+            return CustomFormatMsg(msg);
+        }
     }
+
     FString levelstr, formattedMsg;
     struct tm lt;
     levelstr = GetLevelStr(msg.mLevel);
@@ -150,7 +164,14 @@ FString Logfile::CustomFormatMsg(const LogMsg &msg)
 {
     FString formattedMsg, tmp;
 
-    if (mFormatMask & HLOG_FORMAT_TIMESTAMP)
+    unsigned int formatMask(0);
+
+    {
+        AutoUnlockMutex lock(mMutex);
+        formatMask = mFormatMask;
+    }
+
+    if (formatMask & HLOG_FORMAT_TIMESTAMP)
     {
         struct tm lt;
         localtime_r(&(msg.mTime.tv_sec), &lt);
@@ -162,7 +183,7 @@ FString Logfile::CustomFormatMsg(const LogMsg &msg)
         formattedMsg = tmp;
     }
 
-    if (mFormatMask & HLOG_FORMAT_LEVEL)
+    if (formatMask & HLOG_FORMAT_LEVEL)
     {
         if (!formattedMsg.empty())
         {
@@ -171,7 +192,7 @@ FString Logfile::CustomFormatMsg(const LogMsg &msg)
         formattedMsg += GetLevelStr(msg.mLevel);
     }
 
-    if (mFormatMask & HLOG_FORMAT_THREAD)
+    if (formatMask & HLOG_FORMAT_THREAD)
     {
         FString thread(FStringFC(), "[%d%s%s]",
                        msg.mPID, (msg.mThread ?  "-" : ""),
@@ -187,7 +208,7 @@ FString Logfile::CustomFormatMsg(const LogMsg &msg)
         formattedMsg += thread;
     }
 
-    if (mFormatMask & HLOG_FORMAT_FILE)
+    if (formatMask & HLOG_FORMAT_FILE)
     {
         FString fileLine(FStringFC(), "%s:%d", msg.mFile.c_str(), msg.mLine);
         int padFL = 35-fileLine.size();
@@ -201,7 +222,7 @@ FString Logfile::CustomFormatMsg(const LogMsg &msg)
         formattedMsg += fileLine;
     }
 
-    if (mFormatMask & HLOG_FORMAT_DEPTH)
+    if (formatMask & HLOG_FORMAT_DEPTH)
     {
         if (!formattedMsg.empty())
         {
@@ -214,7 +235,7 @@ FString Logfile::CustomFormatMsg(const LogMsg &msg)
         formattedMsg += offset;
     }
 
-    if (mFormatMask & HLOG_FORMAT_FUNCTION)
+    if (formatMask & HLOG_FORMAT_FUNCTION)
     {
         if (!formattedMsg.empty())
         {
@@ -225,7 +246,7 @@ FString Logfile::CustomFormatMsg(const LogMsg &msg)
         formattedMsg += "()";
     }
 
-    if (mFormatMask & HLOG_FORMAT_MESSAGE)
+    if (formatMask & HLOG_FORMAT_MESSAGE)
     {
         if (!formattedMsg.empty())
         {
@@ -240,6 +261,50 @@ FString Logfile::CustomFormatMsg(const LogMsg &msg)
     return formattedMsg;
 }
 
+unsigned int Logfile::GetLogMask() const
+{
+    AutoUnlockMutex lock(mMutex);
+    const unsigned int mask(mLogMask);
+    return mask;
+}
+
+void Logfile::SetLogMask(const unsigned int& mask)
+{
+    AutoUnlockMutex lock(mMutex);
+    mLogMask = mask;
+}
+
+unsigned int Logfile::GetFormatMask() const
+{
+    AutoUnlockMutex lock(mMutex);
+    const unsigned int mask(mFormatMask);
+    return mask;
+}
+
+void Logfile::SetFormatMask(const unsigned int& mask)
+{
+    AutoUnlockMutex lock(mMutex);
+    mFormatMask = mask;
+}
+
+std::pair<bool, unsigned int> Logfile::GetFileMask(const Forte::FString& file) const
+{
+    AutoUnlockMutex lock(mMutex);
+
+    std::map<FString,unsigned int>::const_iterator i(mFileMasks.find(file));
+
+    if(i != mFileMasks.end())
+    {
+        return make_pair<bool, unsigned int>(true, i->second);
+    }
+
+    return make_pair<bool, unsigned int>(false, 0);
+}
+
+bool Logfile::IsPath(const Forte::FString& path) const
+{
+    return mPath == path;
+}
 
 // SysLogfile
 SysLogfile::SysLogfile(const FString& ident, unsigned logMask, int option)
@@ -369,25 +434,29 @@ void LogManager::BeginLogging(const char *path, int mask, unsigned int format)
 // helper - no locking
 void LogManager::beginLogging(const char *path, int mask, unsigned int format)
 {
-    Logfile *logfile;
+    LogfilePtr logfile;
     if (!strcmp(path, "//stderr"))
-        logfile = new Logfile(path, &cerr, mask, false, format);
+    {
+        logfile = boost::make_shared<Logfile>(path, &cerr, mask, false, format);
+    }
     else if (!strcmp(path, "//stdout"))
-        logfile = new Logfile(path, &cout, mask, false, format);
+    {
+        logfile = boost::make_shared<Logfile>(path, &cout, mask, false, format);
+    }
     else if (!strncmp(path, "//syslog/", 9))
     {
-        logfile = new SysLogfile(path + 9, mask);
+        logfile = boost::make_shared<SysLogfile>(path + 9, mask);
     }
     else
     {
         ofstream *out = new ofstream(path, ios::app | ios::out);
-        logfile = new Logfile(path, out, mask, true, format);
+        logfile = boost::make_shared<Logfile>(path, out, mask, true, format);
     }
-    logfile->mPath = path;
+
     mLogfiles.push_back(logfile);
 }
 
-void LogManager::BeginLogging(Logfile *logfile)
+void LogManager::BeginLogging(LogfilePtr logfile)
 {
     AutoUnlockMutex lock(mLogMutex);
     mLogfiles.push_back(logfile);
@@ -396,9 +465,6 @@ void LogManager::BeginLogging(Logfile *logfile)
 void LogManager::EndLogging()
 {
     AutoUnlockMutex lock(mLogMutex);
-    std::vector<Logfile*>::iterator i;
-    for (i = mLogfiles.begin(); i != mLogfiles.end(); i++)
-        delete *i;
     mLogfiles.clear();
 }
 
@@ -410,17 +476,7 @@ void LogManager::EndLogging(const char *path)
 
 void LogManager::endLogging(const char *path)  // helper - no locking
 {
-    // find the logfile with this path
-    std::vector<Logfile*>::iterator i;
-    for (i = mLogfiles.begin(); i != mLogfiles.end(); i++)
-    {
-        if (!(*i)->mPath.Compare(path))
-        {
-            delete *i;
-            mLogfiles.erase(i);
-            break;
-        }
-    }
+    remove_if(mLogfiles.begin(), mLogfiles.end(), boost::bind(&Logfile::IsPath, _1, path));
 }
 
 void LogManager::Reopen()  // re-open all log files
@@ -429,15 +485,15 @@ void LogManager::Reopen()  // re-open all log files
     typedef boost::tuple<FString,int, unsigned int> PathMaskFormatData;
     std::list<PathMaskFormatData> recreate;
 
-    std::vector<Logfile*>::iterator i;
+    LogfileVector::iterator i;
     for (i = mLogfiles.begin(); i != mLogfiles.end(); i++)
     {
         if (!(*i)->Reopen())
         {
             recreate.push_back(
                 PathMaskFormatData((*i)->mPath,
-                               (*i)->mLogMask,
-                               (*i)->mFormatMask));
+                               (*i)->GetLogMask(),
+                               (*i)->GetFormatMask()));
         }
     }
 
@@ -453,12 +509,8 @@ void LogManager::Reopen()  // re-open all log files
 void LogManager::SetGlobalLogMask(unsigned int mask)
 {
     AutoUnlockMutex lock(mLogMutex);
-    std::vector<Logfile*>::iterator i;
-    for (i = mLogfiles.begin(); i != mLogfiles.end(); i++)
-    {
-        (*i)->mLogMask = mask;
-    }
-    mLogMaskTemplate = mask;  // template is for newly created log files
+    for_each(mLogfiles.begin(), mLogfiles.end(), boost::bind(&Logfile::SetLogMask, _1, mask));
+    mLogMaskTemplate = mask;
 }
 
 void LogManager::SetLogMask(const char *path, unsigned int mask)
@@ -466,24 +518,26 @@ void LogManager::SetLogMask(const char *path, unsigned int mask)
     AutoUnlockMutex lock(mLogMutex);
 
     // find the logfile with this path
-    std::vector<Logfile*>::iterator i;
-    for (i = mLogfiles.begin(); i != mLogfiles.end(); i++)
+    LogfileVector::iterator i(mLogfiles.begin());
+    LogfileVector::iterator end(mLogfiles.end());
+    while((i = find_if(i, end, boost::bind(&Logfile::IsPath, _1, path))) != end)
     {
-        if (!(*i)->mPath.Compare(path))
-        {
-            (*i)->mLogMask = mask;
-        }
+        (*i)->SetLogMask(mask);
+        ++i;
     }
 }
 unsigned int LogManager::GetLogMask(const char *path)
 {
     AutoUnlockMutex lock(mLogMutex);
 
-    // find the logfile with this path
-    std::vector<Logfile*>::iterator i;
-    for (i = mLogfiles.begin(); i != mLogfiles.end(); i++)
-        if (!(*i)->mPath.Compare(path))
-            return (*i)->mLogMask;
+    LogfileVector::iterator end(mLogfiles.end());
+    LogfileVector::iterator i(find_if(mLogfiles.begin(), end, boost::bind(&Logfile::IsPath, _1, path)));
+
+    if(i != end)
+    {
+        return (*i)->GetLogMask();
+    }
+
     return 0;
 }
 void LogManager::SetSourceFileLogMask(const char *filename, unsigned int mask)
@@ -528,16 +582,20 @@ void LogManager::PathFilterList(const char *path, std::vector<LogFilter> &filter
 void LogManager::PathList(std::vector<FString> &paths)
 {
     AutoUnlockMutex lock(mLogMutex);
-    foreach (const Logfile *logfile, mLogfiles)
+    foreach (LogfileVector::value_type& logfile, mLogfiles)
         paths.push_back(logfile->mPath);
 }
 
-Logfile & LogManager::getLogfile(const char *path)
+Logfile& LogManager::getLogfile(const char *path)
 {
-    // internal helper to get a logfile object (caller should already be locked)
-    foreach (Logfile *logfile, mLogfiles)
-        if (!(logfile->mPath.Compare(path)))
-            return *logfile;
+    LogfileVector::iterator end(mLogfiles.end());
+    LogfileVector::iterator i(find_if(mLogfiles.begin(), end, boost::bind(&Logfile::IsPath, _1, path)));
+
+    if(i != end)
+    {
+        return **i;
+    }
+
     throw ELog(FStringFC(), "not currently logging to '%s'", path);
 }
 
@@ -589,50 +647,64 @@ void LogManager::LogMsgString(const char * func, const char * fullfile, int line
         msg.mHost.assign(tmp);
     else
         msg.mHost = "(hostname too long)";
-    AutoUnlockMutex lock(mLogMutex);
-    LogThreadInfo *ti = (LogThreadInfo *)mThreadInfoKey.Get();
-    if (ti != NULL)
-        msg.mThread = &(ti->mThread);
-    msg.mLevel = level;
-    msg.mMsg = message;
-    msg.mFunction = func;
-    msg.mFile = file;
-    msg.mLine = line;
-
-    // decide whether this message should be logged anywhere.
-    // Decision is made by (in order of precedence):
-    //   Output Path: Source file specific mask
-    //   Global:      Source file specific mask
-    //   Output Path: Global Mask
 
     bool fileSpecific = false;
-    // check for file specific log mask
-    if (mFileMasks.find(file) != mFileMasks.end())
+    LogfileWeakVector logfiles;
+    copy(mLogfiles.begin(), mLogfiles.end(), back_inserter(logfiles));
+
     {
-        if ((level & mFileMasks[file]) != 0)
-            fileSpecific = true;
-        else
-            return; // do not log anywhere
+        AutoUnlockMutex lock(mLogMutex);
+        LogThreadInfo *ti = (LogThreadInfo *)mThreadInfoKey.Get();
+        if (ti != NULL)
+            msg.mThread = &(ti->mThread);
+        msg.mLevel = level;
+        msg.mMsg = message;
+        msg.mFunction = func;
+        msg.mFile = file;
+        msg.mLine = line;
+
+        // decide whether this message should be logged anywhere.
+        // Decision is made by (in order of precedence):
+        //   Output Path: Source file specific mask
+        //   Global:      Source file specific mask
+        //   Output Path: Global Mask
+
+        // check for file specific log mask
+        if (mFileMasks.find(file) != mFileMasks.end())
+        {
+            if ((level & mFileMasks[file]) != 0)
+                fileSpecific = true;
+            else
+                return; // do not log anywhere
+        }
     }
 
     // send the message to all the logfiles
-    foreach (Logfile *i, mLogfiles)
+    foreach (LogfileWeakVector::value_type& i, logfiles)
     {
         // first check this logfile's source file filters
-        bool pathFileSpecific = false;
-        Logfile &lf(*i);
-        if (lf.mFileMasks.find(file) != lf.mFileMasks.end())
+        LogfilePtr lf(i.lock());
+
+        if(lf)
         {
-            if ((level & lf.mFileMasks[file]) != 0)
-                pathFileSpecific = true;
-            else
-                continue; // don't log to this path
-        }
-        if (fileSpecific ||
-            pathFileSpecific ||
-            (level & (lf.mLogMask)) != 0)
-        {
-            lf.Write(msg);
+            bool pathFileSpecific(false);
+
+            const pair<bool, unsigned int> valuePair(lf->GetFileMask(file));
+
+            if (valuePair.first)
+            {
+                if ((level & valuePair.second) != 0)
+                    pathFileSpecific = true;
+                else
+                    continue; // don't log to this path
+            }
+
+            if (fileSpecific ||
+                pathFileSpecific ||
+                (level & (lf->GetLogMask())) != 0)
+            {
+                lf->Write(msg);
+            }
         }
     }
 }
@@ -644,8 +716,11 @@ void _hlog(const char *func, const char * file, int line, int level, const char 
     va_start(ap, fmt);
     try
     {
-        AutoUnlockMutex lock(LogManager::GetSingletonMutex());
-        LogManager *log_mgr = LogManager::GetInstancePtr();
+        LogManager *log_mgr(0);
+        {
+            AutoUnlockMutex lock(LogManager::GetSingletonMutex());
+            log_mgr = LogManager::GetInstancePtr();
+        }
         if (log_mgr != NULL) log_mgr->LogMsgVa(func, file, line, level, fmt, ap);
     }
     catch (...)
@@ -658,7 +733,11 @@ void _hlogstream(const char *func, const char * file, int line, int level, const
 {
     try
     {
-        LogManager *log_mgr = LogManager::GetInstancePtr();
+        LogManager *log_mgr(0);
+        {
+            AutoUnlockMutex lock(LogManager::GetSingletonMutex());
+            log_mgr = LogManager::GetInstancePtr();
+        }
         if (log_mgr != NULL) log_mgr->LogMsgString(func, file, line, level, message);
     }
     catch (...)
