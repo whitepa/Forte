@@ -46,6 +46,7 @@ void * Forte::RunLoop::run(void)
     std::multiset<RunLoopScheduleItem>::iterator i;
     AutoUnlockMutex lock(mLock);
     bool warned = false;
+    bool loopLatencyResolved = false;
     while (!IsShuttingDown())
     {
         Timespec now = mc.GetTime();
@@ -76,12 +77,24 @@ void * Forte::RunLoop::run(void)
             else
                 latency = schedLatency;
 
-            if (!warned && latency.AsMillisec() > 100)
+            if (latency.AsMillisec() > 100)
             {
-                hlog(HLOG_WARN, "run loop has high latency (%lld ms)",
-                     latency.AsMillisec());
-                warned = true;
+                if(! warned)
+                {
+                    hlog(HLOG_WARN, "run loop has high latency of (%lld ms)",
+                                    latency.AsMillisec());
+                    warned = true;
+                }
             }
+            else
+            {
+                if(warned)
+                {
+                    warned = false;
+                    loopLatencyResolved = true;
+                }
+            }
+
             shared_ptr<Timer> timer(i->GetTimer());
             mSchedule.erase(i);
             if (!timer)
@@ -118,11 +131,13 @@ void * Forte::RunLoop::run(void)
                 mSchedule.insert(RunLoopScheduleItem(timer, next));
             }
         }
-        if (warned)
+
+        if (loopLatencyResolved)
         {
-            hlog(HLOG_WARN, "run loop has caught up");
-            warned = false;
+            hlogstream(HLOG_WARN, "run loop has caught up");
+            loopLatencyResolved = false;
         }
     }
+
     return NULL;
 }
