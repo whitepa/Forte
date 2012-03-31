@@ -169,7 +169,6 @@ TEST_F(BasicDatabaseTest, SqliteBackupDatabaseTest)
  */
 TEST_F(BasicDatabaseTest, SqliteDbBackupManagerThreadWhenNoInitialDatabaseTest)
 {
-
     shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
 
     RemoveDatabases();
@@ -184,6 +183,18 @@ TEST_F(BasicDatabaseTest, SqliteDbBackupManagerThreadWhenNoInitialDatabaseTest)
 
         CreateDatabases();
         CreateTables();
+
+        // wait for sync
+        {
+            unsigned int ctr(0);
+            while(! fs.FileExists(getBackupDatabaseName()) && (++ctr < 10))
+            {
+                if(fs.FileExists(getBackupDatabaseName()))
+                    break;
+
+                usleep(10000);
+            }
+        }
     }
 
     ASSERT_TRUE(fs.FileExists(getDatabaseName()));
@@ -196,7 +207,7 @@ TEST_F(BasicDatabaseTest, SqliteDbBackupManagerThreadWhenNoInitialDatabaseTest)
  */
 TEST_F(BasicDatabaseTest, SqliteDbBackupManagerThreadWhenFuturePrimaryDatabaseTest)
 {
-    int rows(0);
+    unsigned int rows(0);
 
     // pool to backup database
     shared_ptr<DbConnectionPool> backupPool(make_shared<DbConnectionPool>("sqlite", getBackupDatabaseName()));
@@ -231,7 +242,7 @@ TEST_F(BasicDatabaseTest, SqliteDbBackupManagerThreadWhenFuturePrimaryDatabaseTe
                 DbAutoConnection dbConnection(backupPool);
                 res = dbConnection->Store(SelectDbSqlStatement(SELECT_TEST_TABLE));
             }
-            while(res.GetNumRows() < 1 && (++ctr < 10));
+            while(res.GetNumRows() < rows && (++ctr < 10));
         }
     }
 
@@ -319,8 +330,13 @@ TEST_F(BasicDatabaseTest, SqliteManualFailoverAutoBackupDatabaseTest)
                 {
                     DbAutoConnection dbConnection(backupPool);
                     res = dbConnection->Store(SelectDbSqlStatement(SELECT_TEST_TABLE));
+
+                    if(res.GetNumRows() >= rows)
+                        break;
+
+                    usleep(10000);
                 }
-                while(res.GetNumRows() < 100 && (++ctr < 10));
+                while(++ctr < 10);
             }
         }
 
@@ -384,8 +400,13 @@ TEST_F(BasicDatabaseTest, AutoBackupAutoFailoverDbMirroredConnectionTest)
                 {
                     DbAutoConnection dbConnection(backupPool);
                     res = dbConnection->Store(SelectDbSqlStatement(SELECT_TEST_TABLE));
+
+                    if(res.GetNumRows() >= rows)
+                        break;
+
+                    usleep(10000);
                 }
-                while(res.GetNumRows() < 100 && (++ctr < 10));
+                while(++ctr < 10);
             }
         }
 
