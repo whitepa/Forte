@@ -32,10 +32,11 @@ namespace Forte
          * @param filesystemType
          * @param devicePath
          * @param mountPath
+         * @param options    options to pass to mount -o
          * @throws EDeviceMount when the path cannot be mounted
          */
         void Mount(const FString& filesystemType, const FString& devicePath, 
-                   const FString& mountPath);
+                   const FString& mountPath, const FString& options);
         /**
          * Unmount the given mounted path
          * @param mountPath
