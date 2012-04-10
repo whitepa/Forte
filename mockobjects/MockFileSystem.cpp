@@ -251,7 +251,6 @@ int MockFileSystem::ScanDir(const FString& path, std::vector<FString> &namelist)
     return (int)m_scanDirResultsMap[path].size();
 }
 
-
 void MockFileSystem::AddScanDirResult(const FString& path, FString name)
 {
     hlog(HLOG_DEBUG4, "AddScanDirResult: %s", path.c_str());
@@ -259,14 +258,27 @@ void MockFileSystem::AddScanDirResult(const FString& path, FString name)
     m_scanDirResultsMap[path].push_back(name);
 
     hlog(HLOG_DEBUG4, "AddScanDirResult resulting size: %d", (int)m_scanDirResultsMap[path].size());
+}
 
+void MockFileSystem::RemoveScanDirResult(const FString& path, FString name)
+{
+    hlog(HLOG_DEBUG4, "AddScanDirResult: %s", path.c_str());
+    vector<FString>::iterator it;
+
+    while ((it = find(m_scanDirResultsMap[path].begin(),
+                      m_scanDirResultsMap[path].end(),
+                      name)) != m_scanDirResultsMap[path].end())
+    {
+        m_scanDirResultsMap[path].erase(it);
+    }
+
+    hlog(HLOG_DEBUG4, "RemoveScanDirResult resulting size: %d",
+         (int)m_scanDirResultsMap[path].size());
 }
 
 
 void MockFileSystem::AddDirectoryPathToFileSystem(const FString& path)
 {
-
-
     FString curPath = "";
 
     hlog(HLOG_DEBUG4, "MockFileSystem::%s(%s)", __FUNCTION__, path.c_str());

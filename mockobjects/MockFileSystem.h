@@ -59,6 +59,7 @@ namespace Forte
         int ScanDir(const FString& path, std::vector<FString> &namelist);
         map<Forte::FString, vector<FString> > m_scanDirResultsMap;
         void AddScanDirResult(const FString& path, FString name);
+        void RemoveScanDirResult(const FString& path, FString name);
 
         void AddDirectoryPathToFileSystem(const FString& path);
         void AddFileToFileSystem(const FString& path, bool createPath);
