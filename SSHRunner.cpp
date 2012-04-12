@@ -10,6 +10,7 @@
 #include "SSHRunner.h"
 #include "LogManager.h"
 #include "AutoFD.h"
+#include "SystemCallUtil.h"
 
 using namespace Forte;
 
@@ -345,6 +346,8 @@ int SSHRunner::waitSocket(int socket_fd, LIBSSH2_SESSION *session)
 int SSHRunner::createSocketAndConnect(
     const char *ipAddress, int portNumber)
 {
+    FTRACE2("%s, %i", ipAddress, portNumber);
+
     int sock = -1;
 
     struct sockaddr_in s;
@@ -360,16 +363,23 @@ int SSHRunner::createSocketAndConnect(
     sock = socket(AF_INET, SOCK_STREAM, 0);
     if(sock < 0)
     {
-        FString stmp(FStringFC(), "Failed to create socket when connecting to %s:%d", ipAddress, portNumber);
+        int theErrNo=errno;
+        FString stmp(FStringFC(), 
+                     "Failed to create socket when connecting to %s:%d (%s)",
+                     ipAddress, portNumber,
+                     SystemCallUtil::GetErrorDescription(theErrNo).c_str());
         hlog(HLOG_ERR, "%s", stmp.c_str());
         throw ESocketError(stmp);
     }
 
     if(connect(sock, (struct sockaddr *)&s, sizeof(s)) < 0)
     {
+        int theErrNo=errno;
         close(sock);
         FString stmp;
-        stmp.Format("Failed to connect with sock : %s/%d", ipAddress, portNumber);
+        stmp.Format("Failed to connect with sock : %s/%d (%s)", 
+                    ipAddress, portNumber,
+                    SystemCallUtil::GetErrorDescription(theErrNo).c_str());
         hlog(HLOG_ERR, "%s", stmp.c_str());
         throw ESocketError(stmp);
     }
