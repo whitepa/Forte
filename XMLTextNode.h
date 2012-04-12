@@ -9,7 +9,8 @@ namespace Forte
     class XMLTextNode : public XMLNode
     {
     public:
-        XMLTextNode(const FString& name, const FString& text, xmlNodePtr parent = NULL);
+        XMLTextNode(const FString& name, const FString& text,
+                    xmlNodePtr parent = NULL, bool stripControlChars = true);
         virtual ~XMLTextNode() { }
     };
 };

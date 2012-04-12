@@ -5,11 +5,19 @@
 
 using namespace Forte;
 
-XMLTextNode::XMLTextNode(const FString& name, const FString& text, xmlNodePtr parent) :
+XMLTextNode::XMLTextNode(const FString& name, const FString& text,
+                         xmlNodePtr parent, bool stripControlChars) :
     XMLNode()
 {
     FString stripped;
-    stripControls(stripped, text);
+    if (stripControlChars)
+    {
+        stripControls(stripped, text);
+    }
+    else
+    {
+        stripped = text;
+    }
     mNode = xmlNewTextChild(parent, NULL, BAD_CAST name.c_str(), BAD_CAST stripped.c_str());
 }
 
