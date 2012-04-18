@@ -14,12 +14,14 @@ FileSystemUtil::~FileSystemUtil()
 
 void FileSystemUtil::Mount(const FString&  filesystemType,
                            const FString&  devicePath,
-                           const FString&  mountPath)
+                           const FString&  mountPath,
+                           const FString&  options)
 {
-    FTRACE2("%s, %s, %s", filesystemType.c_str(), devicePath.c_str(),
-            mountPath.c_str());
+    FTRACE2("%s, %s, %s, %s", filesystemType.c_str(), devicePath.c_str(),
+            mountPath.c_str(), options.c_str());
 
-    FString  cmd(FStringFC(), "/bin/mount -t %s %s %s",
+    FString  cmd(FStringFC(), "/bin/mount -o '%s' -t %s %s %s",
+                 options.c_str(),
                  filesystemType.c_str(),
                  devicePath.c_str(),
                  mountPath.c_str());

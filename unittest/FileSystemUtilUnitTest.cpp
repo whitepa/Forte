@@ -57,20 +57,20 @@ TEST_F(FileSystemUtilTest, MountProcRunnerCommandIsCorrect)
 {
     FTRACE;
 
-    mProcRunner->SetCommandResponse("/bin/mount -t fakefs /dev/test /home/test",
-                                    "", 0);
+    mProcRunner->SetCommandResponse(
+        "/bin/mount -o '' -t fakefs /dev/test /home/test", "", 0);
     FileSystemUtil fsutil(*mProcRunner);
-    ASSERT_NO_THROW(fsutil.Mount("fakefs", "/dev/test", "/home/test"));
+    ASSERT_NO_THROW(fsutil.Mount("fakefs", "/dev/test", "/home/test", ""));
 }
 
 TEST_F(FileSystemUtilTest, MountThrowsEDeviceMount)
 {
     FTRACE;
 
-    mProcRunner->SetCommandResponse("/bin/mount -t fakefs /dev/test /home/test",
-                                    "", 1);
+    mProcRunner->SetCommandResponse(
+        "/bin/mount -o '' -t fakefs /dev/test /home/test", "", 1);
     FileSystemUtil fsutil(*mProcRunner);
-    ASSERT_THROW(fsutil.Mount("fakefs", "/dev/test", "/home/test"), 
+    ASSERT_THROW(fsutil.Mount("fakefs", "/dev/test", "/home/test", ""), 
                  EDeviceMount);
 }
 
