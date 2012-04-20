@@ -1,0 +1,33 @@
+processor	: 0
+model name	: Intel(R) Xeon(TM) CPU 3.60GHz
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 2
+core id		: 0
+cpu cores	: 1
+flags           : ht
+processor	: 1
+model name	: Intel(R) Xeon(TM) CPU 3.60GHz
+cache size	: 1024 KB
+physical id	: 3
+siblings	: 2
+core id		: 0
+cpu cores	: 1
+flags           : ht
+processor	: 2
+model name	: Intel(R) Xeon(TM) CPU 3.60GHz
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 2
+core id		: 0
+cpu cores	: 1
+flags           : ht
+processor	: 3
+model name	: Intel(R) Xeon(TM) CPU 3.60GHz
+cache size	: 1024 KB
+physical id	: 3
+siblings	: 2
+core id		: 0
+cpu cores	: 1
+flags           : ht
+

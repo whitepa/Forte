@@ -85,6 +85,7 @@ SRCS =	\
 	ProcRunner.cpp \
 	ProcessFutureImpl.cpp \
 	ProcessManagerImpl.cpp \
+	ProcessorInformation.cpp \
 	Random.cpp \
 	RandomGenerator.cpp \
 	ReceiverThread.cpp \

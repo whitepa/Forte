@@ -72,6 +72,7 @@ GSRCS = CheckedValueStoreUnitTest.cpp \
 	PidFileUnitTest.cpp \
 	PDUPeerUnitTest.cpp \
 	ProcessManagerUnitTest.cpp \
+	ProcessorInformationUnitTest.cpp \
 	ProcFileSystemUnitTest.cpp \
 	SCSIUtilUnitTest.cpp \
 	StateMachineDoIntervalUnitTest.cpp \
@@ -84,7 +85,7 @@ GPROGS = $(GSRCS:%.cpp=%)
 BPROGS = $(BSRCS:%.cpp=%)
 PROGS=$(addprefix $(TARGETDIR)/,$(GPROGS) $(BPROGS))
 
-PROG_DEPS = $(FORTE) $(FORTE_MOCK)
+PROG_DEPS = $(FORTE_MOCK)
 
 PROG_DEPS_OBJS_ContextPredicateUnitTest =
 
@@ -116,6 +117,10 @@ PROG_DEPS_OBJS_ProcessManagerUnitTest =  \
 
 PROG_DEPS_OBJS_ProcFileSystemUnitTest =  \
 	../$(TARGETDIR)/ProcFileSystem.o \
+
+PROG_DEPS_OBJS_ProcessorInformationUnitTest =  \
+	../$(TARGETDIR)/ProcFileSystem.o \
+	../$(TARGETDIR)/ProcessorInformation.o \
 
 PROG_DEPS_OBJS_PDUPeerUnitTest =
 

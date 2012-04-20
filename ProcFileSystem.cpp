@@ -177,6 +177,97 @@ void ProcFileSystem::SetOOMScore(pid_t pid, const FString &score)
          pid);
 }
 
+void ProcFileSystem::GetProcessorInformation(std::vector<CPUInfoPtr>& processors) const
+{
+    FTRACE;
+
+    FString contents = mFileSystemPtr->FileGetContents("/proc/cpuinfo");
+    std::vector<FString> lines;
+    contents.LineSplit(lines, true);
+    CPUInfoPtr info;
+    foreach (const FString &line, lines)
+    {
+        if (line.find("processor") == 0)
+        {
+            // assume this is the beginning of a new proessor
+            info.reset(new CPUInfo());
+            processors.push_back(info);
+        }
+        else if (!info)
+        {
+            continue;
+        }
+
+        std::vector<FString> components;
+        line.Explode(":", components, true);
+        if (components.size() != 2)
+        {
+            hlog(HLOG_DEBUG, "Skipping line: '%s'", line.c_str());
+            continue;
+        }
+
+        if (components[0] == "processor")
+        {
+            info->mProcessorNumber = components[1].AsUnsignedInteger();
+        }
+        else if (components[0] == "vendor_id")
+        {
+            info->mVendorId = components[1];
+        }
+        else if (components[0] == "cpu family")
+        {
+            info->mCPUFamily = components[1].AsUnsignedInteger();
+        }
+        else if (components[0] == "model")
+        {
+            info->mModel = components[1].AsUnsignedInteger();
+        }
+        else if (components[0] == "model name")
+        {
+            info->mModelName = components[1];
+        }
+        else if (components[0] == "stepping")
+        {
+            info->mStepping = components[1].AsUnsignedInteger();
+        }
+        else if (components[0] == "cpu MHz")
+        {
+            info->mClockFrequencyInMegaHertz = components[1].AsDouble();
+        }
+        else if (components[0] == "physical id")
+        {
+            info->mPhysicalId = components[1].AsUnsignedInteger();
+        }
+        else if (components[0] == "siblings")
+        {
+            info->mSiblings = components[1].AsUnsignedInteger();
+        }
+        else if (components[0] == "core id")
+        {
+            info->mCoreId = components[1].AsUnsignedInteger();
+        }
+        else if (components[0] == "cpu cores")
+        {
+            info->mNumberOfCores = components[1].AsUnsignedInteger();
+        }
+        else if (components[0] == "fpu")
+        {
+            info->mHasFPU = (components[1] == "yes");
+        }
+        else if (components[0] == "fpu_exception")
+        {
+            info->mHasFPUException = (components[1] == "yes");
+        }
+        else if (components[0] == "flags")
+        {
+            std::vector<FString> flags;
+            components[1].Explode(" ", flags, true);
+            info->AddFlags(flags);
+        }
+    }
+
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // helpers
 ////////////////////////////////////////////////////////////////////////////////
