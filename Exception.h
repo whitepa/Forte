@@ -46,10 +46,6 @@
             mDescription.Format(DESC, BOOST_PP_SEQ_ENUM(BOOST_PP_SEQ_TRANSFORM(PARAMETER_AS_CSTR, 0, PARAM_TYPES))); \
         }                                                                                               \
         virtual ~NAME()  throw() {}                                                                     \
-        virtual const std::string &GetFormattedDescription() const throw()                              \
-        {                                                                                               \
-            return mFormattedDescription;                                                               \
-        }                                                                                               \
         virtual std::string GetFormattedDescriptionAsObjCStyle() const throw()                          \
         {                                                                                               \
             const boost::regex e("%[^%]");                                                              \
@@ -160,13 +156,9 @@ namespace Forte
             return mDescription;
         }
 
-        virtual const std::string &GetFormattedDescription() const throw()
-        {
-            return mDescription;
-        }
         virtual std::string GetFormattedDescriptionAsObjCStyle() const throw()
         {
-            return mDescription;
+            return "";
         }
         virtual void GetParametersAsStrings(std::vector<std::string> &result) const throw()
         {
