@@ -380,7 +380,7 @@ int SSHRunner::createSocketAndConnect(
         stmp.Format("Failed to connect with sock : %s/%d (%s)", 
                     ipAddress, portNumber,
                     SystemCallUtil::GetErrorDescription(theErrNo).c_str());
-        hlog(HLOG_ERR, "%s", stmp.c_str());
+        hlog(HLOG_INFO, "%s", stmp.c_str());
         throw ESocketError(stmp);
     }
 
