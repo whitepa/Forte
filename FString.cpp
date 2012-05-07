@@ -173,6 +173,17 @@ FString& FString::Replace(const char* str_find, const char* str_replace)
     return *this;
 }
 
+FString& FString::StripNonMatchingChars(const char* whitelist)
+{
+    std::string::size_type pos = 0;
+
+    while ((pos = find_first_not_of(whitelist, pos)) != std::string::npos)
+    {
+        erase(pos, 1);
+    }
+
+    return *this;
+}
 
 FString& FString::TrimLeft(const char* strip_chars)
 {

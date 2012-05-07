@@ -24,6 +24,27 @@ protected:
 
 };
 
+TEST_F(FStringTest, FStringStripNonMatchingCharsTest)
+{
+    FString s, d;
+
+    s = ",a.b c<d;";
+    s.StripNonMatchingChars(",a.b c<d;");
+    ASSERT_EQ(s, ",a.b c<d;");
+
+    s.StripNonMatchingChars(",abc<d;");
+    ASSERT_EQ(s, ",abc<d;");
+
+    s.StripNonMatchingChars(",cba<d;");
+    ASSERT_EQ(s, ",abc<d;");
+
+    s.StripNonMatchingChars("abc<d;");
+    ASSERT_EQ(s, "abc<d;");
+
+    s.StripNonMatchingChars("ad");
+    ASSERT_EQ(s, "ad");
+}
+
 TEST_F(FStringTest, FStringTrimTest)
 {
     FString s, d;

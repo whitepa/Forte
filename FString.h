@@ -191,6 +191,10 @@ namespace Forte
         FString& Replace(const char* find, const char* replace);
 
         /**
+         * Finds and removes all chars from string
+         **/
+        FString& StripNonMatchingChars(const char* whitelist);
+        /**
          *Calls TrimLeft and TrimRight. @see TrimLeft. @see TrimRight.
          **/
         inline FString& Trim(const char *strip_char = " \t\r\n") { return TrimLeft(strip_char).TrimRight(strip_char); }
