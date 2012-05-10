@@ -85,6 +85,12 @@ namespace Forte
                          bool recurse = false,
                          bool includePathInChildNames = true) const;
 
+        void SetGlobResponse(const FString &pattern,
+                             const vector<FString> &response);
+        void ClearGlobResponse(const FString& pattern = "");
+        unsigned int Glob(vector<FString> &resultVec,
+                          const FString &pattern,
+                          const int globFlags = 0) const;
 
         map<FString, FString> mReadLinkResults;
         virtual FString ReadLink(const FString& path);
@@ -155,6 +161,7 @@ namespace Forte
     protected:
         StrStrMap mFiles;
         std::map<FString, struct statfs> mStatFSResponseMap;
+        std::map<FString, vector<FString> > mGlobResponseMap;
         unsigned int mFDForFileOpen;
     };
     typedef boost::shared_ptr<MockFileSystem> MockFileSystemPtr;

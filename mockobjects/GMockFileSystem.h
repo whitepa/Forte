@@ -62,6 +62,9 @@ namespace Forte
         MOCK_METHOD1(Dirname, FString (const FString& filename));
         MOCK_METHOD0(GetCWD, FString ());
         MOCK_METHOD0(GetPathToCurrentProcess, FString ());
+        MOCK_CONST_METHOD3(Glob, unsigned int (std::vector<FString> &resultVec,
+                                               const FString &pattern,
+                                               const int globFlags));
         MOCK_METHOD1(Touch, void (const FString& file));
         MOCK_CONST_METHOD1(FileExists, bool (const FString& filename));
         MOCK_METHOD2(StatFS, void (const FString& path, struct statfs *st));

@@ -461,6 +461,40 @@ void MockFileSystem::GetChildren(const FString& path,
     }
 }
 
+
+void MockFileSystem::SetGlobResponse(const FString& pattern,
+                                     const vector<FString> &response)
+{
+    mGlobResponseMap[pattern].clear();
+    foreach (const FString &path, response)
+    {
+        mGlobResponseMap[pattern].push_back(path);
+    }
+}
+
+void MockFileSystem::ClearGlobResponse(const FString& pattern)
+{
+    if (pattern.empty())
+        mGlobResponseMap.clear();
+    else
+        mGlobResponseMap.erase(pattern);
+}
+
+unsigned int MockFileSystem::Glob(vector<FString> &resultVec,
+                                  const FString &pattern,
+                                  const int globFlags) const
+{
+    FTRACE2("%s", pattern.c_str());
+    resultVec.clear();
+    map<FString, vector<FString> >::const_iterator it;
+    it = mGlobResponseMap.find(pattern);
+    if (it != mGlobResponseMap.end())
+    {
+        resultVec = (*it).second;
+    }
+    return resultVec.size();
+}
+
 FString MockFileSystem::Basename(const FString& filename, const FString& suffix)
 {
     size_t pos = filename.find_last_of("/");

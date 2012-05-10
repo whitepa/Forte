@@ -6,6 +6,7 @@
 #include <fstream>
 #include <vector>
 #include <cstring>
+#include <glob.h>
 #include <sys/time.h>
 #include "SystemCallUtil.h"
 #include "FTrace.h"
@@ -90,6 +91,42 @@ FString FileSystemImpl::GetPathToCurrentProcess()
         procPath = GetCWD() + "/" + procPath;
     }
     return procPath;
+}
+
+
+unsigned int FileSystemImpl::Glob(std::vector<FString> &resultVec,
+                                  const FString &pattern,
+                                  const int globFlags) const
+{
+    int defaultFlags = GLOB_MARK | GLOB_BRACE | GLOB_TILDE |GLOB_TILDE_CHECK;
+    int flags = globFlags;
+    glob_t globbuf;
+    char errbuf[1024];
+
+    resultVec.clear();
+
+    if (!flags)
+        flags = defaultFlags;
+
+    int res = glob(pattern.c_str(), flags, NULL, &globbuf);
+    switch (res)
+    {
+    case 0:
+    case GLOB_NOMATCH:
+        for (size_t i=0; i < globbuf.gl_pathc; i++)
+        {
+            resultVec.push_back(FString(globbuf.gl_pathv[i]));
+        }
+        break;
+    default:
+        memset(errbuf, 0, 1024);
+        strerror_r(errno, errbuf, 1024);
+        hlog(HLOG_DEBUG, "glob(%s) failed: %s\n",
+             pattern.c_str(), errbuf);
+        break;
+    }
+    globfree(&globbuf);
+    return resultVec.size();
 }
 
 void FileSystemImpl::Touch(const FString& file)

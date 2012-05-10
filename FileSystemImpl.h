@@ -20,6 +20,9 @@ namespace Forte
         virtual FString Dirname(const FString& filename);
         virtual FString GetCWD();
         virtual FString GetPathToCurrentProcess();
+        virtual unsigned int Glob(std::vector<FString> &resultVec,
+                                  const FString &pattern,
+                                  const int globFlags = 0) const;
         virtual void Touch(const FString& file);
         virtual bool FileExists(const FString& filename) const;
 
