@@ -144,4 +144,20 @@ TEST_F(FileSystemImplUnitTest, Basename)
     ASSERT_STREQ("test", f.Basename(file2, ".tmp"));
 }
 
+TEST_F(FileSystemImplUnitTest, MakeTemporaryFile)
+{
+    hlog(HLOG_INFO, "MakeTemporaryFile");
+
+    FileSystemImpl f;
+    FString templateFile = "/tmp/tempXXXXXX";
+    FString tmpFile;
+
+    {
+        tmpFile = f.MakeTemporaryFile(templateFile);
+        ASSERT_STRNE(tmpFile, templateFile);
+        ASSERT_TRUE(f.FileExists(tmpFile));
+    }
+    ASSERT_TRUE(f.FileExists(tmpFile));
+    f.Unlink(tmpFile);
+}
 

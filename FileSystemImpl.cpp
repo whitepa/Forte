@@ -1247,10 +1247,18 @@ FString FileSystemImpl::MakeTemporaryFile(const FString& nameTemplate) const
         fileName.append("XXXXXX");
     }
 
-    if (mkstemp((char *)fileName.c_str()) == -1)
+    char cName[fileName.size() + 1];
+
+    cName[fileName.size()] = 0;
+    strncpy(cName, fileName.c_str(), fileName.size());
+
+    int file;
+    if ((file = mkstemp(cName)) == -1)
     {
         SystemCallUtil::ThrowErrNoException(errno);
     }
 
-    return fileName;
+    while(::close(file) == -1 && errno == EINTR);
+
+    return FString(cName, sizeof(cName));
 }

@@ -110,6 +110,8 @@ namespace Forte
                           const ProgressCallback &progressCallback = ProgressCallback());
         // error messages
         virtual FString StrError(int err /*errno*/) const;
+
+        virtual FString MakeTemporaryFile(const FString& nameTemplate) const;
     protected:
         // helpers
 
@@ -132,8 +134,6 @@ namespace Forte
          * unlink just one path (no recursion)
          **/
         virtual void unlinkHelper(const FString& path);
-
-        virtual FString MakeTemporaryFile(const FString& nameTemplate) const;
     };
 };
 #endif
