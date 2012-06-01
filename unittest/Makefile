@@ -77,6 +77,8 @@ GSRCS = CheckedValueStoreUnitTest.cpp \
 	SCSIUtilUnitTest.cpp \
 	StateMachineDoIntervalUnitTest.cpp \
 	StateMachineDoMaximumIterationsUnitTest.cpp \
+	StateMachineEventDeliveryUnitTest.cpp \
+	StateMachineEventDeliveryUnitTest2.cpp \
 	StateMachineSetStateUnitTest.cpp \
 	StateMachineTestHarnessUnitTest.cpp \
 	XMLUnitTest.cpp \
