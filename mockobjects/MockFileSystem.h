@@ -99,8 +99,8 @@ namespace Forte
 
         FString Basename(const FString& filename, const FString& suffix = "");
 
-        FString Dirname(const FString& filename)
-            { FTRACE; throw EUnimplemented(); }
+        FString Dirname(const FString& filename);
+
         FString GetCWD()
             { FTRACE; throw EUnimplemented(); }
         FString GetPathToCurrentProcess()

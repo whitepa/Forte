@@ -513,3 +513,14 @@ FString MockFileSystem::Basename(const FString& filename, const FString& suffix)
 
     return result;
 }
+FString MockFileSystem::Dirname(const FString& filename)
+{
+    size_t pos = filename.find_last_of("/");
+    FString result;
+    if (pos == NOPOS)
+        result = filename;
+    else
+        result = filename.Left(pos);
+
+    return result;
+}
