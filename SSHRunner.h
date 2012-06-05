@@ -70,6 +70,10 @@ namespace Forte
         virtual void GetFile(const FString &remotePath, 
                              const FString &loclPath);
 
+        FString GetIPAddress() {
+            return mIPAddress;
+        }
+
     protected:
         /**
          * Empty constructor
