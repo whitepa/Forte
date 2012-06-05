@@ -75,6 +75,7 @@ namespace Forte
         Timespec operator+(const Timespec &other) const;
         Timespec operator-(const Timespec &other) const;
         bool operator<(const Timespec& other) const;
+        bool operator<=(const Timespec& other) const;
 
         /**
          *Returns the current value of your Timespec object.

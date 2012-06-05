@@ -59,6 +59,11 @@ bool Timespec::operator<(const Timespec& other) const
     return (mTimespec < other.mTimespec);
 }
 
+bool Timespec::operator<=(const Timespec& other) const
+{
+    return (mTimespec <= other.mTimespec);
+}
+
 bool DeadlineClock::Expired() const
 {
     //hlogstream(HLOG_DEBUG, "deadline:" << mDeadlineTimespec
