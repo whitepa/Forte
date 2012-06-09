@@ -81,8 +81,11 @@ void * Forte::RunLoop::run(void)
             {
                 if(! warned)
                 {
-                    hlog(HLOG_WARN, "run loop has high latency of (%lld ms)",
-                                    latency.AsMillisec());
+                    if (hlog_ratelimit(86400))
+                    {
+                        hlog(HLOG_WARN, "run loop has high latency of (%lld ms)",
+                                        latency.AsMillisec());
+                    }
                     warned = true;
                 }
             }
@@ -134,7 +137,10 @@ void * Forte::RunLoop::run(void)
 
         if (loopLatencyResolved)
         {
-            hlogstream(HLOG_WARN, "run loop has caught up");
+            if (hlog_ratelimit(86400))
+            {
+                hlogstream(HLOG_WARN, "run loop has caught up");
+            }
             loopLatencyResolved = false;
         }
     }
