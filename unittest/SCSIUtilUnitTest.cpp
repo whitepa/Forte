@@ -18,7 +18,7 @@ class SCSIUtilTest : public ::testing::Test
 {
 protected:
     static void SetUpTestCase() {
-        logManager.BeginLogging("scsiutilunittest.log", HLOG_ALL);
+        logManager.BeginLogging("SCSIUtilUnitTest.log", HLOG_ALL);
         mProcRunner = new MockProcRunner();
     }
 

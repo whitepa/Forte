@@ -23,7 +23,7 @@ protected:
     static MockProcRunner *mProcRunner;
 
     void SetUp() {
-        logManager.BeginLogging("filesystemutilunitest.log");
+        logManager.BeginLogging("FileSystemUtilUnitTest.log");
     }
 };
 MockProcRunner * FileSystemUtilTest::mProcRunner = NULL;
@@ -70,7 +70,7 @@ TEST_F(FileSystemUtilTest, MountThrowsEDeviceMount)
     mProcRunner->SetCommandResponse(
         "/bin/mount -o '' -t fakefs /dev/test /home/test", "", 1);
     FileSystemUtil fsutil(*mProcRunner);
-    ASSERT_THROW(fsutil.Mount("fakefs", "/dev/test", "/home/test", ""), 
+    ASSERT_THROW(fsutil.Mount("fakefs", "/dev/test", "/home/test", ""),
                  EDeviceMount);
 }
 

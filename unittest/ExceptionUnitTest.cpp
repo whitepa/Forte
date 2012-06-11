@@ -11,7 +11,7 @@ class ExceptionTest : public ::testing::Test
 {
 protected:
     static void SetUpTestCase() {
-        logManager.BeginLogging("exceptiontestlog.log");
+        logManager.BeginLogging("ExceptionUnitTest.log");
     }
 
     static void TearDownTestCase() {
@@ -28,7 +28,7 @@ class Dummy
 public:
     Dummy() {}
     virtual ~Dummy() {}
-    
+
     void throwForteException(const FString& description) {
         throw Exception(description);
     }

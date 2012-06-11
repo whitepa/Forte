@@ -452,6 +452,7 @@ TEST_F(ProcessManagerTest, FileIO)
         boost::shared_ptr<ProcessFuture> ph2 = pm->CreateProcess("/bin/ls", "/", "temp.out");
         ph2->GetResult();
         ASSERT_TRUE(ph2->GetOutputString().find("proc") != string::npos);
+        unlink("temp.out");
 
         hlog(HLOG_DEBUG, "okay, now what happens when output is to /dev/null");
 
@@ -494,6 +495,7 @@ TEST_F(ProcessManagerTest, Callbacks)
         pm->RunProcess(ph);
         ph->GetResult();
         ASSERT_TRUE(complete);
+        unlink("temp.out");
     }
     catch (Exception &e)
     {
