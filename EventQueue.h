@@ -23,6 +23,7 @@ namespace Forte
         {
             QUEUE_MODE_BLOCKING = 0,
             QUEUE_MODE_DROP_OLDEST,
+            QUEUE_MODE_DROP_OLDEST_LOG,
             QUEUE_MODE_THROW
         };
 

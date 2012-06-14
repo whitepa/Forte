@@ -1,4 +1,5 @@
 #include "EventQueue.h"
+#include "LogManager.h"
 
 using namespace Forte;
 
@@ -56,13 +57,15 @@ void EventQueue::Add(shared_ptr<Event> e)
     if (mMode != QUEUE_MODE_BLOCKING && mMaxDepth.TryWait() == -1 && errno == EAGAIN)
     {
         // max depth
-        if (mMode == QUEUE_MODE_DROP_OLDEST)
+        if (mMode == QUEUE_MODE_DROP_OLDEST || mMode == QUEUE_MODE_DROP_OLDEST_LOG)
         {
             // delete the oldest entry
             std::list<shared_ptr<Event> >::iterator i;
             i = mQueue.begin();
             if (i != mQueue.end())
             {
+                if (mMode == QUEUE_MODE_DROP_OLDEST_LOG && (*i))
+                    hlog(HLOG_INFO, "Event queue full: dropping oldest event (%s)", (*i)->mName.c_str());
                 mQueue.pop_front();
                 mMaxDepth.Post();
             }
