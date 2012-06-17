@@ -161,3 +161,205 @@ TEST_F(FileSystemImplUnitTest, MakeTemporaryFile)
     f.Unlink(tmpFile);
 }
 
+TEST_F(FileSystemImplUnitTest, GetChildren_NoRecurse_NoPath_NoDirNames)
+{
+    FileSystemImpl f;
+
+    f.MakeDir("/tmp/root");
+    f.Touch("/tmp/root/file0");
+    f.Touch("/tmp/root/file1");
+    f.MakeDir("/tmp/root/dir0");
+    f.MakeDir("/tmp/root/dir1");
+    f.Touch("/tmp/root/dir0/file2");
+    f.MakeDir("/tmp/root/dir0/dir2");
+
+    vector<FString> children;
+    f.GetChildren("/tmp/root", children, false, false, false);
+
+    EXPECT_EQ(2, children.size());
+
+    vector<FString>::const_iterator end(children.end());
+
+    EXPECT_TRUE(find(children.begin(), children.end(), "file0") != end);
+    EXPECT_TRUE(find(children.begin(), children.end(), "file1") != end);
+}
+
+TEST_F(FileSystemImplUnitTest, GetChildren_NoRecurse_YesPath_NoDirNames)
+{
+    FileSystemImpl f;
+
+    f.MakeDir("/tmp/root");
+    f.Touch("/tmp/root/file0");
+    f.Touch("/tmp/root/file1");
+    f.MakeDir("/tmp/root/dir0");
+    f.MakeDir("/tmp/root/dir1");
+    f.Touch("/tmp/root/dir0/file2");
+    f.MakeDir("/tmp/root/dir0/dir2");
+
+    vector<FString> children;
+    f.GetChildren("/tmp/root", children, false, true, false);
+
+    EXPECT_EQ(2, children.size());
+
+    vector<FString>::const_iterator end(children.end());
+
+    EXPECT_TRUE(find(children.begin(), children.end(), "/tmp/root/file0") != end);
+    EXPECT_TRUE(find(children.begin(), children.end(), "/tmp/root/file1") != end);
+}
+
+TEST_F(FileSystemImplUnitTest, GetChildren_YesRecurse_NoPath_NoDirNames)
+{
+    FileSystemImpl f;
+
+    f.MakeDir("/tmp/root");
+    f.Touch("/tmp/root/file0");
+    f.Touch("/tmp/root/file1");
+    f.MakeDir("/tmp/root/dir0");
+    f.MakeDir("/tmp/root/dir1");
+    f.Touch("/tmp/root/dir0/file2");
+    f.MakeDir("/tmp/root/dir0/dir2");
+
+    vector<FString> children;
+    f.GetChildren("/tmp/root", children, true, false, false);
+
+    EXPECT_EQ(3, children.size());
+
+    vector<FString>::const_iterator end(children.end());
+
+    EXPECT_TRUE(find(children.begin(), children.end(), "file0") != end);
+    EXPECT_TRUE(find(children.begin(), children.end(), "file1") != end);
+    EXPECT_TRUE(find(children.begin(), children.end(), "file2") != end);
+}
+
+TEST_F(FileSystemImplUnitTest, GetChildren_YesRecurse_YesPath_NoDirNames)
+{
+    FileSystemImpl f;
+
+    f.MakeDir("/tmp/root");
+    f.Touch("/tmp/root/file0");
+    f.Touch("/tmp/root/file1");
+    f.MakeDir("/tmp/root/dir0");
+    f.MakeDir("/tmp/root/dir1");
+    f.Touch("/tmp/root/dir0/file2");
+    f.MakeDir("/tmp/root/dir0/dir2");
+
+    vector<FString> children;
+    f.GetChildren("/tmp/root", children, true, true, false);
+
+    EXPECT_EQ(3, children.size());
+
+    foreach(FString& s, children)
+    {
+        cout << s;
+    }
+
+    vector<FString>::const_iterator end(children.end());
+
+    EXPECT_TRUE(find(children.begin(), children.end(), "/tmp/root/file0") != end);
+    EXPECT_TRUE(find(children.begin(), children.end(), "/tmp/root/file1") != end);
+    EXPECT_TRUE(find(children.begin(), children.end(), "/tmp/root/dir0/file2") != end);
+}
+
+TEST_F(FileSystemImplUnitTest, GetChildren_NoRecurse_NoPaths_YesDirNames)
+{
+    FileSystemImpl f;
+
+    f.MakeDir("/tmp/root");
+    f.Touch("/tmp/root/file0");
+    f.Touch("/tmp/root/file1");
+    f.MakeDir("/tmp/root/dir0");
+    f.MakeDir("/tmp/root/dir1");
+    f.Touch("/tmp/root/dir0/file2");
+    f.MakeDir("/tmp/root/dir0/dir2");
+
+    vector<FString> children;
+    f.GetChildren("/tmp/root", children, false, false, true);
+
+    EXPECT_EQ(4, children.size());
+
+    vector<FString>::const_iterator end(children.end());
+
+    EXPECT_TRUE(find(children.begin(), children.end(), "file0") != end);
+    EXPECT_TRUE(find(children.begin(), children.end(), "file1") != end);
+    EXPECT_TRUE(find(children.begin(), children.end(), "dir0") != end);
+    EXPECT_TRUE(find(children.begin(), children.end(), "dir1") != end);
+}
+
+TEST_F(FileSystemImplUnitTest, GetChildren_NoRecurse_YesPaths_YesDirNames)
+{
+    FileSystemImpl f;
+
+    f.MakeDir("/tmp/root");
+    f.Touch("/tmp/root/file0");
+    f.Touch("/tmp/root/file1");
+    f.MakeDir("/tmp/root/dir0");
+    f.MakeDir("/tmp/root/dir1");
+    f.Touch("/tmp/root/dir0/file2");
+    f.MakeDir("/tmp/root/dir0/dir2");
+
+    vector<FString> children;
+    f.GetChildren("/tmp/root", children, false, true, true);
+
+    EXPECT_EQ(4, children.size());
+
+    vector<FString>::const_iterator end(children.end());
+
+    EXPECT_TRUE(find(children.begin(), children.end(), "/tmp/root/file0") != end);
+    EXPECT_TRUE(find(children.begin(), children.end(), "/tmp/root/file1") != end);
+    EXPECT_TRUE(find(children.begin(), children.end(), "/tmp/root/dir0") != end);
+    EXPECT_TRUE(find(children.begin(), children.end(), "/tmp/root/dir1") != end);
+}
+
+TEST_F(FileSystemImplUnitTest, GetChildren_Recurse_NoPaths_YesDirNames)
+{
+    FileSystemImpl f;
+
+    f.MakeDir("/tmp/root");
+    f.Touch("/tmp/root/file0");
+    f.Touch("/tmp/root/file1");
+    f.MakeDir("/tmp/root/dir0");
+    f.MakeDir("/tmp/root/dir1");
+    f.Touch("/tmp/root/dir0/file2");
+    f.MakeDir("/tmp/root/dir0/dir2");
+
+    vector<FString> children;
+    f.GetChildren("/tmp/root", children, true, false, true);
+
+    EXPECT_EQ(6, children.size());
+
+    vector<FString>::const_iterator end(children.end());
+
+    EXPECT_TRUE(find(children.begin(), children.end(), "file0") != end);
+    EXPECT_TRUE(find(children.begin(), children.end(), "file1") != end);
+    EXPECT_TRUE(find(children.begin(), children.end(), "file2") != end);
+    EXPECT_TRUE(find(children.begin(), children.end(), "dir0") != end);
+    EXPECT_TRUE(find(children.begin(), children.end(), "dir1") != end);
+    EXPECT_TRUE(find(children.begin(), children.end(), "dir2") != end);
+}
+
+TEST_F(FileSystemImplUnitTest, GetChildren_Recurse_YesPaths_YesDirNames)
+{
+    FileSystemImpl f;
+
+    f.MakeDir("/tmp/root");
+    f.Touch("/tmp/root/file0");
+    f.Touch("/tmp/root/file1");
+    f.MakeDir("/tmp/root/dir0");
+    f.MakeDir("/tmp/root/dir1");
+    f.Touch("/tmp/root/dir0/file2");
+    f.MakeDir("/tmp/root/dir0/dir2");
+
+    vector<FString> children;
+    f.GetChildren("/tmp/root", children, true, true, true);
+
+    EXPECT_EQ(6, children.size());
+
+    vector<FString>::const_iterator end(children.end());
+
+    EXPECT_TRUE(find(children.begin(), children.end(), "/tmp/root/file0") != end);
+    EXPECT_TRUE(find(children.begin(), children.end(), "/tmp/root/file1") != end);
+    EXPECT_TRUE(find(children.begin(), children.end(), "/tmp/root/dir0/file2") != end);
+    EXPECT_TRUE(find(children.begin(), children.end(), "/tmp/root/dir0") != end);
+    EXPECT_TRUE(find(children.begin(), children.end(), "/tmp/root/dir1") != end);
+    EXPECT_TRUE(find(children.begin(), children.end(), "/tmp/root/dir0/dir2") != end);
+}

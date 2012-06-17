@@ -50,7 +50,8 @@ namespace Forte
         virtual void GetChildren(const FString& path,
                                  std::vector<Forte::FString> &children,
                                  bool recurse = false,
-                                 bool includePathInChildNames = true) const = 0;
+                                 bool includePathInChildNames = true,
+                                 bool includePathNames = false) const = 0;
         virtual uint64_t CountChildren(
             const FString& path, bool recurse) const = 0;
         virtual int LStat(

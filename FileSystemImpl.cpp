@@ -249,7 +249,8 @@ int FileSystemImpl::FStatAt(int dir_fd, const FString& path, struct stat *st, in
 void FileSystemImpl::GetChildren(const FString& path,
                                  std::vector<Forte::FString> &children,
                                  bool recurse,
-                                 bool includePathInChildNames) const
+                                 bool includePathInChildNames,
+                                 bool includeDirNames) const
 {
     FTRACE2("%s, %s, %s", path.c_str(), (recurse ? "true" : "false"),
             (includePathInChildNames ? "true" : "false"));
@@ -275,12 +276,24 @@ void FileSystemImpl::GetChildren(const FString& path,
             {
                 if (recurse)
                 {
-                    GetChildren(path + "/" + stmp, children, recurse);
+                    GetChildren(path + "/" + stmp, children, recurse, includePathInChildNames, includeDirNames);
                 }
                 else
                 {
                     hlog(HLOG_DEBUG, "Skipping %s (not recursing)",
                          stmp.c_str());
+                }
+
+                if(includeDirNames)
+                {
+                    if(includePathInChildNames)
+                    {
+                        children.push_back(path + "/" + stmp);
+                    }
+                    else
+                    {
+                        children.push_back(stmp);
+                    }
                 }
             }
             else

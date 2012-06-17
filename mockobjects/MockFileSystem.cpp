@@ -445,7 +445,8 @@ void MockFileSystem::SetChildren(const FString &parentPath,
 void MockFileSystem::GetChildren(const FString& path,
                                  std::vector<Forte::FString> &children,
                                  bool recurse,
-                                 bool includePathInChildNames) const
+                                 bool includePathInChildNames,
+                                 bool includePathNames) const
 {
     FTRACE2("%s", path.c_str());
     map<FString, vector<FString> >::const_iterator i;

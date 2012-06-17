@@ -83,7 +83,8 @@ namespace Forte
         void GetChildren(const FString& path,
                          std::vector<Forte::FString> &children,
                          bool recurse = false,
-                         bool includePathInChildNames = true) const;
+                         bool includePathInChildNames = true,
+                         bool includePathNames = false) const;
 
         void SetGlobResponse(const FString &pattern,
                              const vector<FString> &response);

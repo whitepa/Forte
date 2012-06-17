@@ -12,51 +12,6 @@ namespace Forte
         GMockFileSystem() {}
         ~GMockFileSystem() {}
 
-
-/*
-        FString Basename(const FString& filename, const FString& suffix = "");
-        FString Dirname(const FString& filename);
-        FString GetCWD();
-        void Touch(const FString& file);
-        bool FileExists(const FString& filename) const;
-        void StatFS(const FString& path, struct statfs *st);
-        int Stat(const FString& path, struct stat *st);
-        bool IsDir(const FString& path) const;
-        void GetChildren(const FString& path, std::vector<Forte::FString> &children, bool recurse = false, bool includePathInChildNames = true) const;
-        uint64_t CountChildren(const FString& path, bool recurse) const;
-        int LStat(const FString& path, struct stat *st);
-        int StatAt(int dir_fd, const FString& path, struct stat *st);
-        int LStatAt(int dir_fd, const FString& path, struct stat *st);
-        int FStatAt(int dir_fd, const FString& path, struct stat *st, int flags = 0);
-        void Unlink(const FString& path, bool unlink_children = false, const ProgressCallback &progressCallback = ProgressCallback());
-        void UnlinkAt(int dir_fd, const FString& path);
-        void Rename(const FString& from, const FString& to);
-        void RenameAt(int dir_from_fd, const FString& from, int dir_to_fd, const FString& to);
-        void MakeDir(const FString& path, mode_t mode = 0777, bool make_parents = false);
-        void MakeDirAt(int dir_fd, const FString& path, mode_t mode = 0777);
-        void MakeFullPath(const FString& path, mode_t mode = 0777);
-        FString MakeRelativePath(const FString& base, const FString& path);
-        FString ResolveRelativePath(const FString& base, const FString& path);
-        int ScanDir(const FString& path, std::vector<FString> &namelist);
-        void Link(const FString& from, const FString& to);
-        void LinkAt(int dir_from_fd, const FString& from, int dir_to_fd, const FString& to);
-        void SymLink(const FString& from, const FString& to);
-        void SymLinkAt(const FString& from, intdir_to_fd, const FString& to);
-        FString ReadLink(const FString& path);
-        FString ResolveSymLink(const FString& path);
-        FString FullyResolveSymLink(const FString& path);
-        FString FileGetContents(const FString& filename) const;
-        void FilePutContents(const FString& filename, const FString& data, bool append=false, bool throwOnError=false);
-        void FileOpen(AutoFD &autoFd, const FString &path, int flags, int mode);
-        void FilePutContents(const FString &path, int flags, int mode, const char *fmt, ...) __attribute__((format(printf, 5, 6)));
-        void FileAppend(const FString& from, const FString& to);
-        void FileCopy(const FString& from, const FString& to, mode_t mode = 0777);
-        void DeepCopy(const FString& source, const FString& dest, const ProgressCallback &progressCallback = ProgressCallback());
-        void Copy(const FString& from_path, const FString& to_path, const ProgressCallback &progressCallback = ProgressCallback());
-        FString StrError(int err) const;
-*/
-
-
         MOCK_METHOD2(Basename, FString (const FString& filename,
                                         const FString& suffix));
         MOCK_METHOD1(Dirname, FString (const FString& filename));
@@ -70,11 +25,12 @@ namespace Forte
         MOCK_METHOD2(StatFS, void (const FString& path, struct statfs *st));
         MOCK_METHOD2(Stat, int (const FString& path, struct stat *st));
         MOCK_CONST_METHOD1(IsDir, bool (const FString& path));
-        MOCK_CONST_METHOD4(GetChildren,
+        MOCK_CONST_METHOD5(GetChildren,
                            void (const FString& path,
                                  std::vector<Forte::FString> &children,
                                  bool recurse,
-                                 bool includePathInChildNames));
+                                 bool includePathInChildNames,
+                                 bool includePathNames));
         MOCK_CONST_METHOD2(CountChildren, uint64_t (const FString& path, bool recurse));
         MOCK_METHOD2(LStat, int (const FString& path, struct stat *st));
         MOCK_METHOD3(StatAt, int (int dir_fd, const FString& path, struct stat *st));
