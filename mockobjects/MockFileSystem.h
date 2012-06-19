@@ -123,6 +123,8 @@ namespace Forte
             { FTRACE; throw EUnimplemented(); }
         void RenameAt(int dir_from_fd, const FString& from, int dir_to_fd, const FString& to)
             { FTRACE; throw EUnimplemented(); }
+        void ChangeOwner(const FString& path, uid_t uid, gid_t gid)
+            { FTRACE; throw EUnimplemented(); }
         void MakeDirAt(int dir_fd, const FString& path, mode_t mode = 0777)
             { FTRACE; throw EUnimplemented(); }
         void MakeFullPath(const FString& path, mode_t mode = 0777)

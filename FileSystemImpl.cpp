@@ -162,6 +162,14 @@ void FileSystemImpl::Touch(const FString& file)
     }
 }
 
+void FileSystemImpl::ChangeOwner(const FString& path, uid_t uid, gid_t gid)
+{
+    if (::chown(path.c_str(), uid, gid))
+    {
+        SystemCallUtil::ThrowErrNoException(errno);
+    }
+}
+
 
 bool FileSystemImpl::FileExists(const FString& filename) const
 {

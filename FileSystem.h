@@ -71,6 +71,8 @@ namespace Forte
         virtual void RenameAt(int dir_from_fd, const FString& from,
                               int dir_to_fd, const FString& to) = 0;
 
+        virtual void ChangeOwner(const FString& path, uid_t uid, gid_t gid) = 0;
+
         virtual void MakeDir(const FString& path, mode_t mode = 0777,
                              bool make_parents = false) = 0;
         virtual void MakeDirAt(int dir_fd,

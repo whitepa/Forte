@@ -85,6 +85,8 @@ namespace Forte
         MOCK_METHOD2(UnlinkAt, void (int dir_fd, const FString& path));
         MOCK_METHOD2(Rename, void (const FString& from, const FString& to));
         MOCK_METHOD4(RenameAt, void (int dir_from_fd, const FString& from, int dir_to_fd, const FString& to));
+        MOCK_METHOD3(ChangeOwner, void (const FString& path, uid_t uid, gid_t gid));
+
         MOCK_METHOD3(MakeDir,
                      void (const FString& path, mode_t mode, bool make_parents));
         MOCK_METHOD3(MakeDirAt, void (int dir_fd, const FString& path, mode_t mode));
