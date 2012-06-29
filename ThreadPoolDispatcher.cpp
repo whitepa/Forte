@@ -265,6 +265,12 @@ Forte::ThreadPoolDispatcher::ThreadPoolDispatcher(boost::shared_ptr<RequestHandl
 }
 Forte::ThreadPoolDispatcher::~ThreadPoolDispatcher()
 {
+    if (!mShutdown)
+        Shutdown();
+}
+
+void Forte::ThreadPoolDispatcher::Shutdown(void)
+{
     // stop accepting new events
     mEventQueue.Shutdown();
     // set the shutdown flag
@@ -276,6 +282,7 @@ Forte::ThreadPoolDispatcher::~ThreadPoolDispatcher()
     mManagerThread.Shutdown();
     mManagerThread.WaitForShutdown();
 }
+
 void Forte::ThreadPoolDispatcher::Pause(void) { mPaused = 1; }
 void Forte::ThreadPoolDispatcher::Resume(void) { mPaused = 0; mNotify.Broadcast(); }
 void Forte::ThreadPoolDispatcher::Enqueue(shared_ptr<Event> e)

@@ -36,6 +36,7 @@ namespace Forte
                               const int minSpareThreads, const int maxSpareThreads,
                               const int deepQueue, const int maxDepth, const char *name);
         virtual ~ThreadPoolDispatcher();
+        virtual void Shutdown(void);
         virtual void Pause(void);
         virtual void Resume(void);
         virtual void Enqueue(shared_ptr<Event> e);
