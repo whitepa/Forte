@@ -617,7 +617,7 @@ void LogManager::LogMsgVa(int level, const char *fmt, va_list ap)
 
 void LogManager::LogMsgVa(const char * func, const char * file, int line, int level, const char *fmt, va_list ap)
 {
-    char *amsg;
+    char *amsg(0);
     vasprintf(&amsg, fmt, ap);
     LogMsgString(func, file, line, level, amsg);
     free(amsg);
