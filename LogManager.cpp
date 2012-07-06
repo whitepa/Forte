@@ -478,7 +478,8 @@ void LogManager::endLogging(const char *path)  // helper - no locking
 {
     mLogfiles.erase(
         remove_if(mLogfiles.begin(), mLogfiles.end(),
-                  boost::bind(&Logfile::IsPath, _1, path)));
+                  boost::bind(&Logfile::IsPath, _1, path)),
+        mLogfiles.end());
 }
 
 void LogManager::Reopen()  // re-open all log files
