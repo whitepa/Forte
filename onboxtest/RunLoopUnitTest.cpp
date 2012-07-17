@@ -42,7 +42,7 @@ TEST_F(RunLoopTest, Basic)
 {
     shared_ptr<TimerTarget> target = make_shared<TimerTarget>();
     shared_ptr<RunLoop> rl = make_shared<RunLoop>("test");
-    shared_ptr<Timer> t = make_shared<Timer>(
+    shared_ptr<Timer> t = make_shared<Timer>("TimerTarget::TimerFired",
         rl, target, boost::bind(&TimerTarget::TimerFired, target),
         Forte::Timespec::FromSeconds(1), false);
     rl->AddTimer(t);
@@ -61,7 +61,7 @@ TEST_F(RunLoopTest, Multi)
     std::list<shared_ptr<Timer> > timers;
     for (int i = 1; i < 11; ++i)
     {
-        shared_ptr<Timer> t = make_shared<Timer>(
+        shared_ptr<Timer> t = make_shared<Timer>("TimerTarget::TimerFired",
             rl, target, boost::bind(&TimerTarget::TimerFired, target),
             Forte::Timespec::FromMillisec(1000*i), false);
         rl->AddTimer(t);
@@ -90,7 +90,7 @@ TEST_F(RunLoopTest, ScheduledInPast)
 
     for (int i = 0; i < 5; ++i)
     {
-        shared_ptr<Timer> t = make_shared<Timer>(
+        shared_ptr<Timer> t = make_shared<Timer>("TimerTarget::TimerFired",
             rl, target,
             boost::bind(&TimerTarget::TimerFired, target),
             Forte::Timespec::FromMillisec(-100*i), false);

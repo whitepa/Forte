@@ -14,7 +14,7 @@ ExpDecayingAvg::ExpDecayingAvg(const boost::shared_ptr<Forte::RunLoop> &rl,
     FTRACE;
     mDataPtr.reset(new ExpDecayingAvgData(mMode, mDampingTime));
     Timer::Callback callback = boost::bind(&ExpDecayingAvgData::update, mDataPtr);
-    mTimerPtr.reset(new Timer(mRunLoopPtr, mDataPtr, callback,
+    mTimerPtr.reset(new Timer("ExpDecayingAvgData::update", mRunLoopPtr, mDataPtr, callback,
                               Timespec::FromMillisec(UPDATE_DELAY),
                               true));
     mRunLoopPtr->AddTimer(mTimerPtr);

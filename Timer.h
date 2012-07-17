@@ -38,7 +38,8 @@ namespace Forte
          * 
          * @return 
          */
-        Timer(shared_ptr<RunLoop> runloop,
+        Timer(const Forte::FString& name,
+              shared_ptr<RunLoop> runloop,
               shared_ptr<Object> target,
               Callback callback,
               Timespec interval,
@@ -52,7 +53,13 @@ namespace Forte
         
         void Fire(void) { mCallback(); }
 
+        const Forte::FString& GetName()
+        {
+            return mName;
+        }
+
     private:
+        const Forte::FString mName;
 
         /** We take shared ownership of the run loop.  This prevents
          * our run loop from being deleted while the timer is still

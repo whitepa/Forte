@@ -57,6 +57,21 @@ namespace Forte
             bool operator < (const RunLoopScheduleItem &other) const { 
                 return mAbsolute < other.mAbsolute;
             }
+
+            FString GetTimerName() const
+            {
+                try
+                {
+                    shared_ptr<Timer> timer(GetTimer());
+                    return timer->GetName();
+                }
+                catch(std::exception& e)
+                {
+                }
+
+                return "<timer object invalid>";
+            }
+
             shared_ptr<Timer>GetTimer(void) const { return mTimer.lock(); }
             const Timespec & GetAbsolute(void) const { return mAbsolute; }
             const Timespec & GetScheduledTime(void) const { return mScheduledTime; }
