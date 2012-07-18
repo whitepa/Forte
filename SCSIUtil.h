@@ -2,6 +2,7 @@
 #define __forte_SCSIUtil_h
 
 #include "ProcRunner.h"
+#include "FileSystem.h"
 // _____________________________________________________________________________
 
 typedef struct _scsi_idlun
@@ -24,7 +25,7 @@ namespace Forte
     class SCSIUtil : public Object
     {
     public:
-        SCSIUtil(ProcRunner& procRunner);
+        SCSIUtil(ProcRunner& procRunner, FileSystem& fs);
         virtual ~SCSIUtil(void);
 
         /**
@@ -45,8 +46,15 @@ namespace Forte
          */
         void RescanHost(int hostId);
 
+        /**
+         * Re-scans the all SCSI hosts it can find.
+         * @throws ESCSIScanFailed on any host it finds that it cannot scan
+         */
+        void RescanAllHosts();
+
     protected:
         ProcRunner&  mProcRunner;
+        FileSystem&  mFileSystem;
     };
 };
 // _____________________________________________________________________________

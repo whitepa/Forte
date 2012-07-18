@@ -8,8 +8,8 @@
 using namespace Forte;
 // -----------------------------------------------------------------------------
 
-SCSIUtil::SCSIUtil(ProcRunner&  procRunner)
-: mProcRunner(procRunner)
+SCSIUtil::SCSIUtil(ProcRunner& procRunner, FileSystem& fileSystem) :
+    mProcRunner(procRunner), mFileSystem(fileSystem)
 {
     FTRACE;
 }
@@ -73,3 +73,42 @@ void SCSIUtil::RescanHost(int hostId)
     }
 }
 // -----------------------------------------------------------------------------
+
+void SCSIUtil::RescanAllHosts()
+{
+    FTRACE;
+    const FString basePath("/sys/class/scsi_host");
+    const bool recurse = false;
+    const bool includePathInChildNames = false;
+    const bool includePathNames = true;
+    std::vector<Forte::FString> children;
+    bool allSucceeded = true;
+
+    mFileSystem.GetChildren(
+        basePath,
+        children,
+        recurse,
+        includePathInChildNames,
+        includePathNames);
+
+    FString output;
+
+    foreach (const FString& child, children)
+    {
+        FString cmd(FStringFC(),
+                    "/bin/echo - - - > /sys/class/scsi_host/%s/scan",
+                    child.c_str());
+
+        if (mProcRunner.Run(cmd, "", &output, PROC_RUNNER_NO_TIMEOUT) != 0)
+        {
+            hlog(HLOG_WARN, "Unable to rescan the scsi %s (%s)\n%s",
+                 child.c_str(), cmd.c_str(), output.c_str());
+            allSucceeded = false;
+        }
+    }
+
+    if (!allSucceeded)
+    {
+        hlog_and_throw(HLOG_WARN, ESCSIScanFailed());
+    }
+}

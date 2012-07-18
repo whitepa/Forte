@@ -144,6 +144,7 @@ namespace Forte
                    int option = LOG_NDELAY | LOG_NOWAIT);
         virtual ~SysLogfile();
         virtual void Write(const LogMsg& msg);
+        virtual void WriteRaw(int level, const Forte::FString& line);
         virtual FString FormatMsg(const LogMsg &msg);
         virtual bool Reopen() { return true; }
         FString GetIdent() const { return mIdent; }

@@ -6,6 +6,7 @@
 
 #include "LogManager.h"
 #include "SCSIUtil.h"
+#include "FileSystemImpl.h"
 
 using namespace Forte;
 
@@ -33,11 +34,12 @@ protected:
 TEST_F(SCSIDriveUnitTest, GetDeviceInfoDevSda)
 {
     ProcRunner  pr;
+    FileSystemImpl fs;
     FString     dev_path("/dev/sda");
     int         host1 = -1;
     int         lun1  = -1;
 
-    SCSIUtil  su(pr);
+    SCSIUtil su(pr, fs);
 
     su.GetDeviceInfo(dev_path, host1, lun1);
 
@@ -52,11 +54,12 @@ TEST_F(SCSIDriveUnitTest, GetDeviceInfoDevSda)
 TEST_F(SCSIDriveUnitTest, GetDeviceInfoDevSdb)
 {
     ProcRunner  pr;
+    FileSystemImpl fs;
     FString     dev_path("/dev/sdb");
     int         host1 = -1;
     int         lun1  = -1;
 
-    SCSIUtil  su(pr);
+    SCSIUtil  su(pr, fs);
 
     su.GetDeviceInfo(dev_path, host1, lun1);
 

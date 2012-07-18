@@ -339,6 +339,11 @@ void SysLogfile::Write(const LogMsg& msg)
     syslog(LOG_DAEMON | level, "%s", FormatMsg(msg).c_str());
 }
 
+void SysLogfile::WriteRaw(int level, const Forte::FString& line)
+{
+    syslog(LOG_DAEMON | level, "%s", line.c_str());
+}
+
 FString SysLogfile::FormatMsg(const LogMsg &msg)
 {
     FString levelstr, formattedMsg;
