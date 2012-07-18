@@ -39,11 +39,11 @@ protected:
     {
     }
 
-    virtual const char* getDatabaseName(const char* str="")=0;
+    virtual std::string getDatabaseName(const char* str="")=0;
 
     virtual void SetUp()
     {
-        mLogManager.BeginLogging("//stderr");
+        mLogManager.BeginLogging(__FILE__ ".log");
 
         {
             hlog(HLOG_TRACE, "{");
@@ -78,13 +78,13 @@ protected:
     virtual void CreateDatabases()
     {
         DbLiteConnection db (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
-        EXPECT_TRUE(db.Init(getDatabaseName()));
+        EXPECT_TRUE(db.Init(getDatabaseName().c_str()));
     }
 
     virtual void CreateTables()
     {
         DbLiteConnection db (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
-        EXPECT_TRUE(db.Init(getDatabaseName()));
+        EXPECT_TRUE(db.Init(getDatabaseName().c_str()));
         EXPECT_TRUE(db.Execute(CREATE_TEST_TABLE));
     }
 
@@ -102,14 +102,14 @@ protected:
     virtual size_t PopulateData()
     {
         DbLiteConnection db (SQLITE_OPEN_READWRITE| SQLITE_OPEN_CREATE);
-        EXPECT_TRUE(db.Init(getDatabaseName()));
+        EXPECT_TRUE(db.Init(getDatabaseName().c_str()));
 
         return PopulateData(db);
     }
 
     virtual void RemoveDatabases()
     {
-        unlink(getDatabaseName());
+        unlink(getDatabaseName().c_str());
     }
 
     virtual void SetUp()
@@ -117,12 +117,12 @@ protected:
         base_type::SetUp();
     }
 
-    const char* getDatabaseName(const char* str="")
+    std::string getDatabaseName(const char* str="")
     {
         string databasePath("/tmp/");
         databasePath += boost::filesystem::basename(__FILE__);
         databasePath += ".unittest.db";
-        return databasePath.c_str();
+        return databasePath;
     }
 };
 
@@ -132,52 +132,58 @@ protected:
 
 TEST_F(BasicDatabasePoolTest, SqliteConstructDatabaseConnectionPool)
 {
-    ASSERT_NO_THROW(DbConnectionPool pool("sqlite", getDatabaseName()));
+    ASSERT_NO_THROW(DbConnectionPool pool("sqlite", getDatabaseName().c_str()));
 }
 
 TEST_F(BasicDatabasePoolTest, SqliteConstructInvalidDatabaseConnectionPool)
 {
-    ASSERT_THROW(DbConnectionPool pool("not-a-real-type-of-connection", getDatabaseName()), Forte::EDbConnectionPool);
+    ASSERT_THROW(DbConnectionPool pool("not-a-real-type-of-connection", getDatabaseName().c_str()), Forte::EDbConnectionPool);
 }
 
 TEST_F(BasicDatabasePoolTest, SqliteGetDatabaseConnectionTest)
 {
-    DbConnectionPool pool("sqlite", getDatabaseName());
+    DbConnectionPool pool("sqlite", getDatabaseName().c_str());
     DbConnection& dbConnection(pool.GetDbConnection());
     dbConnection.Connect();
+    pool.ReleaseDbConnection(dbConnection);
+    pool.DeleteConnections();
 }
 
 TEST_F(BasicDatabasePoolTest, SqliteUseDatabaseConnectionTest)
 {
     size_t rows(0);
 
-    DbConnectionPool pool("sqlite", getDatabaseName());
+    DbConnectionPool pool("sqlite", getDatabaseName().c_str());
     DbConnection& dbConnection(pool.GetDbConnection());
 
     ASSERT_NO_THROW(rows=PopulateData(dbConnection));
 
     DbResult res = dbConnection.Store(SELECT_TEST_TABLE);
     EXPECT_EQ(res.GetNumRows(), rows);
+    pool.ReleaseDbConnection(dbConnection);
+    pool.DeleteConnections();
 }
 
 TEST_F(BasicDatabasePoolTest, SqliteReleaseDatabaseConnectionTest)
 {
-    DbConnectionPool pool("sqlite", getDatabaseName());
+    DbConnectionPool pool("sqlite", getDatabaseName().c_str());
     DbConnection& dbConnection(pool.GetDbConnection());
     ASSERT_NO_THROW(pool.ReleaseDbConnection(dbConnection));
+    pool.DeleteConnections();
 }
 
 TEST_F(BasicDatabasePoolTest, SqliteDoubleReleaseDatabaseConnectionTest)
 {
-    DbConnectionPool pool("sqlite", getDatabaseName(), "", "", "", "", "", 1);
+    DbConnectionPool pool("sqlite", getDatabaseName().c_str(), "", "", "", "", "", 1);
     DbConnection& dbConnection(pool.GetDbConnection());
     ASSERT_NO_THROW(pool.ReleaseDbConnection(dbConnection));
     ASSERT_THROW(pool.ReleaseDbConnection(dbConnection), Forte::EDbConnectionPool);
+    pool.DeleteConnections();
 }
 
 TEST_F(BasicDatabasePoolTest, SqliteDeleteUnacquiredDatabaseConnectionsTest)
 {
-    DbConnectionPool pool("sqlite", getDatabaseName());
+    DbConnectionPool pool("sqlite", getDatabaseName().c_str());
     DbConnection& dbConnection(pool.GetDbConnection());
     ASSERT_NO_THROW(pool.ReleaseDbConnection(dbConnection));
     ASSERT_NO_THROW(pool.DeleteConnections());
@@ -185,10 +191,12 @@ TEST_F(BasicDatabasePoolTest, SqliteDeleteUnacquiredDatabaseConnectionsTest)
 
 TEST_F(BasicDatabasePoolTest, SqliteDeleteAcquiredDatabaseConnectionsTest)
 {
-    DbConnectionPool pool("sqlite", getDatabaseName());
+    DbConnectionPool pool("sqlite", getDatabaseName().c_str());
     DbConnection& dbConnection(pool.GetDbConnection());
     dbConnection.Connect();
     ASSERT_THROW(pool.DeleteConnections(), Forte::EDbConnectionPoolOpenConnections);
+    pool.ReleaseDbConnection(dbConnection);
+    pool.DeleteConnections();
 }
 
 /*
@@ -197,19 +205,21 @@ TEST_F(BasicDatabasePoolTest, SqliteDeleteAcquiredDatabaseConnectionsTest)
 
 TEST_F(BasicDatabasePoolTest, SqliteMirroredConstructDatabaseConnectionPool)
 {
-    ASSERT_NO_THROW(DbConnectionPool pool("sqlite_mirrored", getDatabaseName()));
+    ASSERT_NO_THROW(DbConnectionPool pool("sqlite_mirrored", getDatabaseName().c_str()));
 }
 
 TEST_F(BasicDatabasePoolTest, SqliteMirroredGetDatabaseConnectionTest)
 {
-    DbConnectionPool pool("sqlite_mirrored", getDatabaseName());
+    DbConnectionPool pool("sqlite_mirrored", getDatabaseName().c_str());
     DbConnection& dbConnection(pool.GetDbConnection());
     dbConnection.Connect();
+    pool.ReleaseDbConnection(dbConnection);
+    pool.DeleteConnections();
 }
 
 TEST_F(BasicDatabasePoolTest, SqliteMirroredUseDatabaseConnectionTest)
 {
-    DbConnectionPool pool("sqlite_mirrored", getDatabaseName());
+    DbConnectionPool pool("sqlite_mirrored", getDatabaseName().c_str());
     DbConnection& dbConnection(pool.GetDbConnection());
 
     size_t rows(0);
@@ -217,11 +227,13 @@ TEST_F(BasicDatabasePoolTest, SqliteMirroredUseDatabaseConnectionTest)
 
     DbResult res = dbConnection.Store(SELECT_TEST_TABLE);
     EXPECT_EQ(res.GetNumRows(), rows);
+    pool.ReleaseDbConnection(dbConnection);
+    pool.DeleteConnections();
 }
 
 TEST_F(BasicDatabasePoolTest, SqliteMirroredOverloadStoreDatabaseConnectionTest)
 {
-    DbConnectionPool pool("sqlite_mirrored", getDatabaseName());
+    DbConnectionPool pool("sqlite_mirrored", getDatabaseName().c_str());
     DbConnection& dbConnection(pool.GetDbConnection());
 
     size_t rows(0);
@@ -229,26 +241,30 @@ TEST_F(BasicDatabasePoolTest, SqliteMirroredOverloadStoreDatabaseConnectionTest)
 
     DbResult res = dbConnection.Store(SelectDbSqlStatement(SELECT_TEST_TABLE));
     EXPECT_EQ(res.GetNumRows(), rows);
+    pool.ReleaseDbConnection(dbConnection);
+    pool.DeleteConnections();
 }
 
 TEST_F(BasicDatabasePoolTest, SqliteMirroredReleaseDatabaseConnectionTest)
 {
-    DbConnectionPool pool("sqlite_mirrored", getDatabaseName());
+    DbConnectionPool pool("sqlite_mirrored", getDatabaseName().c_str());
     DbConnection& dbConnection(pool.GetDbConnection());
     ASSERT_NO_THROW(pool.ReleaseDbConnection(dbConnection));
+    pool.DeleteConnections();
 }
 
 TEST_F(BasicDatabasePoolTest, SqliteMirroredDoubleReleaseDatabaseConnectionTest)
 {
-    DbConnectionPool pool("sqlite_mirrored", getDatabaseName(),"","","","","",1);
+    DbConnectionPool pool("sqlite_mirrored", getDatabaseName().c_str(),"","","","","",1);
     DbConnection& dbConnection(pool.GetDbConnection());
     ASSERT_NO_THROW(pool.ReleaseDbConnection(dbConnection));
     ASSERT_THROW(pool.ReleaseDbConnection(dbConnection), Forte::EDbConnectionPool);
+    pool.DeleteConnections();
 }
 
 TEST_F(BasicDatabasePoolTest, SqliteMirroredDeleteUnacquiredDatabaseConnectionsTest)
 {
-    DbConnectionPool pool("sqlite_mirrored", getDatabaseName());
+    DbConnectionPool pool("sqlite_mirrored", getDatabaseName().c_str());
     DbConnection& dbConnection(pool.GetDbConnection());
     ASSERT_NO_THROW(pool.ReleaseDbConnection(dbConnection));
     ASSERT_NO_THROW(pool.DeleteConnections());
@@ -256,8 +272,10 @@ TEST_F(BasicDatabasePoolTest, SqliteMirroredDeleteUnacquiredDatabaseConnectionsT
 
 TEST_F(BasicDatabasePoolTest, SqliteMirroredDeleteAcquiredDatabaseConnectionsTest)
 {
-    DbConnectionPool pool("sqlite_mirrored", getDatabaseName());
+    DbConnectionPool pool("sqlite_mirrored", getDatabaseName().c_str());
     DbConnection& dbConnection(pool.GetDbConnection());
     dbConnection.Connect();
     ASSERT_THROW(pool.DeleteConnections(), Forte::EDbConnectionPoolOpenConnections);
+    pool.ReleaseDbConnection(dbConnection);
+    pool.DeleteConnections();
 }

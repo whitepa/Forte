@@ -49,7 +49,7 @@ protected:
     {
     }
 
-    virtual const char* getDatabaseName(const char* str="")=0;
+    virtual std::string getDatabaseName(const char* str="")=0;
 
     virtual void SetUp()
     {
@@ -91,13 +91,13 @@ protected:
     virtual void CreateDatabases()
     {
         DbLiteConnection db (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
-        EXPECT_TRUE(db.Init(getDatabaseName()));
+        EXPECT_TRUE(db.Init(getDatabaseName().c_str()));
     }
 
     virtual void CreateTables()
     {
         DbLiteConnection db (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
-        EXPECT_TRUE(db.Init(getDatabaseName()));
+        EXPECT_TRUE(db.Init(getDatabaseName().c_str()));
         EXPECT_TRUE(db.Execute(CREATE_TEST_TABLE));
     }
 
@@ -117,7 +117,7 @@ protected:
     virtual size_t PopulateData()
     {
         DbLiteConnection db (SQLITE_OPEN_READWRITE| SQLITE_OPEN_CREATE);
-        EXPECT_TRUE(db.Init(getDatabaseName()));
+        EXPECT_TRUE(db.Init(getDatabaseName().c_str()));
 
         return PopulateData(db);
     }
@@ -130,12 +130,12 @@ protected:
 
     virtual void RemovePrimaryDatabase()
     {
-        unlink(getDatabaseName());
+        unlink(getDatabaseName().c_str());
     }
 
     virtual void RemoveSecondaryDatabase()
     {
-        unlink(getBackupDatabaseName());
+        unlink(getBackupDatabaseName().c_str());
     }
 
     virtual void SetUp()
@@ -143,29 +143,31 @@ protected:
         base_type::SetUp();
     }
 
-    const char* getDatabaseName(const char* str="")
+    string getDatabaseName(const char* str="")
     {
         string databasePath("/tmp/");
         databasePath += boost::filesystem::basename(__FILE__);
         databasePath += getpid();
         databasePath += ".unittest.db";
-        return databasePath.c_str();
+        return databasePath;
     }
 
-    const char* getBackupDatabaseName(const char* str="")
+    string getBackupDatabaseName(const char* str="")
     {
         FString secondaryDatabasePath(getDatabaseName());
         secondaryDatabasePath += ".backup";
-        return secondaryDatabasePath.c_str();
+        return secondaryDatabasePath;
     }
 };
 
 TEST_F(DbMirroredConnectionUnitTest, SqliteBackupDatabaseTest)
 {
-    DbConnectionPool pool("sqlite_mirrored", getDatabaseName());
+    DbConnectionPool pool("sqlite_mirrored", getDatabaseName().c_str());
     DbConnection& dbConnection(pool.GetDbConnection());
 
-    ASSERT_NO_THROW(dbConnection.BackupDatabase(getBackupDatabaseName()));
+    ASSERT_NO_THROW(dbConnection.BackupDatabase(getBackupDatabaseName().c_str()));
+    pool.ReleaseDbConnection(dbConnection);
+    pool.DeleteConnections();
 }
 
 /*
@@ -173,14 +175,14 @@ TEST_F(DbMirroredConnectionUnitTest, SqliteBackupDatabaseTest)
  */
 TEST_F(DbMirroredConnectionUnitTest, SqliteDbBackupManagerThreadWhenNoInitialDatabaseTest)
 {
-    shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
+    shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName().c_str(), getBackupDatabaseName().c_str()));
 
     RemoveDatabases();
 
     FileSystemImpl fs;
 
-    ASSERT_FALSE(fs.FileExists(getDatabaseName()));
-    ASSERT_FALSE(fs.FileExists(getBackupDatabaseName()));
+    ASSERT_FALSE(fs.FileExists(getDatabaseName().c_str()));
+    ASSERT_FALSE(fs.FileExists(getBackupDatabaseName().c_str()));
 
     {
         DbBackupManagerThread backupMgr(pool);
@@ -191,9 +193,9 @@ TEST_F(DbMirroredConnectionUnitTest, SqliteDbBackupManagerThreadWhenNoInitialDat
         // wait for sync
         {
             unsigned int ctr(0);
-            while(! fs.FileExists(getBackupDatabaseName()) && (++ctr < 10))
+            while(! fs.FileExists(getBackupDatabaseName().c_str()) && (++ctr < 10))
             {
-                if(fs.FileExists(getBackupDatabaseName()))
+                if(fs.FileExists(getBackupDatabaseName().c_str()))
                     break;
 
                 usleep(10000);
@@ -201,8 +203,8 @@ TEST_F(DbMirroredConnectionUnitTest, SqliteDbBackupManagerThreadWhenNoInitialDat
         }
     }
 
-    ASSERT_TRUE(fs.FileExists(getDatabaseName()));
-    ASSERT_TRUE(fs.FileExists(getBackupDatabaseName()));
+    ASSERT_TRUE(fs.FileExists(getDatabaseName().c_str()));
+    ASSERT_TRUE(fs.FileExists(getBackupDatabaseName().c_str()));
 }
 
 
@@ -214,10 +216,10 @@ TEST_F(DbMirroredConnectionUnitTest, SqliteDbBackupManagerThreadWhenFuturePrimar
     unsigned int rows(0);
 
     // pool to backup database
-    shared_ptr<DbConnectionPool> backupPool(make_shared<DbConnectionPool>("sqlite", getBackupDatabaseName()));
+    shared_ptr<DbConnectionPool> backupPool(make_shared<DbConnectionPool>("sqlite", getBackupDatabaseName().c_str()));
 
     {
-        shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
+        shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName().c_str(), getBackupDatabaseName().c_str()));
 
         // make an empty primary
         RemoveDatabases();
@@ -226,7 +228,7 @@ TEST_F(DbMirroredConnectionUnitTest, SqliteDbBackupManagerThreadWhenFuturePrimar
         // make an initial backup
         {
             DbAutoConnection dbConnection(pool);
-            dbConnection->BackupDatabase(getBackupDatabaseName());
+            dbConnection->BackupDatabase(getBackupDatabaseName().c_str());
         }
 
         // insert some tables and rows
@@ -258,10 +260,13 @@ TEST_F(DbMirroredConnectionUnitTest, SqliteDbBackupManagerThreadWhenFuturePrimar
 
 TEST_F(DbMirroredConnectionUnitTest, SqliteSameSourceAndTargetBackupDatabaseTest)
 {
-    DbConnectionPool pool("sqlite_mirrored", getDatabaseName());
+    DbConnectionPool pool("sqlite_mirrored", getDatabaseName().c_str());
     DbConnection& dbConnection(pool.GetDbConnection());
 
-    ASSERT_THROW(dbConnection.BackupDatabase(getDatabaseName()), Forte::EDbLiteBackupFailed);
+    ASSERT_THROW(dbConnection.BackupDatabase(getDatabaseName().c_str()),
+                 Forte::EDbLiteBackupFailed);
+    pool.ReleaseDbConnection(dbConnection);
+    pool.DeleteConnections();
 }
 
 TEST_F(DbMirroredConnectionUnitTest, SqliteManualFailoverAndManualBackupDatabaseTest)
@@ -269,15 +274,15 @@ TEST_F(DbMirroredConnectionUnitTest, SqliteManualFailoverAndManualBackupDatabase
     size_t rows(0);
 
     {
-        shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite", getDatabaseName()));
+        shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite", getDatabaseName().c_str()));
         DbAutoConnection dbConnection(pool);
 
-        ASSERT_NO_THROW(dbConnection->BackupDatabase(getBackupDatabaseName()));
+        ASSERT_NO_THROW(dbConnection->BackupDatabase(getBackupDatabaseName().c_str()));
     }
 
     RemovePrimaryDatabase();
 
-    shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite", getBackupDatabaseName()));
+    shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite", getBackupDatabaseName().c_str()));
     DbAutoConnection dbConnection(pool);
 
     DbResult res = dbConnection->Store(SelectDbSqlStatement(SELECT_TEST_TABLE));
@@ -291,7 +296,7 @@ TEST_F(DbMirroredConnectionUnitTest, SqliteNoPathToBackupTargetDatabaseTest)
     FString cleanupPath(FStringFC(), "/tmp/%d", getpid());
     shared_ptr<DbConnectionPool> pool(
         make_shared<DbConnectionPool>(
-            "sqlite_mirrored", getDatabaseName(),
+            "sqlite_mirrored", getDatabaseName().c_str(),
             tmpDeepDir));
     DbAutoConnection dbConnection(pool);
     {
@@ -306,7 +311,7 @@ TEST_F(DbMirroredConnectionUnitTest, SqliteNoPrimaryOnAutoBackupDatabaseTest)
 {
     DbResult res;
 
-    shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
+    shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName().c_str(), getBackupDatabaseName().c_str()));
 
     {
         RemovePrimaryDatabase();
@@ -320,8 +325,8 @@ TEST_F(DbMirroredConnectionUnitTest, SqliteManualFailoverAutoBackupDatabaseTest)
     DbResult res;
 
     {
-        shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
-        shared_ptr<DbConnectionPool> backupPool(make_shared<DbConnectionPool>("sqlite", getBackupDatabaseName()));
+        shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName().c_str(), getBackupDatabaseName().c_str()));
+        shared_ptr<DbConnectionPool> backupPool(make_shared<DbConnectionPool>("sqlite", getBackupDatabaseName().c_str()));
 
         {
             DbBackupManagerThread backupMgr(pool);
@@ -354,7 +359,7 @@ TEST_F(DbMirroredConnectionUnitTest, SqliteManualFailoverAutoBackupDatabaseTest)
         RemovePrimaryDatabase();
 
         {
-            shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite", getBackupDatabaseName()));
+            shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite", getBackupDatabaseName().c_str()));
             DbAutoConnection dbConnection(pool);
             res = dbConnection->Store(SelectDbSqlStatement(SELECT_TEST_TABLE));
         }
@@ -368,11 +373,11 @@ TEST_F(DbMirroredConnectionUnitTest, ManualBackupAutoFailoverDbMirroredConnectio
 {
     PopulateData();
 
-    DbConnectionPool pool("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName());
+    DbConnectionPool pool("sqlite_mirrored", getDatabaseName().c_str(), getBackupDatabaseName().c_str());
 
     {
         DbConnection& dbConnection(pool.GetDbConnection());
-        ASSERT_NO_THROW(dbConnection.BackupDatabase(getBackupDatabaseName()));
+        ASSERT_NO_THROW(dbConnection.BackupDatabase(getBackupDatabaseName().c_str()));
 
         pool.ReleaseDbConnection(dbConnection);
     }
@@ -383,6 +388,8 @@ TEST_F(DbMirroredConnectionUnitTest, ManualBackupAutoFailoverDbMirroredConnectio
 
     DbResult res = dbConnection.Store(SelectDbSqlStatement(SELECT_TEST_TABLE));
     EXPECT_EQ(res.GetNumRows(), 100);
+    pool.ReleaseDbConnection(dbConnection);
+    pool.DeleteConnections();
 }
 
 TEST_F(DbMirroredConnectionUnitTest, AutoBackupAutoFailoverDbMirroredConnectionTest)
@@ -390,8 +397,8 @@ TEST_F(DbMirroredConnectionUnitTest, AutoBackupAutoFailoverDbMirroredConnectionT
     size_t rows(0);
     DbResult res;
 
-    shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
-    shared_ptr<DbConnectionPool> backupPool(make_shared<DbConnectionPool>("sqlite", getBackupDatabaseName()));
+    shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName().c_str(), getBackupDatabaseName().c_str()));
+    shared_ptr<DbConnectionPool> backupPool(make_shared<DbConnectionPool>("sqlite", getBackupDatabaseName().c_str()));
 
     {
         {
@@ -436,7 +443,7 @@ TEST_F(DbMirroredConnectionUnitTest, AutoBackupAutoFailoverStabilityOfBackupMana
     size_t rows(0);
     DbResult res;
 
-    shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
+    shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName().c_str(), getBackupDatabaseName().c_str()));
     DbBackupManagerThread backupMgr(pool);
 
     {
