@@ -33,10 +33,14 @@ namespace Forte
                 if (db.HasPendingQueries())
                 {
                     if (file != NULL)
+                    {
                         hlog(HLOG_DEBUG, "~DbAutoTrans(): Rolling back transaction started at %s:%u",
                              file, line);
+                    }
                     else
+                    {
                         hlog(HLOG_DEBUG, "~DbAutoTrans(): Rolling back transaction");
+                    }
                     db.Rollback();
                 }
             } catch (...) {

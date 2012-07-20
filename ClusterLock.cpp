@@ -119,8 +119,10 @@ void ClusterLock::checkAndClearFromMutexMap(const Forte::FString& name)
     std::map<FString, shared_ptr<Mutex> >::const_iterator i =
         sMutexMap.find(name);
     if (i == sMutexMap.end())
+    {
         hlog(HLOG_ERR, "could not find mutex while unlocking '%s'",
              name.c_str());
+    }
     else
     {
         const shared_ptr<Mutex> &mp(i->second);

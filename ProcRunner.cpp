@@ -38,8 +38,14 @@ int ProcRunner::Run(const FString& command,
                     const StrStrMap *env,
                     const FString &infile)
 {
-    if (cwd.empty()) hlog(HLOG_DEBUG3, "run(%s)", command.c_str());
-    else hlog(HLOG_DEBUG3, "run(%s) [in %s]", command.c_str(), cwd.c_str());
+    if (cwd.empty())
+    {
+        hlog(HLOG_DEBUG3, "run(%s)", command.c_str());
+    }
+    else
+    {
+        hlog(HLOG_DEBUG3, "run(%s) [in %s]", command.c_str(), cwd.c_str());
+    }
     LogTimer timer(HLOG_DEBUG3, "Child ran for @TIME@");
     vector<FString>::const_iterator vi;
     FString stmp, filename, path = "/bin/bash";
@@ -362,8 +368,15 @@ int ProcRunner::Run(const FString& command,
 int ProcRunner::RunBackground(const FString& command, const FString& cwd, 
                               const StrStrMap *env, bool detach, int *pidReturn)
 {
-    if (cwd.empty()) hlog(HLOG_DEBUG3, "run_background(%s)", command.c_str());
-    else hlog(HLOG_DEBUG3, "run_background(%s) [in %s]", command.c_str(), cwd.c_str());
+    if (cwd.empty())
+    {
+        hlog(HLOG_DEBUG3, "run_background(%s)", command.c_str());
+    }
+    else
+    {
+        hlog(HLOG_DEBUG3, "run_background(%s) [in %s]", command.c_str(), cwd.c_str());
+    }
+
     vector<FString>::const_iterator vi;
     FString stmp, path = "/bin/bash";
     int status, ret = -1;

@@ -121,6 +121,11 @@ namespace Forte
 
         bool IsPath(const Forte::FString& path) const;
         unsigned int GetLogMask() const;
+        const std::map<FString,unsigned int>& GetLogMasks() const
+        {
+            return mFileMasks;
+        }
+
         void SetLogMask(const unsigned int& mask);
         unsigned int GetFormatMask() const;
         void SetFormatMask(const unsigned int& mask);
@@ -304,7 +309,7 @@ namespace Forte
          **/
         void SetLogMask(const char *path, unsigned int mask); // bitmask of desired log levels
         unsigned int GetLogMask(const char *path);
-
+        bool ShouldLog(const char * func, const char * file, int line, int level);
         /**
          *SetGlobalLogMask(unsigned int mask) takes an unsigned int mask representing
          *different levels of error messages. The list of error messages you provide
@@ -463,6 +468,10 @@ namespace Forte
         bool LogRatelimit(const char *file, int line, int rate);
 
     protected:
+        void setLogMask(const char *path, unsigned int mask);
+        void setLogMaskOR();
+
+    protected:
         friend class Mutex;
         typedef std::vector<boost::weak_ptr<LogfileVector::value_type::value_type> > LogfileWeakVector;
 
@@ -470,6 +479,7 @@ namespace Forte
         ThreadKey mThreadInfoKey;
         Mutex mLogMutex;
         unsigned mLogMaskTemplate;
+        unsigned mLogMaskOR;
         static LogManager *sLogManager;
         static Mutex sLogManagerMutex;
 
@@ -487,17 +497,41 @@ namespace Forte
 // hermes API compatibility:
 //void hlog(int level, const char* fmt, ...);
 
+bool _should_hlog(const char *func, const char * file, int line, int level);
+
 void _hlog(const char *func, const char *file, int line, int level, const char * fmt, ...) __attribute__((format(printf, 5, 6)));
-#define hlog(level, fmt...) _hlog(__FUNCTION__, __FILE__, __LINE__, level, fmt)
+#define hlog(level, fmt...) \
+    { \
+        const char* _func(__FUNCTION__); \
+        const char* _file(__FILE__); \
+        const unsigned int _line (__LINE__); \
+        if(_should_hlog(_func, _file, _line, level)) \
+            _hlog(_func, _file, _line, level, fmt); \
+    }
 
 void _hlogstream(const char *func, const char *file, int line, int level, const std::string& message);
-#define hlogstream(level, message) {                                    \
-        std::ostringstream o;                                           \
-        o << message;                                                   \
-        _hlogstream(__FUNCTION__, __FILE__, __LINE__, level, o.str()); }
+#define hlogstream(level, message) \
+    { \
+        const char* _func(__FUNCTION__); \
+        const char* _file(__FILE__); \
+        const unsigned int _line (__LINE__); \
+        if(_should_hlog(_func, _file, _line, level)) \
+        { \
+            std::ostringstream o;                                           \
+            o << message;                                                   \
+            _hlogstream(_func, _file, _line, level, o.str()); \
+        } \
+    }
 
 void _hlog_errno(const char* func, const char* file, int line, int level);
-#define hlog_errno(level)  _hlog_errno(__FUNCTION__, __FILE__, __LINE__, level)
+#define hlog_errno(level) \
+    { \
+        const char* _func(__FUNCTION__); \
+        const char* _file(__FILE__); \
+        const unsigned int _line (__LINE__); \
+        if(_should_hlog(_func, _file, _line, level)) \
+            _hlog_errno(_func, _file, _line, level); \
+    }
 
 #define hlog_and_throw(level, exception_decl)                           \
     {                                                                   \
@@ -507,7 +541,6 @@ void _hlog_errno(const char* func, const char* file, int line, int level);
              exception_decl.what());                                    \
         boost::throw_exception(exception_decl);                         \
     }
-
 
 /**
  * hlog_ratelimit() will limit the logging from a particular file/line
