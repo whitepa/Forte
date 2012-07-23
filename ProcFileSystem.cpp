@@ -134,17 +134,41 @@ void ProcFileSystem::PidOf(const FString& runningProg, std::vector<pid_t>& pids)
     }
 }
 
-bool ProcFileSystem::ProcessIsRunning(const FString& runningProg) const
+bool ProcFileSystem::ProcessIsRunning(const FString& runningProg,
+                                      const FString& pidFile) const
 {
-    try
+    if (pidFile.empty())
     {
-        vector<pid_t> pids;
-        PidOf(runningProg, pids);
-        return true;
+        try
+        {
+            vector<pid_t> pids;
+            PidOf(runningProg, pids);
+            return true;
+        }
+        catch (EProcFileSystemProcessNotFound &e)
+        {
+            return false;
+        }
     }
-    catch (EProcFileSystemProcessNotFound &e)
+    else
     {
-        return false;
+        bool result = false;
+        FString pid = mFileSystemPtr->FileGetContents(pidFile).Trim();
+        if (pid.IsNumeric())
+        {
+            FStringVector lines, tokens;
+            FString status =
+                mFileSystemPtr->FileGetContents("/proc/" + pid + "/status");
+            status.LineSplit(lines, true);
+            int count = lines.at(0).Tokenize(" \t", tokens);
+            if (count > 1 &&
+                !tokens.at(0).Compare("Name:") &&
+                !tokens.at(1).Compare(runningProg))
+            {
+                result = true;
+            }
+        }
+        return result;
     }
 }
 

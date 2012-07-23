@@ -55,7 +55,8 @@ namespace Forte
         virtual unsigned int CountOpenFileDescriptors(pid_t pid = getpid() );
 
         virtual void PidOf(const FString& runningProg, std::vector<pid_t>& pids) const;
-        virtual bool ProcessIsRunning(const FString& runningProg) const;
+        virtual bool ProcessIsRunning(const FString& runningProg,
+                                      const FString& pidFile = "") const;
         virtual void SetOOMScore(pid_t pid, const FString &score);
 
 

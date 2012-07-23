@@ -219,7 +219,7 @@ TEST_F(ProcFileSystemUnitTest, GetProcessorInformationSuccess)
 {
     // setup
     shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
-    fsptr->FilePutContents("/proc/cpuinfo", 
+    fsptr->FilePutContents("/proc/cpuinfo",
                            "processor	: 0\n"
                            "vendor_id	: GenuineIntel\n"
                            "cpu family	: 6\n"
@@ -271,7 +271,7 @@ TEST_F(ProcFileSystemUnitTest, GetProcessorInformationSuccess)
                            "power management:\n");
 
     ProcFileSystem pfs(fsptr);
-    
+
     std::vector<Forte::ProcFileSystem::CPUInfoPtr> processors;
     pfs.GetProcessorInformation(processors);
 
@@ -326,4 +326,34 @@ TEST_F(ProcFileSystemUnitTest, GetProcessorInformationSuccess)
 
     ASSERT_EQ(2, processors[0]->mSiblings);
     ASSERT_EQ(2, processors[1]->mSiblings);
+}
+
+TEST_F(ProcFileSystemUnitTest, ProcessIsRunningSuccess)
+{
+    FTRACE;
+    shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
+    fsptr->FilePutContents("/var/run/mydaemon.pid", "1999");
+    fsptr->FilePutContents("/proc/1999/status",
+                           "Name:	mydaemon\n"
+                           "State:	S (sleeping)\n"
+                           "Tgid:	1999\n"
+                           "Pid:	1999\n"
+                           "PPid:	1\n");
+    ProcFileSystem pfs(fsptr);
+    ASSERT_TRUE(pfs.ProcessIsRunning("mydaemon", "/var/run/mydaemon.pid"));
+}
+
+TEST_F(ProcFileSystemUnitTest, ProcessIsRunningFailure)
+{
+    FTRACE;
+    shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
+    fsptr->FilePutContents("/var/run/mydaemon.pid", "1");
+    fsptr->FilePutContents("/proc/1/status",
+                           "Name:	init\n"
+                           "State:	S (sleeping)\n"
+                           "Tgid:	1\n"
+                           "Pid:	1\n"
+                           "PPid:	0\n");
+    ProcFileSystem pfs(fsptr);
+    ASSERT_FALSE(pfs.ProcessIsRunning("mydaemon", "/var/run/mydaemon.pid"));
 }
