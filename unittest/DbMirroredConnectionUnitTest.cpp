@@ -75,12 +75,15 @@ protected:
         hlog(HLOG_TRACE, "}");
     }
 
+protected:
+    FileSystemImpl mFileSystem;
+
 private:
     LogManager mLogManager;
 };
 
 
-class BasicDatabaseTest : public DatabaseTest
+class DbMirroredConnectionUnitTest : public DatabaseTest
 {
 protected:
     typedef DatabaseTest base_type;
@@ -144,6 +147,7 @@ protected:
     {
         string databasePath("/tmp/");
         databasePath += boost::filesystem::basename(__FILE__);
+        databasePath += getpid();
         databasePath += ".unittest.db";
         return databasePath.c_str();
     }
@@ -156,7 +160,7 @@ protected:
     }
 };
 
-TEST_F(BasicDatabaseTest, SqliteBackupDatabaseTest)
+TEST_F(DbMirroredConnectionUnitTest, SqliteBackupDatabaseTest)
 {
     DbConnectionPool pool("sqlite_mirrored", getDatabaseName());
     DbConnection& dbConnection(pool.GetDbConnection());
@@ -167,7 +171,7 @@ TEST_F(BasicDatabaseTest, SqliteBackupDatabaseTest)
 /*
  * Test case where database doesn't exist prior to backup manager instantiation
  */
-TEST_F(BasicDatabaseTest, SqliteDbBackupManagerThreadWhenNoInitialDatabaseTest)
+TEST_F(DbMirroredConnectionUnitTest, SqliteDbBackupManagerThreadWhenNoInitialDatabaseTest)
 {
     shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
 
@@ -205,7 +209,7 @@ TEST_F(BasicDatabaseTest, SqliteDbBackupManagerThreadWhenNoInitialDatabaseTest)
 /*
  * Test case where primary db is future prior to db backup manager instantiation
  */
-TEST_F(BasicDatabaseTest, SqliteDbBackupManagerThreadWhenFuturePrimaryDatabaseTest)
+TEST_F(DbMirroredConnectionUnitTest, SqliteDbBackupManagerThreadWhenFuturePrimaryDatabaseTest)
 {
     unsigned int rows(0);
 
@@ -252,7 +256,7 @@ TEST_F(BasicDatabaseTest, SqliteDbBackupManagerThreadWhenFuturePrimaryDatabaseTe
     ASSERT_EQ(res.GetNumRows(), rows);
 }
 
-TEST_F(BasicDatabaseTest, SqliteSameSourceAndTargetBackupDatabaseTest)
+TEST_F(DbMirroredConnectionUnitTest, SqliteSameSourceAndTargetBackupDatabaseTest)
 {
     DbConnectionPool pool("sqlite_mirrored", getDatabaseName());
     DbConnection& dbConnection(pool.GetDbConnection());
@@ -260,7 +264,7 @@ TEST_F(BasicDatabaseTest, SqliteSameSourceAndTargetBackupDatabaseTest)
     ASSERT_THROW(dbConnection.BackupDatabase(getDatabaseName()), Forte::EDbLiteBackupFailed);
 }
 
-TEST_F(BasicDatabaseTest, SqliteManualFailoverAndManualBackupDatabaseTest)
+TEST_F(DbMirroredConnectionUnitTest, SqliteManualFailoverAndManualBackupDatabaseTest)
 {
     size_t rows(0);
 
@@ -280,18 +284,25 @@ TEST_F(BasicDatabaseTest, SqliteManualFailoverAndManualBackupDatabaseTest)
     EXPECT_EQ(res.GetNumRows(), rows);
 }
 
-TEST_F(BasicDatabaseTest, SqliteNoPathToBackupTargetDatabaseTest)
+TEST_F(DbMirroredConnectionUnitTest, SqliteNoPathToBackupTargetDatabaseTest)
 {
     DbResult res;
-
-    shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), "/tmp/tmp/tmp/backup.db"));
+    FString tmpDeepDir(FStringFC(), "/tmp/%d/%d/backup.db", getpid(), getpid());
+    FString cleanupPath(FStringFC(), "/tmp/%d", getpid());
+    shared_ptr<DbConnectionPool> pool(
+        make_shared<DbConnectionPool>(
+            "sqlite_mirrored", getDatabaseName(),
+            tmpDeepDir));
     DbAutoConnection dbConnection(pool);
     {
         ASSERT_NO_THROW(DbBackupManagerThread backupMgr(pool));
     }
+
+    const bool unlinkChildren = true;
+    mFileSystem.Unlink(cleanupPath, unlinkChildren);
 }
 
-TEST_F(BasicDatabaseTest, SqliteNoPrimaryOnAutoBackupDatabaseTest)
+TEST_F(DbMirroredConnectionUnitTest, SqliteNoPrimaryOnAutoBackupDatabaseTest)
 {
     DbResult res;
 
@@ -303,7 +314,7 @@ TEST_F(BasicDatabaseTest, SqliteNoPrimaryOnAutoBackupDatabaseTest)
     }
 }
 
-TEST_F(BasicDatabaseTest, SqliteManualFailoverAutoBackupDatabaseTest)
+TEST_F(DbMirroredConnectionUnitTest, SqliteManualFailoverAutoBackupDatabaseTest)
 {
     size_t rows(0);
     DbResult res;
@@ -353,7 +364,7 @@ TEST_F(BasicDatabaseTest, SqliteManualFailoverAutoBackupDatabaseTest)
 }
 
 
-TEST_F(BasicDatabaseTest, ManualBackupAutoFailoverDbMirroredConnectionTest)
+TEST_F(DbMirroredConnectionUnitTest, ManualBackupAutoFailoverDbMirroredConnectionTest)
 {
     PopulateData();
 
@@ -374,7 +385,7 @@ TEST_F(BasicDatabaseTest, ManualBackupAutoFailoverDbMirroredConnectionTest)
     EXPECT_EQ(res.GetNumRows(), 100);
 }
 
-TEST_F(BasicDatabaseTest, AutoBackupAutoFailoverDbMirroredConnectionTest)
+TEST_F(DbMirroredConnectionUnitTest, AutoBackupAutoFailoverDbMirroredConnectionTest)
 {
     size_t rows(0);
     DbResult res;
@@ -420,7 +431,7 @@ TEST_F(BasicDatabaseTest, AutoBackupAutoFailoverDbMirroredConnectionTest)
 }
 
 
-TEST_F(BasicDatabaseTest, AutoBackupAutoFailoverStabilityOfBackupManagerUnderPrimaryFailureDbMirroredConnectionTest)
+TEST_F(DbMirroredConnectionUnitTest, AutoBackupAutoFailoverStabilityOfBackupManagerUnderPrimaryFailureDbMirroredConnectionTest)
 {
     size_t rows(0);
     DbResult res;
