@@ -69,14 +69,14 @@ namespace Forte
          * given key will no longer reference the orginal object, but
          * instead a separate local instance.
          **/
-        void Detach(const char *key) { throw_exception(EUnimplemented()); }
+        virtual void Detach(const char *key) { throw_exception(EUnimplemented()); }
 
         /**
          * Get() retrieves a reference counted pointer to an object
          * from the Context.  If the object does not exist, one can
          * be automatically created using an appropriate factory.
          **/
-        ObjectPtr Get(const char *key) const;
+        virtual ObjectPtr Get(const char *key) const;
 
         /**
          * Get() retrieves a reference counted pointer to a typed object
@@ -85,15 +85,12 @@ namespace Forte
          **/
         template <typename ValueType>
         boost::shared_ptr<ValueType> Get(const char *key) const {
-            ObjectMap::const_iterator i;
-            Forte::AutoUnlockMutex lock(mLock);
-            if ((i = mObjectMap.find(key)) == mObjectMap.end())
-                throw_exception(EContextInvalidKey(key));
+            ObjectPtr o = Get(key);
             boost::shared_ptr<ValueType> ptr(
-                boost::dynamic_pointer_cast<ValueType>((*i).second));
+                boost::dynamic_pointer_cast<ValueType>(o));
             if (!ptr)
             {
-                hlog_and_throw(HLOG_ERR, EContextTypeMismatch(FStringFC(), "Invalid type for '%s': asked for %s, but %s was found", key, typeid(ValueType).name(), typeid((*i).second).name()));
+                hlog_and_throw(HLOG_ERR, EContextTypeMismatch(FStringFC(), "Invalid type for '%s': asked for %s, but %s was found", key, typeid(ValueType).name(), typeid(o).name()));
             }
             return ptr;
         }
@@ -103,7 +100,7 @@ namespace Forte
          * Set() stores a reference to an object in the Context.  Any
          * previous entry with the same key will be replaced.
          **/
-        void Set(const char *key, ObjectPtr obj);
+        virtual void Set(const char *key, ObjectPtr obj);
 
         /**
          * Create() allocates and sets a key to a specified object. TODO
@@ -112,21 +109,21 @@ namespace Forte
         /**
          * Remove() will remove a single object from the Context.
          **/
-        void Remove(const char *key);
+        virtual void Remove(const char *key);
 
         /**
          * Clear() will remove all references from the Context.
          **/
-        void Clear(void);
+        virtual void Clear(void);
 
         /**
          * Merge() will merge all keys from the 'other' Context into
          * this one.  Duplicate keys will be replaced with those from 'other'.
          **/
-        void Merge(const Context &other);
+        virtual void Merge(const Context &other);
 
         size_t Size(void) { return mObjectMap.size(); }
-        void Dump(void);
+        virtual void Dump(void);
 
     protected:
         mutable Forte::Mutex mLock;
