@@ -1,3 +1,5 @@
+// #SCQAD TEST: ONBOX: AutoMutexOnBoxTest
+
 #ifndef _AutoMutex_h
 #define _AutoMutex_h
 #include <pthread.h>
@@ -7,8 +9,18 @@
 
 namespace Forte
 {
-    class Mutex : public Object {
+    class Mutex {
         friend class ThreadCondition;
+
+
+    private:
+        // non-copyable:
+        // deriving from forte object or boost::non-copyable adds a
+        // small but measurable amount of overhead to
+        // creation/destruction of this object
+        Mutex(Mutex const&);
+        Mutex& operator=(Mutex const&);
+
     public:
 
         /**
@@ -95,26 +107,44 @@ namespace Forte
         }
     };
 
-    class AutoLockMutex : public Object {
+    class AutoLockMutex {
     public:
         inline AutoLockMutex(Mutex &mutex):mMutex(mutex) {mMutex.Unlock();}
         inline ~AutoLockMutex() {mMutex.Lock();}
+
+    private:
+        // non-copyable: see note above
+        AutoLockMutex(AutoLockMutex const&);
+        AutoLockMutex& operator=(AutoLockMutex const&);
+
     private:
         Mutex &mMutex;
     };
 
-    class AutoUnlockMutex : public Object {
+    class AutoUnlockMutex {
     public:
         inline AutoUnlockMutex(Mutex &mutex):mMutex(mutex) {mMutex.Lock();}
         inline ~AutoUnlockMutex() {mMutex.Unlock();}
+
+    private:
+        // non-copyable: see note above
+        AutoUnlockMutex(AutoUnlockMutex const&);
+        AutoUnlockMutex& operator=(AutoUnlockMutex const&);
+
     private:
         Mutex &mMutex;
     };
 
-    class AutoUnlockOnlyMutex : public Object {
+    class AutoUnlockOnlyMutex {
     public:
         inline AutoUnlockOnlyMutex(Mutex &mutex):mMutex(mutex) { }
         inline ~AutoUnlockOnlyMutex() { mMutex.Unlock(); }
+
+    private:
+        // non-copyable: see note above
+        AutoUnlockOnlyMutex(AutoUnlockOnlyMutex const&);
+        AutoUnlockOnlyMutex& operator=(AutoUnlockOnlyMutex const&);
+
     private:
         Mutex &mMutex;
     };

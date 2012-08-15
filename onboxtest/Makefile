@@ -26,6 +26,7 @@ LIBS = \
 	$(OS_LIBS)
 
 PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
+	$(TARGETDIR)/AutoMutexOnBoxTest \
 	$(TARGETDIR)/DbMirroredConnectionUnitTest \
 	$(TARGETDIR)/INotifyUnitTest \
 	$(TARGETDIR)/ProcessManagerOnBoxTest \
