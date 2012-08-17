@@ -72,6 +72,7 @@ GSRCS = CheckedValueStoreUnitTest.cpp \
 	PidFileUnitTest.cpp \
 	PDUPeerUnitTest.cpp \
 	ProcessManagerUnitTest.cpp \
+	ProcessCommandUnitTest.cpp \
 	ProcessorInformationUnitTest.cpp \
 	ProcFileSystemUnitTest.cpp \
 	SCSIUtilUnitTest.cpp \
@@ -116,6 +117,8 @@ PROG_DEPS_OBJS_FStringUnitTest =  \
 PROG_DEPS_OBJS_ProcessManagerUnitTest =  \
 	../$(TARGETDIR)/ProcessManagerImpl.o \
 	../$(TARGETDIR)/ProcessFutureImpl.o \
+
+PROG_DEPS_OBJS_ProcessCommandUnitTest =
 
 PROG_DEPS_OBJS_ProcFileSystemUnitTest =  \
 	../$(TARGETDIR)/ProcFileSystem.o \
