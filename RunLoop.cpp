@@ -140,8 +140,8 @@ void * Forte::RunLoop::run(void)
         {
             if (hlog_ratelimit(86400))
             {
-                hlogstream(HLOG_WARN, "run loop has caught up for timer '" <<
-                                      i->GetTimerName() << "'");
+                hlogstream(HLOG_WARN, "run loop has caught up for '" <<
+                           mName << "'");
             }
             loopLatencyResolved = false;
         }
