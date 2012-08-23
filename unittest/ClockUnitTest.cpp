@@ -36,6 +36,24 @@ TEST_F(ClockUnitTest, TimespecOperations)
     ASSERT_TRUE((b - a - Timespec(0, 1)) == Timespec(-13, 0));
 }
 
+TEST_F(ClockUnitTest, TimespecComparisonOperations)
+{
+    Timespec a(10, 2);
+    Timespec b(-3 , 3); // -3 + 3 nanosecods = 2.999999997
+
+    EXPECT_TRUE(a > b);
+    EXPECT_TRUE(b < a);
+    EXPECT_TRUE(b <= a);
+    EXPECT_TRUE(a >= b);
+    EXPECT_TRUE(a >= a);
+    EXPECT_TRUE(a <= a);
+
+    EXPECT_FALSE(a < b);
+    EXPECT_FALSE(b > a);
+    EXPECT_FALSE(b >= a);
+    EXPECT_FALSE(a <= b);
+}
+
 TEST_F(ClockUnitTest, TimespecCtorThrowsWhenInvalidNanoseconds)
 {
     ASSERT_THROW (const Timespec b(1, 1000000000), ETimespecInvalid);

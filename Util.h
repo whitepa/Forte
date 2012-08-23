@@ -94,4 +94,12 @@ inline bool operator <= (const struct timespec &a, const struct timespec &b)
     return !(b < a);
 }
 
+inline bool operator > (const struct timespec &a, const struct timespec &b)
+{
+    return (b < a);
+}
+inline bool operator >= (const struct timespec &a, const struct timespec &b)
+{
+    return !(a < b);
+}
 #endif
