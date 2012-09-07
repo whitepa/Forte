@@ -63,7 +63,8 @@ namespace Forte
                 try
                 {
                     shared_ptr<Timer> timer(GetTimer());
-                    return timer->GetName();
+                    if (timer)
+                        return timer->GetName();
                 }
                 catch(std::exception& e)
                 {
