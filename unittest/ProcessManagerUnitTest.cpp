@@ -29,45 +29,34 @@ public:
         logManager.BeginLogging("//stdout");
 
         FileSystemImpl fs;
-        // check all the possible dirs
-        mProcMonLocation = "";
-        if (fs.FileExists("../obj/SC001-x86_64-opt/procmon"))
-        {
-            mProcMonLocation.Format(
-                "FORTE_PROCMON=../obj/SC001-x86_64-%s/procmon",
-                "opt");
-        }
-        else if (fs.FileExists("../obj/SC001-x86_64-debug/procmon"))
-        {
-            mProcMonLocation.Format(
-                "FORTE_PROCMON=../obj/SC001-x86_64-%s/procmon",
-                "debug");
-        }
-        else if (fs.FileExists("../obj/SC001-x86_64-rel/procmon"))
-        {
-            mProcMonLocation.Format(
-                "FORTE_PROCMON=../obj/SC001-x86_64-%s/procmon",
-                "rel");
-        }
-        else if (fs.FileExists("../obj/SC001-x86_64-prof/procmon"))
-        {
-            mProcMonLocation.Format(
-                "FORTE_PROCMON=../obj/SC001-x86_64-%s/procmon",
-                "prof");
-        }
-        // else let Processmanager use the default location it knows abt
+        mProcMonLocation.Format("FORTE_PROCMON=%s/procmon",
+                                getParentTargetDir(fs).c_str());
 
-        if (mProcMonLocation != "")
-        {
-            hlog(HLOG_INFO, "procmon location : %s", mProcMonLocation.c_str());
-            putenv((char *)mProcMonLocation.c_str());
-            hlog(HLOG_INFO, "procmon env : %s", getenv("FORTE_PROCMON"));
-        }
+        hlog(HLOG_INFO, "procmon location : %s", mProcMonLocation.c_str());
+        putenv((char *)mProcMonLocation.c_str());
+        hlog(HLOG_INFO, "procmon env : %s", getenv("FORTE_PROCMON"));
     };
     static void TearDownTestCase() {
 
     };
 
+    static FString getParentTargetDir(FileSystem& fs) {
+        FString pathToExe = fs.GetPathToCurrentProcess();
+
+        // find the /obj/ in the current unit test exe
+        size_t objLocation = pathToExe.find("/obj/");
+        if (objLocation == std::string::npos)
+        {
+            throw Exception(FStringFC(), "Unable to find target dir in %s",
+                            pathToExe.c_str());
+        }
+
+        // now go up a directory
+        pathToExe.insert(objLocation, "/..");
+
+        // and strip off the unit test process location
+        return fs.Dirname(pathToExe);
+    }
 };
 
 TEST_F(ProcessManagerTest, MemLeak)
