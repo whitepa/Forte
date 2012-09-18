@@ -5,11 +5,6 @@
 #include "LogManager.h"
 #include "Types.h"
 
-// \TODO remove this once EPOLLRDHUP makes it into sys/epoll.h
-#ifndef EPOLLRDHUP
-#define EPOLLRDHUP 0x2000
-#endif
-
 using namespace boost;
 using namespace Forte;
 
@@ -51,7 +46,7 @@ void Forte::PDUPeerSet::SendAll(const PDU &pdu) const
     foreach (const shared_ptr<PDUPeer> &peer, mPeerSet)
     {
         if (!peer) continue;
-        hlog(HLOG_DEBUG, "sending to peer on fd %d", 
+        hlog(HLOG_DEBUG, "sending to peer on fd %d",
              peer->GetFD());
         try
         {
@@ -112,18 +107,18 @@ void Forte::PDUPeerSet::Poll(int msTimeout, bool interruptible)
         AutoReadUnlock lock(mEPollLock);
         if (mEPollFD == -1 || !mBuffer)
             throw EPDUPeerSetNotPolling();
-       
+
         memset(events, 0, 32*sizeof(struct epoll_event));
-       
+
         do
         {
             nfds = epoll_wait(mEPollFD, events, 32, msTimeout);
-        } 
+        }
         while (nfds < 0 && !interruptible && errno == EINTR);
 
         buffer = mBuffer;
     }
-//    hlog(HLOG_DEBUG, "epoll_wait complete, nfds=%d", nfds);
+    //hlog(HLOG_DEBUG, "epoll_wait complete, nfds=%d", nfds);
     if (nfds < 0 && (errno == EBADF || errno == EFAULT || errno == EINVAL))
     {
         throw EPDUPeerSetPollFailed(strerror(errno));
@@ -132,7 +127,7 @@ void Forte::PDUPeerSet::Poll(int msTimeout, bool interruptible)
     char *rawBuffer = buffer.get();
     for (int i = 0; i < nfds; ++i)
     {
-//        hlog(HLOG_DEBUG, "i=%d events=0x%x", i, events[i].events);
+        //hlog(HLOG_DEBUG, "i=%d events=0x%x", i, events[i].events);
         bool error = false;
         shared_ptr<PDUPeer> peer;
         {
@@ -177,7 +172,7 @@ void Forte::PDUPeerSet::Poll(int msTimeout, bool interruptible)
             }
             else
             {
-                hlog(HLOG_DEBUG, "received %d bytes on fd %d", 
+                hlog(HLOG_DEBUG, "received %d bytes on fd %d",
                      len, peer->GetFD());
                 peer->DataIn(len, rawBuffer);
                 if (mProcessPDUCallback && peer->IsPDUReady())
