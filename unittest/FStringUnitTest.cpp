@@ -145,6 +145,21 @@ try {
     ASSERT_EQ(d.RightString("t").LeftString("p"), "5");
 }
 
+TEST_F(FStringTest, Regexplode)
+{
+    FString foo("abcdefg");
+    std::vector<FString> bar;
+    ASSERT_TRUE(foo.RegexMatch("b(.)de(.)", bar));
+    ASSERT_EQ(bar[0], "c");
+    ASSERT_EQ(bar[1], "f");
+
+    bar.clear();
+    ASSERT_FALSE(foo.RegexMatch("hijklmnop", bar));
+
+    FString baz("abc123def456");
+    ASSERT_TRUE(baz.RegexMatch("abc(\\d\\d\\d)def", bar));
+}
+
 TEST_F(FStringTest, FStringReplace)
 {
     FString s, d;

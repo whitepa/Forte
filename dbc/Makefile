@@ -10,7 +10,7 @@ INCLUDE = $(FORTE_INCLUDE) -I$(BOOST_INCLUDE)
 
 CCCARGS += -Wno-unused-function
 
-LIBS = $(FORTE_LIBS) -lfl -lpthread
+LIBS = $(FORTE_LIBS) $(BOOST_REGEX_LIB) -lfl -lpthread
 
 CLEAN += SQLParse.[ch]pp SQLScan.cpp SQLParse.output $(EXPORT_BIN)/dbc
 

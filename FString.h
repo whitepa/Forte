@@ -336,6 +336,8 @@ namespace Forte
                 return strtod(c_str(), &c) >= 0.0 && (*c == '\0');
             }
 
+        bool RegexMatch(const char *exp, std::vector<FString> &matching_strings) const;
+
         /// Split a multi-line string into single line components.  Line endings are
         /// automatically detected.  If trim is true, external whitespace will be trimmed
         /// from each line.  Line endings may be CR, LF, or CRLF, and must all be the same.

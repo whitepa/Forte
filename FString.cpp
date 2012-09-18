@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <cstdarg>
 #include <errno.h>
+#include <boost/regex.hpp>
 
 using namespace Forte;
 
@@ -296,6 +297,21 @@ FString& FString::MakeLower()
     }
 
     return *this;
+}
+
+bool FString::RegexMatch(const char *exp, std::vector<FString> &matching_strings) const
+{
+    matching_strings.clear();
+    boost::regex expression(exp);
+    boost::cmatch matches;
+    if (! boost::regex_search(this->c_str(), matches, expression))
+        return false;
+
+    for (uint i=1; i < matches.size(); i++)
+    {
+        matching_strings.push_back(std::string(matches[i].first, matches[i].second));
+    }
+    return true;
 }
 
 int FString::LineSplit(std::vector<FString> &lines, bool trim) const
