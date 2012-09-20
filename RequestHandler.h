@@ -1,11 +1,12 @@
-#ifndef _RequestHandler_h
-#define _RequestHandler_h
+#ifndef _Forte_RequestHandler_h
+#define _Forte_RequestHandler_h
 
-#include "Thread.h"
+#include "Object.h"
 
 namespace Forte
 {
 // base class for a user-defined request handler
+    class Event;
     class RequestHandler : public Object {
     public:
         inline RequestHandler(unsigned int timeout = 0) : mTimeout(timeout) {};

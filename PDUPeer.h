@@ -20,6 +20,7 @@ EXCEPTION_SUBCLASS2(EPDUPeer,
 
 namespace Forte
 {
+    class Mutex;
     class PDUPeer : public Object
     {
     private:
