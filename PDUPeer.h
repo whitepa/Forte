@@ -11,8 +11,12 @@ EXCEPTION_CLASS(EPDUPeer);
 EXCEPTION_SUBCLASS2(EPDUPeer, EPeerBufferOverflow, "Peer buffer overflowed");
 EXCEPTION_SUBCLASS2(EPDUPeer, EPeerSendFailed, "Failed to send PDU to peer");
 EXCEPTION_SUBCLASS2(EPDUPeer, EPeerSendInvalid, "Attempt to send invalid PDU");
-EXCEPTION_SUBCLASS2(EPDUPeer, EPDUVersionInvalid, "Received PDU with invalid version");
-EXCEPTION_SUBCLASS2(EPDUPeer, EPDUOpcodeInvalid, "Received PDU with invalid opcode");
+EXCEPTION_SUBCLASS2(EPDUPeer,
+                    EPDUVersionInvalid,
+                    "Received PDU with invalid version");
+EXCEPTION_SUBCLASS2(EPDUPeer,
+                    EPDUOpcodeInvalid,
+                    "Received PDU with invalid opcode");
 
 namespace Forte
 {
@@ -31,10 +35,10 @@ namespace Forte
             }
         virtual ~PDUPeer() { };
 
-        /** 
+        /**
          * Get a shared pointer to this PDUPeer.  NOTE: A shared_ptr
          * to this object must already exist.
-         * 
+         *
          * @return shared_ptr
          */
         boost::shared_ptr<PDUPeer> GetPtr(void) {
@@ -45,11 +49,11 @@ namespace Forte
         void DataIn(size_t len, char *buf);
         void SendPDU(const Forte::PDU &pdu) const;
 
-        /** 
+        /**
          * Determine whether a full PDU has been received from the
          * peer, and is ready for the application to get with a
          * RecvPDU call.
-         * 
+         *
          * @return true if a PDU is ready, false otherwise
          */
         bool IsPDUReady(void) const;
@@ -57,11 +61,12 @@ namespace Forte
         bool lockedIsPDUReady(void) const;
     public:
 
-        /** 
-         * Receive a PDU.  Returns true if a PDU was received, false if no complete PDU is ready.
-         * 
-         * @param out 
-         * 
+        /**
+         * Receive a PDU.  Returns true if a PDU was received, false
+         * if no complete PDU is ready.
+         *
+         * @param out
+         *
          * @return true if a PDU was received, false if not.
          */
         bool RecvPDU(Forte::PDU &out);

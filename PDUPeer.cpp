@@ -11,7 +11,7 @@ void Forte::PDUPeer::DataIn(size_t len, char *buf)
     memcpy(mPDUBuffer.get() + mCursor, buf, len);
     hlog(HLOG_DEBUG2, "received data; oldCursor=%llu newCursor=%llu",
          (u64) mCursor, (u64) mCursor + len);
-    mCursor += len;    
+    mCursor += len;
 }
 
 void Forte::PDUPeer::SendPDU(const Forte::PDU &pdu) const
@@ -21,7 +21,7 @@ void Forte::PDUPeer::SendPDU(const Forte::PDU &pdu) const
     len += pdu.payloadSize;
     if (len > sizeof(Forte::PDU))
         throw EPeerSendInvalid();
-    hlog(HLOG_DEBUG2, "sending %zu bytes on fd %d, payloadsize = %u", 
+    hlog(HLOG_DEBUG2, "sending %zu bytes on fd %d, payloadsize = %u",
             len, mFD.GetFD(), pdu.payloadSize);
 
     size_t offset = 0;
@@ -42,12 +42,13 @@ bool Forte::PDUPeer::IsPDUReady(void) const
     AutoUnlockMutex lock(mLock);
     return lockedIsPDUReady();
 }
+
 bool Forte::PDUPeer::lockedIsPDUReady(void) const
 {
     // returns true if a PDU has been received
     //         false otherwise
     // ('out' will be populated with the PDU if true)
-        
+
     // check for a valid PDU
     // (for now, read cursor is always the start of buffer)
     size_t minPDUSize = sizeof(Forte::PDU) - Forte::PDU::PDU_MAX_PAYLOAD;
@@ -85,9 +86,8 @@ bool Forte::PDUPeer::RecvPDU(Forte::PDU &out)
     // now, move the rest of the buffer and cursor back by 'len' bytes
     memmove(mPDUBuffer.get(), mPDUBuffer.get() + len, mBufSize - len);
     memset(mPDUBuffer.get() + mBufSize - len, 0, len);
-    hlog(HLOG_DEBUG2, "found valid PDU: oldCursor=%zu newCursor=%zu", 
+    hlog(HLOG_DEBUG2, "found valid PDU: oldCursor=%zu newCursor=%zu",
          mCursor, mCursor - len);
     mCursor -= len;
     return true;
-    
 }
