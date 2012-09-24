@@ -3,7 +3,6 @@
 
 #include "Thread.h"
 #include "Types.h"
-#include "PDUPeerSet.h"
 #include "Object.h"
 #include "Clock.h"
 #include <boost/pointer_cast.hpp>

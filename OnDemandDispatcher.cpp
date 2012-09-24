@@ -53,7 +53,7 @@ void * Forte::OnDemandDispatcherManager::run(void)
             disp.mThreads.push_back(
                 shared_ptr<DispatcherThread>(
                     new OnDemandDispatcherWorker(disp, event)));
-            hlog(HLOG_DEBUG, "Number of threads in queue : %d", (int)disp.mThreads.size());
+            hlog(HLOG_DEBUG2, "Number of threads in queue : %d", (int)disp.mThreads.size());
         }
         if (disp.mShutdown) {
             hlog(HLOG_DEBUG, "Going to shutdown dispatcher thread");

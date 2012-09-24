@@ -1,9 +1,9 @@
 #include "AutoMutex.h"
 #include "LogManager.h"
-#include "PDUPeer.h"
+#include "PDUPeerImpl.h"
 #include "Types.h"
 
-void Forte::PDUPeer::DataIn(size_t len, char *buf)
+void Forte::PDUPeerImpl::DataIn(size_t len, char *buf)
 {
     AutoUnlockMutex lock(mLock);
     if ((mCursor + len) > mBufSize)
@@ -14,7 +14,7 @@ void Forte::PDUPeer::DataIn(size_t len, char *buf)
     mCursor += len;
 }
 
-void Forte::PDUPeer::SendPDU(const Forte::PDU &pdu) const
+void Forte::PDUPeerImpl::SendPDU(const Forte::PDU &pdu) const
 {
     AutoUnlockMutex lock(mLock);
     size_t len = sizeof(Forte::PDU) - Forte::PDU::PDU_MAX_PAYLOAD;
@@ -37,13 +37,13 @@ void Forte::PDUPeer::SendPDU(const Forte::PDU &pdu) const
     }
 }
 
-bool Forte::PDUPeer::IsPDUReady(void) const
+bool Forte::PDUPeerImpl::IsPDUReady(void) const
 {
     AutoUnlockMutex lock(mLock);
     return lockedIsPDUReady();
 }
 
-bool Forte::PDUPeer::lockedIsPDUReady(void) const
+bool Forte::PDUPeerImpl::lockedIsPDUReady(void) const
 {
     // returns true if a PDU has been received
     //         false otherwise
@@ -71,7 +71,7 @@ bool Forte::PDUPeer::lockedIsPDUReady(void) const
         return false;
 }
 
-bool Forte::PDUPeer::RecvPDU(Forte::PDU &out)
+bool Forte::PDUPeerImpl::RecvPDU(Forte::PDU &out)
 {
     AutoUnlockMutex lock(mLock);
     if (!lockedIsPDUReady())

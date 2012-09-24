@@ -15,7 +15,7 @@ namespace Forte
     class Event : public Object {
     public:
         Event() {};
-        Event(const FString &name) : mName(name) {};
+        Event(const FString &name) : mServerID(-1), mName(name) {}
         virtual ~Event() {}
 
         const FString &GetName(void) const { return mName; }
@@ -27,7 +27,7 @@ namespace Forte
 
     class RequestEvent : public Event {
     public:
-        RequestEvent() {};
+        RequestEvent() : mFD(-1) {}
         virtual ~RequestEvent() {}
         int mFD;
         struct in_addr mClient;

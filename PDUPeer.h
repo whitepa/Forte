@@ -1,11 +1,9 @@
 #ifndef __PDU_peer_h_
 #define __PDU_peer_h_
 
-#include "AutoFD.h"
 #include "Exception.h"
 #include "Object.h"
 #include "PDU.h"
-#include <boost/shared_array.hpp>
 
 EXCEPTION_CLASS(EPDUPeer);
 EXCEPTION_SUBCLASS2(EPDUPeer, EPeerBufferOverflow, "Peer buffer overflowed");
@@ -25,16 +23,10 @@ namespace Forte
     {
     private:
         PDUPeer(const PDUPeer &other) { throw EUnimplemented(); }
+
     public:
-        PDUPeer(int fd, unsigned int bufsize = 65536 + PDU::PDU_SIZE) :
-            mFD(fd),
-            mCursor(0),
-            mBufSize(bufsize),
-            mPDUBuffer(new char[mBufSize])
-            {
-                memset(mPDUBuffer.get(), 0, mBufSize);
-            }
-        virtual ~PDUPeer() { };
+        PDUPeer() {}
+        virtual ~PDUPeer() {}
 
         /**
          * Get a shared pointer to this PDUPeer.  NOTE: A shared_ptr
@@ -43,12 +35,13 @@ namespace Forte
          * @return shared_ptr
          */
         boost::shared_ptr<PDUPeer> GetPtr(void) {
-            return boost::static_pointer_cast<PDUPeer>(Object::shared_from_this());
+            return boost::static_pointer_cast<PDUPeer>(
+                Object::shared_from_this());
         }
 
-        int GetFD(void) const { return mFD; }
-        void DataIn(size_t len, char *buf);
-        void SendPDU(const Forte::PDU &pdu) const;
+        virtual int GetFD(void) const = 0;
+        virtual void DataIn(size_t len, char *buf) = 0;
+        virtual void SendPDU(const Forte::PDU &pdu) const = 0;
 
         /**
          * Determine whether a full PDU has been received from the
@@ -57,10 +50,7 @@ namespace Forte
          *
          * @return true if a PDU is ready, false otherwise
          */
-        bool IsPDUReady(void) const;
-    private:
-        bool lockedIsPDUReady(void) const;
-    public:
+        virtual bool IsPDUReady(void) const = 0;
 
         /**
          * Receive a PDU.  Returns true if a PDU was received, false
@@ -70,16 +60,9 @@ namespace Forte
          *
          * @return true if a PDU was received, false if not.
          */
-        bool RecvPDU(Forte::PDU &out);
+        virtual bool RecvPDU(Forte::PDU &out) = 0;
 
-        void Close(void) { mFD.Close(); }
-
-    protected:
-        mutable Forte::Mutex mLock;
-        AutoFD mFD;
-        size_t mCursor;
-        size_t mBufSize;
-        boost::shared_array<char> mPDUBuffer;
+        virtual void Close(void) = 0;
     };
 };
 #endif

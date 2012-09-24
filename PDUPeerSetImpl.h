@@ -1,42 +1,13 @@
-#ifndef __PDU_peer_set_h_
-#define __PDU_peer_set_h_
+#ifndef __PDUPeerSetImpl_h_
+#define __PDUPeerSetImpl_h_
 
 #include "AutoFD.h"
 #include "AutoMutex.h"
+#include "PDUPeerSet.h"
 #include "PDUPeer.h"
 #include "RWLock.h"
 #include <boost/function.hpp>
 #include <boost/shared_array.hpp>
-
-EXCEPTION_CLASS(EPDUPeerSet);
-
-EXCEPTION_SUBCLASS2(EPDUPeerSet,
-                    EPDUPeerDuplicate,
-                    "Peer already exists");
-
-EXCEPTION_SUBCLASS2(EPDUPeerSet,
-                    EPDUPeerInvalid,
-                    "Invalid Peer");
-
-EXCEPTION_SUBCLASS2(EPDUPeerSet,
-                    EPDUPeerSetPollFailed,
-                    "Failed to poll");
-
-EXCEPTION_SUBCLASS2(EPDUPeerSet,
-                    EPDUPeerSetPollCreate,
-                    "Failed to create poll socket");
-
-EXCEPTION_SUBCLASS2(EPDUPeerSet,
-                    EPDUPeerSetPollAdd,
-                    "Failed to add descriptor to poll socket");
-
-EXCEPTION_SUBCLASS2(EPDUPeerSet,
-                    EPDUPeerSetNotPolling,
-                    "PDUPeerSet is not set up for polling");
-
-EXCEPTION_SUBCLASS2(EPDUPeerSet,
-                    EPDUPeerSetNoPeers,
-                    "No peers have been added for polling");
 
 namespace Forte
 {
@@ -46,21 +17,25 @@ namespace Forte
      * 'PDU ready' and 'error' callbacks may be used as part of the
      * polling mechanism.
      */
-    class PDUPeerSet : public Object
+    class PDUPeerSetImpl : public PDUPeerSet
     {
     public:
-        typedef boost::function<void(PDUPeer &peer)> CallbackFunc;
+        static const int MAX_PEERS = 256;
+        static const int RECV_BUFFER_SIZE = 65536;
 
-        PDUPeerSet() {}
-        virtual ~PDUPeerSet() {}
+        PDUPeerSetImpl() : mEPollFD(-1) {}
+        virtual ~PDUPeerSetImpl();
 
         /**
          * GetSize() returns the current number of PDUPeer objects
-         * being managed by this PDUPeerSet.
+         * being managed by this PDUPeerSetImpl.
          *
          * @return size of the set
          */
-        virtual unsigned int GetSize(void) = 0;
+        unsigned int GetSize(void) {
+            AutoUnlockMutex peerSetLock(mLock);
+            return mPeerSet.size();
+        }
 
         /**
          * PeerCreate will create a new PDUPeer object for the already
@@ -70,15 +45,15 @@ namespace Forte
          *
          * @return
          */
-        virtual boost::shared_ptr<PDUPeer> PeerCreate(int fd) = 0;
+        boost::shared_ptr<PDUPeer> PeerCreate(int fd);
 
         /**
          * SendAll will send the given PDU to ALL of the peers being
-         * managed by this PDUPeerSet.
+         * managed by this PDUPeerSetImpl.
          *
          * @param pdu
          */
-        virtual void SendAll(const PDU &pdu) const = 0;
+        void SendAll(const PDU &pdu) const;
 
         /**
          * SetProcessPDUCallback sets the single callback function to
@@ -87,7 +62,9 @@ namespace Forte
          *
          * @param f
          */
-        virtual void SetProcessPDUCallback(CallbackFunc f) = 0;
+        void SetProcessPDUCallback(CallbackFunc f) {
+            mProcessPDUCallback = f;
+        }
 
         /**
          * SetErrorCallback sets the single callback function to use
@@ -99,7 +76,9 @@ namespace Forte
          *
          * @param f
          */
-        virtual void SetErrorCallback(CallbackFunc f) = 0;
+        void SetErrorCallback(CallbackFunc f) {
+            mErrorCallback = f;
+        }
 
         /**
          * Creates an epoll file descriptor, and automatically adds
@@ -110,7 +89,7 @@ namespace Forte
          *
          * @return int epoll file descriptor
          */
-        virtual int SetupEPoll(void) = 0;
+        int SetupEPoll(void);
 
         /**
          * Closes the epoll file descriptor (removing all existing
@@ -119,7 +98,8 @@ namespace Forte
          * exception.
          *
          */
-        virtual void TeardownEPoll(void) = 0;
+        void TeardownEPoll(void);
+    public:
 
         /**
          * Poll will poll all current Peers for input, and process any
@@ -136,17 +116,31 @@ namespace Forte
          * interrupted by a signal.
          *
          */
-        virtual void Poll(int msTimeout = -1, bool interruptible = false) = 0;
+        void Poll(int msTimeout = -1, bool interruptible = false);
 
         /**
-         * PeerDelete will delete the given peer from the PDUPeerSet,
+         * PeerDelete will delete the given peer from the PDUPeerSetImpl,
          * and remove the peer from any poll operation in progress.
          *
          * @param peer
          */
-        virtual void PeerDelete(
-            const boost::shared_ptr<Forte::PDUPeer> &peer) = 0;
+        void PeerDelete(const boost::shared_ptr<Forte::PDUPeer> &peer);
+
+    protected:
+        /**
+         * mEPollLock protects mEPollFD and mBuffer
+         */
+        mutable RWLock mEPollLock;
+        int mEPollFD;
+        boost::shared_array<char> mBuffer;
+
+        /**
+         * mLock protects mPeerSet
+         */
+        mutable Forte::Mutex mLock;
+        std::set < boost::shared_ptr<PDUPeer> > mPeerSet;
+        CallbackFunc mProcessPDUCallback;
+        CallbackFunc mErrorCallback;
     };
-    typedef boost::shared_ptr<Forte::PDUPeerSet> PDUPeerSetPtr;
 };
 #endif

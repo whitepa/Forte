@@ -75,11 +75,9 @@ SRCS =	\
 	Murmur.cpp \
 	OnDemandDispatcher.cpp \
 	OpenSSLInitializer.cpp \
-	PDUPeer.cpp \
-	PDUPeerSet.cpp \
 	PidFile.cpp \
-	PDUPeer.cpp \
-	PDUPeerSet.cpp \
+	PDUPeerImpl.cpp \
+	PDUPeerSetImpl.cpp \
 	PosixTimer.cpp \
 	ProcFileSystem.cpp \
 	ProcRunner.cpp \

@@ -3,7 +3,7 @@
 
 #include "FString.h"
 #include "LogManager.h"
-#include "PDUPeerSet.h"
+#include "PDUPeerSetImpl.h"
 #include "ProcessFuture.h"
 #include "ServiceConfig.h"
 
@@ -152,7 +152,7 @@ namespace Forte
         /**
          * Peers we may be sending/receiving PDUs to/from.
          */
-        PDUPeerSet mPeerSet;
+        PDUPeerSetImpl mPeerSet;
 
         /**
          * Current state of the monitored process.

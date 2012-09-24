@@ -1,5 +1,6 @@
 #include <sys/epoll.h>
-#include "PDUPeerSet.h"
+#include "PDUPeerImpl.h"
+#include "PDUPeerSetImpl.h"
 #include "Foreach.h"
 #include "FTrace.h"
 #include "LogManager.h"
@@ -8,10 +9,30 @@
 using namespace boost;
 using namespace Forte;
 
-void Forte::PDUPeerSet::PeerDelete(const shared_ptr<PDUPeer> &peer)
+
+Forte::PDUPeerSetImpl::~PDUPeerSetImpl()
 {
+    try
+    {
+        AutoReadUnlock epollLock(mEPollLock);
+        if (mEPollFD != -1)
+        {
+            close(mEPollFD);
+        }
+    }
+    catch (Exception& e)
+    {
+        hlog(HLOG_WARN, "Could not clean up epoll fd or "
+             "it was already closed");
+    }
+}
+
+void Forte::PDUPeerSetImpl::PeerDelete(const shared_ptr<PDUPeer> &peer)
+{
+    FTRACE;
     AutoReadUnlock epollLock(mEPollLock);
     AutoUnlockMutex lock(mLock);
+
     if (peer)
     {
         if (mEPollFD != -1 &&
@@ -22,11 +43,12 @@ void Forte::PDUPeerSet::PeerDelete(const shared_ptr<PDUPeer> &peer)
     }
 }
 
-shared_ptr<PDUPeer> Forte::PDUPeerSet::PeerCreate(int fd)
+shared_ptr<PDUPeer> Forte::PDUPeerSetImpl::PeerCreate(int fd)
 {
+    FTRACE2("%d", fd);
     AutoReadUnlock epollLock(mEPollLock);
     AutoUnlockMutex lock(mLock);
-    shared_ptr<PDUPeer> peer(new PDUPeer(fd));
+    shared_ptr<PDUPeer> peer(new PDUPeerImpl(fd));
     mPeerSet.insert(peer);
     struct epoll_event ev;
     ev.events = EPOLLIN | EPOLLERR | EPOLLRDHUP;
@@ -40,14 +62,18 @@ shared_ptr<PDUPeer> Forte::PDUPeerSet::PeerCreate(int fd)
     return peer;
 }
 
-void Forte::PDUPeerSet::SendAll(const PDU &pdu) const
+void Forte::PDUPeerSetImpl::SendAll(const PDU &pdu) const
 {
     AutoUnlockMutex lock(mLock);
     foreach (const shared_ptr<PDUPeer> &peer, mPeerSet)
     {
-        if (!peer) continue;
-        hlog(HLOG_DEBUG, "sending to peer on fd %d",
-             peer->GetFD());
+        if (!peer)
+        {
+            hlog(HLOG_DEBUG, "peer disappeared while looping through peerset");
+            continue;
+        }
+        hlog(HLOG_DEBUG, "sending to peer on fd %d", peer->GetFD());
+
         try
         {
             peer->SendPDU(pdu);
@@ -59,7 +85,7 @@ void Forte::PDUPeerSet::SendAll(const PDU &pdu) const
     }
 }
 
-int Forte::PDUPeerSet::SetupEPoll(void)
+int Forte::PDUPeerSetImpl::SetupEPoll(void)
 {
     FTRACE;
     AutoWriteUnlock pollLock(mEPollLock);
@@ -87,7 +113,7 @@ int Forte::PDUPeerSet::SetupEPoll(void)
     return mEPollFD;
 }
 
-void Forte::PDUPeerSet::TeardownEPoll(void)
+void Forte::PDUPeerSetImpl::TeardownEPoll(void)
 {
     AutoWriteUnlock lock(mEPollLock);
     if (mEPollFD != -1)
@@ -98,7 +124,7 @@ void Forte::PDUPeerSet::TeardownEPoll(void)
     }
 }
 
-void Forte::PDUPeerSet::Poll(int msTimeout, bool interruptible)
+void Forte::PDUPeerSetImpl::Poll(int msTimeout, bool interruptible)
 {
     int nfds = 0;
     struct epoll_event events[32];

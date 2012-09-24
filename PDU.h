@@ -1,7 +1,6 @@
 #ifndef __Forte__PDU_h_
 #define __Forte__PDU_h_
 
-
 namespace Forte
 {
     struct PDU
@@ -21,7 +20,7 @@ namespace Forte
         PDU(int op, size_t size, void *data) :
             version(PDU_VERSION),
             opcode(op),
-            payloadSize(size) { 
+            payloadSize(size) {
             memset(payload, 0, sizeof(payload));
             memcpy(payload, data, size);
         }

@@ -1,5 +1,5 @@
-#ifndef _Replication_MockNetworkConnection_
-#define _Replication_MockNetworkConnection_
+#ifndef __MockNetworkConnection_
+#define __MockNetworkConnection_
 
 #include "Forte.h"
 #include "Exception.h"
@@ -13,7 +13,7 @@ namespace Forte
 
 /**
  * This class helps us create a two node mock network for unit testing
- * 
+ *
  */
     class MockNetworkConnection
     {
@@ -24,10 +24,9 @@ namespace Forte
         class MockNetworkNode
         {
         public:
-        
             MockNetworkNode() {};
             virtual ~MockNetworkNode() {};
-        
+
             /**
              * Function which needs to be implemented by every network node
              *
@@ -39,7 +38,7 @@ namespace Forte
             /**
              * Function used internally by MockNetwork
              */
-            void runAndCloseFD(int fd, bool exit) 
+            void runAndCloseFD(int fd, bool exit)
             {
                 try
                 {
@@ -54,7 +53,7 @@ namespace Forte
 
                 if (exit)
                 {
-                    // this is the node whose state is 
+                    // this is the node whose state is
                     // not saved
                     ::exit(0);
                 }
@@ -64,22 +63,28 @@ namespace Forte
         typedef boost::shared_ptr<MockNetworkNode> MockNetworkNodePtr;
 
         /**
-         * Constructor. Takes the two network nodes for the mock network
-         * 
-         * @param nodeWhoseStateIsSaved This is the network node whose process state is saved
-         *                              after network activity is done. So if you want to obtain
-         *                              any saved data from the network activity. This node should
+         * Constructor. Takes the two network nodes for the mock
+         * network
+         *
+         * @param nodeWhoseStateIsSaved This is the network node whose
+         *                              process state is saved after
+         *                              network activity is done. So
+         *                              if you want to obtain any
+         *                              saved data from the network
+         *                              activity. This node should
          *                              save it.
-         * @param nodeWhoseStateIsLost This network node process state is lost. Any changes made in
+         *
+         * @param nodeWhoseStateIsLost This network node process state
+         *                             is lost. Any changes made in
          *                             this class will not be saved.
-         */ 
+         */
         MockNetworkConnection(const MockNetworkNodePtr& nodeWhoseStateIsSaved,
                               const MockNetworkNodePtr& nodeWhoseStateIsLost);
- 
+
         virtual ~MockNetworkConnection();
 
         /**
-         * Function which runs the mock network. Connects the two network nodes. 
+         * Function which runs the mock network. Connects the two network nodes.
          *
          */
         void RunMockNetwork();

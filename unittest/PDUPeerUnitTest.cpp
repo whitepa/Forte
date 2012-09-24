@@ -7,8 +7,8 @@
 #include "LogManager.h"
 #include "Context.h"
 #include "Foreach.h"
-#include "PDUPeer.h"
-#include "PDUPeerSet.h"
+#include "PDUPeerImpl.h"
+#include "PDUPeerSetImpl.h"
 
 using namespace boost;
 using namespace Forte;
@@ -16,7 +16,7 @@ using namespace Forte;
 LogManager logManager;
 // -----------------------------------------------------------------------------
 
-class PDUPeerUnitTest : public ::testing::Test
+class PDUPeerImplUnitTest : public ::testing::Test
 {
 public:
     // Override this to define how to set up the environment.
@@ -55,7 +55,7 @@ void makeTestPDU(Forte::PDU &pdu, size_t &len)
 }
 // -----------------------------------------------------------------------------
 
-TEST_F(PDUPeerUnitTest, receivePDUTest)
+TEST_F(PDUPeerImplUnitTest, receivePDUTest)
 {
     FTRACE;
 
@@ -63,7 +63,7 @@ TEST_F(PDUPeerUnitTest, receivePDUTest)
     size_t len;
     makeTestPDU(pdu, len);
 
-    Forte::PDUPeer peer(0);
+    Forte::PDUPeerImpl peer(0);
     peer.DataIn(len, (char *)&pdu);
 
     Forte::PDU out;
@@ -74,7 +74,7 @@ TEST_F(PDUPeerUnitTest, receivePDUTest)
     ASSERT_EQ(cmp, 0);
 }
 
-TEST_F(PDUPeerUnitTest, receiveMultiplePDUTest)
+TEST_F(PDUPeerImplUnitTest, receiveMultiplePDUTest)
 {
     FTRACE;
 
@@ -82,7 +82,7 @@ TEST_F(PDUPeerUnitTest, receiveMultiplePDUTest)
     size_t len;
     makeTestPDU(pdu, len);
 
-    Forte::PDUPeer peer(0);
+    Forte::PDUPeerImpl peer(0);
 
     for (int i = 0; i < 3; ++i)
     {
@@ -99,7 +99,7 @@ TEST_F(PDUPeerUnitTest, receiveMultiplePDUTest)
     }
 }
 
-TEST_F(PDUPeerUnitTest, pollPDUTest)
+TEST_F(PDUPeerImplUnitTest, pollPDUTest)
 {
     FTRACE;
 
@@ -109,8 +109,8 @@ TEST_F(PDUPeerUnitTest, pollPDUTest)
         socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
         Forte::AutoFD fd1(fds[0]);
         Forte::AutoFD fd2(fds[1]);
-        Forte::PDUPeerSet set1;
-        Forte::PDUPeerSet set2;
+        Forte::PDUPeerSetImpl set1;
+        Forte::PDUPeerSetImpl set2;
 
         ASSERT_THROW(set1.Poll(), EPDUPeerSetNotPolling);
 
@@ -139,7 +139,7 @@ TEST_F(PDUPeerUnitTest, pollPDUTest)
     }
 }
 
-TEST_F(PDUPeerUnitTest, DataInBufferOverflowTest)
+TEST_F(PDUPeerImplUnitTest, DataInBufferOverflowTest)
 {
     FTRACE;
 
@@ -147,7 +147,7 @@ TEST_F(PDUPeerUnitTest, DataInBufferOverflowTest)
     size_t len;
     makeTestPDU(pdu, len);
 
-    Forte::PDUPeer peer(0, 512);
+    Forte::PDUPeerImpl peer(0, 512);
 
     for (int i = 0; i < 3; ++i)
     {
@@ -158,7 +158,7 @@ TEST_F(PDUPeerUnitTest, DataInBufferOverflowTest)
 }
 
 
-TEST_F(PDUPeerUnitTest, ThrowESendFailedOnBrokenPipe)
+TEST_F(PDUPeerImplUnitTest, ThrowESendFailedOnBrokenPipe)
 {
     FTRACE;
 
@@ -168,8 +168,8 @@ TEST_F(PDUPeerUnitTest, ThrowESendFailedOnBrokenPipe)
         socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
         Forte::AutoFD fd1(fds[0]);
         Forte::AutoFD fd2(fds[1]);
-        Forte::PDUPeerSet set1;
-        Forte::PDUPeerSet set2;
+        Forte::PDUPeerSetImpl set1;
+        Forte::PDUPeerSetImpl set2;
 
         shared_ptr<PDUPeer> peer1 = set1.PeerCreate(fd1);
 
@@ -190,9 +190,9 @@ TEST_F(PDUPeerUnitTest, ThrowESendFailedOnBrokenPipe)
         EXPECT_EQ(true, peer2->RecvPDU(rpdu));
         EXPECT_EQ(0, memcmp(&pdu, &rpdu, sizeof(PDU)));
 
-   close(fds[1]);
-        
-   ASSERT_THROW(peer1->SendPDU(pdu), EPeerSendFailed);
+        close(fds[1]);
+
+        ASSERT_THROW(peer1->SendPDU(pdu), EPeerSendFailed);
 
     }
     catch (Forte::Exception &e)

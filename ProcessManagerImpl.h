@@ -3,7 +3,7 @@
 
 #include "Thread.h"
 #include "Types.h"
-#include "PDUPeerSet.h"
+#include "PDUPeerSetImpl.h"
 #include "Object.h"
 #include "ProcessManager.h"
 #include "ProcessFutureImpl.h"
@@ -159,7 +159,7 @@ namespace Forte
         /** 
          * This function gets called when an error is encountered on a
          * peer connection and the peer is removed from the
-         * PDUPeerSet.
+         * PDUPeerSetImpl.
          * 
          * @param peer 
          */
@@ -178,7 +178,7 @@ namespace Forte
         /**
          * Set of PDU peers
          */
-        PDUPeerSet mPeerSet;
+        PDUPeerSetImpl mPeerSet;
 
         FString mProcmonPath;
 

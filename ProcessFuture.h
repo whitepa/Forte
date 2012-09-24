@@ -6,6 +6,7 @@
 #include "Future.h"
 #include "ThreadCondition.h"
 #include "ProcessManager.h"
+#include "PDUPeer.h"
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 #include <unistd.h>
