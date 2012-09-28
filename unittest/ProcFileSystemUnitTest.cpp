@@ -10,6 +10,7 @@
 #include "FileSystemImpl.h"
 #include "Foreach.h"
 
+using namespace std;
 using namespace boost;
 using namespace Forte;
 

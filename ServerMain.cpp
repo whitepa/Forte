@@ -6,6 +6,7 @@
 #include "VersionManager.h"
 #include "FileSystemImpl.h"
 
+using namespace std;
 using namespace Forte;
 using namespace boost;
 

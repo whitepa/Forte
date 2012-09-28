@@ -4,6 +4,7 @@
 #include "FileSystemImpl.h"
 #include "SystemCallUtil.h"
 
+using namespace std;
 using namespace Forte;
 
 LogManager logManager;

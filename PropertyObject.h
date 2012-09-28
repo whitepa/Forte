@@ -44,7 +44,7 @@ namespace Forte
         };
         void DebugPrintAllProperties(void) {
             AutoUnlockMutex lock(mPropertyLock);
-            typedef pair<FString, FString> PropertyPair;
+            typedef std::pair<FString, FString> PropertyPair;
             foreach(PropertyPair i, mProperties)
             {
                 hlog(HLOG_DEBUG, "%s : %s", i.first.c_str(), i.second.c_str());

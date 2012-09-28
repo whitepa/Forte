@@ -11,6 +11,7 @@
 #include "SystemCallUtil.h"
 #include "FTrace.h"
 
+using namespace std;
 using namespace Forte;
 namespace boostfs = boost::filesystem;
 

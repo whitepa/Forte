@@ -19,6 +19,7 @@
 #include <dirent.h>
 #include <fcntl.h>
 
+using namespace std;
 using namespace Forte;
 
 // methods

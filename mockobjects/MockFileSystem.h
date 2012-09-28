@@ -20,7 +20,7 @@ namespace Forte
                              bool append=false,
                              bool throwOnError=false);
         void FileClearContents(const Forte::FString& filename);
-        map<int, FString> mFilesByFD;
+        std::map<int, FString> mFilesByFD;
         void SetFDForFileOpen(unsigned int fd);
         virtual void FileOpen(AutoFD &autoFd, const FString& path, int flags,
                               int mode);
@@ -30,14 +30,14 @@ namespace Forte
         StrStrMap* getFileMap();
 
         int Stat(const Forte::FString& path, struct stat *st);
-        map<Forte::FString, int> mStatResultMap;
-        map<Forte::FString, struct stat> mStatMap;
+        std::map<Forte::FString, int> mStatResultMap;
+        std::map<Forte::FString, struct stat> mStatMap;
         void SetStatResult(const Forte::FString& path, struct stat st, int result);
 
         void MakeDir(const Forte::FString& path, mode_t mode = 0777, bool make_parents = false);
-        vector<Forte::FString> mDirsCreated;
+        std::vector<Forte::FString> mDirsCreated;
         void ClearDirsCreated();
-        vector<Forte::FString> GetDirsCreated();
+        std::vector<Forte::FString> GetDirsCreated();
         bool DirWasCreated(const Forte::FString& path);
 
         void FileCopy(const Forte::FString& from,
@@ -48,16 +48,16 @@ namespace Forte
         bool FileWasCopied(const FString& key);
 
         bool FileExists(const Forte::FString& path) const;
-        map<Forte::FString, bool> mFileExistsResultMap;
+        std::map<Forte::FString, bool> mFileExistsResultMap;
         void SetFileExistsResult(const Forte::FString& path, bool result);
 
         bool IsDir(const Forte::FString& path) const;
-		map<Forte::FString, bool> mIsDirResultMap;
+        std::map<Forte::FString, bool> mIsDirResultMap;
 		void SetIsDirResult(const Forte::FString& path, bool result);
 
 
         int ScanDir(const FString& path, std::vector<FString> &namelist);
-        map<Forte::FString, vector<FString> > m_scanDirResultsMap;
+        std::map<Forte::FString, std::vector<FString> > m_scanDirResultsMap;
         void AddScanDirResult(const FString& path, FString name);
         void RemoveScanDirResult(const FString& path, FString name);
 
@@ -71,11 +71,11 @@ namespace Forte
 
         void Unlink(const FString& path, bool unlink_children = false,
                     const ProgressCallback &progressCallback = ProgressCallback());
-        map<FString, bool> mFilesUnlinked;
+        std::map<FString, bool> mFilesUnlinked;
         bool FileWasUnlinked(const FString& path);
         void ClearFilesUnlinked();
 
-        map<FString, vector<FString> > mChildren;
+        std::map<FString, std::vector<FString> > mChildren;
         void SetChildren(const FString& parentPath,
                          std::vector<Forte::FString> &children);
         void AddChild(const FString& parentPath, const FString& child);
@@ -87,13 +87,13 @@ namespace Forte
                          bool includePathNames = false) const;
 
         void SetGlobResponse(const FString &pattern,
-                             const vector<FString> &response);
+                             const std::vector<FString> &response);
         void ClearGlobResponse(const FString& pattern = "");
-        unsigned int Glob(vector<FString> &resultVec,
+        unsigned int Glob(std::vector<FString> &resultVec,
                           const FString &pattern,
                           const int globFlags = 0) const;
 
-        map<FString, FString> mReadLinkResults;
+        std::map<FString, FString> mReadLinkResults;
         virtual FString ReadLink(const FString& path);
         void SetReadLinkResult(const FString& path, const FString& result);
         void ClearReadLinkResult(const FString& path);
@@ -164,7 +164,7 @@ namespace Forte
     protected:
         StrStrMap mFiles;
         std::map<FString, struct statfs> mStatFSResponseMap;
-        std::map<FString, vector<FString> > mGlobResponseMap;
+        std::map<FString, std::vector<FString> > mGlobResponseMap;
         unsigned int mFDForFileOpen;
     };
     typedef boost::shared_ptr<MockFileSystem> MockFileSystemPtr;

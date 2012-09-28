@@ -10,6 +10,7 @@
 #include "ProcessMonitor.h"
 #include "ProcessManagerPDU.h"
 #include "FTrace.h"
+#include "PDU.h"
 
 bool Forte::ProcessMonitor::sGotSIGCHLD = false;
 

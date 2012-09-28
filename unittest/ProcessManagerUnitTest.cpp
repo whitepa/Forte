@@ -14,6 +14,7 @@
 #include <boost/bind.hpp>
 #include <boost/make_shared.hpp>
 
+using namespace std;
 using namespace Forte;
 
 LogManager logManager;

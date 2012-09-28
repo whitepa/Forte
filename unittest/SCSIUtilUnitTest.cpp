@@ -10,6 +10,7 @@
 #include "MockProcRunner.h"
 #include "GMockFileSystem.h"
 
+using namespace std;
 using namespace Forte;
 using ::testing::_;
 using ::testing::StrEq;

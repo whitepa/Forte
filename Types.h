@@ -16,34 +16,22 @@
 #include "Exception.h"
 #include "Foreach.h"
 
-// namespace
-using namespace std;
-using namespace __gnu_cxx;
-
-struct eqstr
-{
-    bool operator()(const char* s1, const char* s2) const
-        {
-            return strcmp(s1, s2) == 0;
-        }
-};
-
 // types
 namespace Forte
 {
-    typedef vector<unsigned> UIntVector;
-    typedef set<unsigned> UIntSet;
-    typedef vector<FString> StrList;
-    typedef map<FString, FString> StrStrMap;
-    typedef map<FString, FString> FStringFStringMap;
-    typedef map<FString, int> StrIntMap;
-    typedef map<int, FString> IntStrMap;
-    typedef pair<int, FString> IntStrPair;
-    typedef pair<FString, FString> StrStrPair;
-    typedef map<FString, double> StrDoubleMap;
-    typedef set<FString> FStringSet;
-    typedef vector<FString> FStringVector;
-    typedef list<FString> FStringList;
+    typedef std::vector<unsigned> UIntVector;
+    typedef std::set<unsigned> UIntSet;
+    typedef std::vector<FString> StrList;
+    typedef std::map<FString, FString> StrStrMap;
+    typedef std::map<FString, FString> FStringFStringMap;
+    typedef std::map<FString, int> StrIntMap;
+    typedef std::map<int, FString> IntStrMap;
+    typedef std::pair<int, FString> IntStrPair;
+    typedef std::pair<FString, FString> StrStrPair;
+    typedef std::map<FString, double> StrDoubleMap;
+    typedef std::set<FString> FStringSet;
+    typedef std::vector<FString> FStringVector;
+    typedef std::list<FString> FStringList;
 };
 
 #endif

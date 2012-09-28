@@ -3,6 +3,7 @@
 #include "FTrace.h"
 #include "SystemCallUtil.h"
 
+using namespace std;
 using namespace Forte;
 
 void MockFileSystem::SetStatFSResponse(const FString& path, struct statfs *st)
