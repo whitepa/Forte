@@ -35,9 +35,11 @@ public:
         Forte::FString output;
         Forte::FString errorOutput;
         hlogstream(HLOG_DEBUG, mRequest);
-        mProcessManager->CreateProcessAndGetResult(
-            mRequest.AsString(), output, errorOutput);
-        response_type response(output);
+
+        // don't throw when command returns non-zero status code
+        int result = mProcessManager->CreateProcessAndGetResult(
+            mRequest.AsString(), output, errorOutput, false);
+        response_type response(output, errorOutput, result);
         hlogstream(HLOG_DEBUG, response);
         return response;
     }
@@ -163,15 +165,19 @@ public:
     {
         return mResponse;
     }
-
 protected:
-    explicit ProcessCommandResponse(const Forte::FString& response)
-        :mResponse(response)
+    explicit ProcessCommandResponse(const Forte::FString& response,
+                                    const Forte::FString& errorResponse,
+                                    int returnCode) : 
+        mResponse(response), mErrorResponse(errorResponse),
+        mReturnCode(returnCode)
     {
     }
 
 protected:
     const Forte::FString mResponse;
+    const Forte::FString mErrorResponse;
+    int mReturnCode;
 };
 
 /**
@@ -183,8 +189,10 @@ protected:
 class ProcessCommandResponseBasic : public ProcessCommandResponse
 {
 public:
-    explicit ProcessCommandResponseBasic(const Forte::FString& response)
-        :ProcessCommandResponse(response)
+    explicit ProcessCommandResponseBasic(const Forte::FString& response,
+                                         const Forte::FString& errorResponse,
+                                         int returnCode)
+        :ProcessCommandResponse(response, errorResponse, returnCode)
     {
     }
 };

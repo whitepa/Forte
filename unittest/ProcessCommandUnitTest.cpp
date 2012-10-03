@@ -82,8 +82,10 @@ private:
 class LSProcessCommandResponse : public ProcessCommandResponse
 {
 public:
-    LSProcessCommandResponse(const Forte::FString& output)
-        :ProcessCommandResponse(output)
+    LSProcessCommandResponse(const Forte::FString& output,
+                             const Forte::FString& errorOutput,
+                             int returnCode)
+        :ProcessCommandResponse(output, errorOutput, returnCode)
     {
     }
 
@@ -115,6 +117,34 @@ TEST_F(ProcessCommandTest, ls)
         .Times(1)
         .WillOnce(DoAll(::testing::SetArgReferee<1>(ret),
                       ::testing::Return(0)));
+
+    LSProcessCommand qemuInfo(pm, "/tmp");
+    LSProcessCommand::response_type response(qemuInfo());
+    EXPECT_EQ(7, response.GetFileList().size());
+    EXPECT_EQ("a", response.GetFileList()[0]);
+    EXPECT_EQ("g", response.GetFileList()[6]);
+}
+
+TEST_F(ProcessCommandTest, lsWithNonZeroReturnCode)
+{
+    typedef ProcessCommand<LSProcessCommandRequest, LSProcessCommandResponse> LSProcessCommand;
+
+    boost::shared_ptr<GMockProcessManager> pm(new GMockProcessManager);
+
+    static const char* ret("a b c d e f g");
+
+    EXPECT_CALL(*pm, CreateProcessAndGetResult(
+                    ::testing::StrEq("ls /tmp"),
+                    ::testing::_,
+                    ::testing::_,
+                    ::testing::_,
+                    ::testing::_,
+                    ::testing::_,
+                    ::testing::_,
+                    ::testing::_))
+        .Times(1)
+        .WillOnce(DoAll(::testing::SetArgReferee<1>(ret),
+                      ::testing::Return(1)));
 
     LSProcessCommand qemuInfo(pm, "/tmp");
     LSProcessCommand::response_type response(qemuInfo());

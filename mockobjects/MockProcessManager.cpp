@@ -140,11 +140,11 @@ int MockProcessManager::CreateProcessAndGetResult(
 {
     FTRACE2("%s", command.c_str());
     ExpectedCommandResponsePtr expectedResponse = lookupExpectedResponse(command);
-       
+
     output = expectedResponse->mResponse;
     mCommandInvocationCount[command]++;
     mCommandInvocationList.push_back(command);
-    hlog(HLOG_DEBUG, "Returning response code %i", 
+    hlog(HLOG_DEBUG, "Returning response code %i",
          expectedResponse->mResponseCode);
     return expectedResponse->mResponseCode;
 }
