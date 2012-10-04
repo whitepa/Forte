@@ -30,9 +30,11 @@ namespace Forte
                          const StrStrMap *environment,
                          const FString &commandToLog));
 
-        MOCK_METHOD6(CreateProcessAndGetResult, int (
+        MOCK_METHOD8(CreateProcessAndGetResult, int (
                          const Forte::FString& command,
                          Forte::FString& output,
+                         Forte::FString& errorOutput,
+                         bool throwErrorOnNonZeroReturnCode,
                          const Timespec &timeout,
                          const FString &inputFilename,
                          const StrStrMap *environment,

@@ -124,12 +124,15 @@ namespace Forte
 
         virtual bool IsProcessMapEmpty(void) = 0;
 
-        virtual int CreateProcessAndGetResult(const Forte::FString& command, 
-                                              Forte::FString& output, 
-                                              const Timespec &timeout = Timespec::FromSeconds(-1),
-                                              const FString &inputFilename = "/dev/null",
-                                              const StrStrMap *environment = NULL,
-                                              const Forte::FString& commandToLog= "") = 0;
+        virtual int CreateProcessAndGetResult(
+            const Forte::FString& command,
+            Forte::FString& output,
+            Forte::FString& errorOutput,
+            bool throwErrorOnNonZeroReturnCode = true,
+            const Timespec &timeout = Timespec::FromSeconds(-1),
+            const FString &inputFilename = "/dev/null",
+            const StrStrMap *environment = NULL,
+            const Forte::FString& commandToLog= "") = 0;
     };
     typedef boost::shared_ptr<ProcessManager> ProcessManagerPtr;
 };

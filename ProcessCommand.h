@@ -33,8 +33,10 @@ public:
     virtual response_type operator()()
     {
         Forte::FString output;
+        Forte::FString errorOutput;
         hlogstream(HLOG_DEBUG, mRequest);
-        mProcessManager->CreateProcessAndGetResult(mRequest.AsString(), output);
+        mProcessManager->CreateProcessAndGetResult(
+            mRequest.AsString(), output, errorOutput);
         response_type response(output);
         hlogstream(HLOG_DEBUG, response);
         return response;

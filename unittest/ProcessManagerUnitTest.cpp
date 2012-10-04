@@ -567,20 +567,25 @@ TEST_F(ProcessManagerTest, CommandLineEscape)
         hlog(HLOG_INFO, "Command Line Escapes");
         boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
         FString result;
+        FString errorResult;
         FString test("firstword secondword");
-        pm->CreateProcessAndGetResult("/bin/echo \"" + test + "\"", result);
+        pm->CreateProcessAndGetResult("/bin/echo \"" + test + "\"",
+                                      result, errorResult);
         result.Trim();
         ASSERT_STREQ(result, test);
 
-        pm->CreateProcessAndGetResult("/bin/echo '" + test + "'", result);
+        pm->CreateProcessAndGetResult("/bin/echo '" + test + "'",
+                                      result, errorResult);
         result.Trim();
         ASSERT_STREQ(result, test);
 
-        pm->CreateProcessAndGetResult("/bin/echo \\'" + test + "\\'", result);
+        pm->CreateProcessAndGetResult("/bin/echo \\'" + test + "\\'",
+                                      result, errorResult);
         result.Trim();
         ASSERT_STREQ(result, "'" + test + "'");
 
-        pm->CreateProcessAndGetResult("/bin/echo \\\"" + test + "\\\"", result);
+        pm->CreateProcessAndGetResult("/bin/echo \\\"" + test + "\\\"",
+                                      result, errorResult);
         result.Trim();
         ASSERT_STREQ(result, "\"" + test + "\"");
     }
@@ -608,8 +613,9 @@ TEST_F(ProcessManagerTest, ProcessManagerCanRunHost)
         ProcessManagerImpl& processManager = *processManagerPtr;
 
         FString output;
+        FString errorOutput;
         FString test("/usr/bin/host scalecomputing.com");
-        processManager.CreateProcessAndGetResult(test, output);
+        processManager.CreateProcessAndGetResult(test, output, errorOutput);
 
         hlogstream(HLOG_INFO, "Got output:" << output);
     }

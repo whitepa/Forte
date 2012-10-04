@@ -48,6 +48,8 @@ TEST_F(ProcessCommandTest, basic)
                     ::testing::_,
                     ::testing::_,
                     ::testing::_,
+                    ::testing::_,
+                    ::testing::_,
                     ::testing::_))
         .Times(1)
         .WillOnce(DoAll(::testing::SetArgReferee<1>(ret),
@@ -103,6 +105,8 @@ TEST_F(ProcessCommandTest, ls)
 
     EXPECT_CALL(*pm, CreateProcessAndGetResult(
                     ::testing::StrEq("ls /tmp"),
+                    ::testing::_,
+                    ::testing::_,
                     ::testing::_,
                     ::testing::_,
                     ::testing::_,

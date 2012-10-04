@@ -128,13 +128,15 @@ boost::shared_ptr<ProcessFuture> MockProcessManager::CreateProcessDontRun(
     return boost::shared_ptr<ProcessFuture>();    
 }
 
-
-int MockProcessManager::CreateProcessAndGetResult(const FString& command, 
-                                                  FString& output, 
-                                                  const Timespec &timeout,
-                                                  const FString &inputFileName,
-                                                  const StrStrMap *environment,
-                                                  const FString &commandToLog)
+int MockProcessManager::CreateProcessAndGetResult(
+    const FString& command,
+    FString& output,
+    FString& errorOutput,
+    bool throwErrorOnNonZeroReturnCode,
+    const Timespec &timeout,
+    const FString &inputFileName,
+    const StrStrMap *environment,
+    const FString &commandToLog)
 {
     FTRACE2("%s", command.c_str());
     ExpectedCommandResponsePtr expectedResponse = lookupExpectedResponse(command);

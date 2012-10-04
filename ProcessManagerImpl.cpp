@@ -3,6 +3,7 @@
 #include "ProcessManagerImpl.h"
 #include "ProcessFuture.h"
 #include "AutoMutex.h"
+#include "AutoDoUndo.h"
 #include "Exception.h"
 #include "LogManager.h"
 #include "LogTimer.h"
@@ -258,21 +259,31 @@ boost::shared_ptr<Forte::PDUPeer> Forte::ProcessManagerImpl::addPeer(int fd)
     return mPeerSet.PeerCreate(fd);
 }
 
-int ProcessManagerImpl::CreateProcessAndGetResult(const FString& command,
-                                                  FString& output,
-                                                  const Timespec &timeout,
-                                                  const FString &inputFilename,
-                                                  const StrStrMap *environment,
-                                                  const FString &commandToLog)
+int ProcessManagerImpl::CreateProcessAndGetResult(
+    const FString& command,
+    FString& output,
+    FString& errorOutput,
+    bool throwErrorOnNonZeroReturnCode,
+    const Timespec &timeout,
+    const FString &inputFilename,
+    const StrStrMap *environment,
+    const FString &commandToLog)
 {
-    FTRACE;
+    FTRACE2("%s", command.c_str());
+
     FString randomSuffix;
     GUIDGenerator guidGen;
     guidGen.GenerateGUID(randomSuffix);
     FString outputFilename(FStringFC(), "/tmp/sc_commandoutput_%s.tmp",
                           randomSuffix.c_str());
+    AutoDoUndo<void, void> autoRemoveTempFile1(
+        boost::function<void ()>(),
+        boost::bind(unlink, outputFilename.c_str()), false);
     FString errorFilename(FStringFC(), "/tmp/sc_commandoutput_error_%s.tmp",
                           randomSuffix.c_str());
+    AutoDoUndo<void, void> autoRemoveTempFile2(
+        boost::function<void ()>(),
+        boost::bind(unlink, errorFilename.c_str()), false);
 
     hlog(HLOG_DEBUG, "command = %s, timeout=%ld, output=%s",
          command.c_str(), timeout.AsSeconds(), outputFilename.c_str());
@@ -284,50 +295,23 @@ int ProcessManagerImpl::CreateProcessAndGetResult(const FString& command,
     {
         future->GetResultTimed(timeout);
         output = future->GetOutputString();
-        hlog(HLOG_DEBUG, "output = %s", output.c_str());
-        int statusCode = future->GetStatusCode();
-        hlog(HLOG_DEBUG, "status = %d", statusCode);
-
-        if (unlink(outputFilename.c_str()))
-        {
-            hlog(HLOG_WARN, "Failed to unlink temporary file %s", strerror(errno));
-        }
-        if (unlink(errorFilename.c_str()))
-        {
-            hlog(HLOG_WARN, "Failed to unlink temporary file %s", strerror(errno));
-        }
-        return statusCode;
+        errorOutput = future->GetErrorString();
     }
     catch (EProcessFutureTerminatedWithNonZeroStatus &e)
     {
-        // in this case we can still get the
-        // output
-        output = future->GetErrorString();
-        hlog(HLOG_DEBUG, "output = %s", output.c_str());
+        output = future->GetOutputString();
+        errorOutput = future->GetErrorString();
 
-        if (unlink(outputFilename.c_str()))
+        if (throwErrorOnNonZeroReturnCode)
         {
-            hlog(HLOG_WARN, "Failed to unlink temporary file %s", strerror(errno));
+            throw;
         }
-        if (unlink(errorFilename.c_str()))
-        {
-            hlog(HLOG_WARN, "Failed to unlink temporary file %s", strerror(errno));
-        }
-        throw;
     }
-    catch (Exception& e)
-    {
-        hlog(HLOG_DEBUG, "exception throw : %s", e.what());
-        if (unlink(outputFilename.c_str()))
-        {
-            hlog(HLOG_WARN, "Failed to unlink temporary file %s", strerror(errno));
-        }
-        if (unlink(errorFilename.c_str()))
-        {
-            hlog(HLOG_WARN, "Failed to unlink temporary file %s", strerror(errno));
-        }
-        throw;
-    }
+
+    int statusCode = future->GetStatusCode();
+    hlog(HLOG_DEBUG, "output = %s\nerror = %s\nreturn code = %i",
+         output.c_str(), errorOutput.c_str(), statusCode);
+    return statusCode;
 }
 
 

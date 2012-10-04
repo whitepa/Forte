@@ -112,12 +112,15 @@ namespace Forte
 
         virtual bool IsProcessMapEmpty(void);
 
-        virtual int CreateProcessAndGetResult(const Forte::FString& command, 
-                                              Forte::FString& output, 
-                                              const Timespec &timeout = Timespec::FromSeconds(-1),
-                                              const FString &inputFilename = "/dev/null",
-                                              const StrStrMap *environment = NULL,
-                                              const FString &commandToLog = "");
+        virtual int CreateProcessAndGetResult(
+            const Forte::FString& command, 
+            Forte::FString& output, 
+            Forte::FString& errorOutput,
+            bool throwErrorOnNonZeroReturnCode = true,
+            const Timespec &timeout = Timespec::FromSeconds(-1),
+            const FString &inputFilename = "/dev/null",
+            const StrStrMap *environment = NULL,
+            const FString &commandToLog = "");
     protected:
 
         /**
