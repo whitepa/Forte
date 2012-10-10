@@ -53,7 +53,7 @@ Forte::ProcessMonitor::~ProcessMonitor()
 }
 
 void Forte::ProcessMonitor::Run()
-{    
+{
     // this is the "main function" of the management process.
     // install a SIGCHLD handler
     sGotSIGCHLD = false;
@@ -280,12 +280,12 @@ void Forte::ProcessMonitor::doWait(void)
         {
             if (mCmdlineToLog.empty())
             {
-                hlog(HLOG_INFO, "[%s] exit code is %i", mCmdline.c_str(), 
+                hlog(HLOG_INFO, "[%s] exit code is %i", mCmdline.c_str(),
                      status->statusCode);
             }
             else
             {
-                hlog(HLOG_INFO, "[%s] exit code is %i", mCmdlineToLog.c_str(), 
+                hlog(HLOG_INFO, "[%s] exit code is %i", mCmdlineToLog.c_str(),
                      status->statusCode);
             }
         }
@@ -313,7 +313,7 @@ void Forte::ProcessMonitor::startProcess(void)
         inputfd = open(mInputFilename, O_RDWR);
         if(inputfd == -1 && errno != EINTR)
             throw EProcessMonitorUnableToOpenInputFile(FStringFC(), "%s", strerror(errno));
-    } 
+    }
     while (inputfd == -1 && errno == EINTR);
 
     do
@@ -350,7 +350,7 @@ void Forte::ProcessMonitor::startProcess(void)
         size_t cmdEnvLen = mCmdline.length() + 15;
         unsigned int envCount = 0;
         while (environ[envCount] != 0)
-        {                
+        {
             cmdEnvLen += strlen(environ[envCount]);
             envCount++;
         }
@@ -368,7 +368,7 @@ void Forte::ProcessMonitor::startProcess(void)
         strings.push_back(mCmdline);
 
         unsigned int num_args = strings.size();
-        for(unsigned int i = 0; i < num_args; ++i) 
+        for(unsigned int i = 0; i < num_args; ++i)
         {
             // ugh - I hate this cast here, but as this process
             // is about to be blown away, it is harmless, and
@@ -377,7 +377,7 @@ void Forte::ProcessMonitor::startProcess(void)
             argv[i] = const_cast<char*>(strings[i].c_str());
         }
         argv[num_args] = 0;
- 
+
         // change current working directory
         if (!mCWD.empty() && chdir(mCWD))
         {
@@ -387,12 +387,12 @@ void Forte::ProcessMonitor::startProcess(void)
 
         while (dup2(inputfd, 0) == -1 && errno == EINTR);
         while (dup2(outputfd, 1) == -1 && errno == EINTR);
-        while (dup2(errorfd, 2) == -1 && errno == EINTR); 
+        while (dup2(errorfd, 2) == -1 && errno == EINTR);
 
         // close all other FDs
         int fdstart = 3;
         int fdlimit = sysconf(_SC_OPEN_MAX);
-        while (fdstart < fdlimit) 
+        while (fdstart < fdlimit)
         {
             int closeResult = -1;
             do
@@ -419,10 +419,10 @@ void Forte::ProcessMonitor::startProcess(void)
         // clear sig mask
         sigemptyset(&set);
         pthread_sigmask(SIG_SETMASK, &set, NULL);
-        
+
         // create a new process group / session
         setsid();
-        
+
         execv(argv[0], argv);
         hlog(HLOG_ERR, "unable to execv the command");
         throw EProcessMonitorUnableToExec();
@@ -456,7 +456,7 @@ void Forte::ProcessMonitor::signalProcess(int signal)
         throw EProcessFutureSignalFailed();
 }
 
-Forte::FString Forte::ProcessMonitor::shellEscape(const FString& arg) 
+Forte::FString Forte::ProcessMonitor::shellEscape(const FString& arg)
 {
     // \TODO: implement this.
     hlog(HLOG_WARN, "NOT IMPLEMENTED!");

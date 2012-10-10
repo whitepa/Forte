@@ -17,7 +17,7 @@
  *
  * If the context contains shared pointers to both, that is
  * acceptable, as it will not create a reference loop.
- * 
+ *
  * RECEIVER -->  *DISPATCHER*  -->  REQHANDLER
  *
  */
@@ -25,12 +25,16 @@
 namespace Forte
 {
     EXCEPTION_CLASS(EDispatcher);
-    EXCEPTION_SUBCLASS2(EDispatcher, EDispatcherReqHandlerInvalid, "Request handler is invalid");
+    EXCEPTION_SUBCLASS2(EDispatcher,
+                        EDispatcherReqHandlerInvalid,
+                        "Request handler is invalid");
+
     class DispatcherThread;
+
     class Dispatcher : public Object
     {
     public:
-        Dispatcher(shared_ptr<RequestHandler> reqHandler, 
+        Dispatcher(shared_ptr<RequestHandler> reqHandler,
                    int maxQueueDepth, const char *name);
         virtual ~Dispatcher();
 
@@ -39,14 +43,17 @@ namespace Forte
 
         virtual void Enqueue(boost::shared_ptr<Event> e) = 0;
         virtual bool Accepting(void) = 0;
-        virtual int GetQueuedEvents(int maxEvents, 
-                                    std::list<boost::shared_ptr<Event> > &queuedEvents) = 0;
-        virtual int GetRunningEvents(int maxEvents, 
-                                     std::list<boost::shared_ptr<Event> > &runningEvents) = 0;
+        virtual int GetQueuedEvents(
+            int maxEvents,
+            std::list<boost::shared_ptr<Event> > &queuedEvents) = 0;
+        virtual int GetRunningEvents(
+            int maxEvents,
+            std::list<boost::shared_ptr<Event> > &runningEvents) = 0;
 
         virtual int GetQueueDepth(void) { return mEventQueue.Depth(); }
-    
+
         FString mDispatcherName;
+
     protected:
         bool mPaused;
         volatile bool mShutdown;

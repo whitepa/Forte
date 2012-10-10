@@ -58,7 +58,7 @@ namespace Forte
         /**
          * Get a shared pointer to this ProcessManager.  NOTE: A
          * shared_ptr to this ProcessManager must already exist.
-         * 
+         *
          * @return shared_ptr
          */
         boost::shared_ptr<ProcessManager> GetPtr(void) {

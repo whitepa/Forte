@@ -31,15 +31,15 @@ using namespace Forte;
 
 Forte::ProcessFutureImpl::ProcessFutureImpl(
     const boost::shared_ptr<ProcessManagerImpl> &mgr,
-    const FString &command, 
-    const FString &currentWorkingDirectory, 
-    const FString &outputFilename, 
-    const FString &errorFilename, 
-    const FString &inputFilename, 
+    const FString &command,
+    const FString &currentWorkingDirectory,
+    const FString &outputFilename,
+    const FString &errorFilename,
+    const FString &inputFilename,
     const StrStrMap *environment,
     const FString &commandToLog) :
     mProcessManagerPtr(mgr),
-    mCommand(command), 
+    mCommand(command),
     mCommandToLog(commandToLog),
     mCurrentWorkingDirectory(currentWorkingDirectory),
     mOutputFilename(outputFilename),
@@ -53,13 +53,13 @@ Forte::ProcessFutureImpl::ProcessFutureImpl(
     mWaitCond(mWaitLock)
 {
     // copy the environment entries
-    if(environment) 
+    if(environment)
     {
         mEnvironment.insert(environment->begin(), environment->end());
-    }    
+    }
 }
 
-Forte::ProcessFutureImpl::~ProcessFutureImpl() 
+Forte::ProcessFutureImpl::~ProcessFutureImpl()
 {
     try
     {
@@ -85,7 +85,7 @@ Forte::ProcessFutureImpl::~ProcessFutureImpl()
 
 void Forte::ProcessFutureImpl::SetProcessCompleteCallback(ProcessCompleteCallback processCompleteCallback)
 {
-    if(mState != STATE_READY) 
+    if(mState != STATE_READY)
     {
         hlog(HLOG_ERR, "tried setting the process complete callback after the process had been started");
         throw EProcessFutureStarted();
@@ -93,9 +93,9 @@ void Forte::ProcessFutureImpl::SetProcessCompleteCallback(ProcessCompleteCallbac
     mProcessCompleteCallback = processCompleteCallback;
 }
 
-void Forte::ProcessFutureImpl::SetCurrentWorkingDirectory(const FString &cwd) 
+void Forte::ProcessFutureImpl::SetCurrentWorkingDirectory(const FString &cwd)
 {
-    if(mState != STATE_READY) 
+    if(mState != STATE_READY)
     {
         hlog(HLOG_ERR, "tried setting the current working directory after the process had been started");
         throw EProcessFutureStarted();
@@ -110,7 +110,7 @@ void Forte::ProcessFutureImpl::SetEnvironment(const StrStrMap *env)
         hlog(HLOG_ERR, "tried setting the environment after the process had been started");
         throw EProcessFutureStarted();
     }
-    if(env) 
+    if(env)
     {
         mEnvironment.clear();
         mEnvironment.insert(env->begin(), env->end());
@@ -190,11 +190,11 @@ void Forte::ProcessFutureImpl::run()
         strncpy(param->str, mCurrentWorkingDirectory.c_str(), sizeof(param->str));
         param->param = ProcessCwd;
         mManagementChannel->SendPDU(paramPDU);
-    
+
         strncpy(param->str, mInputFilename.c_str(), sizeof(param->str));
         param->param = ProcessInfile;
         mManagementChannel->SendPDU(paramPDU);
-    
+
         strncpy(param->str, mOutputFilename.c_str(), sizeof(param->str));
         param->param = ProcessOutfile;
         mManagementChannel->SendPDU(paramPDU);
@@ -246,18 +246,18 @@ void Forte::ProcessFutureImpl::setState(int state)
                     // set the future as completed fine
                     SetException(boost::exception_ptr());
                 }
-                else 
+                else
                 {
                     // throw a boost::throw with non-zero status code
                     boost::throw_exception(
                         EProcessFutureTerminatedWithNonZeroStatus(
-                            FStringFC(), "[%s] %u", mCommand.c_str(), 
+                            FStringFC(), "[%s] %u", mCommand.c_str(),
                             mStatusCode)
                         );
                 }
                 break;
             }
-        
+
             case STATE_KILLED:
             {
                 // throw exception saying the process was killed
@@ -276,11 +276,11 @@ void Forte::ProcessFutureImpl::setState(int state)
                 case ProcessUnableToOpenOutputFile:
                     boost::throw_exception(
                         EProcessFutureUnableToOpenOutputFile(mErrorString));
-                    break;  
+                    break;
                 case ProcessUnableToOpenErrorFile:
                     boost::throw_exception(
                         EProcessFutureUnableToOpenErrorFile(mErrorString));
-                    break;  
+                    break;
                 case ProcessUnableToCWD:
                     boost::throw_exception(
                         EProcessFutureUnableToCWD(mErrorString));
@@ -301,7 +301,7 @@ void Forte::ProcessFutureImpl::setState(int state)
                     boost::throw_exception(
                         EProcessFuture(mErrorString));
                     break;
-                }                    
+                }
                 break;
             }
 
@@ -310,7 +310,7 @@ void Forte::ProcessFutureImpl::setState(int state)
                 boost::throw_exception(
                     EProcessFutureAbandoned());
             }
-        
+
             default:
             {
                 // throw exception saying the process ended due to unknown reasons
@@ -321,7 +321,7 @@ void Forte::ProcessFutureImpl::setState(int state)
         }
         catch (...)
         {
-            // we got an exception which we need to 
+            // we got an exception which we need to
             // record in the future
             SetException(boost::current_exception());
         }
@@ -334,7 +334,7 @@ void Forte::ProcessFutureImpl::setState(int state)
 
 void Forte::ProcessFutureImpl::GetResult()
 {
-    if(mState == STATE_READY) 
+    if(mState == STATE_READY)
     {
         hlog(HLOG_ERR, "tried waiting on a process that has not been started");
         throw EProcessFutureNotRunning();
@@ -345,7 +345,7 @@ void Forte::ProcessFutureImpl::GetResult()
 
 void Forte::ProcessFutureImpl::GetResultTimed(const Timespec &timeout)
 {
-    if(mState == STATE_READY) 
+    if(mState == STATE_READY)
     {
         hlog(HLOG_ERR, "tried waiting on a process that has not been started");
         throw EProcessFutureNotRunning();
@@ -364,7 +364,7 @@ void Forte::ProcessFutureImpl::abandon()
     {
         getProcessManager()->abandonProcess(mManagementChannel);
     }
-    
+
     setState(STATE_ABANDONED);
 }
 
@@ -385,8 +385,8 @@ void Forte::ProcessFutureImpl::Signal(int signum)
     mManagementChannel->SendPDU(pdu);
 }
 
-unsigned int Forte::ProcessFutureImpl::GetStatusCode() 
-{ 
+unsigned int Forte::ProcessFutureImpl::GetStatusCode()
+{
     if(mState == STATE_READY)
     {
         hlog(HLOG_ERR, "tried grabbing the status code from a process that hasn't been started");
@@ -400,8 +400,8 @@ unsigned int Forte::ProcessFutureImpl::GetStatusCode()
     return mStatusCode;
 }
 
-Forte::ProcessFuture::ProcessTerminationType Forte::ProcessFutureImpl::GetProcessTerminationType() 
-{ 
+Forte::ProcessFuture::ProcessTerminationType Forte::ProcessFutureImpl::GetProcessTerminationType()
+{
     if(mState == STATE_READY)
     {
         hlog(HLOG_ERR, "tried grabbing the termination type from a process that hasn't been started");
@@ -438,25 +438,25 @@ FString Forte::ProcessFutureImpl::GetOutputString()
     // if so, and the output file wasn't the bit bucket
     // load it up and return it. Otherwise, we just load the
     // string we have already loaded
-    if (mOutputString.empty() && mOutputFilename != "/dev/null") 
+    if (mOutputString.empty() && mOutputFilename != "/dev/null")
     {
         // read log file
         FString stmp;
         ifstream in(mOutputFilename, ios::in | ios::binary);
         char buf[4096];
-  
+
         mOutputString.clear();
-  
+
         while (in.good())
         {
             in.read(buf, sizeof(buf));
             stmp.assign(buf, in.gcount());
             mOutputString += stmp;
         }
-        
+
         // cleanup
         in.close();
-    } 
+    }
     else if(mOutputFilename == "/dev/null")
     {
         hlog(HLOG_WARN, "no output filename set");
@@ -484,25 +484,25 @@ FString Forte::ProcessFutureImpl::GetErrorString()
     // if so, and the error file wasn't the bit bucket
     // load it up and return it. Otherwise, we just load the
     // string we have already loaded
-    if (mErrorString.empty() && mErrorFilename != "/dev/null") 
+    if (mErrorString.empty() && mErrorFilename != "/dev/null")
     {
         // read log file
         FString stmp;
         ifstream in(mErrorFilename, ios::in | ios::binary);
         char buf[4096];
-  
+
         mErrorString.clear();
-  
+
         while (in.good())
         {
             in.read(buf, sizeof(buf));
             stmp.assign(buf, in.gcount());
             mErrorString += stmp;
         }
-        
+
         // cleanup
         in.close();
-    } 
+    }
     else if(mErrorFilename == "/dev/null")
     {
         hlog(HLOG_WARN, "no error filename set");

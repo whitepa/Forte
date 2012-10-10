@@ -28,7 +28,7 @@ namespace Forte
     {
         friend class Forte::ProcessFutureImpl;
     protected:
- 
+
     public:
 
         static const int MAX_RUNNING_PROCS;
@@ -49,7 +49,7 @@ namespace Forte
         /**
          * Get a shared pointer to this ProcessManager.  NOTE: A
          * shared_ptr to this ProcessManager must already exist.
-         * 
+         *
          * @return shared_ptr
          */
         boost::shared_ptr<ProcessManager> GetPtr(void) {
@@ -113,8 +113,8 @@ namespace Forte
         virtual bool IsProcessMapEmpty(void);
 
         virtual int CreateProcessAndGetResult(
-            const Forte::FString& command, 
-            Forte::FString& output, 
+            const Forte::FString& command,
+            Forte::FString& output,
             Forte::FString& errorOutput,
             bool throwErrorOnNonZeroReturnCode = true,
             const Timespec &timeout = Timespec::FromSeconds(-1),
@@ -139,13 +139,13 @@ namespace Forte
          */
         virtual void * run(void);
 
-        /** 
+        /**
          * addPeer() is used by new Process objects after creating
          * their monitoring process.  The ProcessManager object (which
          * owns the Process object) is responsible for polling the
          * associated file descriptor.
-         * 
-         * @param fd 
+         *
+         * @param fd
          * @return shared pointer to the newly created PDU Peer
          */
         virtual boost::shared_ptr<Forte::PDUPeer> addPeer(int fd);
@@ -153,18 +153,18 @@ namespace Forte
         /**
          * This function gets called whenever a PDU is received on any
          * peer.
-         * 
+         *
          * @param peer The peer we received the PDU from.
          * @param pdu The PDU itself.
          */
         void pduCallback(PDUPeer &peer);
 
-        /** 
+        /**
          * This function gets called when an error is encountered on a
          * peer connection and the peer is removed from the
          * PDUPeerSetImpl.
-         * 
-         * @param peer 
+         *
+         * @param peer
          */
         void errorCallback(PDUPeer &peer);
 
