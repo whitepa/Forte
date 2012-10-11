@@ -57,11 +57,19 @@ FString Logfile::GetLevelStr(int level)
         levelstr = "TRCE";
         break;
     case HLOG_DEBUG4:
+        levelstr = "DBG4";
+        break;
     case HLOG_DEBUG3:
+        levelstr = "DBG3";
+        break;
     case HLOG_DEBUG2:
+        levelstr = "DBG2";
+        break;
     case HLOG_DEBUG1:
+        levelstr = "DBG1";
+        break;
     case HLOG_DEBUG:
-        levelstr = "DBUG";
+        levelstr = "DBG ";
         break;
     case HLOG_INFO:
         levelstr = "INFO";
