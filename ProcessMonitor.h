@@ -43,64 +43,64 @@ namespace Forte
             STATE_EXITED
         };
 
-        /** 
+        /**
          * Instantiate a ProcessMonitor application.  This will
          * communicate over a socket with a Forte ProcessManager.
          * Command line usage:
          *
          * procmon <fd>
          *
-         * @param argc 
-         * @param argv 
+         * @param argc
+         * @param argv
          *
-         * @return 
+         * @return
          */
         ProcessMonitor(int argc, char *argv[]);
         virtual ~ProcessMonitor();
-        
-        /** 
+
+        /**
          * Run the monitoring routine.
-         * 
+         *
          */
         void Run(void);
 
     private:
-        
+
         bool isActiveState(void) {
             return (mState == STATE_RUNNING ||
                     mState == STATE_STOPPED);
         }
 
-        /** 
+        /**
          * This function gets called whenever a PDU is received on any
          * peer.
-         * 
+         *
          * @param peer The peer we received the PDU from.
          * @param pdu The PDU itself.
          */
         void pduCallback(PDUPeer &peer);
 
-        /** 
+        /**
          * This function is called after a SIGCHLD is received, once
          * we have returned from the async signal handler.
-         * 
+         *
          */
         void doWait(void);
 
 
-        /** 
+        /**
          * Called after a waitpid() call gives us some data.
-         * 
-         * @param pid 
-         * @param status 
+         *
+         * @param pid
+         * @param status
          */
         void handleWaitStatus(pid_t pid, int status);
-            
 
-        /** 
+
+        /**
          * Async signal handler function for the management process.
-         * 
-         * @param sig 
+         *
+         * @param sig
          */
         static void handleSIGCHLD(int sig);
 
