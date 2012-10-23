@@ -63,7 +63,7 @@ void * Forte::ReceiverThread::run(void)
 
 
     struct epoll_event ev;
-    ev.events = EPOLLIN | EPOLLERR | EPOLLRDHUP;
+    ev.events = EPOLLIN;
     ev.data.ptr = NULL;
     AutoFD efd(epoll_create(2));
 
@@ -71,10 +71,8 @@ void * Forte::ReceiverThread::run(void)
         throw EReceiverThreadPollCreate(strerror(errno));
 
     if (epoll_ctl(efd, EPOLL_CTL_ADD, m, &ev) < 0)
-                throw ERecieverThreadPollAdd(strerror(errno));
+        throw EReceiverThreadPollAdd(strerror(errno));
 
-
-    // loop until shutdown
     while (!mThreadShutdown)
     {
         struct sockaddr_in in_addr;
@@ -84,27 +82,35 @@ void * Forte::ReceiverThread::run(void)
 
         int epollResult = epoll_wait(efd, events, 1, EPOLLTIMEOUT);
 
-        if (epollResult == 0)
+        if (epollResult == 0
+            || (epollResult == -1 && errno == EINTR))
         {
+            //timeout with no events or interrupted
             continue;
         }
-        else
+        else if (epollResult == -1)
         {
-            if (epollResult < 0 &&
-                ((errno == EBADF ||
-                  errno == EFAULT ||
-                  errno == EINVAL) &&
-                 errno != EINTR))
-            {
-                throw EReceiverThreadPollFailed(strerror(errno));
-            }
+            hlog_and_throw(HLOG_DEBUG,
+                           EReceiverThreadPollFailed(strerror(errno)));
         }
 
         if (mThreadShutdown)
+        {
             break;
-        else
-            s = accept(m, (struct sockaddr *)&in_addr, &len);
+        }
 
+        if (events[0].events & EPOLLIN)
+        {
+            s = accept(m, (struct sockaddr *)&in_addr, &len);
+        }
+        else
+        {
+            // EPOLLERR or EPOLLHUP
+            if (hlog_ratelimit(3600))
+                hlog(HLOG_ERR,
+                     "epoll_wait returned error event %d", events[0].events);
+            continue;
+        }
 
         if (s == -1)
         {

@@ -18,7 +18,7 @@ namespace Forte
                         "Dispatcher is invalid");
 
     EXCEPTION_SUBCLASS2(EReceiverThread,
-                        ERecieverThreadPollAdd,
+                        EReceiverThreadPollAdd,
                         "Failed to add descriptor to poll socket");
 
     EXCEPTION_SUBCLASS2(EReceiverThread,
