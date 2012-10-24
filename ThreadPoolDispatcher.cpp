@@ -106,6 +106,8 @@ void* Forte::ThreadPoolDispatcherManager::run(void)
             AutoUnlockMutex lock(disp.mThreadsLock);
             std::vector<shared_ptr<DispatcherThread> >::iterator i =
                 disp.mThreads.begin();
+            //TODO? should thread pool dispatcher try to kill idle
+            //threads first?
             if (*i)
             {
                 (*i)->Shutdown();

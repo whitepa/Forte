@@ -57,6 +57,8 @@ namespace Forte
                              std::list<shared_ptr<Event> > &runningEvents);
         bool StopRunningEvent(shared_ptr<Event> &runningEvent);
 
+        virtual void Shutdown();
+
     protected:
         unsigned int mMaxThreads;
         Semaphore mThreadSem;

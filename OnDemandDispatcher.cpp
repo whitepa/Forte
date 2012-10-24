@@ -140,6 +140,23 @@ Forte::OnDemandDispatcher::OnDemandDispatcher(
 Forte::OnDemandDispatcher::~OnDemandDispatcher()
 {
     FTRACE;
+
+    if (!mShutdown)
+    {
+        try
+        {
+            Shutdown();
+        }
+        catch(...)
+        {
+            hlog(HLOG_ERR, "Exception thrown shutting down");
+        }
+    }
+}
+
+void Forte::OnDemandDispatcher::Shutdown()
+{
+    FTRACE;
     // stop accepting new events
     mEventQueue.Shutdown();
     // set the shutdown flag
@@ -148,6 +165,7 @@ Forte::OnDemandDispatcher::~OnDemandDispatcher()
     // (this allows all worker threads to safely exit and unregister themselves
     //  before this destructor exits; otherwise bad shit happens when this object
     //  is dealloced and worker threads are still around trying to access data)
+    mManagerThread.Shutdown();
     mManagerThread.WaitForShutdown();
 }
 

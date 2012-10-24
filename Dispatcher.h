@@ -52,6 +52,8 @@ namespace Forte
 
         virtual int GetQueueDepth(void) { return mEventQueue.Depth(); }
 
+        virtual void Shutdown() = 0;
+
         FString mDispatcherName;
 
     protected:
@@ -64,7 +66,7 @@ namespace Forte
         ThreadCondition mNotify;
         EventQueue mEventQueue;
     };
-
+    typedef boost::shared_ptr<Dispatcher> DispatcherPtr;
 
     class DispatcherThread : public Thread
     {

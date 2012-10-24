@@ -3,6 +3,27 @@
 
 #include "Dispatcher.h"
 
+/**
+ * Usage:
+ * create a class that derives from RequestHandler
+ *
+ * class MyRequestHandler;
+ * boost::shared_ptr<MyRequestHandler> myWorkHandler(new MyWorkHandler());
+ * ThreadPoolDipatcher myDispatcher (myWorkHandler
+ *                                   minThreads,
+ *                                   maxThreads,
+ *                                   minSpareThreads,
+ *                                   maxSpareThreads,
+ *                                   deepQueue,
+ *                                   maxDepth,
+ *                                   "MyDispatcher");
+ *
+ * In the destructor of the owning class, calling
+ * myDispatcher->Shutdown will provide a smoother destruct experience.
+ */
+
+
+
 namespace Forte
 {
     EXCEPTION_SUBCLASS(Exception, ForteThreadPoolDispatcherException);
@@ -68,5 +89,7 @@ namespace Forte
         Semaphore mSpareThreadSem;
         ThreadPoolDispatcherManager mManagerThread;
     };
+
+    typedef boost::shared_ptr<ThreadPoolDispatcher> ThreadPoolDispatcherPtr;
 };
 #endif
