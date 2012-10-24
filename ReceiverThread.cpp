@@ -93,6 +93,8 @@ void * Forte::ReceiverThread::run(void)
                            EReceiverThreadPollFailed(strerror(errno)));
         }
 
+        hlog(HLOG_DEBUG, "events=0x%x", events[0].events);
+
         if (mThreadShutdown)
         {
             break;

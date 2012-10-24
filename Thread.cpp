@@ -44,7 +44,7 @@ void * Thread::startThread(void *obj)
     if (thr->mThreadName.empty())
         thr->mThreadName.Format("unknown-%u", (unsigned)thr->mThread);
     if (!thr->mThreadShutdown)
-        hlog(HLOG_DEBUG, "thread initialized");
+        hlog(HLOG_DEBUG2, "thread initialized");
     
     // run the thread
     try
@@ -65,13 +65,13 @@ void * Thread::startThread(void *obj)
         hlog(HLOG_ERR, "unknown exception in thread run()");
     }
     
-    hlog(HLOG_DEBUG, "thread shutting down");
+    hlog(HLOG_DEBUG2, "thread shutting down");
     thr->mThreadShutdown = true;
 
     // notify that shutdown is complete
     AutoUnlockMutex lock(thr->mShutdownCompleteLock);
     thr->mShutdownComplete = true;
-    hlog(HLOG_DEBUG, "Broadcasting thread shutdown");
+    hlog(HLOG_DEBUG2, "Broadcasting thread shutdown");
     thr->mShutdownCompleteCondition.Broadcast();
 
     return retval;

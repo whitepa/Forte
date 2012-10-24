@@ -26,8 +26,14 @@ class ProcessManagerTest : public ::testing::Test
 public:
     static void SetUpTestCase() {
         signal(SIGPIPE, SIG_IGN);
-        logManager.SetLogMask("//stdout", HLOG_ALL);
-        logManager.BeginLogging("//stdout");
+
+        logManager.BeginLogging(__FILE__ ".log", HLOG_ALL);
+        logManager.BeginLogging("//stderr",
+                                logManager.GetSingleLevelFromString("UPTO_DEBUG"),
+                                HLOG_FORMAT_SIMPLE | HLOG_FORMAT_THREAD);
+
+        //logManager.SetLogMask("//stdout", HLOG_ALL);
+        //logManager.BeginLogging("//stdout");
 
         FileSystemImpl fs;
         mProcMonLocation.Format("FORTE_PROCMON=%s/procmon",
@@ -64,35 +70,43 @@ TEST_F(ProcessManagerTest, MemLeak)
 {
     try
     {
-        hlog(HLOG_INFO, "new ProcessManage");
+        hlog(HLOG_INFO, "new ProcessManager");
         boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
-        hlog(HLOG_INFO, "CreateProcess");
 
         sleep(1); // causes a race condition where the next Process is
-        // added during the epoll_wait
+                  // added during the epoll_wait
+
         {
-            hlog(HLOG_INFO, "Run Process");
-            boost::shared_ptr<ProcessFuture> ph = pm->CreateProcess("/bin/sleep 3");
+            hlog(HLOG_INFO, "Create and Run Process");
+            boost::shared_ptr<ProcessFuture> ph =
+                pm->CreateProcess("/bin/sleep 3");
             hlog(HLOG_INFO, "Is Running");
             ASSERT_TRUE(ph->IsRunning());
+
             hlog(HLOG_INFO, "Wait");
             ASSERT_NO_THROW(ph->GetResult());
+
             hlog(HLOG_INFO, "Is Running");
             ASSERT_TRUE(!ph->IsRunning());
-            hlog(HLOG_INFO, "Termination Type: %d", ph->GetProcessTerminationType());
+
+            hlog(HLOG_INFO,
+                 "Termination Type: %d", ph->GetProcessTerminationType());
             hlog(HLOG_INFO, "StatusCode: %d", ph->GetStatusCode());
             hlog(HLOG_INFO, "OutputString: %s", ph->GetOutputString().c_str());
         }
         // it is possible for the pf not to be destructed at this point due to a
         // pending PDU. We sleep here to let the destruction happen
-	sleep(1);
+        sleep(1);
         ASSERT_TRUE(pm->IsProcessMapEmpty());
+
     }
     catch (Exception& e)
     {
         hlog(HLOG_ERR, "exception: %s", e.what());
         FAIL();
     }
+
+    hlog(HLOG_INFO, "test complete, cleaning up");
 }
 
 TEST_F(ProcessManagerTest, FDLeak)
@@ -510,19 +524,21 @@ TEST_F(ProcessManagerTest, ProcmonRunning)
             boost::shared_ptr<ProcessFuture> ph = pm->CreateProcess("/bin/sleep 3");
             ph->GetResult();
             monitorPid = ph->GetMonitorPID();
+            hlog(HLOG_INFO, "monitor pid is %d", monitorPid);
         }
 
         sleep(5); // wait for procmon to finish
 
         ASSERT_TRUE(monitorPid != -1);
-        hlog(HLOG_INFO, "Going to check if monitor process %d is still running", monitorPid);
+        hlog(HLOG_INFO, "Going to check if monitor process %d is still running",
+             monitorPid);
         // check if the monitor pid is still running
         FString filename(FStringFC(),
                          "/proc/%d/cmdline", monitorPid);
         hlog(HLOG_INFO, "monitor proc location %s", filename.c_str());
         AutoFD fd;
         fd = open(filename, O_RDONLY);
-        ASSERT_TRUE(fd < 0);
+        ASSERT_LT((int) fd, 0);
     }
     catch (Exception &e)
     {

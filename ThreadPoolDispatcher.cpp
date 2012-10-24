@@ -78,7 +78,7 @@ void* Forte::ThreadPoolDispatcherManager::run(void)
                     // create a new worker thread
                     try
                     {
-                        hlog(HLOG_DEBUG2, "%s: Creating %i thread pool worker",
+                        hlog(HLOG_DEBUG2, "%s: Creating thread pool worker %i",
                              disp.mDispatcherName.c_str(), i);
 
                         AutoUnlockMutex lock(disp.mThreadsLock);
@@ -273,16 +273,19 @@ Forte::ThreadPoolDispatcher::ThreadPoolDispatcher(
       mSpareThreadSem(0),
       mManagerThread(*this)
 {
+    FTRACE;
 }
 
 Forte::ThreadPoolDispatcher::~ThreadPoolDispatcher()
 {
+    FTRACE;
     if (!mShutdown)
         Shutdown();
 }
 
 void Forte::ThreadPoolDispatcher::Shutdown(void)
 {
+    FTRACE;
     // stop accepting new events
     mEventQueue.Shutdown();
     // set the shutdown flag
@@ -308,6 +311,8 @@ void Forte::ThreadPoolDispatcher::Resume(void)
 
 void Forte::ThreadPoolDispatcher::Enqueue(shared_ptr<Event> e)
 {
+    FTRACE;
+
     if (mShutdown)
         throw ForteThreadPoolDispatcherException(
             "dispatcher is shutting down; no new events are being accepted");

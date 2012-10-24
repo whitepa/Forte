@@ -19,6 +19,7 @@ Forte::ProcessMonitor::ProcessMonitor(int argc, char *argv[]) :
     mOutputFilename("/dev/null"),
     mErrorFilename("/dev/null")
 {
+    FTRACE;
     FString logFile;
     FString logLevel;
     try
@@ -37,6 +38,7 @@ Forte::ProcessMonitor::ProcessMonitor(int argc, char *argv[]) :
             mLogManager.ComputeLogMaskFromString(logLevel));
         mLogManager.BeginLogging(logFile);
     }
+
     // single argument only, should be a file descriptor
     if (argc != 2)
         throw EProcessMonitorArguments();
@@ -50,10 +52,13 @@ Forte::ProcessMonitor::ProcessMonitor(int argc, char *argv[]) :
 
 Forte::ProcessMonitor::~ProcessMonitor()
 {
+    FTRACE;
 }
 
 void Forte::ProcessMonitor::Run()
 {
+    FTRACE;
+
     // this is the "main function" of the management process.
     // install a SIGCHLD handler
     sGotSIGCHLD = false;
