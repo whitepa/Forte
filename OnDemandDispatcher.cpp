@@ -7,8 +7,9 @@ using namespace Forte;
 
 /////////////////////////// On demand dispatcher
 
-Forte::OnDemandDispatcherManager::OnDemandDispatcherManager(OnDemandDispatcher &disp) :
-    DispatcherThread(disp)
+Forte::OnDemandDispatcherManager::OnDemandDispatcherManager(
+    OnDemandDispatcher &disp)
+    : DispatcherThread(disp)
 {
     FTRACE;
     initialized();
@@ -17,10 +18,12 @@ Forte::OnDemandDispatcherManager::OnDemandDispatcherManager(OnDemandDispatcher &
 void * Forte::OnDemandDispatcherManager::run(void)
 {
     FTRACE;
+
     OnDemandDispatcher &disp(dynamic_cast<OnDemandDispatcher&>(mDispatcher));
     mThreadName.Format("dsp-od-%u", GetThreadID());
 
     AutoUnlockMutex lock(disp.mNotifyLock);
+
     while (1) // always check for queued events before shutting down
     {
         // reap any completed threads TODO: may need a better method
@@ -44,18 +47,24 @@ void * Forte::OnDemandDispatcherManager::run(void)
                 }
             }
         }
+
         shared_ptr<Event> event;
         while (!disp.mPaused && (event = disp.mEventQueue.Get()))
         {
             AutoLockMutex unlock(disp.mNotifyLock);
             disp.mThreadSem.Wait();
+
             AutoUnlockMutex thrLock(disp.mThreadsLock);
             disp.mThreads.push_back(
                 shared_ptr<DispatcherThread>(
                     new OnDemandDispatcherWorker(disp, event)));
-            hlog(HLOG_DEBUG2, "Number of threads in queue : %d", (int)disp.mThreads.size());
+
+            hlog(HLOG_DEBUG2, "Number of threads in queue : %d",
+                 (int) disp.mThreads.size());
         }
-        if (disp.mShutdown) {
+
+        if (disp.mShutdown)
+        {
             hlog(HLOG_DEBUG, "Going to shutdown dispatcher thread");
             break;
         }
@@ -75,16 +84,20 @@ void * Forte::OnDemandDispatcherManager::run(void)
         // delete all threads
         disp.mThreads.clear();
     }
+
     return NULL;
 }
-Forte::OnDemandDispatcherWorker::OnDemandDispatcherWorker(OnDemandDispatcher &disp,
-                                                          shared_ptr<Event> event) :
-    DispatcherThread(disp)
+
+Forte::OnDemandDispatcherWorker::OnDemandDispatcherWorker(
+    OnDemandDispatcher &disp,
+    shared_ptr<Event> event)
+    : DispatcherThread(disp)
 {
     FTRACE;
     mEventPtr = event;
     initialized();
 }
+
 Forte::OnDemandDispatcherWorker::~OnDemandDispatcherWorker()
 {
     FTRACE;
@@ -109,18 +122,21 @@ void * Forte::OnDemandDispatcherWorker::run()
     return NULL;
 }
 
-Forte::OnDemandDispatcher::OnDemandDispatcher(boost::shared_ptr<RequestHandler> requestHandler,
-                                              const int maxThreads,
-                                              const int deepQueue, const int maxDepth,
-                                              const char *name):
-    Dispatcher(requestHandler, maxDepth, name),
-    mMaxThreads(maxThreads),
-    mThreadSem(maxThreads),
-    mManagerThread(*this)
+Forte::OnDemandDispatcher::OnDemandDispatcher(
+    boost::shared_ptr<RequestHandler> requestHandler,
+    const int maxThreads,
+    const int deepQueue,
+    const int maxDepth,
+    const char *name)
+    : Dispatcher(requestHandler, maxDepth, name),
+      mMaxThreads(maxThreads),
+      mThreadSem(maxThreads),
+      mManagerThread(*this)
 {
     FTRACE;
     mDispatcherName = name;
 }
+
 Forte::OnDemandDispatcher::~OnDemandDispatcher()
 {
     FTRACE;
@@ -134,15 +150,33 @@ Forte::OnDemandDispatcher::~OnDemandDispatcher()
     //  is dealloced and worker threads are still around trying to access data)
     mManagerThread.WaitForShutdown();
 }
-void Forte::OnDemandDispatcher::Pause(void) { mPaused = 1; }
-void Forte::OnDemandDispatcher::Resume(void) { mPaused = 0; mNotify.Signal(); }
+
+void Forte::OnDemandDispatcher::Pause(void)
+{
+    FTRACE;
+    mPaused = 1;
+}
+
+void Forte::OnDemandDispatcher::Resume(void)
+{
+    FTRACE;
+    mPaused = 0;
+    mNotify.Signal();
+}
+
 void Forte::OnDemandDispatcher::Enqueue(shared_ptr<Event> e)
 {
     mEventQueue.Add(e);
 }
-bool Forte::OnDemandDispatcher::Accepting(void) { return mEventQueue.Accepting(); }
-int Forte::OnDemandDispatcher::GetRunningEvents(int maxEvents,
-                                                std::list<shared_ptr<Event> > &runningEvents)
+
+bool Forte::OnDemandDispatcher::Accepting(void)
+{
+    return mEventQueue.Accepting();
+}
+
+int Forte::OnDemandDispatcher::GetRunningEvents(
+    int maxEvents,
+    std::list<shared_ptr<Event> > &runningEvents)
 {
     // lock the notify lock to prevent threads from freeing events while
     // we are copying them

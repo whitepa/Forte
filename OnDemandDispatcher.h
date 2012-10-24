@@ -16,33 +16,43 @@ namespace Forte
     protected:
         virtual void *run(void);
     };
+
     class OnDemandDispatcherWorker : public DispatcherThread
     {
     public:
-        OnDemandDispatcherWorker(OnDemandDispatcher &disp, shared_ptr<Event> event);
+        OnDemandDispatcherWorker(
+            OnDemandDispatcher &disp,
+            shared_ptr<Event> event);
+
         virtual ~OnDemandDispatcherWorker();
+
     protected:
         virtual void *run(void);
     };
-
 
     class OnDemandDispatcher : public Dispatcher
     {
         friend class OnDemandDispatcherManager;
         friend class OnDemandDispatcherWorker;
     public:
-        OnDemandDispatcher(boost::shared_ptr<RequestHandler> requestHandler,
-                            const int maxThreads,
-                            const int deepQueue, const int maxDepth, const char *name);
+        OnDemandDispatcher(
+            boost::shared_ptr<RequestHandler> requestHandler,
+            const int maxThreads,
+            const int deepQueue,
+            const int maxDepth,
+            const char *name);
         virtual ~OnDemandDispatcher();
         virtual void Pause(void);
         virtual void Resume(void);
         virtual void Enqueue(shared_ptr<Event> e);
         virtual bool Accepting(void);
 
-        inline int GetQueuedEvents(int maxEvents,
-                                   std::list<shared_ptr<Event> > &queuedEvents)
-            { return mEventQueue.GetEvents(maxEvents, queuedEvents); }
+        inline int GetQueuedEvents(
+            int maxEvents,
+            std::list<shared_ptr<Event> > &queuedEvents)
+            {
+                return mEventQueue.GetEvents(maxEvents, queuedEvents);
+            }
         int GetRunningEvents(int maxEvents,
                              std::list<shared_ptr<Event> > &runningEvents);
         bool StopRunningEvent(shared_ptr<Event> &runningEvent);

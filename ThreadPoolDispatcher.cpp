@@ -10,13 +10,14 @@ using namespace Forte;
 
 ////////////////////////////// Thread pool dispatcher
 
-Forte::ThreadPoolDispatcherManager::ThreadPoolDispatcherManager(ThreadPoolDispatcher &disp) :
-    DispatcherThread(disp)
+Forte::ThreadPoolDispatcherManager::ThreadPoolDispatcherManager(
+    ThreadPoolDispatcher &disp)
+    : DispatcherThread(disp)
 {
     initialized();
 }
 
-void * Forte::ThreadPoolDispatcherManager::run(void)
+void* Forte::ThreadPoolDispatcherManager::run(void)
 {
     FTRACE;
 
@@ -52,13 +53,14 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
         // see if new threads are needed
         int currentThreads = disp.mMaxThreads - disp.mThreadSem.GetValue();
         int spareThreads = disp.mSpareThreadSem.GetValue();
-        int newThreadsNeeded = disp.mEventQueue.Depth() + disp.mMinSpareThreads - spareThreads;
+        int newThreadsNeeded =
+            disp.mEventQueue.Depth() + disp.mMinSpareThreads - spareThreads;
         int numNew = 0;
         if (newThreadsNeeded < (int)disp.mMinThreads - currentThreads)
             newThreadsNeeded = (int)disp.mMinThreads - currentThreads;
-//        hlog(HLOG_DEBUG4,
-//             "ThreadPool Manager Loop: %d threads; %d spare; %d needed",
-//             currentThreads, spareThreads, newThreadsNeeded);
+        //hlog(HLOG_DEBUG4,
+        //"ThreadPool Manager Loop: %d threads; %d spare; %d needed",
+        //currentThreads, spareThreads, newThreadsNeeded);
         if (!disp.mShutdown && newThreadsNeeded > 0)
         {
             numNew = (lastNew == 0) ? 1 : lastNew * 2;
@@ -158,14 +160,16 @@ void * Forte::ThreadPoolDispatcherManager::run(void)
     return NULL;
 }
 
-Forte::ThreadPoolDispatcherWorker::ThreadPoolDispatcherWorker(ThreadPoolDispatcher &disp) :
-    DispatcherThread(disp),
-    mMonotonicClock(),
-    mLastPeriodicCall(mMonotonicClock.GetTime().AsSeconds())
+Forte::ThreadPoolDispatcherWorker::ThreadPoolDispatcherWorker(
+    ThreadPoolDispatcher &disp)
+    : DispatcherThread(disp),
+      mMonotonicClock(),
+      mLastPeriodicCall(mMonotonicClock.GetTime().AsSeconds())
 {
     FTRACE;
     initialized();
 }
+
 Forte::ThreadPoolDispatcherWorker::~ThreadPoolDispatcherWorker()
 {
     FTRACE;
@@ -184,6 +188,7 @@ Forte::ThreadPoolDispatcherWorker::~ThreadPoolDispatcherWorker()
 
     deleting();
 }
+
 void * Forte::ThreadPoolDispatcherWorker::run(void)
 {
     FTRACE;
@@ -239,7 +244,8 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
         struct timespec now;
         mMonotonicClock.GetTime(now);
         if (disp.mRequestHandler->mTimeout != 0 &&
-            (unsigned int)(now.tv_sec - mLastPeriodicCall) > disp.mRequestHandler->mTimeout)
+            (unsigned int)
+            (now.tv_sec - mLastPeriodicCall) > disp.mRequestHandler->mTimeout)
         {
             disp.mRequestHandler->Periodic();
             mLastPeriodicCall = now.tv_sec;
@@ -249,20 +255,26 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
     return NULL;
 }
 
-Forte::ThreadPoolDispatcher::ThreadPoolDispatcher(boost::shared_ptr<RequestHandler> requestHandler,
-                                                  const int minThreads, const int maxThreads,
-                                                  const int minSpareThreads, const int maxSpareThreads,
-                                                  const int deepQueue, const int maxDepth, const char *name):
-    Dispatcher(requestHandler, maxDepth, name),
-    mMinThreads(minThreads),
-    mMaxThreads(maxThreads),
-    mMinSpareThreads(minSpareThreads),
-    mMaxSpareThreads(maxSpareThreads),
-    mThreadSem(maxThreads),
-    mSpareThreadSem(0),
-    mManagerThread(*this)
+Forte::ThreadPoolDispatcher::ThreadPoolDispatcher(
+    boost::shared_ptr<RequestHandler> requestHandler,
+    const int minThreads,
+    const int maxThreads,
+    const int minSpareThreads,
+    const int maxSpareThreads,
+    const int deepQueue,
+    const int maxDepth,
+    const char *name)
+    : Dispatcher(requestHandler, maxDepth, name),
+      mMinThreads(minThreads),
+      mMaxThreads(maxThreads),
+      mMinSpareThreads(minSpareThreads),
+      mMaxSpareThreads(maxSpareThreads),
+      mThreadSem(maxThreads),
+      mSpareThreadSem(0),
+      mManagerThread(*this)
 {
 }
+
 Forte::ThreadPoolDispatcher::~ThreadPoolDispatcher()
 {
     if (!mShutdown)
@@ -283,18 +295,33 @@ void Forte::ThreadPoolDispatcher::Shutdown(void)
     mManagerThread.WaitForShutdown();
 }
 
-void Forte::ThreadPoolDispatcher::Pause(void) { mPaused = 1; }
-void Forte::ThreadPoolDispatcher::Resume(void) { mPaused = 0; mNotify.Broadcast(); }
+void Forte::ThreadPoolDispatcher::Pause(void)
+{
+    mPaused = 1;
+}
+
+void Forte::ThreadPoolDispatcher::Resume(void)
+{
+    mPaused = 0;
+    mNotify.Broadcast();
+}
+
 void Forte::ThreadPoolDispatcher::Enqueue(shared_ptr<Event> e)
 {
     if (mShutdown)
-        throw ForteThreadPoolDispatcherException("dispatcher is shutting down; no new events are being accepted");
+        throw ForteThreadPoolDispatcherException(
+            "dispatcher is shutting down; no new events are being accepted");
     mEventQueue.Add(e);
 }
-bool Forte::ThreadPoolDispatcher::Accepting(void) { return mEventQueue.Accepting(); }
 
-int Forte::ThreadPoolDispatcher::GetRunningEvents(int maxEvents,
-                                                  std::list<shared_ptr<Event> > &runningEvents)
+bool Forte::ThreadPoolDispatcher::Accepting(void)
+{
+    return mEventQueue.Accepting();
+}
+
+int Forte::ThreadPoolDispatcher::GetRunningEvents(
+    int maxEvents,
+    std::list<shared_ptr<Event> > &runningEvents)
 {
     // loop through the dispatcher threads
     AutoUnlockMutex lock(mNotifyLock);

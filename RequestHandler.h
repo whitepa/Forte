@@ -5,8 +5,9 @@
 
 namespace Forte
 {
-// base class for a user-defined request handler
+    // base class for a user-defined request handler
     class Event;
+
     class RequestHandler : public Object {
     public:
         inline RequestHandler(unsigned int timeout = 0) : mTimeout(timeout) {};

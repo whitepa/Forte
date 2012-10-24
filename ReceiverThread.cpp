@@ -61,7 +61,6 @@ void * Forte::ReceiverThread::run(void)
     int flags = fcntl(m, F_GETFD);
     fcntl(m, F_SETFD, (long)(flags | FD_CLOEXEC));
 
-
     struct epoll_event ev;
     ev.events = EPOLLIN;
     ev.data.ptr = NULL;
