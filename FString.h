@@ -191,6 +191,13 @@ namespace Forte
         FString& Replace(const char* find, const char* replace);
 
         /**
+         *Finds a string and replaces it with a selected string. Overwrites existing value.
+         *Starts at start
+         **/
+        FString& Replace(std::string::size_type start, const char* find,
+                         const char* replace);
+
+        /**
          * Finds and removes all chars from string
          **/
         FString& StripNonMatchingChars(const char* whitelist);

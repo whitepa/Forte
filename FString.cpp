@@ -162,7 +162,12 @@ void FString::VFormat(const char *format, int size, va_list ap)
 
 FString& FString::Replace(const char* str_find, const char* str_replace)
 {
-    std::string::size_type  pos, start = 0;
+    return Replace(0, str_find, str_replace);
+}
+
+FString& FString::Replace(std::string::size_type start, const char* str_find, const char* str_replace)
+{
+    std::string::size_type  pos;
     std::string::size_type  len_f = strlen(str_find), len_r = strlen(str_replace);
 
     while ((pos = find(str_find, start)) != NOPOS)
