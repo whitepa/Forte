@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "AutoMutex.h"
+#include "CXXABI.h"
 #include "Exception.h"
 #include "Object.h"
 #include "Thread.h"
@@ -533,14 +534,22 @@ void _hlog_errno(const char* func, const char* file, int line, int level);
             _hlog_errno(_func, _file, _line, level); \
     }
 
-#define hlog_and_throw(level, exception_decl)                           \
+
+#define _hlog_and_throw(level, exception_decl, msg)                     \
     {                                                                   \
         const std::exception &exception_instance = exception_decl;      \
         hlog(level, "EXCEPTION %s thrown (%s)",                         \
-             typeid(exception_instance).name(),                         \
-             exception_decl.what());                                    \
+             Forte::CXXABI::Demangle(typeid(exception_instance).name()).c_str(), \
+             msg);                                                      \
         boost::throw_exception(exception_decl);                         \
     }
+
+#define hlog_and_throw(level, exception_decl)                           \
+    _hlog_and_throw(level, exception_decl, exception_decl.what());
+
+#define hlogFO_and_throw(level, exception_decl, fmt, params)            \
+    _hlog_and_throw(level, exception_decl,                              \
+                    Forte::FString(FStringFO(), fmt, params).c_str());
 
 /**
  * hlog_ratelimit() will limit the logging from a particular file/line
