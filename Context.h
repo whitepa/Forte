@@ -10,26 +10,26 @@
 // TODO: How to set certain keys as read-only?
 
 // Macro to allow easy scoping of objects out of the context
-#define CGET(key, type, name)                                   \
-    boost::shared_ptr<type> name ## _Ptr = mContext.Get<type>(key);    \
+#define CGET(key, type, name)                                       \
+    boost::shared_ptr<type> name ## _Ptr = mContext.Get<type>(key); \
     type __attribute__((unused)) &name(* name ## _Ptr)
 
-#define CGETPTR(key, type, name)                                \
+#define CGETPTR(key, type, name)                            \
     boost::shared_ptr<type> name = mContext.Get<type>(key);
 
-#define CNEW(key, type, args...)                                \
+#define CNEW(key, type, args...)                                    \
     mContext.Set(key, boost::shared_ptr<type>(new type( args )))
 
-#define CGETNEW(key, type, name, args...)               \
-    boost::shared_ptr<type> name ## _Ptr(new type( args ));    \
-    mContext.Set(key, name ## _Ptr);                    \
+#define CGETNEW(key, type, name, args...)                   \
+    boost::shared_ptr<type> name ## _Ptr(new type( args )); \
+    mContext.Set(key, name ## _Ptr);                        \
     type __attribute__((unused)) &name(* name ## _Ptr)
 
-#define CGETNEWPTR(key, type, name, args...)                    \
-    boost::shared_ptr<type> name(new type( args ));                    \
+#define CGETNEWPTR(key, type, name, args...)        \
+    boost::shared_ptr<type> name(new type( args )); \
     mContext.Set(key, name);
 
-#define CSET(key, type, obj)                    \
+#define CSET(key, type, obj)                            \
     mContext.Set(key, boost::shared_ptr<type>( obj ))
 
 namespace Forte
