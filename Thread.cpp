@@ -17,6 +17,7 @@ void Thread::makeKey(void)
 }
 Thread * Thread::MyThread(void)
 {
+    pthread_once(&sThreadKeyOnce, makeKey);
     Thread *thr = reinterpret_cast<Thread*>(pthread_getspecific(sThreadKey));
     if (thr == NULL)
         throw EThreadUnknown();
