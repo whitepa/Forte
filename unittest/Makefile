@@ -37,6 +37,7 @@ LIBS = \
 	$(OS_LIBS) \
 	$(XML_LIBS) \
 	$(SQLITE_LIBS) \
+	-laio \
 	$(NULL)
 
 BSRCS = ContextUnitTest.cpp \
@@ -67,9 +68,10 @@ GSRCS = CheckedValueStoreUnitTest.cpp \
 	FileSystemImplUnitTest.cpp \
 	FileSystemUtilUnitTest.cpp \
 	FStringUnitTest.cpp \
+	INotifyUnitTest.cpp \
+	IOManagerUnitTest.cpp \
 	LoggingUnitTest.cpp \
 	LogManagerUnitTest.cpp \
-	INotifyUnitTest.cpp \
 	PidFileUnitTest.cpp \
 	PDUPeerUnitTest.cpp \
 	ProcessManagerUnitTest.cpp \
