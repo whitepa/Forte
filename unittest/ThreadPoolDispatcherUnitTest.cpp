@@ -372,3 +372,40 @@ TEST_F(ThreadPoolDispatcherUnitTest, MultipleDispatchersCanExistInSameProcess)
     dispatcher3->Shutdown();
 }
 
+TEST_F(ThreadPoolDispatcherUnitTest, CanCreateThreadPoolWithExactNumberOfThreads)
+{
+    FTRACE;
+
+    boost::shared_ptr<TestRequestHandler> testHandler(new TestRequestHandler());
+    boost::shared_ptr<RequestHandler> handler = testHandler;
+
+    int minThreads = 6;
+    int maxThreads = 6;
+    int minSpareThreads = 6;
+    int maxSpareThreads = 6;
+    int deepQueue = 32;
+    int maxDepth = 32;
+
+    boost::shared_ptr<ThreadPoolDispatcher> dispatcher(
+        new ThreadPoolDispatcher(
+            handler,
+            minThreads,
+            maxThreads,
+            minSpareThreads,
+            maxSpareThreads,
+            deepQueue,
+            maxDepth,
+            "SixThreadPool"
+            )
+        );
+
+    dispatcher->Enqueue(make_shared<TestEventDoOutput>());
+    dispatcher->Enqueue(make_shared<TestEventWorkUntilSignaled>());
+    dispatcher->Enqueue(make_shared<ReenqueueingEvent>(dispatcher));
+
+    for (int i = 0; i<10; i++)
+    {
+        sleep(1);
+        EXPECT_EQ(6, dispatcher->GetThreadCount());
+    }
+}

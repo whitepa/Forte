@@ -52,6 +52,11 @@ namespace Forte
 
         virtual int GetQueueDepth(void) { return mEventQueue.Depth(); }
 
+        virtual int GetThreadCount(void) {
+            AutoUnlockMutex lock(mThreadsLock);
+            return mThreads.size();
+        }
+
         virtual void Shutdown() = 0;
 
         FString mDispatcherName;
