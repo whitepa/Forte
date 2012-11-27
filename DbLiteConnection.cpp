@@ -344,7 +344,7 @@ void DbLiteConnection::backupDatabase(const FString &targetPath)
     if(mDBName == targetPath)
     {
         hlog(HLOG_ERROR, "- operation ignored, source and target are same path={%s}", mDBName.c_str());
-        throw EDbLiteBackupFailed();
+        throw EDbLiteBackupFailedInvalidPath();
     }
 
     // @TODO this function is a prototype
@@ -358,7 +358,7 @@ void DbLiteConnection::backupDatabase(const FString &targetPath)
     pBackup = sqlite3_backup_init(dbTarget.mDB, "main", mDB, "main");
     if (!pBackup)
     {
-        hlog_and_throw(HLOG_WARN, EDbLiteBackupFailed());
+        hlog_and_throw(HLOG_WARN, EDbLiteBackupFailedSqlite3BackupInit());
     }
 
     int rc;
@@ -368,7 +368,7 @@ void DbLiteConnection::backupDatabase(const FString &targetPath)
 
     if(rc != SQLITE_DONE)
     {
-        hlog_and_throw(HLOG_WARN, EDbLiteBackupFailed());
+        hlog_and_throw(HLOG_WARN, EDbLiteBackupFailedSqlite3BackupStep());
     }
 
     /* Release resources allocated by backup_init(). */

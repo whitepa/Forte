@@ -13,6 +13,9 @@
 namespace Forte
 {
     EXCEPTION_SUBCLASS(DbException, EDbLiteBackupFailed);
+    EXCEPTION_SUBCLASS(EDbLiteBackupFailed, EDbLiteBackupFailedInvalidPath);
+    EXCEPTION_SUBCLASS(EDbLiteBackupFailed, EDbLiteBackupFailedSqlite3BackupInit);
+    EXCEPTION_SUBCLASS(EDbLiteBackupFailed, EDbLiteBackupFailedSqlite3BackupStep);
 
     class DbLiteConnection : public DbConnection
     {
