@@ -158,9 +158,11 @@ public: // drawback, bind requires these be public
 
         ASSERT_TRUE(fs.FileExists(getDatabaseName())) << getDatabaseName();
 
+        executeCommand("/opt/scale/bin/scdoall touch /tmp/cluster-in-shutdown-period");
         executeCommand("/etc/init.d/monit stop");
         executeCommand("/etc/init.d/scaled stop");
         executeCommand("/etc/init.d/screpld stop");
+        executeCommand("/etc/init.d/sanlock stop");
         executeCommand("/usr/lpp/mmfs/bin/mmshutdown");
 
         waitMountsDown();
@@ -224,10 +226,12 @@ public: // drawback, bind requires these be public
         ASSERT_FALSE(fs.FileExists(getDatabaseName())) << getDatabaseName();
 
         executeCommand("/usr/lpp/mmfs/bin/mmstartup");
+        executeCommand("/etc/init.d/sanlock start");
         executeCommand("/etc/init.d/screpld start");
         executeCommand("/etc/init.d/scaled start");
         executeCommand("/etc/init.d/monit start");
         restoreMounts();
+        executeCommand("/opt/scale/bin/scdoall rm /tmp/cluster-in-shutdown-period");
 
         ASSERT_TRUE(fs.FileExists(getDatabaseName())) << getDatabaseName();
     }
