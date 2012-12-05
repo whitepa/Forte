@@ -29,7 +29,10 @@ namespace Forte
 
         IORequest() :
 //            mIOManager(ioManager),
-            mCompleted(false), mResult(0),mData(NULL) {
+            mCompleted(false),
+            mResult(0),
+            mData(NULL),
+            mWaitCond(mWaitLock) {
             memset(&mIOCB, 0, sizeof(struct iocb));
             mIOCBs[0] = &mIOCB;
         }
@@ -79,8 +82,10 @@ namespace Forte
         }
         void SetResult(long res) {
             FTRACE2("res=%ld", res);
+            AutoUnlockMutex lock(mWaitLock);
             mResult = res;
             mCompleted = true;
+            mWaitCond.Broadcast();
             if (mCallback)
                 mCallback(*this);
         }
@@ -90,7 +95,19 @@ namespace Forte
             return mResult;
         }
 
-        // void WaitForCompletion(void);
+        void Wait(void) {
+            // wait for the IO completion 
+
+            // @TODO look into the efficiency of using pthread
+            // condition variables for this.  We may want to switch to
+            // a futex.  In particular, the current implementation
+            // instantiates and initializes a pthread_mutex and
+            // pthread_cond_t for each IO request.
+
+            Forte::AutoUnlockMutex lock(mWaitLock);
+            while (!mCompleted)
+                mWaitCond.Wait();
+        }
         bool IsComplete(void) const {
             return mCompleted;
         }
@@ -101,6 +118,9 @@ namespace Forte
         bool mCompleted;
         long mResult;
         void *mData;
+
+        Forte::Mutex mWaitLock;
+        Forte::ThreadCondition mWaitCond;
     };
 
 
