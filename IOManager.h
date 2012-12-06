@@ -8,6 +8,7 @@
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
+#include <libaio.h>
 
 namespace Forte
 {
@@ -164,7 +165,7 @@ namespace Forte
                 else if (n < 0)
                 {
                     hlog(HLOG_ERR, "io_getevents returns %d: %s", n, strerror(-n));
-                    InterruptibleSleep(Timespec::FromMillisec(200));
+                    usleep(200000);
                     continue;
                 }
                 for (int i = 0; i < n; ++i)
