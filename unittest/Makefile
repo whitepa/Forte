@@ -37,7 +37,7 @@ LIBS = \
 	$(OS_LIBS) \
 	$(XML_LIBS) \
 	$(SQLITE_LIBS) \
-	-laio \
+	$(AIO_LIBS) \
 	$(NULL)
 
 BSRCS = ContextUnitTest.cpp \
