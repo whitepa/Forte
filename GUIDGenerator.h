@@ -18,8 +18,8 @@ namespace Forte
         virtual ~GUIDGenerator() {};
 
         virtual FString & GenerateGUID(FString &out);
-        
-        virtual void GenerateGUID(uint8_t &out[]);
+        virtual void GenerateGUID(uint8_t out[]);
+        virtual void GenerateGUID(std::vector<uint8_t> &out);
 
     private:
         Mutex mLock;

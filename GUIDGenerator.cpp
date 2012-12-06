@@ -1,4 +1,5 @@
 #include "Base64.h"
+#include "Foreach.h"
 #include "GUIDGenerator.h"
 #include "RandomGenerator.h"
 #include <sys/time.h>
@@ -23,7 +24,7 @@ FString & Forte::GUIDGenerator::GenerateGUID(FString &out)
     return out;
 }
 
-void Forte::GUIDGenerator::GenerateGUID(uint8_t &out[])
+void Forte::GUIDGenerator::GenerateGUID(uint8_t out[])
 {
     std::vector<uint8_t> v;
     GenerateGUID(v);
@@ -38,5 +39,5 @@ void Forte::GUIDGenerator::GenerateGUID(std::vector<uint8_t> &out)
     AutoUnlockMutex lock(mLock);
     boost::uuids::uuid u = mUUIDGen();
     out.reserve(u.size());
-    std::copy(u.begin(), u.end(), v.begin());
+    std::copy(u.begin(), u.end(), out.begin());
 }
