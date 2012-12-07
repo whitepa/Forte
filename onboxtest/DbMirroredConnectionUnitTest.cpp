@@ -162,7 +162,7 @@ public: // drawback, bind requires these be public
         executeCommand("/etc/init.d/monit stop");
         executeCommand("/etc/init.d/scaled stop");
         executeCommand("/etc/init.d/screpld stop");
-        executeCommand("/etc/init.d/sanlock stop");
+        executeCommand("/etc/init.d/virtlockd stop");
         executeCommand("/usr/lpp/mmfs/bin/mmshutdown");
 
         waitMountsDown();
@@ -226,7 +226,7 @@ public: // drawback, bind requires these be public
         ASSERT_FALSE(fs.FileExists(getDatabaseName())) << getDatabaseName();
 
         executeCommand("/usr/lpp/mmfs/bin/mmstartup");
-        executeCommand("/etc/init.d/sanlock start");
+        executeCommand("/etc/init.d/virtlockd start");
         executeCommand("/etc/init.d/screpld start");
         executeCommand("/etc/init.d/scaled start");
         executeCommand("/etc/init.d/monit start");
