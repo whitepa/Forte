@@ -3,11 +3,9 @@
 # Copyright (C) 2010 Scale Computing, Inc.
 
 # To add a new test, create a new .cpp file in this directory.  It
-# will be compiled as a standalone executable.
-
-# TODO: This makefile does not appear to handle dependencies
-# correctly.  If library headers change, it does not recompile the
-# individual tests.
+# will be compiled as a standalone executable. If the the test has
+# dependencies outside of what is in LIBS, add them individually via
+# the PROG_DEPS_OBJS_<test> variable below.
 
 BUILDROOT:=$(shell echo 'while [ ! -d re ]; do cd ..; done; pwd' | sh)
 
@@ -52,7 +50,8 @@ BSRCS = ContextUnitTest.cpp \
 	StateMachineUnitTest7.cpp \
 	StateMachineUnitTest8.cpp
 
-GSRCS = CheckedValueStoreUnitTest.cpp \
+GSRCS = AutoMutexUnitTest.cpp \
+	CheckedValueStoreUnitTest.cpp \
 	CheckedValueUnitTest.cpp \
 	ClockUnitTest.cpp \
 	ClusterLockUnitTest.cpp \
@@ -73,11 +72,11 @@ GSRCS = CheckedValueStoreUnitTest.cpp \
 	LoggingUnitTest.cpp \
 	LogManagerUnitTest.cpp \
 	PidFileUnitTest.cpp \
-	PDUPeerUnitTest.cpp \
 	ProcessManagerUnitTest.cpp \
 	ProcessCommandUnitTest.cpp \
 	ProcessorInformationUnitTest.cpp \
 	ProcFileSystemUnitTest.cpp \
+	RWLockUnitTest.cpp \
 	SCSIUtilUnitTest.cpp \
 	StateMachineDoIntervalUnitTest.cpp \
 	StateMachineDoMaximumIterationsUnitTest.cpp \
@@ -85,13 +84,26 @@ GSRCS = CheckedValueStoreUnitTest.cpp \
 	StateMachineEventDeliveryUnitTest2.cpp \
 	StateMachineSetStateUnitTest.cpp \
 	StateMachineTestHarnessUnitTest.cpp \
+	ThreadPoolDispatcherUnitTest.cpp \
 	XMLUnitTest.cpp \
+
+# rusted, will fix with arch changes. all functionality covered by
+# PDUPeerSetBuilderImplUnitTest.cpp \
+# PDUPeerFileDescriptorEndpointUnitTest.cpp \
+# PDUPeerInProcessEndpointUnitTest.cpp \
+# PDUPeerImplUnitTest.cpp \
+# PDUPeerNetworkAcceptorEndpointUnitTest.cpp \
+# PDUPeerNetworkConnectorEndpointUnitTest.cpp \
+# PDUPeerSetBuilderImplUnitTest.cpp \
+
 
 GPROGS = $(GSRCS:%.cpp=%)
 BPROGS = $(BSRCS:%.cpp=%)
 PROGS=$(addprefix $(TARGETDIR)/,$(GPROGS) $(BPROGS))
 
 PROG_DEPS = $(FORTE_MOCK)
+
+PROG_DEPS_OBJS_AutoMutexUnitTest =
 
 PROG_DEPS_OBJS_ContextPredicateUnitTest =
 
@@ -120,6 +132,8 @@ PROG_DEPS_OBJS_FStringUnitTest =  \
 PROG_DEPS_OBJS_ProcessManagerUnitTest =  \
 	../$(TARGETDIR)/ProcessManagerImpl.o \
 	../$(TARGETDIR)/ProcessFutureImpl.o \
+	../$(TARGETDIR)/PDUPeerSetImpl.o \
+	../$(TARGETDIR)/PDUPeerFileDescriptorEndpoint.o \
 
 PROG_DEPS_OBJS_ProcessCommandUnitTest =
 
@@ -130,7 +144,36 @@ PROG_DEPS_OBJS_ProcessorInformationUnitTest =  \
 	../$(TARGETDIR)/ProcFileSystem.o \
 	../$(TARGETDIR)/ProcessorInformation.o \
 
-PROG_DEPS_OBJS_PDUPeerUnitTest =
+PROG_DEPS_OBJS_PDUPeerInProcessEndpointUnitTest = \
+	../$(TARGETDIR)/PDUPeerInProcessEndpoint.o \
+
+PROG_DEPS_OBJS_PDUPeerFileDescriptorEndpointUnitTest = \
+	../$(TARGETDIR)/PDUPeerFileDescriptorEndpoint.o \
+
+PROG_DEPS_OBJS_PDUPeerNetworkAcceptorEndpointUnitTest = \
+	../$(TARGETDIR)/PDUPeerNetworkAcceptorEndpoint.o \
+
+PROG_DEPS_OBJS_PDUPeerNetworkConnectorEndpointUnitTest = \
+	../$(TARGETDIR)/PDUPeerNetworkConnectorEndpoint.o \
+	../$(TARGETDIR)/Thread.o \
+
+PROG_DEPS_OBJS_PDUPeerSetBuilderImplUnitTest = \
+	../$(TARGETDIR)/PDUPeerSetBuilderImpl.o \
+	../$(TARGETDIR)/PDUPeerSetConnectionHandler.o \
+	../$(TARGETDIR)/PDUPeerEndpointFactoryImpl.o \
+	../$(TARGETDIR)/PDUPeerNetworkConnectorEndpoint.o \
+	../$(TARGETDIR)/PDUPeerNetworkAcceptorEndpoint.o \
+	../$(TARGETDIR)/PDUPeerInProcessEndpoint.o \
+	../$(TARGETDIR)/PDUPeerSetImpl.o \
+	../$(TARGETDIR)/PDUPeerImpl.o \
+	../$(TARGETDIR)/PDUPeerFileDescriptorEndpoint.o \
+	../$(TARGETDIR)/Thread.o \
+	../$(TARGETDIR)/ThreadPoolDispatcher.o \
+	../$(TARGETDIR)/OnDemandDispatcher.o \
+	../$(TARGETDIR)/ReceiverThread.o \
+
+PROG_DEPS_OBJS_PDUPeerImplUnitTest = \
+	../$(TARGETDIR)/PDUPeerImpl.o \
 
 PROG_DEPS_OBJS_ClockUnitTest =
 
@@ -156,6 +199,12 @@ PROG_DEPS_OBJS_StateMachineSetStateUnitTest =  \
 	../$(TARGETDIR)/StateHistoryLogger.o \
 
 PROG_DEPS_OBJS_StateMachineTestHarnessUnitTest =
+
+PROG_DEPS_OBJS_ThreadPoolDispatcherUnitTest = \
+	../$(TARGETDIR)/ThreadPoolDispatcher.o \
+
+PROG_DEPS_OBJS_RWLockUnitTest = \
+	../$(TARGETDIR)/RWLock.o \
 
 PROG_DEPS_OBJS_SCSIUtilUnitTest =
 

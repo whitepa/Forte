@@ -527,7 +527,7 @@ TEST_F(ProcessManagerTest, ProcmonRunning)
             hlog(HLOG_INFO, "monitor pid is %d", monitorPid);
         }
 
-        sleep(5); // wait for procmon to finish
+        sleep(10); // wait for procmon to finish
 
         ASSERT_TRUE(monitorPid != -1);
         hlog(HLOG_INFO, "Going to check if monitor process %d is still running",

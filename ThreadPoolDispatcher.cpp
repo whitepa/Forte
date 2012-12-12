@@ -102,7 +102,9 @@ void* Forte::ThreadPoolDispatcherManager::run(void)
                  spareThreads > (int)disp.mMinSpareThreads)
         {
             // too many spare threads, shut one down
-            hlog(HLOG_DEBUG2, "shutting down a thread");
+            hlog(HLOG_DEBUG2, "have %d spare threads, need between %u and %u",
+                 spareThreads, disp.mMinSpareThreads, disp.mMaxSpareThreads);
+
             AutoUnlockMutex lock(disp.mThreadsLock);
             std::vector<shared_ptr<DispatcherThread> >::iterator i =
                 disp.mThreads.begin();
@@ -118,14 +120,14 @@ void* Forte::ThreadPoolDispatcherManager::run(void)
     }
 
     // shut down
-    hlog(HLOG_DEBUG,
+    hlog(HLOG_DEBUG2,
          "'%s' dispatcher shutting down, handling final queued requests...",
          disp.mDispatcherName.c_str());
 
     // wait until all requests are processed
     disp.mEventQueue.WaitUntilEmpty();
 
-    hlog(HLOG_DEBUG,
+    hlog(HLOG_DEBUG2,
          "'%s' dispatcher shutting down, waiting for threads to exit...",
          disp.mDispatcherName.c_str());
 
@@ -158,7 +160,7 @@ void* Forte::ThreadPoolDispatcherManager::run(void)
         disp.mThreads.clear();
         // TODO: timed deletion of all threads, give up after a while
     }
-    hlog(HLOG_DEBUG, "'%s' dispatcher shutdown complete", disp.mDispatcherName.c_str());
+    hlog(HLOG_DEBUG2, "'%s' dispatcher shutdown complete", disp.mDispatcherName.c_str());
     return NULL;
 }
 
@@ -221,6 +223,10 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
                 try
                 {
                     disp.mRequestHandler->Handler(event.get());
+                }
+                catch (EThreadShutdown &e)
+                {
+                    //normal
                 }
                 catch (std::exception &e)
                 {
@@ -315,7 +321,7 @@ void Forte::ThreadPoolDispatcher::Enqueue(shared_ptr<Event> e)
     FTRACE;
 
     if (mShutdown)
-        throw ForteThreadPoolDispatcherException(
+        throw EThreadPoolDispatcherShuttingDown(
             "dispatcher is shutting down; no new events are being accepted");
     mEventQueue.Add(e);
 }

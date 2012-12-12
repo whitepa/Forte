@@ -26,7 +26,9 @@
 
 namespace Forte
 {
-    EXCEPTION_SUBCLASS(Exception, ForteThreadPoolDispatcherException);
+    EXCEPTION_CLASS(EThreadPoolDispatcher);
+    EXCEPTION_SUBCLASS(EThreadPoolDispatcher,
+                       EThreadPoolDispatcherShuttingDown);
 
     class ThreadPoolDispatcher;
 

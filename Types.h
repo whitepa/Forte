@@ -32,6 +32,9 @@ namespace Forte
     typedef std::set<FString> FStringSet;
     typedef std::vector<FString> FStringVector;
     typedef std::list<FString> FStringList;
+
+    typedef std::pair<std::string, int> SocketAddress;
+    typedef std::vector<std::pair<std::string, int> > SocketAddressVector;
 };
 
 #endif

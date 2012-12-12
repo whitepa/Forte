@@ -5,8 +5,10 @@
 #include "AutoMutex.h"
 #include "PDUPeer.h"
 #include "RWLock.h"
+#include "Types.h"
 #include <boost/function.hpp>
 #include <boost/shared_array.hpp>
+#include "PDUPeerTypes.h"
 
 EXCEPTION_CLASS(EPDUPeerSet);
 
@@ -49,10 +51,14 @@ namespace Forte
     class PDUPeerSet : public Object
     {
     public:
-        typedef boost::function<void(PDUPeer &peer)> CallbackFunc;
-
         PDUPeerSet() {}
         virtual ~PDUPeerSet() {}
+
+        //NOTE: shared_ptr must already exist
+        boost::shared_ptr<PDUPeerSet> GetPtr() {
+            return boost::static_pointer_cast<PDUPeerSet>(
+                Object::shared_from_this());
+        }
 
         /**
          * GetSize() returns the current number of PDUPeer objects
@@ -63,6 +69,19 @@ namespace Forte
         virtual unsigned int GetSize(void) = 0;
 
         /**
+         * returns the number of PDUPeer objects that are currently
+         * connected
+         *
+         * @return count of connected peers
+         */
+        virtual unsigned int GetConnectedCount(void) = 0;
+
+        /**
+         * Thinking of deprecating this. Current use cases for
+         * PDUPeerSet use PDUPeers differently than the new
+         * design. Will need to figure out if the old way can fit in
+         * to the new diesign of if both use cases make sense.
+         *
          * PeerCreate will create a new PDUPeer object for the already
          * open peer connection on the given file descriptor.
          *
@@ -73,33 +92,46 @@ namespace Forte
         virtual boost::shared_ptr<PDUPeer> PeerCreate(int fd) = 0;
 
         /**
-         * SendAll will send the given PDU to ALL of the peers being
-         * managed by this PDUPeerSet.
+         * PeerEndpointAdd will create an fd to the endpoint object
+         * owned by the given PDUPeer
+         *
+         * @param fd
+         *
+         * @return
+         */
+        virtual void PeerAddFD(uint64_t peerID, int fd) = 0;
+
+        /**
+         * Broadcast will attempt to send the given PDU to ALL of the
+         * peers being managed by this PDUPeerSetImpl. Errors in
+         * sending will silently ignored. If an application needs to
+         * send to all and handle errors, it should call GetPeer() on
+         * each peer it wants to send to handle the error that way
          *
          * @param pdu
          */
-        virtual void SendAll(const PDU &pdu) const = 0;
+        virtual void Broadcast(const PDU &pdu) const = 0;
+
 
         /**
-         * SetProcessPDUCallback sets the single callback function to
-         * use when a complete PDU has been received on any of the
-         * peer connections.
+         * BroadcastAsync will enqueu the given PDU for each peer
+         * being managed by this PDUPeerSetImpl. The error callback
+         * will be called according to the the async send rules of the
+         * PDUPeer.
+         *
+         * @param pdu
+         */
+        virtual void BroadcastAsync(const PDUPtr& pdu) = 0;
+
+
+        /**
+         * SetEventCallback will be called whenever there is an event
+         * of interest fired from a PDUPeer. See PDUPeerTypes.h for
+         * types types of events and available data
          *
          * @param f
          */
-        virtual void SetProcessPDUCallback(CallbackFunc f) = 0;
-
-        /**
-         * SetErrorCallback sets the single callback function to use
-         * when an unrecoverable error has occurred on any of the peer
-         * connections.  The file descriptor within the errored
-         * PDUPeer will still be valid at the time the callback is
-         * made, but will be closed immediately after the callback
-         * returns.
-         *
-         * @param f
-         */
-        virtual void SetErrorCallback(CallbackFunc f) = 0;
+        virtual void SetEventCallback(PDUPeerEventCallback f) = 0;
 
         /**
          * Creates an epoll file descriptor, and automatically adds
@@ -144,9 +176,32 @@ namespace Forte
          *
          * @param peer
          */
-        virtual void PeerDelete(
-            const boost::shared_ptr<Forte::PDUPeer> &peer) = 0;
+        virtual void PeerDelete(const PDUPeerPtr& peer) = 0;
+
+        /**
+         * The PDUPeerSetBuilder handles this automatically. If you
+         * are setting up a PDUPeerSet yourself, you need to call this
+         * if you want events.
+         *
+         */
+        virtual void StartPolling() = 0;
+
+        /**
+         * Direct consumers of PDUPeerSet should call
+         * Shutdown. PDUPeerSetBuilder will call this for you
+         *
+         */
+        virtual void Shutdown() = 0;
+
+        /**
+         * Will return the peer as indexed by the peerID. In the case
+         * that a peer is created with an FD, this will be the fd it
+         * was created with. Otherwise, the peer id passed in by the
+         * creator.
+         *
+         */
+        virtual PDUPeerPtr GetPeer(uint64_t peerID) = 0;
     };
-    typedef boost::shared_ptr<Forte::PDUPeerSet> PDUPeerSetPtr;
+    typedef std::pair<int, PDUPeerPtr> IntPDUPeerPtrPair;
 };
 #endif

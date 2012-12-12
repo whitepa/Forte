@@ -5,7 +5,11 @@
 #include "AutoMutex.h"
 #include "PDUPeerSet.h"
 #include "PDUPeer.h"
+#include "PDUPollThread.h"
 #include "RWLock.h"
+#include "FTrace.h"
+#include "PDUPeerSetWorkHandler.h"
+#include "PDUPollThread.h"
 #include <boost/function.hpp>
 #include <boost/shared_array.hpp>
 
@@ -14,28 +18,25 @@ namespace Forte
     /**
      * PDUPeerSet manages a set of PDUPeer objects, and provides a
      * mechanism for polling the entire set for input simultaneously.
-     * 'PDU ready' and 'error' callbacks may be used as part of the
+     * 'PDU ready' and 'error' events may be used as part of the
      * polling mechanism.
      */
     class PDUPeerSetImpl : public PDUPeerSet
     {
     public:
-        static const int MAX_PEERS = 256;
-        static const int RECV_BUFFER_SIZE = 65536;
+        PDUPeerSetImpl(
+            DispatcherPtr dispatcher,
+            PDUPeerSetWorkHandlerPtr workHandler,
+            const std::vector<PDUPeerPtr>& peers);
 
-        PDUPeerSetImpl() : mEPollFD(-1) {}
         virtual ~PDUPeerSetImpl();
 
-        /**
-         * GetSize() returns the current number of PDUPeer objects
-         * being managed by this PDUPeerSetImpl.
-         *
-         * @return size of the set
-         */
-        unsigned int GetSize(void) {
-            AutoUnlockMutex peerSetLock(mLock);
-            return mPeerSet.size();
+        unsigned int GetSize() {
+            AutoUnlockMutex peerSetLock(mPDUPeerLock);
+            return mPDUPeers.size();
         }
+
+        virtual unsigned int GetConnectedCount(void);
 
         /**
          * PeerCreate will create a new PDUPeer object for the already
@@ -45,40 +46,24 @@ namespace Forte
          *
          * @return
          */
-        boost::shared_ptr<PDUPeer> PeerCreate(int fd);
+        PDUPeerPtr PeerCreate(int fd);
 
-        /**
-         * SendAll will send the given PDU to ALL of the peers being
-         * managed by this PDUPeerSetImpl.
-         *
-         * @param pdu
-         */
-        void SendAll(const PDU &pdu) const;
-
-        /**
-         * SetProcessPDUCallback sets the single callback function to
-         * use when a complete PDU has been received on any of the
-         * peer connections.
-         *
-         * @param f
-         */
-        void SetProcessPDUCallback(CallbackFunc f) {
-            mProcessPDUCallback = f;
+        void PeerAddFD(uint64_t peerID, int fd) {
+            FTRACE2("%llu, %d", (unsigned long long) peerID, fd);
+            AutoUnlockMutex peerSetLock(mPDUPeerLock);
+            std::map<uint64_t, PDUPeerPtr>::iterator i;
+            i = mPDUPeers.find(peerID);
+            if (i == mPDUPeers.end())
+            {
+                hlog_and_throw(HLOG_DEBUG2, EPDUPeerInvalid());
+            }
+            mPDUPeers[peerID]->AddFD(fd);
         }
 
-        /**
-         * SetErrorCallback sets the single callback function to use
-         * when an unrecoverable error has occurred on any of the peer
-         * connections.  The file descriptor within the errored
-         * PDUPeer will still be valid at the time the callback is
-         * made, but will be closed immediately after the callback
-         * returns.
-         *
-         * @param f
-         */
-        void SetErrorCallback(CallbackFunc f) {
-            mErrorCallback = f;
-        }
+        void Broadcast(const PDU& pdu) const;
+        void BroadcastAsync(const PDUPtr& pdu);
+
+        void SetEventCallback(PDUPeerEventCallback f);
 
         /**
          * Creates an epoll file descriptor, and automatically adds
@@ -89,7 +74,7 @@ namespace Forte
          *
          * @return int epoll file descriptor
          */
-        int SetupEPoll(void);
+        int SetupEPoll();
 
         /**
          * Closes the epoll file descriptor (removing all existing
@@ -98,8 +83,7 @@ namespace Forte
          * exception.
          *
          */
-        void TeardownEPoll(void);
-    public:
+        void TeardownEPoll();
 
         /**
          * Poll will poll all current Peers for input, and process any
@@ -124,23 +108,34 @@ namespace Forte
          *
          * @param peer
          */
-        void PeerDelete(const boost::shared_ptr<Forte::PDUPeer> &peer);
+        void PeerDelete(const PDUPeerPtr &peer);
+
+        /**
+         * The PDUPeerSetBuilder handles this automatically. If you
+         * are setting up a PDUPeerSet yourself, you need to call this
+         * if you want events.
+         *
+         */
+        void StartPolling();
+
+        void Shutdown();
+
+        PDUPeerPtr GetPeer(uint64_t peerID) {
+            return mPDUPeers.at(peerID);
+        }
 
     protected:
-        /**
-         * mEPollLock protects mEPollFD and mBuffer
-         */
+        DispatcherPtr mWorkDispatcher;
+        PDUPeerSetWorkHandlerPtr mWorkHandler;
+        PDUPollThreadPtr mPollThread;
+
+        mutable Forte::Mutex mPDUPeerLock;
+        std::map<uint64_t, PDUPeerPtr> mPDUPeers;
+
         mutable RWLock mEPollLock;
         int mEPollFD;
-        boost::shared_array<char> mBuffer;
 
-        /**
-         * mLock protects mPeerSet
-         */
-        mutable Forte::Mutex mLock;
-        std::set < boost::shared_ptr<PDUPeer> > mPeerSet;
-        CallbackFunc mProcessPDUCallback;
-        CallbackFunc mErrorCallback;
-    };
+        PDUPeerEventCallback mEventCallback;
+   };
 };
 #endif

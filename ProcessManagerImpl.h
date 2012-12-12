@@ -3,7 +3,7 @@
 
 #include "Thread.h"
 #include "Types.h"
-#include "PDUPeerSetImpl.h"
+#include "PDUPeerSetBuilder.h"
 #include "Object.h"
 #include "ProcessManager.h"
 #include "ProcessFutureImpl.h"
@@ -23,8 +23,7 @@ namespace Forte
      * ProcessManager provides for the creation and management of
      * child processes in an async manner
      */
-    class ProcessManagerImpl : virtual public ProcessManager,
-                               virtual public Thread
+    class ProcessManagerImpl : virtual public ProcessManager
     {
         friend class Forte::ProcessFutureImpl;
     protected:
@@ -134,12 +133,6 @@ namespace Forte
         virtual void startMonitor(boost::shared_ptr<Forte::ProcessFutureImpl> ph);
 
         /**
-         * the main runloop for the ProcessManager thread monitoring
-         * child processes.
-         */
-        virtual void * run(void);
-
-        /**
          * addPeer() is used by new Process objects after creating
          * their monitoring process.  The ProcessManager object (which
          * owns the Process object) is responsible for polling the
@@ -149,6 +142,15 @@ namespace Forte
          * @return shared pointer to the newly created PDU Peer
          */
         virtual boost::shared_ptr<Forte::PDUPeer> addPeer(int fd);
+
+
+        /**
+         * This function gets called whenever a PDU is received on any
+         * peer.
+         *
+         * @param event the event that has occurred
+         */
+        void pduPeerEventCallback(PDUPeerEventPtr event);
 
         /**
          * This function gets called whenever a PDU is received on any
@@ -181,7 +183,7 @@ namespace Forte
         /**
          * Set of PDU peers
          */
-        PDUPeerSetImpl mPeerSet;
+        PDUPeerSetBuilderPtr mPeerSet;
 
         FString mProcmonPath;
 

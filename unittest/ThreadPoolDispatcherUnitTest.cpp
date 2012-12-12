@@ -44,9 +44,9 @@ public:
     virtual void DoWork() {
         while (!Thread::MyThread()->IsShuttingDown())
         {
-            const int timeoutInSeconds(5);
+            const Timespec interval(5, 0);
             const bool throwOnShutdown(false);
-            Thread::InterruptibleSleep(timeoutInSeconds, throwOnShutdown);
+            Thread::InterruptibleSleep(interval, throwOnShutdown);
         }
     }
 };
@@ -64,9 +64,9 @@ public:
     virtual void DoWork() {
         if (!Thread::MyThread()->IsShuttingDown())
         {
-            const int timeoutInSeconds(1);
+            const Timespec interval(1, 0);
             const bool throwOnShutdown(false);
-            Thread::InterruptibleSleep(timeoutInSeconds, throwOnShutdown);
+            Thread::InterruptibleSleep(interval, throwOnShutdown);
             mDispatcher->Enqueue(make_shared<ReenqueueingEvent>(mDispatcher));
         }
     }

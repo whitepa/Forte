@@ -12,6 +12,7 @@
 #include "Util.h"
 #include "FTrace.h"
 #include "GUIDGenerator.h"
+#include "PDUPeerSetBuilderImpl.h"
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
@@ -32,22 +33,26 @@ const int Forte::ProcessManagerImpl::MAX_RUNNING_PROCS = 128;
 const int Forte::ProcessManagerImpl::PDU_BUFFER_SIZE = 4096;
 
 Forte::ProcessManagerImpl::ProcessManagerImpl() :
+    mPeerSet(new PDUPeerSetBuilderImpl()),
     mProcmonPath("/usr/libexec/procmon")
 {
     FTRACE;
-    setThreadName(FString(FStringFC(), "procmon-%u", GetThreadID()));
+    //TODO: does this need to be propogated now that we aren't running
+    //the thread directly
+
+    //setThreadName(FString(FStringFC(), "procmon-%u", GetThreadID()));
     char *procmon = getenv("FORTE_PROCMON");
     if (procmon)
     {
-        hlog(HLOG_INFO, "FORTE_PROCMON is set; using alternate procmon at path '%s'", procmon);
+        hlog(HLOG_INFO,
+             "FORTE_PROCMON is set; using alternate procmon at path '%s'",
+             procmon);
         mProcmonPath.assign(procmon);
     }
 
-    mPeerSet.SetupEPoll();
-    mPeerSet.SetProcessPDUCallback(boost::bind(&ProcessManagerImpl::pduCallback, this, _1));
-    mPeerSet.SetErrorCallback(boost::bind(&ProcessManagerImpl::errorCallback, this, _1));
-
-    initialized();
+    mPeerSet->SetEventCallback(
+        boost::bind(&ProcessManagerImpl::pduPeerEventCallback, this, _1));
+    mPeerSet->StartPolling();
 }
 
 Forte::ProcessManagerImpl::~ProcessManagerImpl()
@@ -58,9 +63,6 @@ Forte::ProcessManagerImpl::~ProcessManagerImpl()
     // the Process objects.
 
     // \TODO abandon processes
-
-    // shut down the thread
-    deleting();
 }
 
 boost::shared_ptr<ProcessFuture>
@@ -147,7 +149,7 @@ void Forte::ProcessManagerImpl::abandonProcess(const boost::shared_ptr<Forte::PD
         // lock is unlocked
         // object is destroyed
     }
-    mPeerSet.PeerDelete(peer);
+    mPeerSet->PeerDelete(peer);
 }
 
 void Forte::ProcessManagerImpl::startMonitor(
@@ -256,7 +258,7 @@ void Forte::ProcessManagerImpl::startMonitor(
 boost::shared_ptr<Forte::PDUPeer> Forte::ProcessManagerImpl::addPeer(int fd)
 {
     hlog(HLOG_DEBUG, "adding ProcessMonitor peer on fd %d", fd);
-    return mPeerSet.PeerCreate(fd);
+    return mPeerSet->PeerCreate(fd);
 }
 
 int ProcessManagerImpl::CreateProcessAndGetResult(
@@ -314,6 +316,31 @@ int ProcessManagerImpl::CreateProcessAndGetResult(
     return statusCode;
 }
 
+void Forte::ProcessManagerImpl::pduPeerEventCallback(PDUPeerEventPtr event)
+{
+    switch (event->mEventType)
+    {
+    case PDUPeerReceivedPDUEvent:
+        pduCallback(*(event->mPeer));
+        break;
+
+    case PDUPeerSendErrorEvent:
+        errorCallback(*(event->mPeer));
+        break;
+
+    case PDUPeerConnectedEvent:
+        break;
+
+    case PDUPeerDisconnectedEvent:
+        // happends on file descriptor close. no way to reconnect so
+        // we will delete our side of the PDUPeer connection
+        mPeerSet->PeerDelete(event->mPeer);
+        break;
+
+    default:
+        break;
+    }
+}
 
 void Forte::ProcessManagerImpl::pduCallback(PDUPeer &peer)
 {
@@ -386,24 +413,6 @@ void Forte::ProcessManagerImpl::errorCallback(PDUPeer &peer)
         // map
         throw_exception(EProcessManagerNoSharedPtr());
     }
-}
-
-void* Forte::ProcessManagerImpl::run(void)
-{
-    while (!mThreadShutdown)
-    {
-        try
-        {
-            // 100ms poll timeout
-            mPeerSet.Poll(100);
-        }
-        catch (Exception &e)
-        {
-            hlog(HLOG_ERR, "process manager thread caught exception: %s", e.what());
-            interruptibleSleep(Forte::Timespec::FromSeconds(1)); // prevent tight loops
-        }
-    }
-    return NULL;
 }
 
 bool Forte::ProcessManagerImpl::IsProcessMapEmpty(void)

@@ -1,6 +1,11 @@
 #ifndef __Forte__PDU_h_
 #define __Forte__PDU_h_
 
+#include "Exception.h"
+
+EXCEPTION_CLASS(EPDU);
+EXCEPTION_SUBCLASS(EPDU, EOversizedPayload);
+
 namespace Forte
 {
     struct PDU
@@ -17,18 +22,27 @@ namespace Forte
             version(PDU_VERSION),
             opcode(op),
             payloadSize(size) { memset(payload, 0, sizeof(payload)); }
-        PDU(int op, size_t size, void *data) :
+        PDU(int op, size_t size, const void *data) :
             version(PDU_VERSION),
             opcode(op),
-            payloadSize(size) {
-            memset(payload, 0, sizeof(payload));
-            memcpy(payload, data, size);
-        }
+            payloadSize(size)
+            {
+                if (size > sizeof(payload))
+                {
+                    throw EOversizedPayload();
+                }
+                memset(payload, 0, sizeof(payload));
+                memcpy(payload, data, size);
+            }
 
         unsigned int version;
         unsigned int opcode;
         unsigned int payloadSize;
         char payload[PDU_MAX_PAYLOAD];
+
+    private:
+        // not deriving from non-copyable to avoid vtable
+        PDU& operator= (const PDU&);
     } __attribute__((__packed__));
 };
 

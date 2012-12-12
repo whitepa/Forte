@@ -3,7 +3,7 @@
 
 #include "FString.h"
 #include "LogManager.h"
-#include "PDUPeerSetImpl.h"
+#include "PDUPeerSetBuilder.h"
 #include "ProcessFuture.h"
 #include "ServiceConfig.h"
 
@@ -75,10 +75,9 @@ namespace Forte
          * This function gets called whenever a PDU is received on any
          * peer.
          *
-         * @param peer The peer we received the PDU from.
-         * @param pdu The PDU itself.
+         * @param event type of event and relevant details
          */
-        void pduCallback(PDUPeer &peer);
+        void pduCallback(PDUPeerEventPtr event);
 
         /**
          * This function is called after a SIGCHLD is received, once
@@ -106,8 +105,8 @@ namespace Forte
 
 
         void handleParam(const PDUPeer &peer, const PDU &pdu);
-        void handleControlReq(const PDUPeer &peer, const PDU &pdu);
-        void sendControlRes(const PDUPeer &peer, int resultCode, const char *desc = "");
+        void handleControlReq(PDUPeer &peer, const PDU &pdu);
+        void sendControlRes(PDUPeer &peer, int resultCode, const char *desc = "");
 
         void startProcess(void);
         void signalProcess(int signal);
@@ -152,7 +151,7 @@ namespace Forte
         /**
          * Peers we may be sending/receiving PDUs to/from.
          */
-        PDUPeerSetImpl mPeerSet;
+        PDUPeerSetBuilderPtr mPeerSet;
 
         /**
          * Current state of the monitored process.

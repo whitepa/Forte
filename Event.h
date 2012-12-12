@@ -34,5 +34,14 @@ namespace Forte
         struct timeval mTime;
     };
 
+    class PDUEvent : public Event
+    {
+    public:
+        PDUEvent() {}
+        virtual ~PDUEvent() {}
+
+        virtual void DoWork() = 0;
+    };
+
 };
 #endif

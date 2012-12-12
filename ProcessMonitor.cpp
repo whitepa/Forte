@@ -9,12 +9,14 @@
 #include "LogManager.h"
 #include "ProcessMonitor.h"
 #include "ProcessManagerPDU.h"
+#include "PDUPeerSetBuilderImpl.h"
 #include "FTrace.h"
 #include "PDU.h"
 
 bool Forte::ProcessMonitor::sGotSIGCHLD = false;
 
 Forte::ProcessMonitor::ProcessMonitor(int argc, char *argv[]) :
+    mPeerSet(new PDUPeerSetBuilderImpl()),
     mInputFilename("/dev/null"),
     mOutputFilename("/dev/null"),
     mErrorFilename("/dev/null")
@@ -46,7 +48,7 @@ Forte::ProcessMonitor::ProcessMonitor(int argc, char *argv[]) :
     if (!fdStr.IsUnsignedNumeric())
         throw EProcessMonitorArguments();
     int fd = fdStr.AsUnsignedInteger();
-    mPeerSet.PeerCreate(fd);
+    mPeerSet->PeerCreate(fd);
     argv[1] = NULL;
 }
 
@@ -68,19 +70,20 @@ void Forte::ProcessMonitor::Run()
     signal(SIGPIPE, SIG_IGN);
     pthread_sigmask(SIG_SETMASK, &set, NULL);
 
-    mPeerSet.SetupEPoll();
-
-    mPeerSet.SetProcessPDUCallback(boost::bind(&ProcessMonitor::pduCallback, this, _1));
+    mPeerSet->SetEventCallback(
+        boost::bind(&ProcessMonitor::pduCallback, this, _1));
+    mPeerSet->StartPolling();
 
     // The process monitor should exit when:
     //  the process terminates AND all peer connections close
-    while (isActiveState() || mPeerSet.GetSize() > 0)
+    while (isActiveState() || mPeerSet->GetConnectedCount() > 0)
     {
         try
         {
             if (sGotSIGCHLD)
                 doWait();
-            mPeerSet.Poll(500, true);
+
+            usleep(500);
         }
         catch (EPDUPeerSetNoPeers &e)
         {
@@ -97,24 +100,27 @@ void Forte::ProcessMonitor::Run()
     }
 }
 
-void Forte::ProcessMonitor::pduCallback(PDUPeer &peer)
+void Forte::ProcessMonitor::pduCallback(PDUPeerEventPtr event)
 {
     FTRACE;
-    PDU pdu;
-    while (peer.RecvPDU(pdu))
+    if (event->mEventType == PDUPeerReceivedPDUEvent)
     {
-        hlog(HLOG_DEBUG, "PDU opcode %d", pdu.opcode);
-        switch(pdu.opcode)
+        PDU pdu;
+        while (event->mPeer->RecvPDU(pdu))
         {
-        case ProcessOpParam:
-            handleParam(peer, pdu);
-            break;
-        case ProcessOpControlReq:
-            handleControlReq(peer, pdu);
-            break;
-        default:
-            hlog(HLOG_ERR, "unexpected PDU with opcode %d", pdu.opcode);
-            break;
+            hlog(HLOG_DEBUG, "PDU opcode %d", pdu.opcode);
+            switch(pdu.opcode)
+            {
+            case ProcessOpParam:
+                handleParam(*(event->mPeer), pdu);
+                break;
+            case ProcessOpControlReq:
+                handleControlReq(*(event->mPeer), pdu);
+                break;
+            default:
+                hlog(HLOG_ERR, "unexpected PDU with opcode %d", pdu.opcode);
+                break;
+            }
         }
     }
 }
@@ -152,7 +158,7 @@ void Forte::ProcessMonitor::handleParam(const PDUPeer &peer, const PDU &pdu)
         break;
     }
 }
-void Forte::ProcessMonitor::handleControlReq(const PDUPeer &peer, const PDU &pdu)
+void Forte::ProcessMonitor::handleControlReq(PDUPeer &peer, const PDU &pdu)
 {
     FTRACE;
     const ProcessControlReqPDU *controlPDU = reinterpret_cast<const ProcessControlReqPDU*>(pdu.payload);
@@ -199,7 +205,7 @@ void Forte::ProcessMonitor::handleControlReq(const PDUPeer &peer, const PDU &pdu
     }
 }
 
-void Forte::ProcessMonitor::sendControlRes(const PDUPeer &peer, int result, const char *desc)
+void Forte::ProcessMonitor::sendControlRes(PDUPeer &peer, int result, const char *desc)
 {
     FTRACE;
     PDU p(ProcessOpControlRes, sizeof(ProcessControlResPDU));
@@ -295,7 +301,7 @@ void Forte::ProcessMonitor::doWait(void)
             }
         }
         // Send the status PDU to all peer connections
-        mPeerSet.SendAll(p);
+        mPeerSet->Broadcast(p);
     }
     else
     {
