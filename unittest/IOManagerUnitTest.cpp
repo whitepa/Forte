@@ -17,7 +17,7 @@ public:
         mCond(mLock),mNumCompletions(0)
     {
         hlog(HLOG_INFO, "initializing test case");
-        mTmpfile = mFileSystem.MakeTemporaryFile("IOManagerUnitTest-XXXXXX");
+        mTmpfile = mFileSystem.MakeTemporaryFile("/tmp/IOManagerUnitTest-XXXXXX");
 //        mTmpfile = "tmpfile";
     }
     ~IOManagerUnitTest() {
