@@ -27,12 +27,14 @@ LIBS = \
 
 PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
 	$(TARGETDIR)/AutoMutexOnBoxTest \
-	$(TARGETDIR)/DbMirroredConnectionUnitTest \
 	$(TARGETDIR)/INotifyUnitTest \
 	$(TARGETDIR)/ProcessManagerOnBoxTest \
 	$(TARGETDIR)/RunLoopUnitTest \
 	$(TARGETDIR)/SCSIUtilUnitTest \
 	$(TARGETDIR)/ServerMainOnboxTest
+
+#TODO: rewrite this sans gpfs
+#	$(TARGETDIR)/DbMirroredConnectionUnitTest \
 
 ###  RULES  ###
 all: $(GTEST) $(PROGS)
