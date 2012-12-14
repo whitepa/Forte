@@ -133,13 +133,13 @@ namespace Forte
     {
     public:
         IOManager(int maxRequests) :
+            mCompletionCond(mLock),
             mIOContext(NULL),
             mRequestCounter(0) {
             int err;
             // @TODO check range on maxRequests
             if ((err = io_setup(maxRequests, &mIOContext)) != 0)
-                SystemCallUtil::ThrowErrNoException(-err);
-//            mIOCB = new struct iocb[maxRequests];
+                SystemCallUtil::ThrowErrNoException(-err, "io_setup");
             initialized();
         }
         virtual ~IOManager() {
@@ -161,6 +161,11 @@ namespace Forte
                 if (n > 0)
                 {
                     hlog(HLOG_DEBUG, "io_getevents returns %d events", n);
+                }
+                else if (n == -EINTR)
+                {
+                    // interrupted syscall
+                    continue;
                 }
                 else if (n < 0)
                 {
@@ -185,19 +190,33 @@ namespace Forte
 
         uint64_t SubmitRequest(const boost::shared_ptr<IORequest> &req) {
             // take ownership of request
+            uint64_t reqnum(0);
             AutoUnlockMutex lock(mLock);
-            req->SetRequestNumber(mRequestCounter);
+            reqnum = mRequestCounter++;
+            req->SetRequestNumber(reqnum);
             int res;
             while ((res = io_submit(mIOContext, 1, req->GetIOCBs())) < 0)
             {
                 if (-res == EAGAIN)
+                {
+                    // in this situation the IO context is likely full,
+                    // and we need to wait for completion handlers to do
+                    // their job.
+                    mCompletionCond.Wait();
                     continue;
-                SystemCallUtil::ThrowErrNoException(-res);
+                }
+                else if (-res == EINTR)
+                {
+                    continue;
+                }
+                SystemCallUtil::ThrowErrNoException(-res, "io_submit");
             }
+            // hlog(HLOG_DEBUG4, "io_submit complete: reqnum=%lu res=%d",
+            //      reqnum, res);
             if (res == 0)
                 throw EIOSubmitFailed();
-            mPendingRequests[mRequestCounter] = req;
-            return mRequestCounter++;
+            mPendingRequests[reqnum] = req;
+            return reqnum;
         }
 
         void HandleCompletionEvent(const struct io_event *event) {
@@ -205,6 +224,7 @@ namespace Forte
             boost::shared_ptr<IORequest> req;
             {
                 AutoUnlockMutex lock(mLock);
+                mCompletionCond.Signal();
                 RequestMap::iterator i = mPendingRequests.find(requestNum);
                 if (i == mPendingRequests.end())
                 {
@@ -220,6 +240,7 @@ namespace Forte
         }
 
         Forte::Mutex mLock;
+        Forte::ThreadCondition mCompletionCond;
 
         io_context_t mIOContext;
 

@@ -38,12 +38,17 @@ public:
         IOManagerUnitTest &ut(*(reinterpret_cast<IOManagerUnitTest*>(req.GetUserData())));
         AutoUnlockMutex lock(ut.mLock);
         ++ut.mNumCompletions;
+//        hlog(HLOG_DEBUG, "mNumCompletions now %d", ut.mNumCompletions);
         ut.mCond.Signal();
     }
     void Wait(const int numCompletions = 1) {
         AutoUnlockMutex lock(mLock);
         while (mNumCompletions < numCompletions)
+        {
+            // hlog(HLOG_DEBUG, "mNumCompletions=%d numCompletions=%d",
+            //      mNumCompletions, numCompletions);
             mCond.Wait();
+        }
     }
     Mutex mLock;
     ThreadCondition mCond;
@@ -82,7 +87,7 @@ TEST_F(IOManagerUnitTest, DirectIOFileReadAligned)
     ASSERT_EQ(0, posix_memalign((void **)&buf, /*align*/4096, /*size*/len));
     memset(buf, 0, len);
 
-    boost::shared_ptr<IOManager> iomgr = boost::make_shared<IOManager>(256);
+    boost::shared_ptr<IOManager> iomgr = boost::make_shared<IOManager>(32);
 
     boost::shared_ptr<IORequest> req = iomgr->NewRequest();
     req->SetOp(IORequest::READ);
@@ -116,7 +121,7 @@ TEST_F(IOManagerUnitTest, DirectIOFileReadUnaligned)
     ASSERT_EQ(0, posix_memalign((void **)&buf, /*align*/4096, /*size*/4096));
     memset(buf, 0, len);
 
-    boost::shared_ptr<IOManager> iomgr = boost::make_shared<IOManager>(256);
+    boost::shared_ptr<IOManager> iomgr = boost::make_shared<IOManager>(32);
 
     boost::shared_ptr<IORequest> req = iomgr->NewRequest();
     req->SetOp(IORequest::READ);
@@ -141,8 +146,8 @@ TEST_F(IOManagerUnitTest, DirectIOFileWriteAligned)
     FileSystemImpl fs;
 
     // Open the file with direct IO
-    int fd(open(mTmpfile, O_RDWR | O_CREAT | O_DIRECT));
-    ASSERT_NE(fd, -1);
+    AutoFD fd(open(mTmpfile, O_RDWR | O_CREAT | O_DIRECT));
+    ASSERT_NE(fd.GetFD(), -1);
 
     // Allocate a buffer
     char *buf = 0;
@@ -150,7 +155,7 @@ TEST_F(IOManagerUnitTest, DirectIOFileWriteAligned)
     ASSERT_EQ(0, posix_memalign((void **)&buf, /*align*/4096, /*size*/len));
     memset(buf, 65, len);
 
-    boost::shared_ptr<IOManager> iomgr = boost::make_shared<IOManager>(256);
+    boost::shared_ptr<IOManager> iomgr = boost::make_shared<IOManager>(32);
 
     boost::shared_ptr<IORequest> req = iomgr->NewRequest();
     req->SetOp(IORequest::WRITE);
@@ -173,8 +178,8 @@ TEST_F(IOManagerUnitTest, DirectIOFileWriteUnaligned)
     FileSystemImpl fs;
 
     // Open the file with direct IO
-    int fd(open(mTmpfile, O_RDWR | O_CREAT | O_DIRECT));
-    ASSERT_NE(fd, -1);
+    AutoFD fd(open(mTmpfile, O_RDWR | O_CREAT | O_DIRECT));
+    ASSERT_NE(fd.GetFD(), -1);
 
     // Allocate a buffer
     char *buf = 0;
@@ -185,7 +190,7 @@ TEST_F(IOManagerUnitTest, DirectIOFileWriteUnaligned)
     for (off_t offset = 0; offset < 4096; offset += interval)
         memset(buf + offset, ++i, interval);
 
-    boost::shared_ptr<IOManager> iomgr = boost::make_shared<IOManager>(256);
+    boost::shared_ptr<IOManager> iomgr = boost::make_shared<IOManager>(32);
 
     boost::shared_ptr<IORequest> req = iomgr->NewRequest();
     req->SetOp(IORequest::WRITE);
@@ -217,7 +222,7 @@ TEST_F(IOManagerUnitTest, MultipleReads)
     AutoFD fd(open(mTmpfile, O_DIRECT));
     ASSERT_NE(fd.GetFD(), -1);
 
-    boost::shared_ptr<IOManager> iomgr = boost::make_shared<IOManager>(256);
+    boost::shared_ptr<IOManager> iomgr = boost::make_shared<IOManager>(32);
 
     // Read a series of 512 byte blocks
     ssize_t total = 512*512;
@@ -282,7 +287,7 @@ TEST_F(IOManagerUnitTest, MultipleWrites)
     AutoFD fd(open(mTmpfile, O_RDWR | O_DIRECT));
     ASSERT_NE(fd.GetFD(), -1);
 
-    boost::shared_ptr<IOManager> iomgr = boost::make_shared<IOManager>(256);
+    boost::shared_ptr<IOManager> iomgr = boost::make_shared<IOManager>(32);
 
     // Read a series of 512 byte blocks
     ssize_t total = 512*512;
@@ -347,7 +352,7 @@ TEST_F(IOManagerUnitTest, ReadWriteMix)
     AutoFD fd(open(mTmpfile, O_RDWR | O_DIRECT));
     ASSERT_NE(fd.GetFD(), -1);
 
-    boost::shared_ptr<IOManager> iomgr = boost::make_shared<IOManager>(256);
+    boost::shared_ptr<IOManager> iomgr = boost::make_shared<IOManager>(32);
 
     ssize_t total = 512*512;
     ssize_t each = 512;
