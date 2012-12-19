@@ -12,6 +12,8 @@
 #include <boost/make_shared.hpp>
 #include <boost/bind.hpp>
 
+// #SCQAD TESTTAG: smoketest
+
 using namespace Forte;
 using namespace boost;
 

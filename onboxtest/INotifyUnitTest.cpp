@@ -11,6 +11,8 @@
 #include "Context.h"
 #include "FileSystemImpl.h"
 
+// #SCQAD TESTTAG: smoketest
+
 using namespace Forte;
 
 class INotifyTest : public ::testing::Test

@@ -46,6 +46,8 @@ install: all
 	@echo "Copying files to $(PREFIX)"
 	@$(CP) $(PROGS) $(PREFIX)/opt/scale/lib/qa/onbox
 	@$(CP) ServerMainOnboxTest.info $(PREFIX)/opt/scale/lib/qa/onbox
+	@$(call GENERATE_ONBOX_TAGS, $(PROGS), $(PREFIX)/opt/scale/lib/qa/onbox)
+
 
 include $(BUILDROOT)/re/make/tail.mk
 

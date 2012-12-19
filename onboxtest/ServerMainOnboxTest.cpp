@@ -9,6 +9,8 @@
 #include "Forte.h"
 #include "Context.h"
 
+// #SCQAD TESTTAG: smoketest
+
 using namespace Forte;
 using namespace boost;
 
