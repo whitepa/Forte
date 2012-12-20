@@ -48,24 +48,10 @@ namespace Forte
      * mechanism for objects contained in the context.  Contexts may
      * also be copied, at which time setting an object in the copy
      * will not affect the original context.
-     *
-     * \code
-     Forte::Context context;
-     context.Detach("key");
-     \endcode
     **/
     class Context : public Object
     {
     public:
-        /**
-         * Detach() will make a copy of an object within this Context
-         * instance, such that if this Context object had been copied
-         * from another Context object, the object referenced by the
-         * given key will no longer reference the orginal object, but
-         * instead a separate local instance.
-         **/
-        virtual void Detach(const char *key) { throw_exception(EUnimplemented()); }
-
         /**
          * Get() retrieves a reference counted pointer to an object
          * from the Context.  If the object does not exist, one can
