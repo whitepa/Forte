@@ -15,12 +15,7 @@ Forte::Context::~Context()
         hlog(HLOG_DEBUG, "Objects Remain in Context at deletion:");
         Dump();
     }
-    ObjectMap tmp;
-    {
-        Forte::AutoUnlockMutex lock(mLock);
-        tmp = mObjectMap;
-        mObjectMap.clear();
-    }
+    Clear();
 }
 
 Forte::ObjectPtr Forte::Context::Get(const char *key) const
