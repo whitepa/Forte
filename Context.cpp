@@ -76,8 +76,7 @@ void Forte::Context::Clear(void)
     ObjectMap localCopy;
     {
         Forte::AutoUnlockMutex lock(mLock);
-        localCopy = mObjectMap;
-        mObjectMap.clear();
+        mObjectMap.swap(localCopy);
     }
 }
 
