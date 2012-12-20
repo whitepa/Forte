@@ -85,8 +85,9 @@ void Forte::Context::Merge(const Context &other)
 {
     FTRACE;
     if (&other == this) return;
-    AutoUnlockMutex lock(mLock);
-    AutoUnlockMutex otherLock(other.mLock);
+    const bool meFirst = this < &other;
+    AutoUnlockMutex lockOne(meFirst ? mLock : other.mLock);
+    AutoUnlockMutex lockTwo(meFirst ? other.mLock : mLock);
     foreach (const ObjectPair &pair, other.mObjectMap)
     {
         mObjectMap[pair.first] = pair.second;
