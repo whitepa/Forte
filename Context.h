@@ -122,7 +122,6 @@ namespace Forte
          **/
         virtual void Merge(const Context &other);
 
-        size_t Size(void) { return mObjectMap.size(); }
         virtual void Dump(void);
 
     protected:
