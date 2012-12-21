@@ -54,6 +54,7 @@ SRCS =	\
 	ConditionDeltaLogger.cpp \
 	ConditionLogEntry.cpp \
 	Context.cpp \
+	ContextImpl.cpp \
 	ContextPredicate.cpp \
 	Curl.cpp \
 	DaemonUtil.cpp \
