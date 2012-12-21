@@ -52,18 +52,6 @@ void Forte::Context::Clear(void)
    mObjectMap.Clear();
 }
 
-void Forte::Context::Merge(const Context &other)
-{
-    FTRACE;
-    if (&other == this) return;
-    const bool meFirst = this < &other;
-    AutoUnlockMutex lockOne(meFirst ? mLock : other.mLock);
-    AutoUnlockMutex lockTwo(meFirst ? other.mLock : mLock);
-    foreach (const ObjectPair &pair, other.mObjectMap)
-    {
-        mObjectMap[pair.first] = pair.second;
-    }
-}
 void Forte::Context::Dump(void)
 {
     mObjectMap.Dump();

@@ -117,12 +117,6 @@ namespace Forte
          **/
         virtual void Clear(void);
 
-        /**
-         * Merge() will merge all keys from the 'other' Context into
-         * this one.  Duplicate keys will be replaced with those from 'other'.
-         **/
-        virtual void Merge(const Context &other);
-
         virtual void Dump(void);
 
     protected:
