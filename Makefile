@@ -103,6 +103,7 @@ SRCS =	\
 	Thread.cpp \
 	ThreadKey.cpp \
 	ThreadPoolDispatcher.cpp \
+	ThreadSafeObjectMap.cpp \
 	Timer.cpp \
 	UrlString.cpp \
 	Util.cpp \

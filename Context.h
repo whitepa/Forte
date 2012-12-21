@@ -4,6 +4,7 @@
 #include "Exception.h"
 #include "LogManager.h"
 #include "Object.h"
+#include "ThreadSafeObjectMap.h"
 #include "AutoMutex.h"
 #include <boost/shared_ptr.hpp>
 
@@ -125,8 +126,7 @@ namespace Forte
         virtual void Dump(void);
 
     protected:
-        mutable Forte::Mutex mLock;
-        ObjectMap mObjectMap;
+        ThreadSafeObjectMap mObjectMap;
     };
     typedef boost::shared_ptr<Context> ContextPtr;
 };
