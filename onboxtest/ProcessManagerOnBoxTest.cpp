@@ -14,7 +14,9 @@
 #include <boost/bind.hpp>
 #include <boost/make_shared.hpp>
 
-// #SCQAD TESTTAG: smoketest
+// #SCQAD TEST: ONBOX: ProcessManagerOnBoxTest
+
+// #SCQAD TESTTAG: smoketest, forte, forte.procmon
 
 using namespace Forte;
 

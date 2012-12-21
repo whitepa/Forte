@@ -1,5 +1,3 @@
-// #SCQAD TEST: ONBOX: AutoMutexOnBoxTest
-
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include "LogManager.h"
@@ -7,6 +5,10 @@
 #include <boost/make_shared.hpp>
 #include "FTrace.h"
 #include <boost/thread/mutex.hpp>
+
+// #SCQAD TEST: ONBOX: AutoMutexOnBoxTest
+
+// #SCQAD TESTTAG: smoketest, forte
 
 using namespace Forte;
 using ::testing::_;
@@ -159,4 +161,3 @@ TEST_F(AutoMutexOnBoxTest, IsFasterThanBoostLockGuardAt1000000000Locks)
     ASSERT_GT(boostTimer.GetRunTimeRealInSeconds() + 3000,
               forteTimer.GetRunTimeRealInSeconds());
 }
-

@@ -9,7 +9,9 @@
 #include "Forte.h"
 #include "Context.h"
 
-// #SCQAD TESTTAG: smoketest
+// #SCQAD TEST: ONBOX: ServerMainOnboxTest
+
+// #SCQAD TESTTAG: smoketest, forte
 
 using namespace Forte;
 using namespace boost;

@@ -8,6 +8,10 @@
 #include "SCSIUtil.h"
 #include "FileSystemImpl.h"
 
+// #SCQAD TEST: ONBOX: SCSIUtilUnitTest
+
+// #SCQAD TESTTAG: smoketest, forte, storage, storage.iscsi
+
 using namespace Forte;
 
 LogManager logManager;

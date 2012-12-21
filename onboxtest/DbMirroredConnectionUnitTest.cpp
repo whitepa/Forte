@@ -13,6 +13,10 @@
 #include "DbBackupManagerThread.h"
 #include "FTrace.h"
 
+// #SCQAD TEST: ONBOX: DBMirroredConnectionUnitTest
+
+// #SCQAD TESTTAG: forte, scel.sqlite
+
 using namespace Forte;
 using namespace boost;
 
