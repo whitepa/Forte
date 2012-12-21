@@ -2,7 +2,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include "LogManager.h"
-#include "Context.h"
+#include "ContextImpl.h"
 #include "FileSystemImpl.h"
 #include "ServiceConfig.h"
 #include "ProcFileSystem.h"
@@ -50,7 +50,7 @@ void contextGetFileSystem(const Forte::Context &context)
 
 struct ContextFixture {
     ContextFixture() { mgr.BeginLogging(); }
-    Forte::Context c;
+    Forte::ContextImpl c;
     Forte::LogManager mgr;
 };
 
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(PointerCastPreservesReference)
         BOOST_CHECK(TestClass::sCount == 0);
         {
             // this test case needs its own context, as it must be destroyed
-            Context c;
+            ContextImpl c;
             {
                 shared_ptr<TestClassDerived> ptr2(new TestClassDerived());
                 c.Set("testclass", ptr2);

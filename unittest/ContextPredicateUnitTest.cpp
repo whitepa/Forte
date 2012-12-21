@@ -1,4 +1,5 @@
 #include "Forte.h"
+#include "ContextImpl.h"
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -21,8 +22,8 @@ public:
         logManager.BeginLogging(__FILE__ ".log", HLOG_ALL);
     };
 
-    Forte::Context c1;
-    Forte::Context c2;
+    Forte::ContextImpl c1;
+    Forte::ContextImpl c2;
 
     static void TearDownTestCase() {
 

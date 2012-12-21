@@ -1,7 +1,7 @@
 #ifndef __ServerMain_h
 #define __ServerMain_h
 
-#include "Context.h"
+#include "ContextImpl.h"
 #include "LogManager.h"
 #include "ServiceConfig.h"
 #include "AutoMutex.h"
@@ -51,7 +51,7 @@ namespace Forte
         boost::shared_ptr<PidFile> mPidFile;
         bool mDaemon;
         LogManager mLogManager;
-        Context mContext;
+        ContextImpl mContext;
         Mutex mCallbackMutex;
         sigset_t mSigmask;
 

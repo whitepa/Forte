@@ -1,4 +1,5 @@
 #include "Forte.h"
+#include "ContextImpl.h"
 #define BOOST_TEST_MODULE "Context Unit Tests"
 #include <boost/test/unit_test.hpp>
 
@@ -17,7 +18,7 @@ namespace bll = boost::lambda;
 using namespace Forte;
 
 struct ContextFixture {
-    Forte::Context c;
+    Forte::ContextImpl c;
 };
 
 class TestClass : public Forte::Object {
