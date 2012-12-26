@@ -4,8 +4,6 @@
 #include "Exception.h"
 #include "LogManager.h"
 #include "Object.h"
-#include "ThreadSafeObjectMap.h"
-#include "AutoMutex.h"
 #include <boost/shared_ptr.hpp>
 
 // TODO: How to set certain keys as read-only?
@@ -59,10 +57,6 @@ namespace Forte
     class Context : public Object
     {
     public:
-        Context();
-
-        virtual ~Context();
-
         /**
          * Detach() will make a copy of an object within this Context
          * instance, such that if this Context object had been copied
@@ -77,7 +71,7 @@ namespace Forte
          * from the Context.  If the object does not exist, one can
          * be automatically created using an appropriate factory.
          **/
-        virtual ObjectPtr Get(const char *key) const;
+        virtual ObjectPtr Get(const char *key) const = 0;
 
         /**
          * Get() retrieves a reference counted pointer to a typed object
@@ -96,31 +90,23 @@ namespace Forte
             return ptr;
         }
 
-
         /**
          * Set() stores a reference to an object in the Context.  Any
          * previous entry with the same key will be replaced.
          **/
-        virtual void Set(const char *key, ObjectPtr obj);
-
-        /**
-         * Create() allocates and sets a key to a specified object. TODO
-         **/
+        virtual void Set(const char *key, ObjectPtr obj) = 0;
 
         /**
          * Remove() will remove a single object from the Context.
          **/
-        virtual void Remove(const char *key);
+        virtual void Remove(const char *key) = 0;
 
         /**
          * Clear() will remove all references from the Context.
          **/
-        virtual void Clear(void);
+        virtual void Clear(void) = 0;
 
-        virtual void Dump(void);
-
-    protected:
-        ThreadSafeObjectMap mObjectMap;
+        virtual void Dump(void) = 0;
     };
     typedef boost::shared_ptr<Context> ContextPtr;
 };
