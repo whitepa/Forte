@@ -156,8 +156,22 @@ void Forte::PDUPeerFileDescriptorEndpoint::DataIn(size_t len, char *buf)
     FTRACE;
     {
         AutoUnlockMutex lock(mFDLock);
-        if ((mCursor + len) > mBufSize)
-            throw EPeerBufferOverflow();
+        try {
+            while ((len + mCursor) >= mBufSize) {
+                size_t newsize = mBufSize + mBufStepSize;
+                if (newsize > mBufMaxSize)
+                    throw EPeerBufferOverflow();
+                char *tmpstr = new char[newsize];
+                memset (tmpstr, 0, newsize);
+                if (mBufSize)
+                    memcpy(tmpstr, mPDUBuffer.get(), mBufSize);
+                mPDUBuffer.reset(tmpstr);
+                mBufSize = newsize;
+                hlog(HLOG_DEBUG, "PDU new size %llu", (u64)mBufSize);
+            }
+        } catch (std::bad_alloc &e) {
+            throw EPeerBufferOutOfMemory();
+        }
         memcpy(mPDUBuffer.get() + mCursor, buf, len);
         hlog(HLOG_DEBUG2, "received data; oldCursor=%llu newCursor=%llu",
              (u64) mCursor, (u64) mCursor + len);

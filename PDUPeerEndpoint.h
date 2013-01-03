@@ -21,6 +21,11 @@ EXCEPTION_SUBCLASS2(
 
 EXCEPTION_SUBCLASS2(
     EPDUPeerEndpoint,
+    EPeerBufferOutOfMemory,
+    "Cannot allocate memory for peer buffer");
+
+EXCEPTION_SUBCLASS2(
+    EPDUPeerEndpoint,
     EPeerSendFailed,
     "Failed to send PDU to peer");
 

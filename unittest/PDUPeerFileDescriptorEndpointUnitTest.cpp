@@ -169,7 +169,7 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest, DataInBufferOverflowTest)
     size_t len;
     makeTestPDU(pdu, len);
 
-    Forte::PDUPeerFileDescriptorEndpoint peer(0, 512);
+    Forte::PDUPeerFileDescriptorEndpoint peer(0, 512, 768);
 
     for (int i = 0; i < 3; ++i)
     {
