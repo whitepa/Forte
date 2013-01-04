@@ -70,6 +70,11 @@ GSRCS = AutoMutexUnitTest.cpp \
 	IOManagerUnitTest.cpp \
 	LoggingUnitTest.cpp \
 	LogManagerUnitTest.cpp \
+	PDUPeerFileDescriptorEndpointUnitTest.cpp \
+	PDUPeerInProcessEndpointUnitTest.cpp \
+	PDUPeerImplUnitTest.cpp \
+	PDUPeerNetworkAcceptorEndpointUnitTest.cpp \
+	PDUPeerNetworkConnectorEndpointUnitTest.cpp \
 	PidFileUnitTest.cpp \
 	ProcessManagerUnitTest.cpp \
 	ProcessCommandUnitTest.cpp \
@@ -88,16 +93,6 @@ GSRCS = AutoMutexUnitTest.cpp \
 
 # flaky
 #	DbMirroredConnectionUnitTest.cpp \
-
-
-# rusted, will fix with arch changes. all functionality covered by
-# PDUPeerFileDescriptorEndpointUnitTest.cpp \
-# PDUPeerInProcessEndpointUnitTest.cpp \
-# PDUPeerImplUnitTest.cpp \
-# PDUPeerNetworkAcceptorEndpointUnitTest.cpp \
-# PDUPeerNetworkConnectorEndpointUnitTest.cpp \
-# PDUPeerSetBuilderImplUnitTest.cpp \
-
 
 GPROGS = $(GSRCS:%.cpp=%)
 BPROGS = $(BSRCS:%.cpp=%)

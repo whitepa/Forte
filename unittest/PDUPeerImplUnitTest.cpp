@@ -16,6 +16,7 @@ using namespace Forte;
 
 using ::testing::_;
 using ::testing::Throw;
+using ::testing::Return;
 
 LogManager logManager;
 
@@ -108,7 +109,7 @@ TEST_F(PDUPeerImplUnitTest, CanEnqueuPDUsAysnc)
     peer->EnqueuePDU(pdu);
 }
 
-TEST_F(PDUPeerImplUnitTest, SendNextPDUSendsFrontOfPDUList)
+TEST_F(PDUPeerImplUnitTest, SendNextPDUSendsAll)
 {
     FTRACE;
     GMockDispatcherPtr mockDispatcher(new GMockDispatcher());
@@ -128,6 +129,8 @@ TEST_F(PDUPeerImplUnitTest, SendNextPDUSendsFrontOfPDUList)
 
     // TODO: may want to verify this is the right pdu
     EXPECT_CALL(*mockEndpoint, SendPDU(_));
+    EXPECT_CALL(*mockEndpoint, IsConnected())
+        .WillRepeatedly(Return(true));
     // this will be called by a worker thread
     peer->SendNextPDU();
 }
@@ -144,7 +147,46 @@ TEST_F(PDUPeerImplUnitTest, SendPDUCallsErrorCallbackAfterTimeout)
     char buf[] = "the data";
     PDUPtr pdu(new PDU(op, sizeof(buf), buf));
 
+    const long sendTimeout(1);
+
+    PDUPeerImplPtr peer(new PDUPeerImpl(0, dispatcher, endpoint, sendTimeout));
+    peer->SetEventCallback(
+        boost::bind(&PDUPeerImplUnitTest::EventCallback, this, _1));
+
+    // PDUPeer will enqueue an event if there are still things to send
+    // in the event queue after it returns, also once up front
     EXPECT_CALL(*mockDispatcher, Enqueue(_)).Times(2);
+
+    peer->EnqueuePDU(pdu);
+
+    // TODO: may want to verify this is the right pdu
+    EXPECT_CALL(*mockEndpoint, SendPDU(_))
+        .WillRepeatedly(Throw(EPDUPeerEndpoint()));
+
+    EXPECT_CALL(*mockEndpoint, IsConnected())
+        .WillRepeatedly(Return(true));
+
+    // this will be called by a worker thread
+    peer->SendNextPDU();
+    //Timeout is 1 second
+    EXPECT_FALSE(mPDUSendErrorCallbackCalled);
+
+    sleep(1);
+    peer->SendNextPDU();
+    EXPECT_TRUE(mPDUSendErrorCallbackCalled);
+}
+
+TEST_F(PDUPeerImplUnitTest, TimesOutWhenNodeIsNotConnected)
+{
+    FTRACE;
+    GMockDispatcherPtr mockDispatcher(new GMockDispatcher());
+    DispatcherPtr dispatcher = mockDispatcher;
+    GMockPDUPeerEndpointPtr mockEndpoint(new GMockPDUPeerEndpoint());
+    PDUPeerEndpointPtr endpoint = mockEndpoint;
+
+    int op = 1;
+    char buf[] = "the data";
+    PDUPtr pdu(new PDU(op, sizeof(buf), buf));
 
     const long sendTimeout(1);
 
@@ -152,11 +194,18 @@ TEST_F(PDUPeerImplUnitTest, SendPDUCallsErrorCallbackAfterTimeout)
     peer->SetEventCallback(
         boost::bind(&PDUPeerImplUnitTest::EventCallback, this, _1));
 
+    // PDUPeer will enqueue an event if there are still things to send
+    // in the event queue after it returns, also once up front
+    EXPECT_CALL(*mockDispatcher, Enqueue(_)).Times(2);
+
     peer->EnqueuePDU(pdu);
 
     // TODO: may want to verify this is the right pdu
     EXPECT_CALL(*mockEndpoint, SendPDU(_))
         .WillRepeatedly(Throw(EPDUPeerEndpoint()));
+
+    EXPECT_CALL(*mockEndpoint, IsConnected())
+        .WillRepeatedly(Return(false));
 
     // this will be called by a worker thread
     peer->SendNextPDU();

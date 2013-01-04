@@ -38,7 +38,7 @@ namespace Forte
                     // PDUPollThread and exit? happens during
                     // start up and shutdown. for now, wait a second.
                     if (hlog_ratelimit(20))
-                        hlog(HLOG_DEBUG, "PeerSetNot Polling");
+                        hlog(HLOG_DEBUG2, "PeerSetNot Polling");
                     InterruptibleSleep(Timespec::FromSeconds(1));
                 }
                 catch (EThreadPoolDispatcherShuttingDown& e)

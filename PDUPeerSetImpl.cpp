@@ -46,20 +46,17 @@ Forte::PDUPeerSetImpl::~PDUPeerSetImpl()
             mPollThread->WaitForShutdown();
             mPollThread.reset();
         }
+
         TeardownEPoll();
+
+        mWorkDispatcher->Shutdown();
+        mWorkDispatcher.reset();
     }
     catch (Exception& e)
     {
         hlog(HLOG_WARN, "Could not clean up epoll fd or "
              "it was already closed");
     }
-}
-
-void Forte::PDUPeerSetImpl::Shutdown()
-{
-    FTRACE;
-
-    mWorkDispatcher->Shutdown();
 }
 
 void Forte::PDUPeerSetImpl::PeerDelete(const shared_ptr<PDUPeer>& peer)

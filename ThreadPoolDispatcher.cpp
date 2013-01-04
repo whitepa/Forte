@@ -228,6 +228,10 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
                 {
                     //normal
                 }
+                catch (EThreadPoolDispatcherShuttingDown &e)
+                {
+                    // normal
+                }
                 catch (std::exception &e)
                 {
                     hlog(HLOG_ERR, "exception thrown in event handler: %s",

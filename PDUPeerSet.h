@@ -188,13 +188,6 @@ namespace Forte
         virtual void StartPolling() = 0;
 
         /**
-         * Direct consumers of PDUPeerSet should call
-         * Shutdown. PDUPeerSetBuilder will call this for you
-         *
-         */
-        virtual void Shutdown() = 0;
-
-        /**
          * Will return the peer as indexed by the peerID. In the case
          * that a peer is created with an FD, this will be the fd it
          * was created with. Otherwise, the peer id passed in by the

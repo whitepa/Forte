@@ -91,6 +91,8 @@ namespace Forte
 
     protected:
         void lockedEnqueuePDU(const PDUHolderPtr& pdu);
+        bool isPDUExpired(PDUHolderPtr pduHolder);
+        void emptyList();
 
 
     protected:

@@ -119,8 +119,6 @@ namespace Forte
          */
         void StartPolling();
 
-        void Shutdown();
-
         PDUPeerPtr GetPeer(uint64_t peerID) {
             return mPDUPeers.at(peerID);
         }

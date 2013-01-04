@@ -51,14 +51,6 @@ void Forte::PDUPeerImpl::SendNextPDU()
         // every loop will check if mPDUList is empty inside the lock
         while (true)
         {
-            if (!mEndpoint->IsConnected())
-            {
-                //hlogstream(HLOG_DEBUG, "endpoint is not connected, quit trying");
-                break;
-            }
-
-            //hlogstream(HLOG_DEBUG, "endpoint is connected");
-
             PDUHolderPtr pduHolder;
             {
                 AutoUnlockMutex lock(mListLock);
@@ -72,7 +64,16 @@ void Forte::PDUPeerImpl::SendNextPDU()
                 pduHolder = mPDUList.front();
             }
 
-            //hlogstream(HLOG_DEBUG, "have pdu to send");
+            if (!mEndpoint->IsConnected())
+            {
+                //hlogstream(HLOG_DEBUG, "endpoint is not connected, try later");
+                if (isPDUExpired(pduHolder))
+                {
+                    emptyList();
+                }
+                break;
+            }
+
             try
             {
                 mEndpoint->SendPDU(*(pduHolder->pdu));
@@ -84,31 +85,12 @@ void Forte::PDUPeerImpl::SendNextPDU()
             }
             catch (Exception& e)
             {
-                hlog(HLOG_DEBUG, "Could not send pdu %s", e.what());
-
-                Timespec timeout(mPDUPeerSendTimeout, 0);
-                Timespec now;
-                now = mClock.GetTime();
-                if (pduHolder->enqueuedTime + timeout < now)
+                hlog(HLOG_DEBUG2, "Could not send pdu %s", e.what());
+                if (isPDUExpired(pduHolder))
                 {
-                    hlogstream(HLOG_DEBUG, "list is expired, dropping");
-
-                    AutoUnlockMutex lock(mListLock);
-                    while (!mPDUList.empty())
-                    {
-                        if (mEventCallback)
-                        {
-                            PDUPeerEventPtr event(new PDUPeerEvent());
-                            event->mPeer = GetPtr();
-                            event->mEventType = PDUPeerSendErrorEvent;
-                            event->mPDU = pduHolder->pdu;
-                            mEventCallback(event);
-                        }
-                        mPDUList.pop_front();
-                    }
-                    //hlogstream(HLOG_DEBUG, "list is empty");
-                    break;
+                    emptyList();
                 }
+                break;
             }
         }
     }
@@ -118,6 +100,44 @@ void Forte::PDUPeerImpl::SendNextPDU()
     {
         mWorkDispatcher->Enqueue(make_shared<PDUReadyToSendEvent>(GetPtr()));
         mPDUReadyToSendEventPending = true;
+    }
+}
+
+bool Forte::PDUPeerImpl::isPDUExpired(PDUHolderPtr pduHolder)
+{
+    FTRACE;
+
+    Timespec timeout(mPDUPeerSendTimeout, 0);
+    Timespec now;
+    now = mClock.GetTime();
+    if (pduHolder->enqueuedTime + timeout < now)
+    {
+        hlogstream(HLOG_DEBUG, "list is expired, dropping");
+        return true;
+    }
+
+    return false;
+}
+
+void Forte::PDUPeerImpl::emptyList()
+{
+    FTRACE;
+
+    AutoUnlockMutex lock(mListLock);
+    PDUHolderPtr pduHolder;
+
+    while (!mPDUList.empty())
+    {
+        if (mEventCallback)
+        {
+            pduHolder = mPDUList.front();
+            PDUPeerEventPtr event(new PDUPeerEvent());
+            event->mPeer = GetPtr();
+            event->mEventType = PDUPeerSendErrorEvent;
+            event->mPDU = pduHolder->pdu;
+            mEventCallback(event);
+        }
+        mPDUList.pop_front();
     }
 }
 

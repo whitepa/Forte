@@ -128,7 +128,6 @@ Forte::PDUPeerSetBuilderImpl::~PDUPeerSetBuilderImpl()
     FTRACE2("%llu", (unsigned long long) mID);
 
     mPDUPeerSet->TeardownEPoll();
-    mPDUPeerSet->Shutdown();
 }
 
 uint64_t Forte::PDUPeerSetBuilderImpl::SocketAddressToID(const SocketAddress& sa)
