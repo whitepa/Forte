@@ -1,3 +1,5 @@
+// #SCQAD TESTTAG: forte, forte.pdupeer
+// #SCQAD TEST: ONBOX: PDUPeerSetBuilderImplOnBoxTest
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
@@ -92,7 +94,7 @@ public:
 
 typedef boost::shared_ptr<TestPeer> TestPeerPtr;
 
-class PDUPeerSetBuilderImplUnitTest : public ::testing::Test
+class PDUPeerSetBuilderImplOnBoxTest : public ::testing::Test
 {
 public:
     static void SetUpTestCase() {
@@ -189,7 +191,7 @@ public:
     std::vector<boost::shared_ptr<TestPeer> > mTestPeers;
 };
 
-TEST_F(PDUPeerSetBuilderImplUnitTest, IDIsIPAndPortAs64BitInt)
+TEST_F(PDUPeerSetBuilderImplOnBoxTest, IDIsIPAndPortAs64BitInt)
 {
     FTRACE;
     SocketAddress listenAddress(make_pair("127.0.0.1", 11001));
@@ -204,7 +206,7 @@ TEST_F(PDUPeerSetBuilderImplUnitTest, IDIsIPAndPortAs64BitInt)
               PDUPeerSetBuilderImpl::SocketAddressToID(listenAddress));
 }
 
-TEST_F(PDUPeerSetBuilderImplUnitTest, ConstructorSetsUpBasics)
+TEST_F(PDUPeerSetBuilderImplOnBoxTest, ConstructorSetsUpBasics)
 {
     FTRACE;
     SocketAddress listenAddress(make_pair("127.0.0.1", 11001));
@@ -224,7 +226,7 @@ TEST_F(PDUPeerSetBuilderImplUnitTest, ConstructorSetsUpBasics)
     ASSERT_EQ(9151314447111826169, peerSet.GetID());
 }
 
-TEST_F(PDUPeerSetBuilderImplUnitTest, CanDispatchWithoutThrowing)
+TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanDispatchWithoutThrowing)
 {
     FTRACE;
 
@@ -241,7 +243,7 @@ TEST_F(PDUPeerSetBuilderImplUnitTest, CanDispatchWithoutThrowing)
     peerSet.BroadcastAsync(pdu);
 }
 
-TEST_F(PDUPeerSetBuilderImplUnitTest, CanProvideConnectionStatusOnPeers)
+TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanProvideConnectionStatusOnPeers)
 {
     FTRACE;
 
@@ -296,7 +298,7 @@ TEST_F(PDUPeerSetBuilderImplUnitTest, CanProvideConnectionStatusOnPeers)
     EXPECT_FALSE(isConnected(2,1));
 }
 
-TEST_F(PDUPeerSetBuilderImplUnitTest, AllPeersReceiveABroadcastPDUFromFirst)
+TEST_F(PDUPeerSetBuilderImplOnBoxTest, AllPeersReceiveABroadcastPDUFromFirst)
 {
     FTRACE;
     setupThreePeers();
@@ -332,7 +334,7 @@ TEST_F(PDUPeerSetBuilderImplUnitTest, AllPeersReceiveABroadcastPDUFromFirst)
     }
 }
 
-TEST_F(PDUPeerSetBuilderImplUnitTest, AllPeersReceiveABroadcastPDUFromMiddle)
+TEST_F(PDUPeerSetBuilderImplOnBoxTest, AllPeersReceiveABroadcastPDUFromMiddle)
 {
     FTRACE;
     setupThreePeers();
@@ -368,7 +370,7 @@ TEST_F(PDUPeerSetBuilderImplUnitTest, AllPeersReceiveABroadcastPDUFromMiddle)
     }
 }
 
-TEST_F(PDUPeerSetBuilderImplUnitTest, AllPeersReceiveABroadcastPDUFromLast)
+TEST_F(PDUPeerSetBuilderImplOnBoxTest, AllPeersReceiveABroadcastPDUFromLast)
 {
     FTRACE;
     setupThreePeers();
@@ -404,7 +406,7 @@ TEST_F(PDUPeerSetBuilderImplUnitTest, AllPeersReceiveABroadcastPDUFromLast)
     }
 }
 
-TEST_F(PDUPeerSetBuilderImplUnitTest, StopsReceivingEventsIfCallbackIsDisabled)
+TEST_F(PDUPeerSetBuilderImplOnBoxTest, StopsReceivingEventsIfCallbackIsDisabled)
 {
     FTRACE;
     setupThreePeers();
@@ -435,7 +437,7 @@ TEST_F(PDUPeerSetBuilderImplUnitTest, StopsReceivingEventsIfCallbackIsDisabled)
     ASSERT_EQ(0, mTestPeers[1]->mCallbackCount);
 }
 
-TEST_F(PDUPeerSetBuilderImplUnitTest, CanBroadcastAtLeast50PDUsFromEach)
+TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanBroadcastAtLeast50PDUsFromEach)
 {
     FTRACE;
     setupThreePeers();
@@ -482,7 +484,7 @@ TEST_F(PDUPeerSetBuilderImplUnitTest, CanBroadcastAtLeast50PDUsFromEach)
     }
 }
 
-TEST_F(PDUPeerSetBuilderImplUnitTest, PDUWillComeAcrossIfConnectorDiesAndRestarts)
+TEST_F(PDUPeerSetBuilderImplOnBoxTest, PDUWillComeAcrossIfConnectorDiesAndRestarts)
 {
     FTRACE;
     setupTwoPeers();
@@ -523,7 +525,7 @@ TEST_F(PDUPeerSetBuilderImplUnitTest, PDUWillComeAcrossIfConnectorDiesAndRestart
     expectEqual(pdu, mTestPeers[1]->mReceivedPDUList.front());
 }
 
-TEST_F(PDUPeerSetBuilderImplUnitTest, PDUWillComeAcrossIfAcceptorDiesAndRestarts)
+TEST_F(PDUPeerSetBuilderImplOnBoxTest, PDUWillComeAcrossIfAcceptorDiesAndRestarts)
 {
     FTRACE;
     setupTwoPeers();
@@ -564,7 +566,7 @@ TEST_F(PDUPeerSetBuilderImplUnitTest, PDUWillComeAcrossIfAcceptorDiesAndRestarts
     expectEqual(pdu, mTestPeers[0]->mReceivedPDUList.front());
 }
 
-TEST_F(PDUPeerSetBuilderImplUnitTest, CanEnque100PDUsForDownPeer)
+TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanEnque100PDUsForDownPeer)
 {
     FTRACE;
     setupTwoPeers();
@@ -624,7 +626,7 @@ TEST_F(PDUPeerSetBuilderImplUnitTest, CanEnque100PDUsForDownPeer)
     }
 }
 
-TEST_F(PDUPeerSetBuilderImplUnitTest, PeersRecoverOnRestartsWithinTimeout)
+TEST_F(PDUPeerSetBuilderImplOnBoxTest, PeersRecoverOnRestartsWithinTimeout)
 {
     FTRACE;
     setupThreePeers();
@@ -705,11 +707,8 @@ TEST_F(PDUPeerSetBuilderImplUnitTest, PeersRecoverOnRestartsWithinTimeout)
     }
 }
 
-//TODO: onbox test. passes on my build vm, but could have trouble on a
-//busy build vm
-
-TEST_F(PDUPeerSetBuilderImplUnitTest,
-       DISABLED_CanBroadcastAndReceive1000PDUsFromEachIn10Seconds)
+TEST_F(PDUPeerSetBuilderImplOnBoxTest,
+       CanBroadcastAndReceive1000PDUsFromEachIn10Seconds)
 {
     FTRACE;
     setupThreePeers();
@@ -759,7 +758,7 @@ TEST_F(PDUPeerSetBuilderImplUnitTest,
 // this is more of a developer test to ensure that as long as
 // something is consuming PDUs the PeerSet itself is not holding on to
 // them
-TEST_F(PDUPeerSetBuilderImplUnitTest, DISABLED_ProperlyReleasesPDUs)
+TEST_F(PDUPeerSetBuilderImplOnBoxTest, DISABLED_ProperlyReleasesPDUs)
 {
     FTRACE;
     setupTwoPeers();
@@ -812,7 +811,7 @@ TEST_F(PDUPeerSetBuilderImplUnitTest, DISABLED_ProperlyReleasesPDUs)
 
 //This is purely to ensure PDUPeers can teardown and setup ok
 //underload, no checking of PDUs sent/recv'd will be done
-TEST_F(PDUPeerSetBuilderImplUnitTest,
+TEST_F(PDUPeerSetBuilderImplOnBoxTest,
        PDUPeersCanDieAndRecoverUnderLoad)
 {
     FTRACE;

@@ -91,7 +91,6 @@ GSRCS = AutoMutexUnitTest.cpp \
 
 
 # rusted, will fix with arch changes. all functionality covered by
-# PDUPeerSetBuilderImplUnitTest.cpp \
 # PDUPeerFileDescriptorEndpointUnitTest.cpp \
 # PDUPeerInProcessEndpointUnitTest.cpp \
 # PDUPeerImplUnitTest.cpp \
@@ -159,21 +158,6 @@ PROG_DEPS_OBJS_PDUPeerNetworkAcceptorEndpointUnitTest = \
 PROG_DEPS_OBJS_PDUPeerNetworkConnectorEndpointUnitTest = \
 	../$(TARGETDIR)/PDUPeerNetworkConnectorEndpoint.o \
 	../$(TARGETDIR)/Thread.o \
-
-PROG_DEPS_OBJS_PDUPeerSetBuilderImplUnitTest = \
-	../$(TARGETDIR)/PDUPeerSetBuilderImpl.o \
-	../$(TARGETDIR)/PDUPeerSetConnectionHandler.o \
-	../$(TARGETDIR)/PDUPeerEndpointFactoryImpl.o \
-	../$(TARGETDIR)/PDUPeerNetworkConnectorEndpoint.o \
-	../$(TARGETDIR)/PDUPeerNetworkAcceptorEndpoint.o \
-	../$(TARGETDIR)/PDUPeerInProcessEndpoint.o \
-	../$(TARGETDIR)/PDUPeerSetImpl.o \
-	../$(TARGETDIR)/PDUPeerImpl.o \
-	../$(TARGETDIR)/PDUPeerFileDescriptorEndpoint.o \
-	../$(TARGETDIR)/Thread.o \
-	../$(TARGETDIR)/ThreadPoolDispatcher.o \
-	../$(TARGETDIR)/OnDemandDispatcher.o \
-	../$(TARGETDIR)/ReceiverThread.o \
 
 PROG_DEPS_OBJS_PDUPeerImplUnitTest = \
 	../$(TARGETDIR)/PDUPeerImpl.o \

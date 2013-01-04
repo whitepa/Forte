@@ -28,6 +28,7 @@ LIBS = \
 PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
 	$(TARGETDIR)/AutoMutexOnBoxTest \
 	$(TARGETDIR)/INotifyUnitTest \
+	$(TARGETDIR)/PDUPeerSetBuilderImplOnBoxTest \
 	$(TARGETDIR)/ProcessManagerOnBoxTest \
 	$(TARGETDIR)/RunLoopUnitTest \
 	$(TARGETDIR)/SCSIUtilUnitTest \
@@ -35,6 +36,22 @@ PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
 
 #TODO: rewrite this sans gpfs
 #	$(TARGETDIR)/DbMirroredConnectionUnitTest \
+
+PROG_DEPS_OBJS_PDUPeerSetBuilderImplOnBoxTest = \
+	../$(TARGETDIR)/PDUPeerSetBuilderImpl.o \
+	../$(TARGETDIR)/PDUPeerSetConnectionHandler.o \
+	../$(TARGETDIR)/PDUPeerEndpointFactoryImpl.o \
+	../$(TARGETDIR)/PDUPeerNetworkConnectorEndpoint.o \
+	../$(TARGETDIR)/PDUPeerNetworkAcceptorEndpoint.o \
+	../$(TARGETDIR)/PDUPeerInProcessEndpoint.o \
+	../$(TARGETDIR)/PDUPeerSetImpl.o \
+	../$(TARGETDIR)/PDUPeerImpl.o \
+	../$(TARGETDIR)/PDUPeerFileDescriptorEndpoint.o \
+	../$(TARGETDIR)/Thread.o \
+	../$(TARGETDIR)/ThreadPoolDispatcher.o \
+	../$(TARGETDIR)/OnDemandDispatcher.o \
+	../$(TARGETDIR)/ReceiverThread.o \
+
 
 ###  RULES  ###
 all: $(GTEST) $(PROGS)
