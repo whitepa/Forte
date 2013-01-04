@@ -62,7 +62,6 @@ GSRCS = AutoMutexUnitTest.cpp \
 	ContextPredicateUnitTest.cpp \
 	DbLiteConnectionUnitTest.cpp \
 	DbConnectionPoolUnitTest.cpp \
-	DbMirroredConnectionUnitTest.cpp \
 	ExceptionUnitTest.cpp \
 	FileSystemImplUnitTest.cpp \
 	FileSystemUtilUnitTest.cpp \
@@ -86,6 +85,10 @@ GSRCS = AutoMutexUnitTest.cpp \
 	StateMachineTestHarnessUnitTest.cpp \
 	ThreadPoolDispatcherUnitTest.cpp \
 	XMLUnitTest.cpp \
+
+# flaky
+#	DbMirroredConnectionUnitTest.cpp \
+
 
 # rusted, will fix with arch changes. all functionality covered by
 # PDUPeerSetBuilderImplUnitTest.cpp \
