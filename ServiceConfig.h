@@ -189,7 +189,7 @@ namespace Forte
             }
             catch (boost::property_tree::ptree_error &e)
             {
-                boost::throw_exception(EServiceConfigNoKey());
+                boost::throw_exception(EServiceConfigNoKey(key.dump().c_str()));
             }
         }
 
