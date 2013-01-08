@@ -43,7 +43,7 @@ public:
 TEST_F(PDUPeerNetworkConnectorEndpointUnitTest, ConstructDelete)
 {
     FTRACE;
-    SocketAddress mListeningSocketAddress = make_pair("127.0.0.1", 12001);
+    SocketAddress mListeningSocketAddress = make_pair("127.0.0.1", 12888);
     PDUPeerNetworkConnectorEndpoint theClass(mOwnerID,
                                              mDispatcher,
                                              mListeningSocketAddress);
@@ -53,7 +53,7 @@ TEST_F(PDUPeerNetworkConnectorEndpointUnitTest,
        CheckConnectionsWillThrowAndReenqueueEventIfItCannotConnect)
 {
     FTRACE;
-    SocketAddress mListeningSocketAddress = make_pair("127.0.0.1", 12001);
+    SocketAddress mListeningSocketAddress = make_pair("127.0.0.1", 12888);
     PDUPeerNetworkConnectorEndpointPtr theClass(
         new PDUPeerNetworkConnectorEndpoint(mOwnerID,
                                             mDispatcher,
@@ -67,7 +67,7 @@ TEST_F(PDUPeerNetworkConnectorEndpointUnitTest,
        SendPDUEnqueuesCheckConnectionEventAndSetFDToInvalidOnFail)
 {
     FTRACE;
-    SocketAddress mListeningSocketAddress = make_pair("127.0.0.1", 12001);
+    SocketAddress mListeningSocketAddress = make_pair("127.0.0.1", 12888);
     PDUPeerNetworkConnectorEndpointPtr theClass(
         new PDUPeerNetworkConnectorEndpoint(mOwnerID,
                                             mDispatcher,
