@@ -71,8 +71,8 @@ GSRCS = AutoMutexUnitTest.cpp \
 	LoggingUnitTest.cpp \
 	LogManagerUnitTest.cpp \
 	PDUPeerFileDescriptorEndpointUnitTest.cpp \
-	PDUPeerInProcessEndpointUnitTest.cpp \
 	PDUPeerImplUnitTest.cpp \
+	PDUPeerInProcessEndpointUnitTest.cpp \
 	PDUPeerNetworkAcceptorEndpointUnitTest.cpp \
 	PDUPeerNetworkConnectorEndpointUnitTest.cpp \
 	PidFileUnitTest.cpp \
@@ -98,7 +98,7 @@ GPROGS = $(GSRCS:%.cpp=%)
 BPROGS = $(BSRCS:%.cpp=%)
 PROGS=$(addprefix $(TARGETDIR)/,$(GPROGS) $(BPROGS))
 
-PROG_DEPS = $(FORTE_MOCK)
+PROG_DEPS = $(FORTE_MOCK) $(FORTE)
 
 PROG_DEPS_OBJS_AutoMutexUnitTest =
 
@@ -129,6 +129,7 @@ PROG_DEPS_OBJS_FStringUnitTest =  \
 PROG_DEPS_OBJS_ProcessManagerUnitTest =  \
 	../$(TARGETDIR)/ProcessManagerImpl.o \
 	../$(TARGETDIR)/ProcessFutureImpl.o \
+	../$(TARGETDIR)/PDU.o \
 	../$(TARGETDIR)/PDUPeerSetImpl.o \
 	../$(TARGETDIR)/PDUPeerFileDescriptorEndpoint.o \
 
@@ -142,19 +143,24 @@ PROG_DEPS_OBJS_ProcessorInformationUnitTest =  \
 	../$(TARGETDIR)/ProcessorInformation.o \
 
 PROG_DEPS_OBJS_PDUPeerInProcessEndpointUnitTest = \
+	../$(TARGETDIR)/PDU.o \
 	../$(TARGETDIR)/PDUPeerInProcessEndpoint.o \
 
 PROG_DEPS_OBJS_PDUPeerFileDescriptorEndpointUnitTest = \
+	../$(TARGETDIR)/PDU.o \
 	../$(TARGETDIR)/PDUPeerFileDescriptorEndpoint.o \
 
 PROG_DEPS_OBJS_PDUPeerNetworkAcceptorEndpointUnitTest = \
+	../$(TARGETDIR)/PDU.o \
 	../$(TARGETDIR)/PDUPeerNetworkAcceptorEndpoint.o \
 
 PROG_DEPS_OBJS_PDUPeerNetworkConnectorEndpointUnitTest = \
+	../$(TARGETDIR)/PDU.o \
 	../$(TARGETDIR)/PDUPeerNetworkConnectorEndpoint.o \
 	../$(TARGETDIR)/Thread.o \
 
 PROG_DEPS_OBJS_PDUPeerImplUnitTest = \
+	../$(TARGETDIR)/PDU.o \
 	../$(TARGETDIR)/PDUPeerImpl.o \
 
 PROG_DEPS_OBJS_ClockUnitTest =

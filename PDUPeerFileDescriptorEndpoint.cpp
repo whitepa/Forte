@@ -152,7 +152,7 @@ void Forte::PDUPeerFileDescriptorEndpoint::lockedRemoveFDFromEPoll()
     }
 }
 
-void Forte::PDUPeerFileDescriptorEndpoint::DataIn(size_t len, char *buf)
+void Forte::PDUPeerFileDescriptorEndpoint::DataIn(const size_t len, const char *buf)
 {
     FTRACE;
     {
@@ -195,19 +195,18 @@ void Forte::PDUPeerFileDescriptorEndpoint::SendPDU(const Forte::PDU &pdu)
 {
     FTRACE;
     AutoUnlockMutex lock(mFDLock);
-    size_t len = sizeof(Forte::PDU) - Forte::PDU::PDU_MAX_PAYLOAD;
-    len += pdu.payloadSize;
-    if (len > sizeof(Forte::PDU))
-        throw EPeerSendInvalid();
-    hlog(HLOG_DEBUG2, "sending %zu bytes on fd %d, payloadsize = %u",
-            len, mFD.GetFD(), pdu.payloadSize);
-
     size_t offset = 0;
-    const char* buf = reinterpret_cast<const char*>(&pdu);
+    size_t len = sizeof(Forte::PDUHeader) + pdu.GetPayloadSize();
+    hlog(HLOG_DEBUG2, "sending %zu bytes on fd %d, payloadsize = %u",
+         len, mFD.GetFD(), pdu.GetPayloadSize());
+
+    // Put PDU header & payload contents into single buffer for sending
+    boost::shared_array<char> sendBuf = PDU::CreateSendBuffer(pdu);
+
     int flags = MSG_NOSIGNAL;
     while (len > 0)
     {
-        int sent = send(mFD, buf+offset, len, flags);
+        int sent = send(mFD, sendBuf.get()+offset, len, flags);
         if (sent < 0)
             hlog_and_throw(
                 HLOG_DEBUG,
@@ -230,22 +229,25 @@ bool Forte::PDUPeerFileDescriptorEndpoint::lockedIsPDUReady(void) const
 {
     // check for a valid PDU
     // (for now, read cursor is always the start of buffer)
-    size_t minPDUSize = sizeof(Forte::PDU) - Forte::PDU::PDU_MAX_PAYLOAD;
+    size_t minPDUSize = sizeof(Forte::PDUHeader);
     if (mCursor < minPDUSize)
     {
-        hlog(HLOG_DEBUG4, "buffer contains less data than minimum PDU %zu vs %zu",
+        hlog(HLOG_DEBUG4,
+             "buffer contains less data than minimum PDU %zu vs %zu",
              mCursor, minPDUSize);
         return false;
     }
-    Forte::PDU *pdu = reinterpret_cast<Forte::PDU *>(mPDUBuffer.get());
-    if (pdu->version != Forte::PDU::PDU_VERSION)
+    Forte::PDUHeader *pduHeader = (Forte::PDUHeader*)mPDUBuffer.get();
+
+    // Validate PDU
+    if (pduHeader->version != Forte::PDU::PDU_VERSION)
     {
         hlog(HLOG_DEBUG2, "invalid PDU version");
         throw EPDUVersionInvalid();
     }
     // \TODO figure out how to do proper opcode validation
 
-    if (mCursor >= minPDUSize + pdu->payloadSize)
+    if (mCursor >= minPDUSize + pduHeader->payloadSize)
         return true;
     else
         return false;
@@ -256,13 +258,17 @@ bool Forte::PDUPeerFileDescriptorEndpoint::RecvPDU(Forte::PDU &out)
     AutoUnlockMutex lock(mFDLock);
     if (!lockedIsPDUReady())
         return false;
-    size_t minPDUSize = sizeof(Forte::PDU) - Forte::PDU::PDU_MAX_PAYLOAD;
-    Forte::PDU *pdu = reinterpret_cast<Forte::PDU *>(mPDUBuffer.get());
-    size_t len = minPDUSize + pdu->payloadSize;
+
+    Forte::PDUHeader *pduHeader =
+        reinterpret_cast<Forte::PDUHeader*>(mPDUBuffer.get());
+    size_t len = sizeof(Forte::PDUHeader) + pduHeader->payloadSize;;
     hlog(HLOG_DEBUG2, "found valid PDU: len=%zu", len);
     // \TODO this memmove() based method is inefficient.  Implement a
     // proper ring-buffer.
-    memcpy(&out, pdu, len);
+    out.SetHeader(*pduHeader);
+    out.SetPayload(out.GetPayloadSize(),
+                   mPDUBuffer.get()+sizeof(Forte::PDUHeader));
+
     // now, move the rest of the buffer and cursor back by 'len' bytes
     memmove(mPDUBuffer.get(), mPDUBuffer.get() + len, mBufSize - len);
     memset(mPDUBuffer.get() + mBufSize - len, 0, len);

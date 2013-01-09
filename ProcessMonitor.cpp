@@ -108,8 +108,8 @@ void Forte::ProcessMonitor::pduCallback(PDUPeerEventPtr event)
         PDU pdu;
         while (event->mPeer->RecvPDU(pdu))
         {
-            hlog(HLOG_DEBUG, "PDU opcode %d", pdu.opcode);
-            switch(pdu.opcode)
+            hlog(HLOG_DEBUG, "PDU opcode %d", pdu.GetOpcode());
+            switch(pdu.GetOpcode())
             {
             case ProcessOpParam:
                 handleParam(*(event->mPeer), pdu);
@@ -118,7 +118,7 @@ void Forte::ProcessMonitor::pduCallback(PDUPeerEventPtr event)
                 handleControlReq(*(event->mPeer), pdu);
                 break;
             default:
-                hlog(HLOG_ERR, "unexpected PDU with opcode %d", pdu.opcode);
+                hlog(HLOG_ERR, "unexpected PDU with opcode %d", pdu.GetOpcode());
                 break;
             }
         }
@@ -130,7 +130,7 @@ void Forte::ProcessMonitor::handleParam(const PDUPeer &peer, const PDU &pdu)
     // \TODO better string handling here, don't assume null
     // termination of paramPDU->str
     FTRACE;
-    const ProcessParamPDU *paramPDU = reinterpret_cast<const ProcessParamPDU*>(pdu.payload);
+    const ProcessParamPDU *paramPDU = pdu.GetPayload<ProcessParamPDU>();
     hlog(HLOG_DEBUG, "received param %d", paramPDU->param);
     switch (paramPDU->param)
     {
@@ -161,7 +161,8 @@ void Forte::ProcessMonitor::handleParam(const PDUPeer &peer, const PDU &pdu)
 void Forte::ProcessMonitor::handleControlReq(PDUPeer &peer, const PDU &pdu)
 {
     FTRACE;
-    const ProcessControlReqPDU *controlPDU = reinterpret_cast<const ProcessControlReqPDU*>(pdu.payload);
+    const ProcessControlReqPDU *controlPDU =
+        pdu.GetPayload<ProcessControlReqPDU>();
     try
     {
         switch (controlPDU->control)
@@ -209,7 +210,7 @@ void Forte::ProcessMonitor::sendControlRes(PDUPeer &peer, int result, const char
 {
     FTRACE;
     PDU p(ProcessOpControlRes, sizeof(ProcessControlResPDU));
-    ProcessControlResPDU *response = reinterpret_cast<ProcessControlResPDU*>(p.payload);
+    ProcessControlResPDU *response = p.GetPayload<ProcessControlResPDU>();
     response->result = result;
     response->processPID = mPID;
     response->monitorPID = getpid();
@@ -250,7 +251,7 @@ void Forte::ProcessMonitor::doWait(void)
     else if (tpid == mPID)
     {
         PDU p(ProcessOpStatus, sizeof(ProcessStatusPDU));
-        ProcessStatusPDU *status = reinterpret_cast<ProcessStatusPDU*>(p.payload);
+        ProcessStatusPDU *status = p.GetPayload<ProcessStatusPDU>();
         gettimeofday(&status->timestamp, NULL);
         if (WIFEXITED(child_status))
         {

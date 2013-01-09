@@ -28,17 +28,24 @@ struct PDU_Test
     char d[128];
 } __attribute__((__packed__));
 
-void makeTestPDU(Forte::PDU &pdu, size_t &len)
+shared_array<char> makeTestPDU(Forte::PDU &pdu, size_t &len)
 {
-    PDU_Test *testPDU = reinterpret_cast<PDU_Test*>(pdu.payload);
-    pdu.opcode = 1;
-    pdu.payloadSize = sizeof(PDU_Test);
+    PDUHeader header;
+    header.version = Forte::PDU::PDU_VERSION;
+    header.opcode = 1;
+    header.payloadSize = sizeof(PDU_Test);
+    pdu.SetHeader(header);
+    pdu.SetPayload(sizeof(PDU_Test));
+
+    PDU_Test *testPDU = pdu.GetPayload<PDU_Test>();
     testPDU->a = 1;
     testPDU->b = 2;
     testPDU->c = 3;
     snprintf(testPDU->d, sizeof(testPDU->d), "111.222.333.444");
-    len = sizeof(Forte::PDU) - Forte::PDU::PDU_MAX_PAYLOAD;
-    len += pdu.payloadSize;
+    len = sizeof(Forte::PDUHeader) + header.payloadSize;
+
+    // Return the full data buffer
+    return PDU::CreateSendBuffer(pdu);
 }
 // -----------------------------------------------------------------------------
 
@@ -75,17 +82,16 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest, IsPassedDataViaDataIn)
 
     Forte::PDU pdu;
     size_t len;
-    makeTestPDU(pdu, len);
+    shared_array<char> buf = makeTestPDU(pdu, len);
 
     Forte::PDUPeerFileDescriptorEndpoint peer(-1);
-    peer.DataIn(len, (char *)&pdu);
+    peer.DataIn(len, buf.get());
 
     Forte::PDU out;
     bool received = peer.RecvPDU(out);
     ASSERT_EQ(received, true);
 
-    int cmp = memcmp(&pdu, &out, len);
-    ASSERT_EQ(cmp, 0);
+    ASSERT_EQ(pdu == out, true);
 }
 
 
@@ -95,13 +101,12 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest, KeepsIncomingPDUsInAQueue)
 
     Forte::PDU pdu;
     size_t len;
-    makeTestPDU(pdu, len);
-
+    shared_array<char> buf = makeTestPDU(pdu, len);
     Forte::PDUPeerFileDescriptorEndpoint peer(-1);
 
     for (int i = 0; i < 3; ++i)
     {
-        peer.DataIn(len, (char *)&pdu);
+        peer.DataIn(len, buf.get());
     }
 
     Forte::PDU out;
@@ -109,8 +114,8 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest, KeepsIncomingPDUsInAQueue)
     {
         bool received = peer.RecvPDU(out);
         ASSERT_EQ(received, true);
-        int cmp = memcmp(&pdu, &out, len);
-        ASSERT_EQ(cmp, 0);
+
+        ASSERT_EQ(pdu == out, true);
     }
 }
 
@@ -152,7 +157,7 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest, HandlesPDUsInternally)
 
         EXPECT_EQ(true, endpoint2.IsPDUReady());
         EXPECT_EQ(true, endpoint2.RecvPDU(rpdu));
-        EXPECT_EQ(0, memcmp(&pdu, &rpdu, sizeof(PDU)));
+        EXPECT_EQ(true, pdu == rpdu);
     }
     catch (Forte::Exception &e)
     {
@@ -167,16 +172,16 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest, DataInBufferOverflowTest)
 
     Forte::PDU pdu;
     size_t len;
-    makeTestPDU(pdu, len);
+    shared_array<char> buf = makeTestPDU(pdu, len);
 
     Forte::PDUPeerFileDescriptorEndpoint peer(0, 512, 768);
 
     for (int i = 0; i < 3; ++i)
     {
-        peer.DataIn(len, (char *)&pdu);
+        peer.DataIn(len, buf.get());
     }
 
-    ASSERT_THROW(peer.DataIn(len, (char*) &pdu), EPeerBufferOverflow);
+    ASSERT_THROW(peer.DataIn(len, buf.get()), EPeerBufferOverflow);
 }
 
 TEST_F(PDUPeerFileDescriptorEndpointUnitTest, ThrowESendFailedOnBrokenPipe)
@@ -217,7 +222,7 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest, ThrowESendFailedOnBrokenPipe)
 
         EXPECT_EQ(true, endpoint2.IsPDUReady());
         EXPECT_EQ(true, endpoint2.RecvPDU(rpdu));
-        EXPECT_EQ(0, memcmp(&pdu, &rpdu, sizeof(PDU)));
+        EXPECT_EQ(true, pdu == rpdu);
 
         close(fds[1]);
 

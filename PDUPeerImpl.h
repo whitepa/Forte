@@ -59,7 +59,7 @@ namespace Forte
          *
          * @return true if a PDU is ready, false otherwise
          */
-        void EnqueuePDU(const boost::shared_ptr<Forte::PDU>& pdu);
+        void EnqueuePDU(const PDUPtr &pdu);
         virtual void SendNextPDU();
 
         virtual void SendPDU(const PDU& pdu);

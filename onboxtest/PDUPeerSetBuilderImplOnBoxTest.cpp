@@ -118,13 +118,11 @@ public:
     }
 
     void expectEqual(const PDUPtr& expected, const PDUPtr& received) {
-        EXPECT_EQ(expected->opcode, received->opcode);
-        EXPECT_EQ(expected->payloadSize, received->payloadSize);
+        EXPECT_EQ(expected->GetOpcode(), received->GetOpcode());
+        EXPECT_EQ(expected->GetPayloadSize(), received->GetPayloadSize());
 
-        const Payload *expectedPayload =
-            reinterpret_cast<const Payload*>(expected->payload);
-        const Payload *receivedPayload =
-            reinterpret_cast<const Payload*>(received->payload);
+        const Payload *expectedPayload = expected->GetPayload<Payload>();
+        const Payload *receivedPayload = received->GetPayload<Payload>();
 
         EXPECT_EQ(expectedPayload->a, receivedPayload->a);
         EXPECT_EQ(expectedPayload->b, receivedPayload->b);
@@ -133,19 +131,15 @@ public:
     }
 
     PDUPtr makePDUPtr(int opcode=1) {
-        PDUPtr pdu(new PDU);
-        pdu->opcode = opcode;
-
-        Payload *p = reinterpret_cast<Payload*>(pdu->payload);
+        PDUPtr pdu(new PDU(opcode, sizeof(Payload)));
+        Payload *p = pdu->GetPayload<Payload>();
 
         p->a = opcode + 1;
         p->b = opcode + 2;
         p->c = opcode + 3;
         stringstream s;
         s << "opcode is " << opcode;
-        strcpy(p->d, s.str().c_str());
-
-        pdu->payloadSize = sizeof(Payload);
+        strncpy(p->d, s.str().c_str(), 128);
 
         return pdu;
     }
@@ -477,7 +471,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanBroadcastAtLeast50PDUsFromEach)
 
         while (!peer->mReceivedPDUList.empty())
         {
-            PDUPtr expected = makePDUPtr(peer->mReceivedPDUList.front()->opcode);
+            PDUPtr expected = makePDUPtr(peer->mReceivedPDUList.front()->GetOpcode());
             expectEqual(expected, peer->mReceivedPDUList.front());
             peer->mReceivedPDUList.pop_front();
         }
@@ -620,7 +614,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanEnque100PDUsForDownPeer)
     const TestPeerPtr& peer(mTestPeers[0]);
     while (!peer->mReceivedPDUList.empty())
     {
-        PDUPtr expected = makePDUPtr(peer->mReceivedPDUList.front()->opcode);
+        PDUPtr expected = makePDUPtr(peer->mReceivedPDUList.front()->GetOpcode());
         expectEqual(expected, peer->mReceivedPDUList.front());
         peer->mReceivedPDUList.pop_front();
     }
@@ -700,7 +694,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, PeersRecoverOnRestartsWithinTimeout)
 
         while (!peer->mReceivedPDUList.empty())
         {
-            PDUPtr expected = makePDUPtr(peer->mReceivedPDUList.front()->opcode);
+            PDUPtr expected = makePDUPtr(peer->mReceivedPDUList.front()->GetOpcode());
             expectEqual(expected, peer->mReceivedPDUList.front());
             peer->mReceivedPDUList.pop_front();
         }
@@ -748,7 +742,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest,
 
         while (!peer->mReceivedPDUList.empty())
         {
-            PDUPtr expected = makePDUPtr(peer->mReceivedPDUList.front()->opcode);
+            PDUPtr expected = makePDUPtr(peer->mReceivedPDUList.front()->GetOpcode());
             expectEqual(expected, peer->mReceivedPDUList.front());
             peer->mReceivedPDUList.pop_front();
         }

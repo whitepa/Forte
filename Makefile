@@ -76,6 +76,7 @@ SRCS =	\
 	Murmur.cpp \
 	OnDemandDispatcher.cpp \
 	OpenSSLInitializer.cpp \
+	PDU.cpp \
 	PDUPeerEndpointFactoryImpl.cpp \
 	PDUPeerFileDescriptorEndpoint.cpp \
 	PDUPeerImpl.cpp \

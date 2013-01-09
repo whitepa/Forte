@@ -1,6 +1,7 @@
 // #SCQAD TAG: forte.pdupeer
 #include "PDUPeerInProcessEndpoint.h"
 #include "FTrace.h"
+#include <boost/make_shared.hpp>
 
 Forte::PDUPeerInProcessEndpoint::PDUPeerInProcessEndpoint()
 {
@@ -23,7 +24,7 @@ void Forte::PDUPeerInProcessEndpoint::SendPDU(const Forte::PDU &pdu)
 
     {
         AutoUnlockMutex lock(mMutex);
-        mPDUBuffer.push_back(pdu);
+        mPDUBuffer.push_back(boost::make_shared<PDU>(pdu));
     }
 
     PDUPeerEventPtr event(new PDUPeerEvent());
@@ -49,9 +50,11 @@ bool Forte::PDUPeerInProcessEndpoint::RecvPDU(Forte::PDU &out)
         // copying the PDU data into the PDU& directly from an
         // incoming ring buffer. A shared_ptr could be returned from
         // this function, but all call sites will need to be changed.
-        memcpy(&out, &(mPDUBuffer.front()), sizeof(mPDUBuffer.front()));
-        mPDUBuffer.pop_front();
+        PDU *tmp = reinterpret_cast<Forte::PDU*>(mPDUBuffer.front().get());
+        memcpy(&out, tmp, sizeof(Forte::PDU));
+        out.SetPayload(tmp->GetPayloadSize(), tmp->GetPayload<char>());
 
+        mPDUBuffer.pop_front();
         return true;
     }
 

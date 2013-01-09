@@ -42,7 +42,7 @@ namespace Forte
 
         void SetFD(int FD);
         int GetFD(void) const { return mFD; }
-        void DataIn(size_t len, char *buf);
+        void DataIn(const size_t len, const char *buf);
         virtual void SendPDU(const Forte::PDU &pdu);
 
         void SetEPollFD(int epollFD);

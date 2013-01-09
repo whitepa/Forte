@@ -38,6 +38,7 @@ PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
 #	$(TARGETDIR)/DbMirroredConnectionUnitTest \
 
 PROG_DEPS_OBJS_PDUPeerSetBuilderImplOnBoxTest = \
+	../$(TARGETDIR)/PDU.o \
 	../$(TARGETDIR)/PDUPeerSetBuilderImpl.o \
 	../$(TARGETDIR)/PDUPeerSetConnectionHandler.o \
 	../$(TARGETDIR)/PDUPeerEndpointFactoryImpl.o \

@@ -28,18 +28,6 @@ struct PDU_Test
     char d[128];
 } __attribute__((__packed__));
 
-void makeTestPDU(Forte::PDU &pdu, size_t &len)
-{
-    PDU_Test *testPDU = reinterpret_cast<PDU_Test*>(pdu.payload);
-    pdu.opcode = 1;
-    pdu.payloadSize = sizeof(PDU_Test);
-    testPDU->a = 1;
-    testPDU->b = 2;
-    testPDU->c = 3;
-    snprintf(testPDU->d, sizeof(testPDU->d), "111.222.333.444");
-    len = sizeof(Forte::PDU) - Forte::PDU::PDU_MAX_PAYLOAD;
-    len += pdu.payloadSize;
-}
 // -----------------------------------------------------------------------------
 
 class PDUPeerImplUnitTest : public ::testing::Test

@@ -173,7 +173,7 @@ void Forte::ProcessFutureImpl::run()
 
         // send the param PDUs, with full command line info, etc
         PDU paramPDU(ProcessOpParam, sizeof(ProcessParamPDU));
-        ProcessParamPDU *param = reinterpret_cast<ProcessParamPDU*>(paramPDU.payload);
+        ProcessParamPDU *param = paramPDU.GetPayload<ProcessParamPDU>();
 
         // \TODO safe copy of these strings, ensure null termination,
         // disallow truncation (throw exception if the source strings are
@@ -205,7 +205,8 @@ void Forte::ProcessFutureImpl::run()
 
         // send the control PDU telling the process to start
         PDU pdu(ProcessOpControlReq, sizeof(ProcessControlReqPDU));
-        ProcessControlReqPDU *control = reinterpret_cast<ProcessControlReqPDU*>(pdu.payload);
+        ProcessControlReqPDU *control = pdu.GetPayload<ProcessControlReqPDU>();
+
         control->control = ProcessControlStart;
         mManagementChannel->SendPDU(pdu);
     }
@@ -379,7 +380,8 @@ void Forte::ProcessFutureImpl::Signal(int signum)
         throw EProcessFutureNotRunning();
 
     PDU pdu(ProcessOpControlReq, sizeof(ProcessControlReqPDU));
-    ProcessControlReqPDU *control = reinterpret_cast<ProcessControlReqPDU*>(pdu.payload);
+    ProcessControlReqPDU *control = pdu.GetPayload<ProcessControlReqPDU>();
+
     control->control = ProcessControlSignal;
     control->signum = signum;
     mManagementChannel->SendPDU(pdu);
@@ -524,8 +526,8 @@ void Forte::ProcessFutureImpl::handlePDU(PDUPeer &peer)
     PDU pdu;
     while (peer.RecvPDU(pdu))
     {
-        hlog(HLOG_DEBUG, "PDU opcode %d", pdu.opcode);
-        switch (pdu.opcode)
+        hlog(HLOG_DEBUG, "PDU opcode %d", pdu.GetOpcode());
+        switch (pdu.GetOpcode())
         {
         case ProcessOpControlRes:
             handleControlRes(peer, pdu);
@@ -534,7 +536,7 @@ void Forte::ProcessFutureImpl::handlePDU(PDUPeer &peer)
             handleStatus(peer, pdu);
             break;
         default:
-            hlog(HLOG_ERR, "unexpected PDU with opcode %d", pdu.opcode);
+            hlog(HLOG_ERR, "unexpected PDU with opcode %d", pdu.GetOpcode());
             break;
         }
     }
@@ -543,7 +545,7 @@ void Forte::ProcessFutureImpl::handlePDU(PDUPeer &peer)
 void Forte::ProcessFutureImpl::handleControlRes(PDUPeer &peer, const PDU &pdu)
 {
     FTRACE;
-    const ProcessControlResPDU *resPDU = reinterpret_cast<const ProcessControlResPDU*>(pdu.payload);
+    const ProcessControlResPDU *resPDU = pdu.GetPayload<ProcessControlResPDU>();
     hlog(HLOG_DEBUG, "got back result code %d", resPDU->result);
     mMonitorPid = resPDU->monitorPID;
     mProcessPid = resPDU->processPID;
@@ -560,7 +562,7 @@ void Forte::ProcessFutureImpl::handleControlRes(PDUPeer &peer, const PDU &pdu)
 void Forte::ProcessFutureImpl::handleStatus(PDUPeer &peer, const PDU &pdu)
 {
     FTRACE;
-    const ProcessStatusPDU *status = reinterpret_cast<const ProcessStatusPDU*>(pdu.payload);
+    const ProcessStatusPDU *status = pdu.GetPayload<ProcessStatusPDU>();
     hlog(HLOG_DEBUG, "got back status type %d code %d", status->type, status->statusCode);
     mStatusCode = status->statusCode;
     switch (status->type)

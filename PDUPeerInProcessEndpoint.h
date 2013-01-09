@@ -44,7 +44,7 @@ namespace Forte
 
     protected:
         mutable Mutex mMutex;
-        std::list<PDU> mPDUBuffer;
+        std::list<PDUPtr> mPDUBuffer;
     };
 
     typedef boost::shared_ptr<PDUPeerInProcessEndpoint> PDUPeerInProcessEndpointPtr;
