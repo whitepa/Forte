@@ -4,12 +4,12 @@
 #include "LogManager.h"
 #include "PDUPeerNetworkAcceptorEndpoint.h"
 
-
 Forte::PDUPeerNetworkAcceptorEndpoint::PDUPeerNetworkAcceptorEndpoint(
     const SocketAddress& listenAddress)
     : PDUPeerFileDescriptorEndpoint(-1),
       mListenAddress(listenAddress)
 {
+    FTRACE;
 }
 
 void Forte::PDUPeerNetworkAcceptorEndpoint::SendPDU(const Forte::PDU &pdu)

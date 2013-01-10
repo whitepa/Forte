@@ -33,7 +33,7 @@ void Forte::PDUPeerImpl::EnqueuePDU(const Forte::PDUPtr& pdu)
 // should be called by WorkDispatcher
 void Forte::PDUPeerImpl::SendNextPDU()
 {
-    FTRACE;
+    //FTRACE;
 
     {
         // assumption is that only WorkDispatcher will call this function
@@ -124,6 +124,9 @@ void Forte::PDUPeerImpl::emptyList()
     FTRACE;
 
     AutoUnlockMutex lock(mListLock);
+    hlogstream(HLOG_DEBUG,
+               "Error sending PDUs to peer " << mConnectingPeerID);
+
     PDUHolderPtr pduHolder;
 
     while (!mPDUList.empty())
