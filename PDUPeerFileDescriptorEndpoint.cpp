@@ -167,14 +167,15 @@ void Forte::PDUPeerFileDescriptorEndpoint::DataIn(const size_t len, const char *
                     memcpy(tmpstr, mPDUBuffer.get(), mBufSize);
                 mPDUBuffer.reset(tmpstr);
                 mBufSize = newsize;
-                hlog(HLOG_DEBUG, "PDU new size %llu", (u64)mBufSize);
+                hlog(HLOG_DEBUG,
+                     "PDU new size %llu", (unsigned long long)mBufSize);
             }
         } catch (std::bad_alloc &e) {
             throw EPeerBufferOutOfMemory();
         }
         memcpy(mPDUBuffer.get() + mCursor, buf, len);
         hlog(HLOG_DEBUG2, "received data; oldCursor=%llu newCursor=%llu",
-             (u64) mCursor, (u64) mCursor + len);
+             (unsigned long long) mCursor, (unsigned long long) mCursor + len);
         mCursor += len;
     }
 

@@ -1,9 +1,6 @@
 #ifndef __Types_h
 #define __Types_h
 
-// for casting things in printf-like functions
-#define u64 unsigned long long int
-
 // includes
 #include <cstdlib>
 #include <cassert>

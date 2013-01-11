@@ -8,10 +8,7 @@
 #include "PDU.h"
 #include "PDUPeerTypes.h"
 #include <boost/function.hpp>
-
-#undef u64
 #include <sys/epoll.h>
-#define u64 unsigned long long int
 
 EXCEPTION_CLASS(EPDUPeerEndpoint);
 
