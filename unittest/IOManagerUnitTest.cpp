@@ -96,7 +96,8 @@ TEST_F(IOManagerUnitTest, DirectIOFileReadAligned)
     req->SetBuffer(buf, len);
     req->SetOffset(4096);
     req->SetFD(fd);
-    uint64_t reqnum = iomgr->SubmitRequest(req);
+    uint64_t reqnum = req->GetRequestNumber();
+    req->Begin();
     hlog(HLOG_INFO, "submitted IO request %lu", reqnum);
     Wait();
     hlog(HLOG_INFO, "got result %ld", req->GetResult());
@@ -130,7 +131,8 @@ TEST_F(IOManagerUnitTest, DirectIOFileReadUnaligned)
     req->SetBuffer(buf+128, 512); // misaligned
     req->SetOffset(4096);
     req->SetFD(fd);
-    uint64_t reqnum = iomgr->SubmitRequest(req);
+    uint64_t reqnum = req->GetRequestNumber();
+    req->Begin();
     hlog(HLOG_INFO, "submitted IO request %lu", reqnum);
     Wait();
     hlog(HLOG_INFO, "got result %ld", req->GetResult());
@@ -165,7 +167,8 @@ TEST_F(IOManagerUnitTest, DirectIOFileWriteAligned)
     req->SetCallback(IOManagerUnitTest::Notify);
     req->SetUserData(this);
     hlog(HLOG_INFO, "got here");
-    uint64_t reqnum = iomgr->SubmitRequest(req);
+    uint64_t reqnum = req->GetRequestNumber();
+    req->Begin();
     hlog(HLOG_INFO, "submitted IO request %lu", reqnum);
     Wait();
     ASSERT_EQ(4096, req->GetResult());
@@ -200,7 +203,8 @@ TEST_F(IOManagerUnitTest, DirectIOFileWriteUnaligned)
     req->SetCallback(IOManagerUnitTest::Notify);
     req->SetUserData(this);
     hlog(HLOG_INFO, "got here");
-    uint64_t reqnum = iomgr->SubmitRequest(req);
+    uint64_t reqnum = req->GetRequestNumber();
+    req->Begin();
     hlog(HLOG_INFO, "submitted IO request %lu", reqnum);
     Wait();
     hlog(HLOG_INFO, "got result %ld", req->GetResult());
@@ -249,8 +253,8 @@ TEST_F(IOManagerUnitTest, MultipleReads)
         req->SetBuffer(buf+(each*i), each);
         req->SetOffset(each*i);
         req->SetFD(fd);
-        uint64_t reqnum(0);
-        ASSERT_NO_THROW(reqnum = iomgr->SubmitRequest(req));
+        uint64_t reqnum = req->GetRequestNumber();
+        ASSERT_NO_THROW(req->Begin());
         requestMap[reqnum] = req;
         EXPECT_EQ(requestMap.size(), i+1); // (check for unique reqnums)
     }
@@ -314,8 +318,8 @@ TEST_F(IOManagerUnitTest, MultipleWrites)
         req->SetBuffer(buf+(each*i), each);
         req->SetOffset(each*i);
         req->SetFD(fd);
-        uint64_t reqnum(0);
-        ASSERT_NO_THROW(reqnum = iomgr->SubmitRequest(req));
+        uint64_t reqnum = req->GetRequestNumber();
+        ASSERT_NO_THROW(req->Begin(););
         requestMap[reqnum] = req;
         EXPECT_EQ(requestMap.size(), i+1); // (check for unique reqnums)
     }
@@ -381,8 +385,8 @@ TEST_F(IOManagerUnitTest, ReadWriteMix)
         req->SetBuffer(buf+(each*i), each);
         req->SetOffset(each*i);
         req->SetFD(fd);
-        uint64_t reqnum(0);
-        ASSERT_NO_THROW(reqnum = iomgr->SubmitRequest(req));
+        uint64_t reqnum = req->GetRequestNumber();
+        ASSERT_NO_THROW(req->Begin(););
         requestMap[reqnum] = req;
         EXPECT_EQ(requestMap.size(), i+1); // (check for unique reqnums)
     }

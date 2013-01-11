@@ -1,9 +1,9 @@
 #ifndef __IORequest_h__
 #define __IORequest_h__
 
+#include "LogManager.h"
 #include "SystemCallUtil.h"
 #include "Thread.h"
-#include "LogManager.h"
 #include "FTrace.h"
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
@@ -19,7 +19,9 @@ namespace Forte
     EXCEPTION_SUBCLASS(EIOManager, EIORequest);
     EXCEPTION_SUBCLASS2(EIORequest, EIORequestStillInProgress,
                         "The IO request is still in progress");
-    class IORequest
+    class IOManager;
+
+    class IORequest : public boost::enable_shared_from_this<IORequest>
     {
     public:
         typedef enum {
@@ -28,91 +30,28 @@ namespace Forte
         } OperationType;
         typedef boost::function<void(const IORequest &req)> IOCompletionCallback;
 
-        IORequest() :
-//            mIOManager(ioManager),
-            mCompleted(false),
-            mResult(0),
-            mData(NULL),
-            mWaitCond(mWaitLock) {
-            memset(&mIOCB, 0, sizeof(struct iocb));
-            mIOCBs[0] = &mIOCB;
-        }
-        void SetOp(IORequest::OperationType op) {
-            switch (op) {
-            case READ:
-                mIOCB.aio_lio_opcode = IO_CMD_PREAD;
-                break;
-            case WRITE:
-                mIOCB.aio_lio_opcode = IO_CMD_PWRITE;
-                break;
-            default:
-                break;
-            }
-        }
-        void SetBuffer(void *buf, size_t len) {
-            FTRACE2("buf=%p len=%lu", buf, len);
-            mIOCB.u.c.buf = buf;
-            mIOCB.u.c.nbytes = len;
-        }
-        void SetOffset(off_t off) {
-            mIOCB.u.c.offset = off;
-        }
-        void SetFD(int fd) {
-            mIOCB.aio_fildes = fd;
-        }
-        void SetCallback(IOCompletionCallback cb) {
-            mCallback = cb;
-        }
-        void SetUserData(void *data) {
-            mData = data;
-        }
-        void * GetUserData(void) const {
-            return mData;
-        }
+        IORequest(const boost::shared_ptr<IOManager>& ioManager);
+
+        void Begin();
+        void SetOp(IORequest::OperationType op);
+        void SetBuffer(void *buf, size_t len);
+        void SetOffset(off_t off);
+        void SetFD(int fd);
+        void SetCallback(IOCompletionCallback cb);
+        void SetUserData(void *data);
+        void * GetUserData(void) const;
+
         // Called only by IOManager
-        void SetRequestNumber(uint64_t reqNum) {
-            mIOCB.data = (void *)reqNum;
-        }
+        void SetRequestNumber(uint64_t reqNum);
+        uint64_t GetRequestNumber(void) const;
+        struct iocb ** GetIOCBs(void);
+        void SetResult(long res);
+        long GetResult(void) const;
+        void Wait(void);
+        bool IsComplete(void) const;
 
-        uint64_t GetRequestNumber(void) const {
-            return (uint64_t)mIOCB.data;
-        }
-
-        struct iocb ** GetIOCBs(void) {
-            return mIOCBs;
-        }
-        void SetResult(long res) {
-            FTRACE2("res=%ld", res);
-            AutoUnlockMutex lock(mWaitLock);
-            mResult = res;
-            mCompleted = true;
-            mWaitCond.Broadcast();
-            if (mCallback)
-                mCallback(*this);
-        }
-        long GetResult(void) const {
-            if (!mCompleted)
-                throw EIORequestStillInProgress();
-            return mResult;
-        }
-
-        void Wait(void) {
-            // wait for the IO completion 
-
-            // @TODO look into the efficiency of using pthread
-            // condition variables for this.  We may want to switch to
-            // a futex.  In particular, the current implementation
-            // instantiates and initializes a pthread_mutex and
-            // pthread_cond_t for each IO request.
-
-            Forte::AutoUnlockMutex lock(mWaitLock);
-            while (!mCompleted)
-                mWaitCond.Wait();
-        }
-        bool IsComplete(void) const {
-            return mCompleted;
-        }
-
+    protected:
+        boost::weak_ptr<IOManager> mIOManager;
         struct iocb mIOCB;
         struct iocb *mIOCBs[1];
         IOCompletionCallback mCallback;
@@ -185,15 +124,18 @@ namespace Forte
 
         boost::shared_ptr<IORequest> NewRequest() {
             // @TODO allocate from a pool
-            return boost::make_shared<IORequest>();
+            AutoUnlockMutex lock(mLock);
+            uint64_t reqnum = mRequestCounter++;
+            boost::shared_ptr<IORequest> req(
+                new IORequest(
+                    boost::dynamic_pointer_cast<IOManager>(shared_from_this())));
+            req->SetRequestNumber(reqnum);
+            return req;
         }
 
-        uint64_t SubmitRequest(const boost::shared_ptr<IORequest> &req) {
-            // take ownership of request
-            uint64_t reqnum(0);
+        // should be called by an IORequst
+        void SubmitRequest(const boost::shared_ptr<IORequest> &req) {
             AutoUnlockMutex lock(mLock);
-            reqnum = mRequestCounter++;
-            req->SetRequestNumber(reqnum);
             int res;
             while ((res = io_submit(mIOContext, 1, req->GetIOCBs())) < 0)
             {
@@ -215,8 +157,8 @@ namespace Forte
             //      reqnum, res);
             if (res == 0)
                 throw EIOSubmitFailed();
-            mPendingRequests[reqnum] = req;
-            return reqnum;
+            // take ownership of request
+            mPendingRequests[req->GetRequestNumber()] = req;
         }
 
         void HandleCompletionEvent(const struct io_event *event) {

@@ -70,6 +70,7 @@ SRCS =	\
 	FTrace.cpp \
 	GUIDGenerator.cpp \
 	INotify.cpp \
+	IOManager.cpp \
 	LogManager.cpp \
 	LogTimer.cpp \
 	MD5.cpp \
