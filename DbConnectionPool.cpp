@@ -57,6 +57,11 @@ DbConnectionPool::DbConnectionPool(const char *dbType,
     {
         mDbConnectionFactory = shared_ptr<DbConnectionFactory>(new DbLiteConnectionFactory());
     }
+    else if (!mDbType.CompareNoCase("sqlite_scribe"))
+    {
+        mDbConnectionFactory = shared_ptr<DbConnectionFactory>(
+            new DbLiteConnectionFactory("scribeVFS"));
+    }
     else if (!mDbType.CompareNoCase("sqlite_mirrored"))
     {
         shared_ptr<DbConnectionFactory> primaryDbFactory(new DbLiteConnectionFactory());
@@ -95,21 +100,37 @@ void DbConnectionPool::DeleteConnections()
 }
 
 DbConnection& DbConnectionPool::GetDbConnection() {
-    AutoUnlockMutex lock(mPoolMutex);
-    DbConnection * pDb;
-
     FTRACE;
 
-    hlog(HLOG_DEBUG2, "[%s] Free connections=%zu, Used connections=%zu",
-         mDbName.c_str(), mFreeConnections.size(), mUsedConnections.size());
-    if (mFreeConnections.size() == 0)
+    DbConnection * pDb = NULL;
+    bool initNeeded = false;
     {
-        hlog(HLOG_DEBUG2, "[%s] Creating new connection", mDbName.c_str());
-        auto_ptr<DbConnection> pNewDb(mDbConnectionFactory->create());
+        AutoUnlockMutex lock(mPoolMutex);
 
+        hlog(HLOG_DEBUG2, "[%s] Free connections=%zu, Used connections=%zu",
+             mDbName.c_str(), mFreeConnections.size(), mUsedConnections.size());
+        if (mFreeConnections.size() == 0)
+        {
+            hlog(HLOG_DEBUG2, "[%s] Creating new connection", mDbName.c_str());
+            pDb = mDbConnectionFactory->create();
+            initNeeded = true;
+        } else {
+            hlog(HLOG_DEBUG2, "[%s] Free connections=%zu, Used connections=%zu",
+                 mDbName.c_str(), mFreeConnections.size(), mUsedConnections.size());
+            pDb = mFreeConnections.back();
+            mUsedConnections.insert(mUsedConnections.end(), pDb);
+            mFreeConnections.pop_back();
+            hlog(HLOG_DEBUG2, "[%s] Free connections=%zu, Used connections=%zu",
+                 mDbName.c_str(), mFreeConnections.size(), mUsedConnections.size());
+        }
+    }
+
+    if (initNeeded && pDb)
+    {
+        auto_ptr<DbConnection> pNewDb(pDb);
         if (mDbSock.empty())
         {
-            if (!pNewDb->Init(mDbName, mDbUser, mDbPassword, mDbHost)) {
+            if (!pDb->Init(mDbName, mDbUser, mDbPassword, mDbHost)) {
                 FString err;
                 err.Format("[%s] Could not initialize database connection: %s",
                            mDbName.c_str(), pNewDb->mError.c_str());
@@ -125,19 +146,27 @@ DbConnection& DbConnectionPool::GetDbConnection() {
                 throw EDbConnectionPool(err.c_str());
             }
         }
-        mUsedConnections.insert(mUsedConnections.end(), pNewDb.get());
-        pDb = pNewDb.release();
-        hlog(HLOG_DEBUG2, "[%s] Free connections=%zu, Used connections=%zu",
-             mDbName.c_str(), mFreeConnections.size(), mUsedConnections.size());
-    } else {
-        hlog(HLOG_DEBUG2, "[%s] Free connections=%zu, Used connections=%zu",
-             mDbName.c_str(), mFreeConnections.size(), mUsedConnections.size());
-        pDb = mFreeConnections.back();
-        mUsedConnections.insert(mUsedConnections.end(), pDb);
-        mFreeConnections.pop_back();
-        hlog(HLOG_DEBUG2, "[%s] Free connections=%zu, Used connections=%zu",
-             mDbName.c_str(), mFreeConnections.size(), mUsedConnections.size());
+
+        {
+            // add this new initialized connection to used connections set
+            AutoUnlockMutex lock(mPoolMutex);
+            mUsedConnections.insert(mUsedConnections.end(), pNewDb.get());
+            hlog(HLOG_DEBUG2, "[%s] Free connections=%zu, Used connections=%zu",
+                 mDbName.c_str(), mFreeConnections.size(), mUsedConnections.size());
+            // release the auto pointer at this point, we are done
+            pDb = pNewDb.release();
+        }
     }
+
+    if (!pDb)
+    {
+        // failed to create pDb
+        FString err;
+        err.Format("[%s] Failed to create database connection",
+                   mDbName.c_str());
+        throw EDbConnectionPool(err.c_str());
+    }
+
     hlog(HLOG_DEBUG, "Returning connection [%p]", pDb);
     return *pDb;
 }
@@ -166,36 +195,46 @@ void DbConnectionPool::ReleaseDbConnection(DbConnection& db)
                  db.GetDbName().c_str());
         }
     }
-    AutoUnlockMutex lock(mPoolMutex);
 
-    // place this connection in the free pool, and remove it from the in-use pool
-    set<DbConnection*>::iterator iConnection = mUsedConnections.find(&db);
-
-    if(iConnection != mUsedConnections.end())
+    DbConnection * pOldConnection = NULL;
+    bool freeConnection = false;
     {
-        hlog(HLOG_DEBUG2,
-             "[%s] BEFORE:Free connections=%zu, Used connections=%zu",
-             mDbName.c_str(), mFreeConnections.size(), mUsedConnections.size());
-        mFreeConnections.push_back(*iConnection);
-        mUsedConnections.erase(iConnection);
-        if (mFreeConnections.size() > mPoolSize)
+        AutoUnlockMutex lock(mPoolMutex);
+
+        // place this connection in the free pool, and remove it from the in-use pool
+        set<DbConnection*>::iterator iConnection = mUsedConnections.find(&db);
+
+        if(iConnection != mUsedConnections.end())
         {
-            // have too many connections in the pool, delete one
-            DbConnection * pOldConnection = mFreeConnections.front();
-
-            hlog(HLOG_DEBUG2, "[%s] Deleting connection %p (%zu > %u)",
-                 mDbName.c_str(), pOldConnection,
-                 mFreeConnections.size(), mPoolSize);
-            mFreeConnections.pop_front();
-            delete pOldConnection;
+            hlog(HLOG_DEBUG2,
+                 "[%s] BEFORE:Free connections=%zu, Used connections=%zu",
+                 mDbName.c_str(), mFreeConnections.size(), mUsedConnections.size());
+            mFreeConnections.push_back(*iConnection);
+            mUsedConnections.erase(iConnection);
+            if (mFreeConnections.size() > mPoolSize)
+            {
+                // have too many connections in the pool, delete one
+                hlog(HLOG_DEBUG2, "[%s] Deleting connection %p (%zu > %u)",
+                     mDbName.c_str(), pOldConnection,
+                     mFreeConnections.size(), mPoolSize);
+                pOldConnection = mFreeConnections.front();
+                mFreeConnections.pop_front();
+                freeConnection = true;
+            }
+            hlog(HLOG_DEBUG2,
+                 "[%s] AFTER:Free connections=%zu, Used connections=%zu",
+                 mDbName.c_str(), mFreeConnections.size(), mUsedConnections.size());
         }
-        hlog(HLOG_DEBUG2,
-             "[%s] AFTER:Free connections=%zu, Used connections=%zu",
-             mDbName.c_str(), mFreeConnections.size(), mUsedConnections.size());
+        else
+        {
+            throw EDbConnectionPool("Connection not found");
+        }
     }
-    else
+
+    if (freeConnection && pOldConnection)
     {
-        throw EDbConnectionPool("Connection not found");
+        // need to free up connection
+        delete pOldConnection;
     }
 }
 

@@ -6,19 +6,21 @@
 
 using namespace Forte;
 
-DbLiteConnectionFactory::DbLiteConnectionFactory()
-    :mFlags(SQLITE_OPEN_READWRITE)
+DbLiteConnectionFactory::DbLiteConnectionFactory(const char *vfsName)
+    :mFlags(SQLITE_OPEN_READWRITE),
+     mVFSName(vfsName)
 {
 }
 
-DbLiteConnectionFactory::DbLiteConnectionFactory(int flags)
-    :mFlags(flags)
+DbLiteConnectionFactory::DbLiteConnectionFactory(int flags, const char *vfsName)
+    :mFlags(flags),
+     mVFSName(vfsName)
 {
 }
 
 DbConnection* DbLiteConnectionFactory::create()
 {
-    return new DbLiteConnection(mFlags);
+    return new DbLiteConnection(mFlags, mVFSName);
 }
 
 

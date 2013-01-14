@@ -12,12 +12,13 @@ class DbLiteConnectionFactory : public DbConnectionFactory
 {
 public:
 
-    DbLiteConnectionFactory();
-    DbLiteConnectionFactory(int flags);
+    DbLiteConnectionFactory(const char *vfsName = NULL);
+    DbLiteConnectionFactory(int flags, const char *vfsName = NULL);
     DbConnection* create();
 
 private:
     const int mFlags;
+    const char *mVFSName;
 
 }; // class DbLiteConnectionFactory
 

@@ -20,7 +20,8 @@ namespace Forte
     class DbLiteConnection : public DbConnection
     {
     public:
-        DbLiteConnection(int openFlags = SQLITE_OPEN_READWRITE);
+        DbLiteConnection(int openFlags = SQLITE_OPEN_READWRITE,
+                         const char *vfsName = NULL);
         virtual ~DbLiteConnection();
 
         // initialization
@@ -59,13 +60,15 @@ namespace Forte
     private:
         FString getTmpBackupPath(const FString& targetPath) const;
         virtual void backupDatabase(const FString &targetPath);
-        void removeTmpBackup(const FString &targetPath);
         void setError();
         DbResult Query(const FString& sql);
         struct sqlite3 *mDB;
 
      public:
         int mFlags;
+
+    private:
+        const char *mVFSName;
     };
 };
 #endif

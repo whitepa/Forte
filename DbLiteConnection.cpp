@@ -15,10 +15,11 @@
 
 using namespace Forte;
 
-DbLiteConnection::DbLiteConnection(int openFlags)
+DbLiteConnection::DbLiteConnection(int openFlags, const char *vfsName)
 :
     DbConnection(),
-    mFlags(openFlags)
+    mFlags(openFlags),
+    mVFSName (vfsName)
 {
     FTRACE2("%i", openFlags);
 
@@ -90,7 +91,7 @@ bool DbLiteConnection::Connect()
 
     if (mDB != NULL && !Close()) return false;
 
-    err = sqlite3_open_v2(mDBName, &mDB, mFlags, NULL);
+    err = sqlite3_open_v2(mDBName, &mDB, mFlags, mVFSName);
 
     if (err == SQLITE_OK)
     {
@@ -121,6 +122,7 @@ bool DbLiteConnection::Close()
 
     if (sqlite3_close(mDB) == SQLITE_OK)
     {
+        hlog(HLOG_DEBUG, "[%s] close complete [%p/%p]", mDBName.c_str(), this, mDB);
         mDB = NULL;
         return true;
     }
@@ -303,38 +305,12 @@ void DbLiteConnection::BackupDatabase(const FString &targetPath)
 {
     FTRACE2("'%s' -> '%s'", mDBName.c_str(), targetPath.c_str());
     typedef AutoDoUndo<void, void> BackupOperation;
-    BackupOperation op(boost::bind(&::DbLiteConnection::backupDatabase, this, targetPath),
-                       boost::bind(&::DbLiteConnection::removeTmpBackup, this, targetPath));
-}
-
-void DbLiteConnection::removeTmpBackup(const FString &targetPath)
-{
-    FTRACE2("%s", targetPath.c_str());
-
-    try
-    {
-        FileSystemImpl fs;
-        const FString tmpTargetPath(getTmpBackupPath(targetPath));
-        if(fs.FileExists(tmpTargetPath))
-        {
-            hlog(HLOG_DEBUG, "Removing temporary backup file '%s'",
-                 tmpTargetPath.c_str());
-            fs.Unlink(tmpTargetPath);
-        }
-    }
-    catch(Exception& e)
-    {
-        hlog(HLOG_WARN, "%s", e.what());
-    }
+    backupDatabase(targetPath);
 }
 
 FString DbLiteConnection::getTmpBackupPath(const FString& targetPath) const
 {
-    FileSystemImpl fs;
-    FString tmpTargetPath(targetPath);
-    tmpTargetPath += ".tmp";
-    hlog(HLOG_DEBUG, "'%s' -> '%s'", targetPath.c_str(), tmpTargetPath.c_str());
-    return tmpTargetPath;
+    return targetPath;
 }
 
 void DbLiteConnection::backupDatabase(const FString &targetPath)
@@ -377,12 +353,6 @@ void DbLiteConnection::backupDatabase(const FString &targetPath)
         hlog(HLOG_ERROR, "failed to finish backup to %s",
              tmpTargetPath.c_str());
     }
-
-    // @TODO: these file system objects should be passed in
-    FileSystemImpl fs;
-    hlog(HLOG_DEBUG, "Renaming '%s' to '%s'", tmpTargetPath.c_str(),
-         targetPath.c_str());
-    fs.Rename(tmpTargetPath, targetPath);
 }
 
 uint64_t DbLiteConnection::InsertID()
