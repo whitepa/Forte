@@ -60,7 +60,7 @@ namespace Forte
         virtual ~CheckConnectionEvent() {}
 
         virtual void DoWork() {
-            FTRACE;
+            //FTRACE;
             mEndpoint->CheckConnections();
         }
     protected:

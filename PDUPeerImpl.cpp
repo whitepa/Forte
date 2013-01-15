@@ -105,7 +105,7 @@ void Forte::PDUPeerImpl::SendNextPDU()
 
 bool Forte::PDUPeerImpl::isPDUExpired(PDUHolderPtr pduHolder)
 {
-    FTRACE;
+    //FTRACE;
 
     Timespec timeout(mPDUPeerSendTimeout, 0);
     Timespec now;

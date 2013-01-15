@@ -44,7 +44,7 @@ namespace Forte
                 catch (EThreadPoolDispatcherShuttingDown& e)
                 {
                 }
-                catch (Exception &e)
+                catch (std::exception &e)
                 {
                     hlog(HLOG_ERR,
                          "unexpected exception while polling PDUPeerSet: %s",

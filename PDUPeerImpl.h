@@ -130,15 +130,15 @@ namespace Forte
         PDUReadyToSendEvent(const PDUPeerPtr& peer)
             : mPeer(peer)
             {
-                FTRACE;
+                //FTRACE;
             }
 
         virtual ~PDUReadyToSendEvent() {
-            FTRACE;
+            //FTRACE;
         }
 
         void DoWork() {
-            FTRACE;
+            //FTRACE;
             mPeer->SendNextPDU();
         }
 

@@ -322,7 +322,7 @@ void Forte::ThreadPoolDispatcher::Resume(void)
 
 void Forte::ThreadPoolDispatcher::Enqueue(shared_ptr<Event> e)
 {
-    FTRACE;
+    //FTRACE;
 
     if (mShutdown)
         throw EThreadPoolDispatcherShuttingDown(

@@ -8,17 +8,17 @@ using namespace boost;
 PDUPeerSetWorkHandler::PDUPeerSetWorkHandler() :
     RequestHandler(0)
 {
-    FTRACE;
+    //FTRACE;
 }
 
 PDUPeerSetWorkHandler::~PDUPeerSetWorkHandler()
 {
-    FTRACE;
+    //FTRACE;
 }
 
 void PDUPeerSetWorkHandler::Handler(Forte::Event* e)
 {
-    FTRACE;
+    //FTRACE;
 
     PDUEvent* event = dynamic_cast<PDUEvent*>(e);
     if (event == NULL)
