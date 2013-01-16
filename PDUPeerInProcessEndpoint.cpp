@@ -24,12 +24,7 @@ void Forte::PDUPeerInProcessEndpoint::SendPDU(const Forte::PDU &pdu)
 
     {
         AutoUnlockMutex lock(mMutex);
-        PDUPtr newPDU(new PDU(pdu.GetOpcode(),
-                              pdu.GetPayloadSize(),
-                              pdu.GetPayload<void*>()));
-        mPDUBuffer.push_back(newPDU);
-
-        //mPDUBuffer.push_back(boost::make_shared<PDU>(pdu));
+        mPDUBuffer.push_back(PDUPtr(new PDU(pdu)));
     }
 
     PDUPeerEventPtr event(new PDUPeerEvent());
@@ -55,19 +50,9 @@ bool Forte::PDUPeerInProcessEndpoint::RecvPDU(Forte::PDU &out)
         // copying the PDU data into the PDU& directly from an
         // incoming ring buffer. A shared_ptr could be returned from
         // this function, but all call sites will need to be changed.
-        //PDU *tmp = reinterpret_cast<Forte::PDU*>(mPDUBuffer.front().get());
-        //memcpy(&out, tmp, sizeof(Forte::PDU));
-        //out.SetPayload(tmp->GetPayloadSize(), tmp->GetPayload<char>());
-
         PDUPtr pdu = mPDUBuffer.front();
-        PDUHeader pduHeader;
-        pduHeader.version = pdu->GetVersion();
-        pduHeader.opcode = pdu->GetOpcode();
-        pduHeader.payloadSize = pdu->GetPayloadSize();
-        out.SetHeader(pduHeader);
-        out.SetPayload(pduHeader.payloadSize, pdu->GetPayload<void*>());
-        //memcpy(&out, tmp, sizeof(Forte::PDU));
-        //out.SetPayload(tmp->GetPayloadSize(), tmp->GetPayload<char>());
+        out.SetHeader(pdu->GetHeader());
+        out.SetPayload(out.GetPayloadSize(), pdu->GetPayload<void*>());
 
         mPDUBuffer.pop_front();
         return true;

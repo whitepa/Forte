@@ -42,6 +42,7 @@ namespace Forte
         }
 
         static boost::shared_array<char> CreateSendBuffer(const Forte::PDU &pdu);
+        PDUHeader GetHeader(void) const { return mHeader; }
         unsigned int GetVersion(void) const { return mHeader.version; }
         unsigned int GetOpcode(void) const { return mHeader.opcode; }
         unsigned int GetPayloadSize(void) const { return mHeader.payloadSize; }
