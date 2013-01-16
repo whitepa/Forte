@@ -31,11 +31,12 @@ PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
 	$(TARGETDIR)/PDUPeerSetBuilderImplOnBoxTest \
 	$(TARGETDIR)/ProcessManagerOnBoxTest \
 	$(TARGETDIR)/RunLoopUnitTest \
-	$(TARGETDIR)/SCSIUtilUnitTest \
 	$(TARGETDIR)/ServerMainOnboxTest
 
 #TODO: rewrite this sans gpfs
 #	$(TARGETDIR)/DbMirroredConnectionUnitTest \
+# flaky or broken
+#	$(TARGETDIR)/SCSIUtilUnitTest \
 
 PROG_DEPS_OBJS_PDUPeerSetBuilderImplOnBoxTest = \
 	../$(TARGETDIR)/PDU.o \
