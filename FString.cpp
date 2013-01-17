@@ -861,7 +861,7 @@ FString FString::HexDump() const
 
     for (size_t i=0; i<n; i++, resultLen+=3)
     {
-        snprintf(digit, 4, "%02X ", at(i));
+        snprintf(digit, 4, "%02uX ", at(i));
         result[resultLen] = digit[0];
         result[resultLen+1] = digit[1];
         result[resultLen+2] = digit[2];
