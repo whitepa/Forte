@@ -96,6 +96,11 @@ void Thread::deleting()
     Shutdown();
     // Join the pthread
     // (this will block until the thread exits)
+    if (pthread_equal(mThread, pthread_self()))
+    {
+        hlog(HLOG_ERR, "Thread %s deleting itself! aborting!", mThreadName.c_str());
+        abort();
+    }
     pthread_join(mThread, NULL);
     mDeletingCalled = true;
 }
