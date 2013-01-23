@@ -10,7 +10,7 @@
 
 // #SCQAD TEST: ONBOX: SCSIUtilUnitTest
 
-// #SCQAD TESTTAG: smoketest, forte, storage, storage.iscsi
+// #SCQAD TESTTAG: broken, smoketest, forte, storage, storage.iscsi
 
 using namespace Forte;
 
