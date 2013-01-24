@@ -24,7 +24,7 @@ Thread * Thread::MyThread(void)
     return thr;
 }
 void * Thread::startThread(void *obj)
-{ 
+{
     FTRACE;
 
     // initialize the thread key once
@@ -46,7 +46,7 @@ void * Thread::startThread(void *obj)
         thr->mThreadName.Format("unknown-%u", (unsigned)thr->mThread);
     if (!thr->mThreadShutdown)
         hlog(HLOG_DEBUG2, "thread initialized");
-    
+
     // run the thread
     try
     {
@@ -65,7 +65,7 @@ void * Thread::startThread(void *obj)
     {
         hlog(HLOG_ERR, "unknown exception in thread run()");
     }
-    
+
     hlog(HLOG_DEBUG2, "thread shutting down");
     thr->mThreadShutdown = true;
 

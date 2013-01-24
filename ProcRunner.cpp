@@ -23,17 +23,17 @@ using namespace std;
 using namespace Forte;
 
 // methods
-int ProcRunner::RunNoTimeout(const FString& command, 
-                             const FString& cwd, 
+int ProcRunner::RunNoTimeout(const FString& command,
+                             const FString& cwd,
                              FString *output)
 {
     return Run(command, cwd, output, PROC_RUNNER_NO_TIMEOUT);
 }
 
 
-int ProcRunner::Run(const FString& command, 
-                    const FString& cwd, 
-                    FString *output, 
+int ProcRunner::Run(const FString& command,
+                    const FString& cwd,
+                    FString *output,
                     unsigned int timeout,
                     const StrStrMap *env,
                     const FString &infile)
@@ -215,7 +215,7 @@ int ProcRunner::Run(const FString& command,
 
                 if (WEXITSTATUS(status) != 0)
                 {
-                    stmp.Format("Child exited with status code %d", 
+                    stmp.Format("Child exited with status code %d",
                                 WEXITSTATUS(status));
                     hlog(HLOG_DEBUG, "%s", stmp.c_str());
                     break;
@@ -278,7 +278,7 @@ int ProcRunner::Run(const FString& command,
         //gettimeofday(&current_time, NULL);
         //total_msec = 1000 * (current_time.tv_sec - start_time.tv_sec);
         //total_msec += (current_time.tv_usec - start_time.tv_usec + 500) / 1000;
-        total_msec = 
+        total_msec =
             (elapsed_time.tv_nsec + (elapsed_time.tv_sec * 1000000000))
             / 1000000;
 
@@ -366,7 +366,7 @@ int ProcRunner::Run(const FString& command,
 }
 
 
-int ProcRunner::RunBackground(const FString& command, const FString& cwd, 
+int ProcRunner::RunBackground(const FString& command, const FString& cwd,
                               const StrStrMap *env, bool detach, int *pidReturn)
 {
     if (cwd.empty())
@@ -389,7 +389,7 @@ int ProcRunner::RunBackground(const FString& command, const FString& cwd,
     {
         // child
 
-        if (detach) 
+        if (detach)
         {
             // fork into background
             daemon(1, 0);
@@ -481,17 +481,17 @@ int ProcRunner::RunBackground(const FString& command, const FString& cwd,
         return ret;
     }
 
-    if (detach) 
+    if (detach)
     {
         // wait for child to fork into background
         if (waitpid(pid, &status, 0) == -1)
         {
-            stmp.Format("Unable to verify status of command: %s", 
+            stmp.Format("Unable to verify status of command: %s",
                         command.c_str());
             hlog(HLOG_ERR, "%s", stmp.c_str());
             return ret;
         }
-        
+
         // the pid we have will no longer be around at this point
         // (daemon fork() will create new process id)
         if (pidReturn != NULL)

@@ -37,7 +37,7 @@ ClusterLock::ClusterLock(const FString& name, unsigned timeout)
     Lock(name, timeout);
 }
 
-ClusterLock::ClusterLock(const FString& name, unsigned timeout,  
+ClusterLock::ClusterLock(const FString& name, unsigned timeout,
                          const Forte::FString& errorString)
     : mName(name)
     , mFD(-1)
@@ -102,13 +102,13 @@ void ClusterLock::init()
 
     try
     {
-        mTimer.Init(se);        
+        mTimer.Init(se);
     }
     catch (EPosixTimerInit& e)
     {
         // translate error to what we are expected to throw
         throw EClusterLockUnvailable(FStringFC(),
-                                     "LOCK_TIMER_FAIL|||%s", 
+                                     "LOCK_TIMER_FAIL|||%s",
                                      e.what());
     }
 }
@@ -135,9 +135,9 @@ void ClusterLock::checkAndClearFromMutexMap(const Forte::FString& name)
         else
         {
             hlog(HLOG_DEBUG4, "lock %s still in use; will not free mutex",
-                 name.c_str());                
+                 name.c_str());
         }
-    }    
+    }
 }
 
 // lock/unlock
@@ -199,29 +199,29 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
         {
             // mName = filename;
             mFD = open(mName, O_RDWR | O_CREAT | O_NOATIME, 0600);
-                
+
             if (mFD == -1)
             {
                 err = errno;
-                    
-                hlog(HLOG_WARN, "could not open lock file: %s", 
+
+                hlog(HLOG_WARN, "could not open lock file: %s",
                      strerror(errno));
 
                 // release the mutex
                 mMutex->Unlock();
                 mMutex.reset();
                 checkAndClearFromMutexMap(mName);
-                    
+
                 throw EClusterLockFile(
                     errorString.empty() ? "LOCK_FAIL|||" + mName
-                    + "|||" + mFileSystem.StrError(err) : 
+                    + "|||" + mFileSystem.StrError(err) :
                     errorString);
             }
-                
+
             ftruncate(mFD, 1);
             mLock.reset(new AdvisoryLock(mFD, 0, 1));
         }
-            
+
         // acquire lock?
         if (!(locked = mLock->ExclusiveLock(true)))
         {
@@ -241,11 +241,11 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
         locked = false;
         if (err == ETIMEDOUT)
         {
-            timed_out = true;            
+            timed_out = true;
         }
         else
         {
-            hlog(HLOG_WARN, "%u could not get lock on file, not timed out: %s", 
+            hlog(HLOG_WARN, "%u could not get lock on file, not timed out: %s",
                  (unsigned int) pthread_self(),
                  strerror(errno));
         }
