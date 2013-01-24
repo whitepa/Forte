@@ -3,6 +3,8 @@
 
 #include "XMLDoc.h"
 #include "XMLNode.h"
+#include "LogManager.h"
+#include <boost/lexical_cast.hpp>
 #include <wctype.h>
 #include <boost/bind.hpp>
 #include <libxml/xpath.h>
@@ -90,6 +92,64 @@ void XMLNode::Nuke()
     xmlUnlinkNode(mNode);
     xmlFreeNode(mNode);
     mNode = NULL;
+}
+
+void XMLNode::XPathStr(FString &resultString, const Forte::FString &xpath)
+{
+    shared_ptr<xmlXPathContext> ctxt(xmlXPathNewContext(mNode->doc),
+            bind(xmlXPathFreeContext, _1));
+    if (!ctxt)
+        throw ForteXMLDocException("XPath query invalid");
+    ctxt->node = mNode;
+
+    shared_ptr<xmlXPathObject> result(
+            xmlXPathEval((const xmlChar*) xpath.c_str(), ctxt.get()),
+            bind(xmlXPathFreeObject, _1));
+
+    if (!result)
+        throw ForteXMLDocException("XPath query invalid");
+
+    if (result->type == XPATH_NUMBER)
+    {
+        resultString = lexical_cast<FString>(result->floatval);
+    }
+    else if(result->type == XPATH_STRING)
+    {
+        resultString = FString((char *) result->stringval);
+    }
+    else if(result->type == XPATH_BOOLEAN)
+    {
+        //resultString = lexical_cast<FString>(result->boolval);
+        resultString = "false";
+        if (result->boolval)
+            resultString = FString("true");
+    }
+    else if(result->type == XPATH_NODESET)
+    {
+        const int count = xmlXPathNodeSetGetLength(result->nodesetval);
+        for (int i = 0; i != count; i++)
+        {
+            if (result->nodesetval->nodeTab[i]->type == XML_ATTRIBUTE_NODE)
+            {
+                // There should be only one child for each attribute node, a text
+                resultString = resultString + FString((char *) result->nodesetval->nodeTab[i]->children->content);
+                //resultString = resultString + FString((char *) xmlNodeGetContent(result->nodesetval->nodeTab[i]);
+            }
+            else if (result->nodesetval->nodeTab[i]->type == XML_TEXT_NODE)
+            {
+                resultString = resultString + FString((char *) result->nodesetval->nodeTab[i]->content);
+            }
+            else
+            {
+                hlog(HLOG_DEBUG, "found type: %i", result->nodesetval->nodeTab[i]->type);
+                throw ForteXMLDocException("XPathStr nodeset result unsupported for non-attr, non-text nodes.");
+            }
+        }
+    }
+    else
+    {
+        throw ForteXMLDocException("XPath result type unknown");
+    }
 }
 
 void XMLNode::Find(std::vector<XMLNode> &nodes, const Forte::FString &xpath)

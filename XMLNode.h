@@ -36,6 +36,7 @@ namespace Forte
         inline xmlNodePtr GetNext() const { return mNode == NULL ? NULL : mNode->next; }
         inline xmlNodePtr GetParent() const { return mNode == NULL ? NULL : mNode->parent; }
         void Find(std::vector<XMLNode> &nodes, const Forte::FString &xPath);
+        void XPathStr(FString & resultString, const Forte::FString &xPath);
 
         inline operator xmlNodePtr() { return mNode; }
         inline operator const xmlNodePtr() const { return mNode; }
