@@ -6,6 +6,7 @@
 #include "Foreach.h"
 #include "FTrace.h"
 #include "LogManager.h"
+#include "SystemCallUtil.h"
 #include "Types.h"
 #include "SystemCallUtil.h"
 
@@ -213,7 +214,8 @@ void Forte::PDUPeerSetImpl::Poll(int msTimeout, bool interruptible)
     if (fdReadyCount < 0
         && (errno == EBADF || errno == EFAULT || errno == EINVAL))
     {
-        throw EPDUPeerSetPollFailed(SystemCallUtil::GetErrorDescription(errno));
+        throw EPDUPeerSetPollFailed(
+            SystemCallUtil::GetErrorDescription(errno));
     }
 
     // process the fds

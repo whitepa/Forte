@@ -12,6 +12,7 @@
 #include "PDUPeerSetBuilderImpl.h"
 #include "FTrace.h"
 #include "PDU.h"
+#include "SystemCallUtil.h"
 
 bool Forte::ProcessMonitor::sGotSIGCHLD = false;
 
@@ -324,7 +325,8 @@ void Forte::ProcessMonitor::startProcess(void)
     {
         inputfd = open(mInputFilename, O_RDWR);
         if(inputfd == -1 && errno != EINTR)
-            throw EProcessMonitorUnableToOpenInputFile(FStringFC(), "%s", strerror(errno));
+            throw EProcessMonitorUnableToOpenInputFile(
+                SystemCallUtil::GetErrorDescription(errno));
     }
     while (inputfd == -1 && errno == EINTR);
 
@@ -332,7 +334,8 @@ void Forte::ProcessMonitor::startProcess(void)
     {
         outputfd = open(mOutputFilename, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR);
         if(outputfd == -1 && errno != EINTR)
-            throw EProcessMonitorUnableToOpenOutputFile(FStringFC(), "%s", strerror(errno));
+            throw EProcessMonitorUnableToOpenOutputFile(
+                SystemCallUtil::GetErrorDescription(errno));
     }
     while (outputfd == -1 && errno == EINTR);
 
@@ -340,7 +343,8 @@ void Forte::ProcessMonitor::startProcess(void)
     {
         errorfd = open(mErrorFilename, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR);
         if(errorfd == -1 && errno != EINTR)
-            throw EProcessMonitorUnableToOpenErrorFile(FStringFC(), "%s", strerror(errno));
+            throw EProcessMonitorUnableToOpenErrorFile(
+                SystemCallUtil::GetErrorDescription(errno));
     }
     while (errorfd == -1 && errno == EINTR);
 

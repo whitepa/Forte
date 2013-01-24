@@ -2,6 +2,7 @@
 #include "FTrace.h"
 #include "LogManager.h"
 #include "Clock.h"
+#include "SystemCallUtil.h"
 #include "Util.h"
 
 using namespace Forte;
@@ -156,7 +157,8 @@ void Thread::interruptibleSleep(const struct timespec &interval, bool throwOnShu
                 return;
         }
         else if (status == EINVAL || status == EPERM)
-            throw EThread(FStringFC(), "Software error: %s", strerror(errno));
+            throw EThread(FStringFC(), "Software error: %s",
+                          SystemCallUtil::GetErrorDescription(errno).c_str());
         else if (status == ETIMEDOUT)
         {
             // evaluate timeout actually occurred, as spurious wakeups may occur

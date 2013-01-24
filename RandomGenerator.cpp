@@ -1,6 +1,7 @@
 #include "FString.h"
 #include "RandomGenerator.h"
 #include "LogManager.h"
+#include "SystemCallUtil.h"
 #include <fstream>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -26,7 +27,7 @@ FString & Forte::RandomGenerator::GetRandomData(unsigned int length, FString &ou
     }
     while (ret != (int)length && errno == EINTR);
     if (ret != (int)length)
-        throw ERandomGeneratorFailed(strerror(errno));
+        throw ERandomGeneratorFailed(SystemCallUtil::GetErrorDescription(errno));
     return out;
 }
 unsigned int Forte::RandomGenerator::GetRandomUInt(void)

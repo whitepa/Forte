@@ -4,6 +4,7 @@
 #include "LogManager.h"
 #include "LogTimer.h"
 #include "ServerMain.h"
+#include "SystemCallUtil.h"
 #include "Util.h"
 #include <iostream>
 #include <fstream>
@@ -242,13 +243,15 @@ int ProcRunner::Run(const FString& command,
                     if (killpg(pid, 9) == -1)
                     {
                         hlog(HLOG_ERR, "failed to killpg(%u): %s",
-                             (unsigned)pid, strerror(errno));
+                             (unsigned)pid,
+                             SystemCallUtil::GetErrorDescription(errno).c_str());
                         hlog(HLOG_DEBUG, "calling kill(%u, 9)", (unsigned)pid);
 
                         if (kill(pid, 9) == -1)
                         {
                             hlog(HLOG_ERR, "failed to kill -9 (%u): %s",
-                                 (unsigned)pid, strerror(errno));
+                                 (unsigned)pid,
+                                 SystemCallUtil::GetErrorDescription(errno).c_str());
                         }
                     }
                 }

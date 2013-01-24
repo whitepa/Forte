@@ -5,6 +5,7 @@
 #include "FTrace.h"
 #include "VersionManager.h"
 #include "FileSystemImpl.h"
+#include "SystemCallUtil.h"
 
 using namespace std;
 using namespace Forte;
@@ -80,7 +81,8 @@ void ServerMain::init(const FString& defaultConfig,
 
     // daemonize
     if (mDaemon && daemon(1,0)) {
-        fprintf(stderr, "can't start as daemon: %s\n", strerror(errno));
+        fprintf(stderr, "can't start as daemon: %s\n",
+                SystemCallUtil::GetErrorDescription(errno).c_str());
         exit(1);
     }
 
@@ -111,7 +113,8 @@ void ServerMain::initHostname()
         char hn[128];
         if (gethostname(hn, sizeof(hn)) < 0)
         {
-            fprintf(stderr, "Unable to get hostname: %s\n", strerror(errno));
+            fprintf(stderr, "Unable to get hostname: %s\n",
+                    SystemCallUtil::GetErrorDescription(errno).c_str());
             exit(1);
         }
         mHostname.assign(hn);
@@ -269,8 +272,7 @@ void ServerMain::MainLoop()
         {
             // should only be EINVAL (invalid timeout)
             hlog(HLOG_ERR, "Error while calling sigtimedwait (%s)",
-                 strerror(errno));
-
+                 SystemCallUtil::GetErrorDescription(errno).c_str());
         }
     }
 }

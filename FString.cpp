@@ -1,6 +1,7 @@
 #include "FString.h"
 #include "Foreach.h"
 #include "LogManager.h"
+#include "SystemCallUtil.h"
 #include <cstdio>
 #include <cstdarg>
 #include <errno.h>
@@ -109,7 +110,7 @@ FString::FString(const struct sockaddr *sa)
         char buf[INET_ADDRSTRLEN];
         if (!inet_ntop(sa->sa_family, &(((struct sockaddr_in *)sa)->sin_addr),
                        buf, INET_ADDRSTRLEN))
-            throw EFString(FStringFC(), "%s", strerror(errno));
+            throw EFString(SystemCallUtil::GetErrorDescription(errno));
         assign(buf);
     }
     else if (sa->sa_family == AF_INET6)
@@ -117,7 +118,7 @@ FString::FString(const struct sockaddr *sa)
         char buf[INET6_ADDRSTRLEN];
         if (!inet_ntop(sa->sa_family, &(((struct sockaddr_in *)sa)->sin_addr),
                        buf, INET6_ADDRSTRLEN))
-            throw EFString(FStringFC(), "%s", strerror(errno));
+            throw EFString(SystemCallUtil::GetErrorDescription(errno));
         assign(buf);
     }
     else
@@ -744,7 +745,8 @@ void FString::SaveFile(const char *filename, const FString &in)
     {
         throw EFString(FStringFC(),
                        "failed to write to file '%s': %s",
-                       filename, strerror(err));
+                       filename,
+                       SystemCallUtil::GetErrorDescription(err).c_str());
     }
 }
 

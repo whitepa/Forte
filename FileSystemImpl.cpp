@@ -33,12 +33,7 @@ FileSystemImpl::~FileSystemImpl()
 // helpers
 FString FileSystemImpl::StrError(int err) const
 {
-    char buf[256], *str;
-    FString ret;
-    str = strerror_r(err, buf, sizeof(buf));
-    buf[sizeof(buf) - 1] = 0;
-    ret = str;
-    return ret;
+    return SystemCallUtil::GetErrorDescription(err);
 }
 
 

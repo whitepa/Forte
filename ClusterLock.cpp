@@ -1,6 +1,7 @@
 // ClusterLock.cpp
 #include "ClusterLock.h"
 #include "FTrace.h"
+#include "SystemCallUtil.h"
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <time.h>
@@ -202,10 +203,9 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
 
             if (mFD == -1)
             {
-                err = errno;
+                FString errStr(SystemCallUtil::GetErrorDescription(errno));
 
-                hlog(HLOG_WARN, "could not open lock file: %s",
-                     strerror(errno));
+                hlog(HLOG_WARN, "could not open lock file: %s", errStr.c_str());
 
                 // release the mutex
                 mMutex->Unlock();
@@ -214,7 +214,7 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
 
                 throw EClusterLockFile(
                     errorString.empty() ? "LOCK_FAIL|||" + mName
-                    + "|||" + mFileSystem.StrError(err) :
+                    + "|||" + errStr.c_str() :
                     errorString);
             }
 
@@ -247,7 +247,7 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
         {
             hlog(HLOG_WARN, "%u could not get lock on file, not timed out: %s",
                  (unsigned int) pthread_self(),
-                 strerror(errno));
+                 SystemCallUtil::GetErrorDescription(errno).c_str());
         }
 
         mMutex.reset();

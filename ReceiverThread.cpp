@@ -1,6 +1,7 @@
 #include "AutoFD.h"
 #include "LogManager.h"
 #include "ReceiverThread.h"
+#include "SystemCallUtil.h"
 #include <fcntl.h>
 #include <sys/epoll.h>
 #include <sys/types.h>
@@ -23,7 +24,8 @@ void * Forte::ReceiverThread::run(void)
     AutoFD m;
     if ((m = socket(PF_INET, SOCK_STREAM, 0)) < 0)
         throw EReceiverThread(
-            FStringFC(), "Failed to create socket: %s", strerror(errno));
+            FStringFC(), "Failed to create socket: %s",
+            SystemCallUtil::GetErrorDescription(errno).c_str());
 
     // set SO_REUSEADDR
     int one = 1;
@@ -42,11 +44,13 @@ void * Forte::ReceiverThread::run(void)
             FStringFC(), "invalid bind IP: %s", mBindIP.c_str());
 
     if (::bind(m, (struct sockaddr*)&bind_addr, sizeof(struct sockaddr_in)) == -1)
-        throw EReceiverThread(FStringFC(), "failed to bind: %s", strerror(errno));
+        throw EReceiverThread(FStringFC(), "failed to bind: %s",
+                              SystemCallUtil::GetErrorDescription(errno).c_str());
 
     if (listen(m, mBacklog) == -1)
         throw EReceiverThread(
-            FStringFC(), "failed to listen: %s", strerror(errno));
+            FStringFC(), "failed to listen: %s",
+            SystemCallUtil::GetErrorDescription(errno).c_str());
 
     // set socket to close-on-exec, which prevents a bug wherein a
     // child process that restarts this server will still have this
@@ -67,10 +71,10 @@ void * Forte::ReceiverThread::run(void)
     AutoFD efd(epoll_create(2));
 
     if (efd == -1)
-        throw EReceiverThreadPollCreate(strerror(errno));
+        throw EReceiverThreadPollCreate(SystemCallUtil::GetErrorDescription(errno));
 
     if (epoll_ctl(efd, EPOLL_CTL_ADD, m, &ev) < 0)
-        throw EReceiverThreadPollAdd(strerror(errno));
+        throw EReceiverThreadPollAdd(SystemCallUtil::GetErrorDescription(errno));
 
     while (!mThreadShutdown)
     {
@@ -90,7 +94,8 @@ void * Forte::ReceiverThread::run(void)
         else if (epollResult == -1)
         {
             hlog_and_throw(HLOG_DEBUG,
-                           EReceiverThreadPollFailed(strerror(errno)));
+                           EReceiverThreadPollFailed(
+                               SystemCallUtil::GetErrorDescription(errno)));
         }
 
         hlog(HLOG_DEBUG, "events=0x%x", events[0].events);
@@ -116,7 +121,8 @@ void * Forte::ReceiverThread::run(void)
         if (s == -1)
         {
             // got an invalid fd, may have been interrupted
-            hlog(HLOG_DEBUG, "accept failed: %s", strerror(errno));
+            hlog(HLOG_DEBUG, "accept failed: %s",
+                 SystemCallUtil::GetErrorDescription(errno).c_str());
             continue;
         }
 

@@ -9,6 +9,7 @@
 #include "LogTimer.h"
 #include "Timer.h"
 #include "ServerMain.h"
+#include "SystemCallUtil.h"
 #include "Util.h"
 #include "FTrace.h"
 #include "GUIDGenerator.h"
@@ -160,13 +161,15 @@ void Forte::ProcessManagerImpl::startMonitor(
     try
     {
         if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) < 0)
-            throw_exception(EProcessManagerUnableToCreateSocket(FStringFC(), "%s", strerror(errno)));
+            throw_exception(EProcessManagerUnableToCreateSocket(
+                                SystemCallUtil::GetErrorDescription(errno)));
         AutoFD parentfd(fds[0]);
         AutoFD childfd(fds[1]);
 
         pid_t childPid = DaemonUtil::ForkSafely();
         if(childPid < 0)
-            throw_exception(EProcessManagerUnableToFork(FStringFC(), "%s", strerror(errno)));
+            throw_exception(EProcessManagerUnableToFork(
+                                SystemCallUtil::GetErrorDescription(errno)));
         else if(childPid == 0)
         {
             //fprintf(stderr, "procmon child, childfd=%d\n", childfd.GetFD());
@@ -185,7 +188,9 @@ void Forte::ProcessManagerImpl::startMonitor(
             // (redirects 0,1,2 to /dev/null, forks, parent calls _exit)
             if (daemon(1, 0) == -1)
             {
-                fprintf(stderr, "procmon child, daemon() failed: %d %s\n", errno, strerror(errno));
+                fprintf(stderr, "procmon child, daemon() failed: %d %s\n",
+                        errno,
+                        SystemCallUtil::GetErrorDescription(errno).c_str());
                 exit(-1);
             }
             setsid();
@@ -196,7 +201,8 @@ void Forte::ProcessManagerImpl::startMonitor(
             vargs[2] = 0;
 //        fprintf(stderr, "procmon child, exec '%s' '%s'\n", mProcmonPath.c_str(), vargs[1]);
             execv(mProcmonPath, vargs);
-            fprintf(stderr, "procmon child, exec() failed: %d %s\n", errno, strerror(errno));
+            fprintf(stderr, "procmon child, exec() failed: %d %s\n", errno,
+                    SystemCallUtil::GetErrorDescription(errno).c_str());
             exit(-1);
         }
         else
@@ -226,7 +232,8 @@ void Forte::ProcessManagerImpl::startMonitor(
                                EProcessManagerUnableToCreateProcmon(
                                    FStringFC(),
                                    "err waiting on child pid: %d, %d (%s)",
-                                   childPid, errno, strerror(errno)));
+                                   childPid, errno,
+                                   SystemCallUtil::GetErrorDescription(errno).c_str()));
             }
             else if (WIFEXITED(childStatus) && WEXITSTATUS(childStatus) != 0)
             {
