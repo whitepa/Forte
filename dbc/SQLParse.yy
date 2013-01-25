@@ -32,6 +32,7 @@ using namespace DBC;
 %token ENGINE EXISTS GRANT IDENTIFIED IF INDEX INSERT INT INTO KEY 
 %token LONGTEXT NULL_TOK ON TABLE TEXT TINYINT TO PRIMARY
 %token PRIVILEGES REPLACE SET UNIQUE UNSIGNED USE VALUES VARBINARY VARCHAR
+%token COMMIT_TOK BEGIN_TOK TRANSACTION_TOK EXCLUSIVE_TOK
 
 %token PARAMS DEFINE FILENAME CLASSNAME
 %token SELECTOR DELETOR CTOR EXISTOR LOOKUP FK
@@ -57,6 +58,8 @@ query:
         |  replace
         |  set
         |  use
+        |  begin
+        |  commit
         ;
 
 opt_params:
@@ -148,6 +151,12 @@ insert:
 
 replace:
         REPLACE INTO table_ident VALUES '(' literal_list ')' ;
+        
+begin:
+        BEGIN_TOK EXCLUSIVE_TOK TRANSACTION_TOK;
+
+commit:
+        COMMIT_TOK;
 
 set:
         SET IDENT_VAR EQ expr

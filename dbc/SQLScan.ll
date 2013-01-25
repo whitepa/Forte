@@ -34,6 +34,7 @@ typedef boost::shared_ptr<AnyPtr> YYSTYPE;
 ALL           { return ALL; }
 AUTO_INCREMENT { return AUTO_INCREMENT; }
 AUTOINCREMENT { return AUTO_INCREMENT; }
+BEGIN         { return BEGIN_TOK; }
 BIGINT        { return BIGINT; }
 BINARY        { return BINARY; }
 BLOB          { return BLOB; }
@@ -43,12 +44,14 @@ CASCADE       { return CASCADE; }
 CHAR          { return CHAR; }
 CHARSET       { return CHARSET; }
 CREATE        { return CREATE; }
+COMMIT        { return COMMIT_TOK; }
 COUNT         { return COUNT; }
 DATABASE      { return DATABASE; }
 DEFAULT       { return DEFAULT; }
 DELETE        { return DELETE; }
 DROP          { return DROP; }
 ENGINE        { return ENGINE; }
+EXCLUSIVE     { return EXCLUSIVE_TOK; }
 EXISTS        { return EXISTS; }
 GRANT         { return GRANT; }
 IDENTIFIED    { return IDENTIFIED; }
@@ -73,6 +76,7 @@ PRIVILEGES    { return PRIVILEGES; }
 REPLACE       { return REPLACE; }
 RESTRICT      { return RESTRICT; }
 SET           { return SET; }
+TRANSACTION   { return TRANSACTION_TOK; }
 UNIQUE        { return UNIQUE; }
 UNSIGNED      { return UNSIGNED; }
 UPDATE        { return UPDATE; }
