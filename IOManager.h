@@ -90,6 +90,7 @@ namespace Forte
         }
         virtual void * run(void) {
             FTRACE;
+            setThreadName(FString(FStringFC(), "IOManager-%u", GetThreadID()));
             struct timespec timeout = Timespec::FromMillisec(200);
             struct io_event events[32];
             while (!IsShuttingDown()) {
@@ -99,7 +100,7 @@ namespace Forte
                 n = io_getevents(mIOContext, 1, 32, events, &timeout);
                 if (n > 0)
                 {
-                    hlog(HLOG_DEBUG, "io_getevents returns %d events", n);
+                    hlog(HLOG_DEBUG4, "io_getevents returns %d events", n);
                 }
                 else if (n == -EINTR)
                 {
@@ -115,7 +116,7 @@ namespace Forte
                 }
                 for (int i = 0; i < n; ++i)
                 {
-                    hlog(HLOG_DEBUG, "received IO completion for request %lu",
+                    hlog(HLOG_DEBUG4, "received IO completion for request %lu",
                          (long)events[i].obj->data);
                     HandleCompletionEvent(&events[i]);
                 }

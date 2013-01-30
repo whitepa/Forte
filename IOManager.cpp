@@ -34,7 +34,7 @@ void IORequest::SetOp(IORequest::OperationType op)
 
 void IORequest::SetBuffer(void *buf, size_t len)
 {
-    FTRACE2("buf=%p len=%lu", buf, len);
+    hlog(HLOG_DEBUG4, "buf=%p len=%lu", buf, len);
     mIOCB.u.c.buf = buf;
     mIOCB.u.c.nbytes = len;
 }
