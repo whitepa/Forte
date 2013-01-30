@@ -5,6 +5,7 @@
 #include "AutoMutex.h"
 #include "ThreadCondition.h"
 #include "FTrace.h"
+#include <boost/function.hpp>
 
 EXCEPTION_CLASS(EAsyncTask);
 EXCEPTION_SUBCLASS2(EAsyncTask, EAsyncTaskStillInProgress,
@@ -77,15 +78,35 @@ namespace Forte {
                 mWaitCond.Broadcast();
             }
             if (mCompletionCallback)
-                mCompletionCallback(*this);
+            {
+                try
+                {
+                    mCompletionCallback(*this);
+                }
+                catch (...)
+                {
+                }
+            }
         }
 
         virtual void setException(boost::exception_ptr e) {
             FTRACE;
-            AutoUnlockMutex lock(mWaitLock);
-            mException = e;
-            mCompleted = true;
-            mWaitCond.Broadcast();
+            {
+                AutoUnlockMutex lock(mWaitLock);
+                mException = e;
+                mCompleted = true;
+                mWaitCond.Broadcast();
+            }
+            if (mCompletionCallback)
+            {
+                try
+                {
+                    mCompletionCallback(*this);
+                }
+                catch (...)
+                {
+                }
+            }
         }
 
     private:
@@ -149,15 +170,35 @@ namespace Forte {
                 mWaitCond.Broadcast();
             }
             if (mCompletionCallback)
-                mCompletionCallback(*this);
+            {
+                try
+                {
+                    mCompletionCallback(*this);
+                }
+                catch (...)
+                {
+                }
+            }
         }
 
         virtual void setException(boost::exception_ptr e) {
             FTRACE;
-            AutoUnlockMutex lock(mWaitLock);
-            mException = e;
-            mCompleted = true;
-            mWaitCond.Broadcast();
+            {
+                AutoUnlockMutex lock(mWaitLock);
+                mException = e;
+                mCompleted = true;
+                mWaitCond.Broadcast();
+            }
+            if (mCompletionCallback)
+            {
+                try
+                {
+                    mCompletionCallback(*this);
+                }
+                catch (...)
+                {
+                }
+            }
         }
 
     private:
