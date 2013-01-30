@@ -43,5 +43,39 @@ namespace Forte
         Mutex mLock;
         ThreadCondition mNotify;
     };;
+
+    class AutoIncrementSemaphore {
+    public:
+        inline AutoIncrementSemaphore(
+            Semaphore &sem) :mSemaphore(sem) {
+            mSemaphore.Wait();
+        }
+        inline ~AutoIncrementSemaphore() {
+            mSemaphore.Post();
+        }
+
+    private:
+        AutoIncrementSemaphore(AutoIncrementSemaphore const&);
+        AutoIncrementSemaphore& operator=(AutoIncrementSemaphore const&);
+
+    private:
+        Semaphore &mSemaphore;
+    };
+
+    class AutoIncrementOnlySemaphore {
+    public:
+        inline AutoIncrementOnlySemaphore(
+            Semaphore &sem) :mSemaphore(sem) { }
+        inline ~AutoIncrementOnlySemaphore() {
+            mSemaphore.Post();
+        }
+
+    private:
+        AutoIncrementOnlySemaphore(AutoIncrementOnlySemaphore const&);
+        AutoIncrementOnlySemaphore& operator=(AutoIncrementOnlySemaphore const&);
+
+    private:
+        Semaphore &mSemaphore;
+    };
 };
 #endif
