@@ -161,6 +161,11 @@ namespace Forte
             throw EUnimplemented();
         }
 
+        virtual void Truncate(const FString& path, off_t size) const {
+            FTRACE;
+            throw EUnimplemented();
+        }
+
     protected:
         StrStrMap mFiles;
         std::map<FString, struct statfs> mStatFSResponseMap;

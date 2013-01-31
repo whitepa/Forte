@@ -130,6 +130,8 @@ namespace Forte
         virtual FString StrError(int err /*errno*/) const = 0;
 
         virtual FString MakeTemporaryFile(const FString& nameTemplate) const = 0;
+
+        virtual void Truncate(const FString& path, off_t size) const = 0;
     };
 
     typedef boost::shared_ptr<FileSystem> FileSystemPtr;

@@ -73,6 +73,7 @@ namespace Forte
         MOCK_METHOD3(Copy, void (const FString& from_path, const FString& to_path, const ProgressCallback &progressCallback));
         MOCK_CONST_METHOD1(StrError, FString (int err));
         MOCK_CONST_METHOD1(MakeTemporaryFile, FString(const FString&));
+        MOCK_CONST_METHOD2(Truncate, void(const FString& path, off_t size));
     };
 
     typedef boost::shared_ptr<GMockFileSystem> GMockFileSystemPtr;

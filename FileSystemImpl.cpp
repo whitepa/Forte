@@ -1281,3 +1281,13 @@ FString FileSystemImpl::MakeTemporaryFile(const FString& nameTemplate) const
 
     return FString(cName, sizeof(cName));
 }
+
+void FileSystemImpl::Truncate(const FString& path, off_t size) const
+{
+    FTRACE;
+
+    if (truncate(path.c_str(), size) == -1)
+    {
+        SystemCallUtil::ThrowErrNoException(errno);
+    }
+}
