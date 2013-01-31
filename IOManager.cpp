@@ -94,7 +94,7 @@ void IORequest::SetResult(long res)
 long IORequest::GetResult(void) const
 {
     if (!mCompleted)
-        throw EIORequestStillInProgress();
+        boost::throw_exception(EIORequestStillInProgress());
     return mResult;
 }
 
