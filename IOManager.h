@@ -66,7 +66,7 @@ namespace Forte
 
     typedef boost::shared_ptr<IORequest> IORequestPtr;
     typedef std::pair<uint64_t, IORequestPtr> IORequestPair;
-    typedef std::map<uint64_t, IORequestPtr> RequestMap;
+    typedef std::map<uint64_t, IORequestPtr> RequestMap; // @TODO C++11 unordered_map
 
     class IOManager : public Forte::Thread
     {
@@ -108,8 +108,9 @@ namespace Forte
                 }
                 else if (n < 0)
                 {
-                    hlog(HLOG_ERR, "io_getevents returns %d: %s", n, strerror(-n));
-                    usleep(200000);
+                    if (hlog_ratelimit(30))
+                        hlog(HLOG_ERR, "io_getevents returns %d: %s", n, strerror(-n));
+                    usleep(10000); // 10ms
                     continue;
                 }
                 for (int i = 0; i < n; ++i)
@@ -133,7 +134,7 @@ namespace Forte
             return req;
         }
 
-        // should be called by an IORequst
+        // should be called by an IORequest
         void SubmitRequest(const boost::shared_ptr<IORequest> &req) {
             AutoUnlockMutex lock(mLock);
             int res;
