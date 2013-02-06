@@ -44,12 +44,12 @@ namespace Forte
                 Forte::AutoUnlockMutex lock(mLock);
                 int64_t current = mValueGetter() << mPrecision;
                 mValue *= mExp;
-                mValue += current * ((1 << mPrecision) - mExp);
+                mValue += current * ((1ULL << mPrecision) - mExp);
                 mValue >>= mPrecision;
             }
             Forte::Mutex mLock;
             int64_t mValue;
-            unsigned mPrecision;
+            uint64_t mPrecision;
             int64_t mExp;
             Forte::Timespec mUpdateInterval;
             boost::function<int64_t(void)> mValueGetter;
