@@ -88,7 +88,10 @@ void IORequest::SetResult(long res)
     mCompleted = true;
     mWaitCond.Broadcast();
     if (mCallback)
+    {
         mCallback(*this);
+        mCallback = IOCompletionCallback();
+    }
 }
 
 long IORequest::GetResult(void) const

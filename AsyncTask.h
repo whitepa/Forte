@@ -85,6 +85,7 @@ namespace Forte {
                     catch (...)
                     {
                     }
+                    mCompletionCallback = AsyncTaskCompletionCallback();
                 }
             }
         }
@@ -105,6 +106,7 @@ namespace Forte {
                     catch (...)
                     {
                     }
+                    mCompletionCallback = AsyncTaskCompletionCallback();
                 }
             }
         }
@@ -177,6 +179,7 @@ namespace Forte {
                     catch (...)
                     {
                     }
+                    mCompletionCallback = AsyncTaskCompletionCallback();
                 }
             }
         }
@@ -197,6 +200,7 @@ namespace Forte {
                     catch (...)
                     {
                     }
+                    mCompletionCallback = AsyncTaskCompletionCallback();
                 }
             }
         }
