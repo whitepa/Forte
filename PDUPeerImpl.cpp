@@ -19,7 +19,40 @@ void Forte::PDUPeerImpl::EnqueuePDU(const Forte::PDUPtr& pdu)
 {
     FTRACE;
 
+    if (mQueueType == PDU_PEER_QUEUE_BLOCK)
+        mQueueSemaphore.Wait();
+
+    // Potential race condition between semaphore & mutex locks
     AutoUnlockMutex lock(mListLock);
+
+    if (mQueueType != PDU_PEER_QUEUE_BLOCK && mPDUList.size()+1 > mQueueMaxSize)
+    {
+        switch (mQueueType)
+        {
+        case PDU_PEER_QUEUE_CALLBACK:
+            if (mEventCallback)
+            {
+                PDUPeerEventPtr ev(new PDUPeerEvent());
+                ev->mEventType = PDUPeerSendErrorEvent;
+                ev->mPeer = GetPtr();
+                ev->mPDU = pdu;
+                mEventCallback(ev);
+            }
+            else
+            {
+                hlog_and_throw(HLOG_ERR, EPDUPeerNoEventCallback());
+            }
+            return;
+        case PDU_PEER_QUEUE_THROW:
+            hlog_and_throw(HLOG_ERR, EPDUPeerQueueFull(mQueueMaxSize));
+            return;
+        default:
+            hlog_and_throw(HLOG_ERR,
+                           EPDUPeerUnknownQueueType(mQueueType));
+            return;
+        }
+    }
+
     PDUHolderPtr pduHolder(new PDUHolder);
     pduHolder->enqueuedTime = mClock.GetTime();
     pduHolder->pdu = pdu;
@@ -82,6 +115,7 @@ void Forte::PDUPeerImpl::SendNextPDU()
 
                 AutoUnlockMutex lock(mListLock);
                 mPDUList.pop_front();
+                mQueueSemaphore.Post();
                 //hlog(HLOG_DEBUG, "PDU sent and removed from list");
             }
             catch (Exception& e)
@@ -142,6 +176,7 @@ void Forte::PDUPeerImpl::emptyList()
             mEventCallback(event);
         }
         mPDUList.pop_front();
+        mQueueSemaphore.Post();
     }
 }
 

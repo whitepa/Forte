@@ -15,6 +15,7 @@ using namespace boost;
 using namespace Forte;
 
 using ::testing::_;
+using ::testing::AtLeast;
 using ::testing::Throw;
 using ::testing::Return;
 
@@ -71,6 +72,20 @@ public:
     bool mPDUSendErrorCallbackCalled;
 };
 
+void* AsyncSendNextPDU(void *arg) {
+    PDUPeerImplPtr *peer = (PDUPeerImplPtr*)(arg);
+    int count = 0;
+    sleep(3);
+    while (count++ < 4)
+    {
+        sleep(2);
+        hlog(HLOG_DEBUG2, "Calling SendNextPDU async: %d", count);
+        (*peer)->SendNextPDU();
+        hlog(HLOG_DEBUG2, "Sent SendNextPDU async: %d", count);
+    }
+    return peer;
+}
+
 TEST_F(PDUPeerImplUnitTest, CanConstructWithMockEndpoint)
 {
     FTRACE;
@@ -79,7 +94,7 @@ TEST_F(PDUPeerImplUnitTest, CanConstructWithMockEndpoint)
     PDUPeerImpl peer(0, dispatcher, endpoint);
 }
 
-TEST_F(PDUPeerImplUnitTest, CanEnqueuPDUsAysnc)
+TEST_F(PDUPeerImplUnitTest, CanEnqueuePDUsAysnc)
 {
     FTRACE;
     GMockDispatcherPtr mockDispatcher(new GMockDispatcher());
@@ -203,4 +218,92 @@ TEST_F(PDUPeerImplUnitTest, TimesOutWhenNodeIsNotConnected)
     sleep(1);
     peer->SendNextPDU();
     EXPECT_TRUE(mPDUSendErrorCallbackCalled);
+}
+
+TEST_F(PDUPeerImplUnitTest, QueueOverflowBlock)
+{
+    FTRACE;
+    GMockDispatcherPtr mockDispatcher(new GMockDispatcher());
+    DispatcherPtr dispatcher = mockDispatcher;
+    GMockPDUPeerEndpointPtr mockEndpoint(new GMockPDUPeerEndpoint());
+    PDUPeerEndpointPtr endpoint = mockEndpoint;
+
+    // TODO: may want to verify this is the right event
+    EXPECT_CALL(*mockDispatcher, Enqueue(_)).Times(AtLeast(1));
+
+    // TODO: may want to verify this is the right pdu
+    EXPECT_CALL(*mockEndpoint, SendPDU(_))
+        .WillRepeatedly(Return());
+    EXPECT_CALL(*mockEndpoint, IsConnected())
+        .WillRepeatedly(Return(true));
+
+    int op = 1;
+    char buf[] = "the data";
+    PDUPtr pdu(new PDU(op, sizeof(buf), buf));
+    PDUPeerImplPtr peer(new PDUPeerImpl(0, dispatcher, endpoint, 1, 2,
+                                        PDU_PEER_QUEUE_BLOCK));
+
+    // Create thread to async send pdus and free up queue space
+    // This test will block indefinitely if it fails.
+    pthread_t sendThread;
+    int res = pthread_create(&sendThread, NULL, &AsyncSendNextPDU, &peer);
+    EXPECT_EQ(0, res);
+
+    int count = 0;
+    while (count++ < 6)
+    {
+        hlog(HLOG_DEBUG2, "Block queueing: %d", count);
+        peer->EnqueuePDU(pdu);
+        hlog(HLOG_DEBUG2, "Block queued: %d", count);
+    }
+    EXPECT_EQ(0, pthread_join(sendThread, NULL));
+}
+
+TEST_F(PDUPeerImplUnitTest, QueueOverflowCallback)
+{
+    FTRACE;
+    GMockDispatcherPtr mockDispatcher(new GMockDispatcher());
+    DispatcherPtr dispatcher = mockDispatcher;
+    PDUPeerEndpointPtr endpoint(new GMockPDUPeerEndpoint());
+
+    // TODO: may want to verify this is the right event
+    EXPECT_CALL(*mockDispatcher, Enqueue(_)).Times(AtLeast(1));
+
+    int op = 1;
+    char buf[] = "the data";
+    PDUPtr pdu(new PDU(op, sizeof(buf), buf));
+    PDUPeerImplPtr peer(new PDUPeerImpl(0, dispatcher, endpoint, 1, 2,
+                                        PDU_PEER_QUEUE_CALLBACK));
+    peer->SetEventCallback(
+        boost::bind(&PDUPeerImplUnitTest::EventCallback, this, _1));
+
+    int count = 0;
+    while (count++ < 3)
+    {
+        EXPECT_FALSE(mPDUSendErrorCallbackCalled);
+        peer->EnqueuePDU(pdu);
+    }
+    EXPECT_TRUE(mPDUSendErrorCallbackCalled);
+}
+
+TEST_F(PDUPeerImplUnitTest, QueueOverflowThrow)
+{
+    FTRACE;
+    GMockDispatcherPtr mockDispatcher(new GMockDispatcher());
+    DispatcherPtr dispatcher = mockDispatcher;
+    PDUPeerEndpointPtr endpoint(new GMockPDUPeerEndpoint());
+
+    // TODO: may want to verify this is the right event
+    EXPECT_CALL(*mockDispatcher, Enqueue(_)).Times(AtLeast(1));
+
+
+    int op = 1;
+    char buf[] = "the data";
+    PDUPtr pdu(new PDU(op, sizeof(buf), buf));
+    PDUPeerImplPtr peer(new PDUPeerImpl(0, dispatcher, endpoint, 1, 2,
+                                        PDU_PEER_QUEUE_THROW));
+    int count = 0;
+    while (count++ < 2)
+        peer->EnqueuePDU(pdu);
+    ASSERT_THROW(peer->EnqueuePDU(pdu), EPDUPeerQueueFull);
 }

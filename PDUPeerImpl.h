@@ -7,8 +7,15 @@
 #include "PDUPeer.h"
 #include "PDUPeerTypes.h"
 #include "Clock.h"
+#include "Semaphore.h"
 
-EXCEPTION_CLASS(EPDUSendError);
+EXCEPTION_SUBCLASS(EPDUPeer, EPDUPeerSendError);
+EXCEPTION_SUBCLASS2(EPDUPeer, EPDUPeerNoEventCallback,
+                    "Expected PDU Peer event callback function is not set");
+EXCEPTION_PARAM_SUBCLASS(EPDUPeer, EPDUPeerQueueFull,
+                         "PDU Peer send queue is full (%s)", (unsigned short));
+EXCEPTION_PARAM_SUBCLASS(EPDUPeer, EPDUPeerUnknownQueueType,
+                         "Unknown queue type: %s", (unsigned short));
 
 namespace Forte
 {
@@ -20,17 +27,28 @@ namespace Forte
     };
     typedef boost::shared_ptr<PDUHolder> PDUHolderPtr;
 
+    typedef enum {
+        PDU_PEER_QUEUE_THROW,
+        PDU_PEER_QUEUE_BLOCK,
+        PDU_PEER_QUEUE_CALLBACK
+    } PDUPeerQueueType;
+
     class PDUPeerImpl : public PDUPeer
     {
     public:
         PDUPeerImpl(uint64_t connectingPeerID,
                     DispatcherPtr dispatcher,
                     PDUPeerEndpointPtr endpoint,
-                    long pduPeerSendTimeout = 30)
+                    long pduPeerSendTimeout = 30,
+                    unsigned short queueSize = 1024,
+                    PDUPeerQueueType queueType = PDU_PEER_QUEUE_THROW)
             : mConnectingPeerID(connectingPeerID),
               mWorkDispatcher(dispatcher),
               mEndpoint(endpoint),
               mPDUPeerSendTimeout(pduPeerSendTimeout),
+              mQueueMaxSize(queueSize),
+              mQueueType(queueType),
+              mQueueSemaphore(mQueueMaxSize),
               mPDUReadyToSendEventPending(false)
             {
                 FTRACE;
@@ -110,6 +128,11 @@ namespace Forte
         std::list<PDUHolderPtr> mPDUList;
         MonotonicClock mClock;
         long mPDUPeerSendTimeout;
+
+        // limit size of queue
+        unsigned short mQueueMaxSize;
+        PDUPeerQueueType mQueueType;
+        Semaphore mQueueSemaphore;
 
         // there is currently a design issue for which this enables a
         // hokey solution. the design is that enqueueing an event will
