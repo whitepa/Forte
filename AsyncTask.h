@@ -76,15 +76,15 @@ namespace Forte {
                 mResult = res;
                 mCompleted = true;
                 mWaitCond.Broadcast();
-            }
-            if (mCompletionCallback)
-            {
-                try
+                if (mCompletionCallback)
                 {
-                    mCompletionCallback(*this);
-                }
-                catch (...)
-                {
+                    try
+                    {
+                        mCompletionCallback(*this);
+                    }
+                    catch (...)
+                    {
+                    }
                 }
             }
         }
@@ -96,15 +96,15 @@ namespace Forte {
                 mException = e;
                 mCompleted = true;
                 mWaitCond.Broadcast();
-            }
-            if (mCompletionCallback)
-            {
-                try
+                if (mCompletionCallback)
                 {
-                    mCompletionCallback(*this);
-                }
-                catch (...)
-                {
+                    try
+                    {
+                        mCompletionCallback(*this);
+                    }
+                    catch (...)
+                    {
+                    }
                 }
             }
         }
@@ -168,15 +168,15 @@ namespace Forte {
                 AutoUnlockMutex lock(mWaitLock);
                 mCompleted = true;
                 mWaitCond.Broadcast();
-            }
-            if (mCompletionCallback)
-            {
-                try
+                if (mCompletionCallback)
                 {
-                    mCompletionCallback(*this);
-                }
-                catch (...)
-                {
+                    try
+                    {
+                        mCompletionCallback(*this);
+                    }
+                    catch (...)
+                    {
+                    }
                 }
             }
         }
@@ -188,15 +188,15 @@ namespace Forte {
                 mException = e;
                 mCompleted = true;
                 mWaitCond.Broadcast();
-            }
-            if (mCompletionCallback)
-            {
-                try
+                if (mCompletionCallback)
                 {
-                    mCompletionCallback(*this);
-                }
-                catch (...)
-                {
+                    try
+                    {
+                        mCompletionCallback(*this);
+                    }
+                    catch (...)
+                    {
+                    }
                 }
             }
         }
