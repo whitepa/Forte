@@ -10,14 +10,12 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
 
-using namespace boost;
-
 namespace Forte
 {
     EXCEPTION_CLASS(ERunLoop);
     EXCEPTION_SUBCLASS2(ERunLoop, ERunLoopTimerInvalid, "Invalid Timer");
-    
-    class RunLoop : public Thread
+
+    class RunLoop : public Forte::Thread
     {
     public:
 
@@ -28,12 +26,12 @@ namespace Forte
         RunLoop(const FString &name);
         virtual ~RunLoop();
 
-        /** 
+        /**
          * AddTimer() allows the addition of Timer objects to the RunLoop.
-         * 
+         *
          * @param timer
          */
-        void AddTimer(const shared_ptr<Timer> &timer);
+        void AddTimer(const boost::shared_ptr<Timer> &timer);
 
         /**
          * IsEmpty() checks to see if there is anything scheduled to run
@@ -49,12 +47,12 @@ namespace Forte
         class RunLoopScheduleItem
         {
         public:
-            RunLoopScheduleItem(const shared_ptr<Timer> &timer,
-                                const Timespec &absolute) :
+            RunLoopScheduleItem(const boost::shared_ptr<Timer> &timer,
+                                const Forte::Timespec &absolute) :
                 mTimer(timer), mAbsolute(absolute) {
                 mScheduledTime = Forte::MonotonicClock().GetTime();
             }
-            bool operator < (const RunLoopScheduleItem &other) const { 
+            bool operator < (const RunLoopScheduleItem &other) const {
                 return mAbsolute < other.mAbsolute;
             }
 
@@ -62,7 +60,7 @@ namespace Forte
             {
                 try
                 {
-                    shared_ptr<Timer> timer(GetTimer());
+                    boost::shared_ptr<Timer> timer(GetTimer());
                     if (timer)
                         return timer->GetName();
                 }
@@ -73,10 +71,10 @@ namespace Forte
                 return "<timer object invalid>";
             }
 
-            shared_ptr<Timer>GetTimer(void) const { return mTimer.lock(); }
+            boost::shared_ptr<Timer>GetTimer(void) const { return mTimer.lock(); }
             const Timespec & GetAbsolute(void) const { return mAbsolute; }
             const Timespec & GetScheduledTime(void) const { return mScheduledTime; }
-            weak_ptr<Timer> mTimer;
+            boost::weak_ptr<Timer> mTimer;
             Timespec mAbsolute;
             Timespec mScheduledTime;
         };
@@ -85,4 +83,3 @@ namespace Forte
 };
 
 #endif
-

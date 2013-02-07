@@ -10,8 +10,6 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 
-using namespace boost;
-
 namespace Forte
 {
     EXCEPTION_CLASS(ETimer);
@@ -26,23 +24,23 @@ namespace Forte
     public:
         typedef boost::function<void(void)> Callback;
 
-        /** 
+        /**
          * Create a Timer object, which will call the callback method
          * on the target object at the given time.
-         * 
+         *
          * @param runloop The RunLoop this timer should utilize.
-         * @param target 
-         * @param callback 
+         * @param target
+         * @param callback
          * @param interval
-         * @param repeat 
-         * 
-         * @return 
+         * @param repeat
+         *
+         * @return
          */
         Timer(const Forte::FString& name,
-              shared_ptr<RunLoop> runloop,
-              shared_ptr<Object> target,
-              Callback callback,
-              Timespec interval,
+              const boost::shared_ptr<RunLoop> &runloop,
+              const boost::shared_ptr<Object> &target,
+              const Callback &callback,
+              const Forte::Timespec &interval,
               bool repeats = false);
 
         virtual ~Timer();
@@ -50,7 +48,7 @@ namespace Forte
         Timespec GetInterval(void) { return mInterval; }
 
         bool Repeats(void) { return mRepeats; }
-        
+
         void Fire(void) { mCallback(); }
 
         const Forte::FString& GetName()
@@ -66,10 +64,10 @@ namespace Forte
          * pending, and prevents bugs where a pending timer never
          * fires.
          */
-        shared_ptr<RunLoop> mRunLoop;
-        shared_ptr<Object> mTarget;
+        boost::shared_ptr<RunLoop> mRunLoop;
+        boost::shared_ptr<Object> mTarget;
         Callback mCallback;
-        Timespec mInterval;
+        Forte::Timespec mInterval;
         bool mRepeats;
     };
 }

@@ -2,6 +2,8 @@
 #include "LogManager.h"
 #include "FTrace.h"
 
+using namespace boost;
+
 Forte::RunLoop::RunLoop(const Forte::FString &name) :
         mName(name)
 {

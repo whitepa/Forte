@@ -15,7 +15,7 @@
 #include <set>
 #include "Timer.h"
 
-#define UPDATE_DELAY 250 // each object will be updated every 250ms 
+#define UPDATE_DELAY 250 // each object will be updated every 250ms
 
 #define EDA_VALUE 0
 #define EDA_RATE  1
@@ -37,18 +37,18 @@ namespace Forte
 
         int mMode;
         int mDampingTime;
-        Timespec mLastUpdate;
+        Forte::Timespec mLastUpdate;
         float mLastAvg;
         float mLastRate;
         float mInput;
         float mLastInput;
         bool mResetInputUponUpdate;
-        Mutex mLock;
+        Forte::Mutex mLock;
     };
 
     class ExpDecayingAvg : public Object {
     public:
-        /** 
+        /**
          * ExpDecayingAvg computes a decaying average of a particular
          * value, or the decaying average of a rate at which a value
          * is changing.
@@ -56,20 +56,20 @@ namespace Forte
          * MODES:
          *  EDA_VALUE - Decaying Average of the value should be computed.
          *  EDA_RATE  - Average rate of change of the value should be computed.
-         * 
-         * @param context 
+         *
+         * @param context
          * @param mode which mode to operate in
-         * @param dampingTime 
-         * 
-         * @return 
+         * @param dampingTime
+         *
+         * @return
          */
         ExpDecayingAvg(const boost::shared_ptr<Forte::RunLoop> &rl,
                        int mode, int dampingTime);
         virtual ~ExpDecayingAvg();
-    
+
         // reset the average to zero
         void Reset(void) { mDataPtr->Reset(); }
-    
+
         // set the current input value (will remain set until Reset() or increment())
         float Set(float input) { return mDataPtr->Set(input); }
         // increment the current input value (will be reset when avg is updated)
@@ -81,12 +81,12 @@ namespace Forte
     protected:
         // update the average using the current input value
         void update(void);
-        
-        shared_ptr<Forte::RunLoop> mRunLoopPtr;
+
+        boost::shared_ptr<Forte::RunLoop> mRunLoopPtr;
         int mMode;
         int mDampingTime;
-        shared_ptr<ExpDecayingAvgData> mDataPtr;
-        shared_ptr<Timer> mTimerPtr;
+        boost::shared_ptr<ExpDecayingAvgData> mDataPtr;
+        boost::shared_ptr<Forte::Timer> mTimerPtr;
     };
 
 };

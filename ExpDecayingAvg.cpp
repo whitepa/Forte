@@ -6,6 +6,7 @@
 #include <boost/bind.hpp>
 
 using namespace Forte;
+using namespace boost;
 
 ExpDecayingAvg::ExpDecayingAvg(const boost::shared_ptr<Forte::RunLoop> &rl,
                                int mode, int dampingTime) :
@@ -26,8 +27,8 @@ ExpDecayingAvg::~ExpDecayingAvg()
 
 ExpDecayingAvgData::ExpDecayingAvgData(int mode, int dampingTime) :
     mMode(mode),
-    mDampingTime(dampingTime) 
-{ 
+    mDampingTime(dampingTime)
+{
     FTRACE;
     Reset();
 }

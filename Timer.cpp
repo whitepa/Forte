@@ -7,10 +7,10 @@ using namespace Forte;
 using namespace boost;
 
 Timer::Timer(const Forte::FString& name,
-             shared_ptr<RunLoop> runloop,
-             shared_ptr<Object> target,
-             Callback callback,
-             Timespec interval,
+             const boost::shared_ptr<RunLoop> &runloop,
+             const boost::shared_ptr<Object> &target,
+             const Callback &callback,
+             const Timespec &interval,
              bool repeats) :
     mName(name),
     mRunLoop(runloop),
