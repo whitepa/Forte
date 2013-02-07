@@ -8,20 +8,17 @@ using namespace boost;
 
 Timer::Timer(const Forte::FString& name,
              const boost::shared_ptr<RunLoop> &runloop,
-             const boost::shared_ptr<Object> &target,
              const Callback &callback,
              const Timespec &interval,
              bool repeats) :
     mName(name),
     mRunLoop(runloop),
-    mTarget(target),
     mCallback(callback),
     mInterval(interval),
     mRepeats(repeats)
 {
     FTRACE;
     if (!runloop) throw ETimerRunLoopInvalid();
-    if (!target) throw ETimerTargetInvalid();
 }
 
 Timer::~Timer()

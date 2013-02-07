@@ -14,7 +14,6 @@ namespace Forte
 {
     EXCEPTION_CLASS(ETimer);
     EXCEPTION_SUBCLASS2(ETimer, ETimerRunLoopInvalid, "Invalid RunLoop");
-    EXCEPTION_SUBCLASS2(ETimer, ETimerTargetInvalid, "Invalid Target Object");
     EXCEPTION_SUBCLASS2(ETimer, ETimerIntervalInvalid, "Invalid Timer Interval");
 
     class RunLoop;
@@ -26,10 +25,9 @@ namespace Forte
 
         /**
          * Create a Timer object, which will call the callback method
-         * on the target object at the given time.
+         * at the given time.
          *
          * @param runloop The RunLoop this timer should utilize.
-         * @param target
          * @param callback
          * @param interval
          * @param repeat
@@ -38,7 +36,6 @@ namespace Forte
          */
         Timer(const Forte::FString& name,
               const boost::shared_ptr<RunLoop> &runloop,
-              const boost::shared_ptr<Object> &target,
               const Callback &callback,
               const Forte::Timespec &interval,
               bool repeats = false);
@@ -65,7 +62,6 @@ namespace Forte
          * fires.
          */
         boost::shared_ptr<RunLoop> mRunLoop;
-        boost::shared_ptr<Object> mTarget;
         Callback mCallback;
         Forte::Timespec mInterval;
         bool mRepeats;
