@@ -114,9 +114,6 @@ namespace Forte
         virtual FString StrError(int err /*errno*/) const;
 
         virtual FString MakeTemporaryFile(const FString& nameTemplate) const;
-
-        virtual void Truncate(const FString& path, off_t size) const;
-
     protected:
         // helpers
 
