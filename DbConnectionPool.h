@@ -41,7 +41,6 @@ namespace Forte
 
     protected:
         DbConnectionPool() {};
-        static auto_ptr<DbConnectionPool> spInstance;
         static Mutex sSingletonMutex;
 
         FString mDbType;
