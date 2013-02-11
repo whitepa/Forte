@@ -1,4 +1,5 @@
-
+// #SCQAD TEST: ONBOX: FileSystemImplOnBoxTest
+// #SCQAD TESTTAG: smoketest, forte
 #include <gtest/gtest.h>
 #include "LogManager.h"
 #include "FileSystemImpl.h"
@@ -9,7 +10,7 @@ using namespace Forte;
 
 LogManager logManager;
 
-class FileSystemImplUnitTest : public ::testing::Test
+class FileSystemImplOnBoxTest : public ::testing::Test
 {
 protected:
     static void SetUpTestCase() {
@@ -18,7 +19,7 @@ protected:
         hlog(HLOG_DEBUG, "Starting test...");
     }
 };
-TEST_F(FileSystemImplUnitTest, StatFS)
+TEST_F(FileSystemImplOnBoxTest, StatFS)
 {
     hlog(HLOG_INFO, "StatFS");
     FileSystemImpl f;
@@ -26,7 +27,7 @@ TEST_F(FileSystemImplUnitTest, StatFS)
     f.StatFS("/", &st);
 }
 
-TEST_F(FileSystemImplUnitTest, StatFSPathDoesNotExist)
+TEST_F(FileSystemImplOnBoxTest, StatFSPathDoesNotExist)
 {
     hlog(HLOG_INFO, "StatFSPathDoesNotExist");
     FileSystemImpl f;
@@ -34,7 +35,7 @@ TEST_F(FileSystemImplUnitTest, StatFSPathDoesNotExist)
     ASSERT_THROW(f.StatFS("pathdoesnotexist", &st), EErrNoENOENT);
 }
 
-TEST_F(FileSystemImplUnitTest, ScanDirReplacement)
+TEST_F(FileSystemImplOnBoxTest, ScanDirReplacement)
 {
     hlog(HLOG_INFO, "ScanDirReplacement");
     FileSystemImpl f;
@@ -44,11 +45,11 @@ TEST_F(FileSystemImplUnitTest, ScanDirReplacement)
     ASSERT_NE(names.size(), 0);
 }
 
-TEST_F(FileSystemImplUnitTest, TouchFileAndTestTimes)
+TEST_F(FileSystemImplOnBoxTest, TouchFileAndTestTimes)
 {
     hlog(HLOG_INFO, "TouchFileAndTestTimes");
     FileSystemImpl f;
-    FString fileName = "/tmp/TouchFileAndTestTimes_unittest_file";
+    FString fileName = "/tmp/TouchFileAndTestTimes_onboxtest_file";
 
     struct stat st;
     long long int currTime = (int64_t)time(0);
@@ -67,13 +68,13 @@ TEST_F(FileSystemImplUnitTest, TouchFileAndTestTimes)
     }
 }
 
-TEST_F(FileSystemImplUnitTest, TestFileCopy)
+TEST_F(FileSystemImplOnBoxTest, TestFileCopy)
 {
     hlog(HLOG_INFO, "TestFileCopy");
     FileSystemImpl f;
 
-    FString fileName1 = "/tmp/TestFileCopy_unittest_file1";
-    FString fileName2 = "/tmp/TestFileCopy_unittest_file2";
+    FString fileName1 = "/tmp/TestFileCopy_onboxtest_file1";
+    FString fileName2 = "/tmp/TestFileCopy_onboxtest_file2";
 
     FString contents1 = "contents1\n";
 
@@ -92,13 +93,13 @@ TEST_F(FileSystemImplUnitTest, TestFileCopy)
 
 }
 
-TEST_F(FileSystemImplUnitTest, TestFileAppend)
+TEST_F(FileSystemImplOnBoxTest, TestFileAppend)
 {
     hlog(HLOG_INFO, "TestFileAppend");
 
     FileSystemImpl f;
-    FString fileName1 = "/tmp/TestFileConcatonation_unittest_file1";
-    FString fileName2 = "/tmp/TestFileConcatonation_unittest_file2";
+    FString fileName1 = "/tmp/TestFileConcatonation_onboxtest_file1";
+    FString fileName2 = "/tmp/TestFileConcatonation_onboxtest_file2";
 
     FString contents1 = "contents1\nsecondline(contents1)\n";
     FString contents2 = "contents2\nsecondline(contents2)\n";
@@ -117,7 +118,7 @@ TEST_F(FileSystemImplUnitTest, TestFileAppend)
 }
 
 
-TEST_F(FileSystemImplUnitTest, DirName)
+TEST_F(FileSystemImplOnBoxTest, DirName)
 {
     hlog(HLOG_INFO, "DireName");
 
@@ -130,7 +131,7 @@ TEST_F(FileSystemImplUnitTest, DirName)
     ASSERT_STREQ(".", f.Dirname(file2));
 }
 
-TEST_F(FileSystemImplUnitTest, Basename)
+TEST_F(FileSystemImplOnBoxTest, Basename)
 {
     hlog(HLOG_INFO, "Basename");
 
@@ -145,7 +146,7 @@ TEST_F(FileSystemImplUnitTest, Basename)
     ASSERT_STREQ("test", f.Basename(file2, ".tmp"));
 }
 
-TEST_F(FileSystemImplUnitTest, MakeTemporaryFile)
+TEST_F(FileSystemImplOnBoxTest, MakeTemporaryFile)
 {
     hlog(HLOG_INFO, "MakeTemporaryFile");
 
@@ -162,7 +163,7 @@ TEST_F(FileSystemImplUnitTest, MakeTemporaryFile)
     f.Unlink(tmpFile);
 }
 
-TEST_F(FileSystemImplUnitTest, GetChildren_NoRecurse_NoPath_NoDirNames)
+TEST_F(FileSystemImplOnBoxTest, GetChildren_NoRecurse_NoPath_NoDirNames)
 {
     FileSystemImpl f;
 
@@ -185,7 +186,7 @@ TEST_F(FileSystemImplUnitTest, GetChildren_NoRecurse_NoPath_NoDirNames)
     EXPECT_TRUE(find(children.begin(), children.end(), "file1") != end);
 }
 
-TEST_F(FileSystemImplUnitTest, GetChildren_NoRecurse_YesPath_NoDirNames)
+TEST_F(FileSystemImplOnBoxTest, GetChildren_NoRecurse_YesPath_NoDirNames)
 {
     FileSystemImpl f;
 
@@ -208,7 +209,7 @@ TEST_F(FileSystemImplUnitTest, GetChildren_NoRecurse_YesPath_NoDirNames)
     EXPECT_TRUE(find(children.begin(), children.end(), "/tmp/root/file1") != end);
 }
 
-TEST_F(FileSystemImplUnitTest, GetChildren_YesRecurse_NoPath_NoDirNames)
+TEST_F(FileSystemImplOnBoxTest, GetChildren_YesRecurse_NoPath_NoDirNames)
 {
     FileSystemImpl f;
 
@@ -232,7 +233,7 @@ TEST_F(FileSystemImplUnitTest, GetChildren_YesRecurse_NoPath_NoDirNames)
     EXPECT_TRUE(find(children.begin(), children.end(), "file2") != end);
 }
 
-TEST_F(FileSystemImplUnitTest, GetChildren_YesRecurse_YesPath_NoDirNames)
+TEST_F(FileSystemImplOnBoxTest, GetChildren_YesRecurse_YesPath_NoDirNames)
 {
     FileSystemImpl f;
 
@@ -261,7 +262,7 @@ TEST_F(FileSystemImplUnitTest, GetChildren_YesRecurse_YesPath_NoDirNames)
     EXPECT_TRUE(find(children.begin(), children.end(), "/tmp/root/dir0/file2") != end);
 }
 
-TEST_F(FileSystemImplUnitTest, GetChildren_NoRecurse_NoPaths_YesDirNames)
+TEST_F(FileSystemImplOnBoxTest, GetChildren_NoRecurse_NoPaths_YesDirNames)
 {
     FileSystemImpl f;
 
@@ -286,7 +287,7 @@ TEST_F(FileSystemImplUnitTest, GetChildren_NoRecurse_NoPaths_YesDirNames)
     EXPECT_TRUE(find(children.begin(), children.end(), "dir1") != end);
 }
 
-TEST_F(FileSystemImplUnitTest, GetChildren_NoRecurse_YesPaths_YesDirNames)
+TEST_F(FileSystemImplOnBoxTest, GetChildren_NoRecurse_YesPaths_YesDirNames)
 {
     FileSystemImpl f;
 
@@ -311,7 +312,7 @@ TEST_F(FileSystemImplUnitTest, GetChildren_NoRecurse_YesPaths_YesDirNames)
     EXPECT_TRUE(find(children.begin(), children.end(), "/tmp/root/dir1") != end);
 }
 
-TEST_F(FileSystemImplUnitTest, GetChildren_Recurse_NoPaths_YesDirNames)
+TEST_F(FileSystemImplOnBoxTest, GetChildren_Recurse_NoPaths_YesDirNames)
 {
     FileSystemImpl f;
 
@@ -338,7 +339,7 @@ TEST_F(FileSystemImplUnitTest, GetChildren_Recurse_NoPaths_YesDirNames)
     EXPECT_TRUE(find(children.begin(), children.end(), "dir2") != end);
 }
 
-TEST_F(FileSystemImplUnitTest, GetChildren_Recurse_YesPaths_YesDirNames)
+TEST_F(FileSystemImplOnBoxTest, GetChildren_Recurse_YesPaths_YesDirNames)
 {
     FileSystemImpl f;
 

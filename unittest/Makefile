@@ -63,7 +63,6 @@ GSRCS = AutoMutexUnitTest.cpp \
 	DbLiteConnectionUnitTest.cpp \
 	DbConnectionPoolUnitTest.cpp \
 	ExceptionUnitTest.cpp \
-	FileSystemImplUnitTest.cpp \
 	FileSystemUtilUnitTest.cpp \
 	FStringUnitTest.cpp \
 	INotifyUnitTest.cpp \
@@ -103,9 +102,6 @@ PROG_DEPS = $(FORTE_MOCK) $(FORTE)
 PROG_DEPS_OBJS_AutoMutexUnitTest =
 
 PROG_DEPS_OBJS_ContextPredicateUnitTest =
-
-PROG_DEPS_OBJS_FileSystemImplUnitTest =  \
-	../$(TARGETDIR)/FileSystemImpl.o
 
 PROG_DEPS_OBJS_FileSystemUtilUnitTest =  \
 	../$(TARGETDIR)/FileSystemUtil.o \
