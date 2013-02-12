@@ -373,3 +373,32 @@ TEST_F(FStringTest, OFormat)
     ASSERT_STREQ(FString(FStringFO(), static_cast<std::string>(format), sParams),
             FString("test 12 blah3"));
 }
+
+TEST_F(FStringTest, HexDump)
+{
+    FString binary;
+    FString expected;
+    EXPECT_EQ(expected,binary.HexDump());
+
+    char buf[32];
+    memset(buf, 0, sizeof(buf));
+
+    // One octet
+    binary.assign(buf, 1);
+    EXPECT_STREQ(FString("00 "), binary.HexDump());
+
+    // Two octets
+    binary = "AB";
+    EXPECT_STREQ(FString("41 42 "), binary.HexDump());
+
+    // 16 octets
+    binary = "abcdefghijklmnop";
+    EXPECT_STREQ(FString("61 62 63 64 65 66 67 68 69 6A 6B 6C 6D 6E 6F 70 "), binary.HexDump());
+
+    // Unsigned char needed
+    memset(buf, 0xff, sizeof(buf));
+    binary.assign(buf, 10);
+    EXPECT_STREQ(FString("FF FF FF FF FF FF FF FF FF FF "), binary.HexDump());
+
+
+}
