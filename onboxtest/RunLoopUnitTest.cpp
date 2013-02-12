@@ -53,6 +53,8 @@ TEST_F(RunLoopTest, Basic)
     EXPECT_EQ(0, target->mCount);
     usleep(1100000);
     EXPECT_EQ(1, target->mCount);
+    rl->Shutdown();
+    rl->WaitForShutdown();
 }
 
 // NOTE: this test has been backed down because the run time
@@ -84,6 +86,8 @@ TEST_F(RunLoopTest, Multi)
         EXPECT_EQ(i, target->mCount);
         usleep(1000000);
     }
+    rl->Shutdown();
+    rl->WaitForShutdown();
 }
 
 TEST_F(RunLoopTest, ScheduledInPast)
@@ -103,4 +107,6 @@ TEST_F(RunLoopTest, ScheduledInPast)
     }
     usleep(10000);
     EXPECT_EQ(5, target->mCount);
+    rl->Shutdown();
+    rl->WaitForShutdown();
 }
