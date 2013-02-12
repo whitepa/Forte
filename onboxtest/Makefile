@@ -31,6 +31,7 @@ PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
 	$(TARGETDIR)/INotifyUnitTest \
 	$(TARGETDIR)/InterProcessLockOnBoxTest \
 	$(TARGETDIR)/PDUPeerSetBuilderImplOnBoxTest \
+	$(TARGETDIR)/PDUPeerSetImplOnBoxTest \
 	$(TARGETDIR)/ProcessManagerOnBoxTest \
 	$(TARGETDIR)/RunLoopUnitTest \
 	$(TARGETDIR)/ServerMainOnboxTest
@@ -39,6 +40,22 @@ PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
 #	$(TARGETDIR)/DbMirroredConnectionUnitTest \
 # flaky or broken
 #	$(TARGETDIR)/SCSIUtilUnitTest \
+
+PROG_DEPS_OBJS_PDUPeerSetImplOnBoxTest = \
+	../$(TARGETDIR)/PDU.o \
+	../$(TARGETDIR)/PDUPeerSetBuilderImpl.o \
+	../$(TARGETDIR)/PDUPeerSetConnectionHandler.o \
+	../$(TARGETDIR)/PDUPeerEndpointFactoryImpl.o \
+	../$(TARGETDIR)/PDUPeerNetworkConnectorEndpoint.o \
+	../$(TARGETDIR)/PDUPeerNetworkAcceptorEndpoint.o \
+	../$(TARGETDIR)/PDUPeerInProcessEndpoint.o \
+	../$(TARGETDIR)/PDUPeerSetImpl.o \
+	../$(TARGETDIR)/PDUPeerImpl.o \
+	../$(TARGETDIR)/PDUPeerFileDescriptorEndpoint.o \
+	../$(TARGETDIR)/Thread.o \
+	../$(TARGETDIR)/ThreadPoolDispatcher.o \
+	../$(TARGETDIR)/OnDemandDispatcher.o \
+	../$(TARGETDIR)/ReceiverThread.o \
 
 PROG_DEPS_OBJS_PDUPeerSetBuilderImplOnBoxTest = \
 	../$(TARGETDIR)/PDU.o \

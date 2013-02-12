@@ -39,14 +39,20 @@ void Forte::PDUPeerFileDescriptorEndpoint::HandleEPollEvent(
 
     if (e.events & EPOLLIN)
     {
-        //TODO: differently
-        char recvBuffer[5000];
-        size_t bufferSize = 5000;
-        // input is ready
-        int len = recv(mFD, recvBuffer, bufferSize, 0);
-        if (len < 0)
+        char recvBuffer[2048];
+        size_t bufferSize = 2048;
+
         {
-            if (errno != EINTR)
+            int flags = MSG_PEEK | MSG_DONTWAIT;
+            int len;
+
+            while (
+                (len = recv(mFD, recvBuffer, bufferSize, flags)) == -1
+                && errno == EINTR)
+            {
+            }
+
+            if (len < 0)
             {
                 //TODO: handle these errors more specifically
                 // for now, HLOG_ERR
@@ -62,17 +68,41 @@ void Forte::PDUPeerFileDescriptorEndpoint::HandleEPollEvent(
                      SystemCallUtil::GetErrorDescription(errno).c_str());
                 //handleFileDescriptorClose(e);
             }
-        }
-        else if (len == 0)
-        {
-            hlog(HLOG_DEBUG2, "epoll_event was socket shutdown");
-            // sub classes should override for specialization of FD loss
-            handleFileDescriptorClose(e);
-        }
-        else
-        {
-            hlog(HLOG_DEBUG2, "received %d bytes on fd %d", len, mFD.Fd());
-            DataIn(len, recvBuffer);
+            else if (len == 0)
+            {
+                hlog(HLOG_DEBUG2, "epoll_event was socket shutdown");
+                // sub classes should override for specialization of FD loss
+                handleFileDescriptorClose(e);
+            }
+            else
+            {
+                while (len > 0)
+                {
+                    {
+                        AutoUnlockMutex lock(mReceiveMutex);
+                        flags = MSG_DONTWAIT;
+
+                        while (
+                            (len = recv(mFD, recvBuffer, bufferSize, 0)) == -1
+                            && errno == EINTR)
+                        {
+                        }
+
+                        hlog(HLOG_DEBUG2,
+                             "received %d bytes on fd %d", len, mFD.Fd());
+                        lockedDataIn(len, recvBuffer);
+
+                        flags = MSG_PEEK | MSG_DONTWAIT;
+                        while (
+                            (len = recv(mFD, recvBuffer, bufferSize, flags)) == -1
+                            && errno == EINTR)
+                        {
+                        }
+
+                    }
+                    callbackIfPDUReady();
+                }
+            }
         }
     }
     else if (
@@ -81,6 +111,67 @@ void Forte::PDUPeerFileDescriptorEndpoint::HandleEPollEvent(
         || e.events & EPOLLRDHUP)
     {
         handleFileDescriptorClose(e);
+    }
+}
+
+void Forte::PDUPeerFileDescriptorEndpoint::DataIn(
+    const size_t len, const char *buf)
+{
+    {
+        AutoUnlockMutex lock(mReceiveMutex);
+        lockedDataIn(len, buf);
+    }
+
+    callbackIfPDUReady();
+}
+
+void Forte::PDUPeerFileDescriptorEndpoint::lockedDataIn(
+    const size_t len, const char *buf)
+{
+    FTRACE;
+    try
+    {
+        //while (thisPDUWillOverflowBuffer())
+        while (len + mCursor >= mBufSize
+               && mBufSize + mBufStepSize > mBufMaxSize)
+        {
+            mBufferFullCondition.Wait();
+        }
+
+        while ((len + mCursor) >= mBufSize)
+        {
+            size_t newsize = mBufSize + mBufStepSize;
+
+            if (newsize > mBufMaxSize)
+                hlog_and_throw(HLOG_ERR, EPeerBufferOverflow());
+
+            char *tmpstr = new char[newsize];
+            memset (tmpstr, 0, newsize);
+            if (mBufSize)
+                memcpy(tmpstr, mPDUBuffer.get(), mBufSize);
+            mPDUBuffer.reset(tmpstr);
+            mBufSize = newsize;
+            hlog(HLOG_DEBUG,
+                 "PDU new size %llu", (unsigned long long)mBufSize);
+        }
+    }
+    catch (std::bad_alloc &e)
+    {
+        throw EPeerBufferOutOfMemory();
+    }
+    memcpy(mPDUBuffer.get() + mCursor, buf, len);
+    hlog(HLOG_DEBUG2, "received data; oldCursor=%llu newCursor=%llu",
+         (unsigned long long) mCursor, (unsigned long long) mCursor + len);
+    mCursor += len;
+}
+
+void Forte::PDUPeerFileDescriptorEndpoint::callbackIfPDUReady()
+{
+    if (mEventCallback && IsPDUReady())
+    {
+        PDUPeerEventPtr event(new PDUPeerEvent());
+        event->mEventType = PDUPeerReceivedPDUEvent;
+        mEventCallback(event);
     }
 }
 
@@ -151,64 +242,10 @@ void Forte::PDUPeerFileDescriptorEndpoint::lockedRemoveFDFromEPoll()
     }
 }
 
-void Forte::PDUPeerFileDescriptorEndpoint::DataIn(
-    const size_t len, const char *buf)
-{
-    FTRACE;
-    {
-        AutoUnlockMutex lock(mFDLock);
-        try
-        {
-            //while (thisPDUWillOverflowBuffer())
-            while (len + mCursor >= mBufSize
-                   && mBufSize + mBufStepSize > mBufMaxSize)
-            {
-                mBufferFullCondition.Wait();
-            }
-
-            while ((len + mCursor) >= mBufSize)
-            {
-                size_t newsize = mBufSize + mBufStepSize;
-
-                if (newsize > mBufMaxSize)
-                    hlog_and_throw(HLOG_ERR, EPeerBufferOverflow());
-
-                char *tmpstr = new char[newsize];
-                memset (tmpstr, 0, newsize);
-                if (mBufSize)
-                    memcpy(tmpstr, mPDUBuffer.get(), mBufSize);
-                mPDUBuffer.reset(tmpstr);
-                mBufSize = newsize;
-                hlog(HLOG_DEBUG,
-                     "PDU new size %llu", (unsigned long long)mBufSize);
-            }
-        }
-        catch (std::bad_alloc &e)
-        {
-            throw EPeerBufferOutOfMemory();
-        }
-        memcpy(mPDUBuffer.get() + mCursor, buf, len);
-        hlog(HLOG_DEBUG2, "received data; oldCursor=%llu newCursor=%llu",
-             (unsigned long long) mCursor, (unsigned long long) mCursor + len);
-        mCursor += len;
-    }
-
-    // i think there is technically a race here where you could miss a
-    // PDU if a PDU is ready before mPDUReceivedCallbackFunc is set
-    // and it is the last PDU but I can't think of a case where it
-    // matters
-    if (mEventCallback && IsPDUReady())
-    {
-        PDUPeerEventPtr event(new PDUPeerEvent());
-        event->mEventType = PDUPeerReceivedPDUEvent;
-        mEventCallback(event);
-    }
-}
-
 void Forte::PDUPeerFileDescriptorEndpoint::SendPDU(const Forte::PDU &pdu)
 {
     FTRACE;
-    AutoUnlockMutex lock(mFDLock);
+    AutoUnlockMutex lock(mSendMutex);
     size_t offset = 0;
     size_t len = sizeof(Forte::PDUHeader) + pdu.GetPayloadSize();
     hlog(HLOG_DEBUG2, "sending %zu bytes on fd %d, payloadsize = %u",
@@ -235,7 +272,7 @@ void Forte::PDUPeerFileDescriptorEndpoint::SendPDU(const Forte::PDU &pdu)
 
 bool Forte::PDUPeerFileDescriptorEndpoint::IsPDUReady(void) const
 {
-    AutoUnlockMutex lock(mFDLock);
+    AutoUnlockMutex lock(mReceiveMutex);
     return lockedIsPDUReady();
 }
 
@@ -269,7 +306,7 @@ bool Forte::PDUPeerFileDescriptorEndpoint::lockedIsPDUReady(void) const
 
 bool Forte::PDUPeerFileDescriptorEndpoint::RecvPDU(Forte::PDU &out)
 {
-    AutoUnlockMutex lock(mFDLock);
+    AutoUnlockMutex lock(mReceiveMutex);
     if (!lockedIsPDUReady())
         return false;
 

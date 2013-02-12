@@ -23,7 +23,7 @@ namespace Forte
             unsigned int bufStepSize = RECV_BUFFER_SIZE) :
             mFDLock(),
             mFD(fd),
-            mBufferFullCondition(mFDLock),
+            mBufferFullCondition(mReceiveMutex),
             mEPollFD(-1),
             mCursor(0),
             mBufSize(bufSize),
@@ -99,7 +99,13 @@ namespace Forte
         void lockedRemoveFDFromEPoll();
         void lockedAddFDToEPoll();
 
+        void lockedDataIn(const size_t len, const char *buf);
+        void callbackIfPDUReady();
+
     protected:
+        mutable Forte::Mutex mReceiveMutex;
+        mutable Forte::Mutex mSendMutex;
+
         mutable Forte::Mutex mFDLock;
         AutoFD mFD;
         mutable Forte::ThreadCondition mBufferFullCondition;
