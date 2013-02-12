@@ -31,7 +31,10 @@ namespace Forte
             PDUPeerEventCallback eventCallback = NULL,
             int minThreads = 6,
             int maxThreads = 10,
-            bool createInProcessPDUPeer = true);
+            bool createInProcessPDUPeer = true,
+            long pduPeerSendTimeout = 30,
+            unsigned short queueSize = 1024,
+            PDUPeerQueueType queueType = PDU_PEER_QUEUE_THROW);
 
         // old school style
         // Callers using this setup should also call

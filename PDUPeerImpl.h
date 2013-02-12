@@ -27,12 +27,6 @@ namespace Forte
     };
     typedef boost::shared_ptr<PDUHolder> PDUHolderPtr;
 
-    typedef enum {
-        PDU_PEER_QUEUE_THROW,
-        PDU_PEER_QUEUE_BLOCK,
-        PDU_PEER_QUEUE_CALLBACK
-    } PDUPeerQueueType;
-
     class PDUPeerImpl : public PDUPeer
     {
     public:

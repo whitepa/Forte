@@ -39,6 +39,12 @@ namespace Forte
         PDUPeerDisconnectedEvent
     };
 
+    typedef enum {
+        PDU_PEER_QUEUE_THROW,
+        PDU_PEER_QUEUE_BLOCK,
+        PDU_PEER_QUEUE_CALLBACK
+    } PDUPeerQueueType;
+
     class PDUPeerEvent
     {
     public:

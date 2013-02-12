@@ -15,11 +15,14 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
     PDUPeerEventCallback eventCallback,
     int minThreads,
     int maxThreads,
-    bool createInProcessPDUPeer) :
-    mListenAddress(listenAddress),
-    mID(SocketAddressToID(listenAddress)),
-    mPeerSocketAddresses(peers),
-    mPDUPeerEndpointFactory(new PDUPeerEndpointFactoryImpl())
+    bool createInProcessPDUPeer,
+    long pduPeerSendTimeout,
+    unsigned short queueSize,
+    PDUPeerQueueType queueType)
+    : mListenAddress(listenAddress),
+      mID(SocketAddressToID(listenAddress)),
+      mPeerSocketAddresses(peers),
+      mPDUPeerEndpointFactory(new PDUPeerEndpointFactoryImpl())
 {
     FTRACE2("%llu", (unsigned long long) mID);
 
@@ -58,7 +61,11 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
                 SocketAddressToID(a),
                 mWorkDispatcher,
                 mPDUPeerEndpointFactory->Create(
-                    listenAddress, a, mID, mWorkDispatcher)));
+                    listenAddress, a, mID, mWorkDispatcher),
+                pduPeerSendTimeout,
+                queueSize,
+                queueType
+                ));
 
         pduPeers.push_back(p);
     }
