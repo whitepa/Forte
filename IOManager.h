@@ -182,7 +182,11 @@ namespace Forte
             // Set result, triggering callbacks (from this thread)
             req->SetResult(event->res);
         }
-
+        unsigned int GetNumberOfPendingRequests(void) {
+            AutoUnlockMutex lock(mLock);
+            return mPendingRequests.size();
+        }
+    private:
         Forte::Mutex mLock;
         Forte::ThreadCondition mCompletionCond;
 
