@@ -67,8 +67,11 @@ std::ostream& Forte::operator<<(std::ostream& os, const PDU &obj)
         if (payload != NULL)
         {
             FString str;
-            str.assign((const char*)payload, payloadSize);
-            os << "Payload = |" << str.HexDump().c_str() << "|" << endl;
+            str.assign((const char*)payload,
+                       std::min(payloadSize, (unsigned int) 255));
+            os << "Payload = "
+               << "[" << payloadSize << "]" << endl
+               << "|" << str.HexDump().c_str() << "|" << endl;
         }
     }
     return os;
