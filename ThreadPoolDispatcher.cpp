@@ -306,6 +306,7 @@ void Forte::ThreadPoolDispatcher::Shutdown(void)
     // (this allows all worker threads to safely exit and unregister themselves
     //  before this destructor exits; otherwise bad shit happens when this object
     //  is dealloced and worker threads are still around trying to access data)
+    mManagerThread.Shutdown();
     mManagerThread.WaitForShutdown();
 }
 
