@@ -71,7 +71,8 @@ public:
     boost::mutex mBoostMutex;
 };
 
-TEST_F(AutoMutexOnBoxTest, IsFasterThanBoostLockGuardAt1000000Locks)
+// this seems like too small of a sample size
+TEST_F(AutoMutexOnBoxTest, DISABLED_IsEquivalentToBoostLockGuardAt1000000Locks)
 {
     FTRACE;
 
@@ -102,7 +103,7 @@ TEST_F(AutoMutexOnBoxTest, IsFasterThanBoostLockGuardAt1000000Locks)
               forteTimer.GetRunTimeRealInSeconds());
 }
 
-TEST_F(AutoMutexOnBoxTest, IsFasterThanBoostLockGuardAt100000000Locks)
+TEST_F(AutoMutexOnBoxTest, IsEquivalentToBoostLockGuardAt100000000Locks)
 {
     FTRACE;
 
@@ -127,12 +128,12 @@ TEST_F(AutoMutexOnBoxTest, IsFasterThanBoostLockGuardAt100000000Locks)
                << " boost time: " << boostTimer.GetRunTimeRealInSeconds());
 
     // these have been seen to take around 3000 seconds, giving 10%
-    // handicap to avaoid false failures
+    // handicap to avoid false failures
     ASSERT_GT(boostTimer.GetRunTimeRealInSeconds() + 300,
               forteTimer.GetRunTimeRealInSeconds());
 }
 
-TEST_F(AutoMutexOnBoxTest, IsFasterThanBoostLockGuardAt1000000000Locks)
+TEST_F(AutoMutexOnBoxTest, IsEquivalentToBoostLockGuardAt1000000000Locks)
 {
     FTRACE;
 
@@ -157,7 +158,7 @@ TEST_F(AutoMutexOnBoxTest, IsFasterThanBoostLockGuardAt1000000000Locks)
                << " boost time: " << boostTimer.GetRunTimeRealInSeconds());
 
     // these have been seen to take around 30000 seconds, giving 10%
-    // handicap to avaoid false failures
+    // handicap to avoid false failures
     ASSERT_GT(boostTimer.GetRunTimeRealInSeconds() + 3000,
               forteTimer.GetRunTimeRealInSeconds());
 }
