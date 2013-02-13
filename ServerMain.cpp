@@ -135,8 +135,6 @@ void ServerMain::initLogging()
     // if we are not running as a daemon, use the log level
     // the conf file
     FString logMask = sc.Get("logfile.level");
-    if (!logMask.empty())
-        mLogManager.SetGlobalLogMask(mLogManager.ComputeLogMaskFromString(logMask));
     if (!mDaemon)
     {
         // log to stderr if running interactively, use logmask as set
@@ -148,6 +146,8 @@ void ServerMain::initLogging()
     if (mLogFile.length() > 0)
     {
         mLogManager.BeginLogging(mLogFile);
+        if (!logMask.empty())
+            mLogManager.SetLogMask(mLogFile, mLogManager.ComputeLogMaskFromString(logMask));
     }
     else
     {
