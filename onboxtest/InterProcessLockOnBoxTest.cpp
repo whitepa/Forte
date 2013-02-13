@@ -1,3 +1,5 @@
+// #SCQAD TEST: ONBOX: IntraProcessLockOnBoxTest
+// #SCQAD TESTTAG: smoketest, forte
 #include "Clock.h"
 #include "EventQueue.h"
 #include "FileSystemImpl.h"
@@ -9,7 +11,7 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
-#include "ClusterLock.h"
+#include "InterProcessLock.h"
 
 #include <boost/make_shared.hpp>
 
@@ -22,7 +24,7 @@ class EVerifyProcLocksEntry {};
 void verifyFileHasEntryInProcLocks(const FString& theFile);
 // -----------------------------------------------------------------------------
 
-class ClusterLockTest : public ::testing::Test
+class InterProcessLockOnBoxTest : public ::testing::Test
 {
 protected:
     static void SetUpTestCase() {
@@ -32,18 +34,18 @@ protected:
 
         if (fs.FileExists("/fsscale0/lock"))
         {
-            ClusterLock::LOCK_PATH = "/fsscale0/lock";
+            InterProcessLock::LOCK_PATH = "/fsscale0/lock";
         }
         else
         {
-            ClusterLock::LOCK_PATH = "./lock";
+            InterProcessLock::LOCK_PATH = "./lock";
             fs.MakeDir("./lock");
         }
     }
 
     static void TearDownTestCase() {
 
-        if (!strcmp(ClusterLock::LOCK_PATH, "./lock"))
+        if (!strcmp(InterProcessLock::LOCK_PATH, "./lock"))
         {
             FileSystemImpl fs;
             fs.Unlink("./lock", true);
@@ -112,18 +114,18 @@ void verifyFileHasEntryInProcLocks(const FString& theFile)
 }
 // -----------------------------------------------------------------------------
 
-TEST_F(ClusterLockTest, HoldLockFor2Seconds)
+TEST_F(InterProcessLockOnBoxTest, HoldLockFor2Seconds)
 {
     FString name;
     name = "HoldLockFor2Seconds";
 
     FString theFile(FStringFC(),
                     "%s/%s",
-                    ClusterLock::LOCK_PATH,
+                    InterProcessLock::LOCK_PATH,
                     name.c_str());
 
     hlog(HLOG_INFO, "ATTEMPTING TO LOCK %s", name.c_str());
-    ClusterLock theLock(name, 5);
+    InterProcessLock theLock(name, 5);
     hlog(HLOG_INFO, "GOT LOCK %s", name.c_str());
     verifyFileHasEntryInProcLocks(theFile);
     sleep(2);
@@ -133,48 +135,48 @@ TEST_F(ClusterLockTest, HoldLockFor2Seconds)
 }
 // -----------------------------------------------------------------------------
 
-TEST_F(ClusterLockTest, AnInProcessLockTimeoutDoesNotReleaseYourLock)
+TEST_F(InterProcessLockOnBoxTest, AnInProcessLockTimeoutDoesNotReleaseYourLock)
 {
     FString name;
     name = "AnInProcessLockTimeoutDoesNotReleaseYourLock";
 
     FString theFile(FStringFC(),
                     "%s/%s",
-                    ClusterLock::LOCK_PATH,
+                    InterProcessLock::LOCK_PATH,
                     name.c_str());
 
     hlog(HLOG_INFO, "ATTEMPTING TO LOCK %s", name.c_str());
-    ClusterLock theLock(name, 5);
+    InterProcessLock theLock(name, 5);
     hlog(HLOG_INFO, "GOT LOCK %s", name.c_str());
     verifyFileHasEntryInProcLocks(theFile);
 
-    ASSERT_THROW(ClusterLock theSameLock(name, 1),
-                 EClusterLockTimeout);
+    ASSERT_THROW(InterProcessLock theSameLock(name, 1),
+                 EInterProcessLockTimeout);
 
     verifyFileHasEntryInProcLocks(theFile);
     hlog(HLOG_INFO, "RELEASING LOCK %s", name.c_str());
 }
 // -----------------------------------------------------------------------------
 
-TEST_F(ClusterLockTest, StaticMutexesAreFreed)
+TEST_F(InterProcessLockOnBoxTest, StaticMutexesAreFreed)
 {
     FString name1("StaticMutexesAreFreed1");
     FString name2("StaticMutexesAreFreed2");
-    ASSERT_EQ(0u, ClusterLock::NumLocks());
+    ASSERT_EQ(0u, InterProcessLock::NumLocks());
     {
-        ClusterLock lock1(name1, 1);
-        ASSERT_EQ(1u, ClusterLock::NumLocks());
+        InterProcessLock lock1(name1, 1);
+        ASSERT_EQ(1u, InterProcessLock::NumLocks());
         {
-            ClusterLock lock2(name2, 1);
-            ASSERT_EQ(2u, ClusterLock::NumLocks());
+            InterProcessLock lock2(name2, 1);
+            ASSERT_EQ(2u, InterProcessLock::NumLocks());
         }
-        ASSERT_EQ(1u, ClusterLock::NumLocks());
+        ASSERT_EQ(1u, InterProcessLock::NumLocks());
     }
-    ASSERT_EQ(0u, ClusterLock::NumLocks());
+    ASSERT_EQ(0u, InterProcessLock::NumLocks());
 }
 // -----------------------------------------------------------------------------
 
-TEST_F(ClusterLockTest, LockFileCouldNotOpen)
+TEST_F(InterProcessLockOnBoxTest, LockFileCouldNotOpen)
 {
     const char *dirToMake = "dirToMake";
     FString name(FStringFC(),
@@ -184,12 +186,12 @@ TEST_F(ClusterLockTest, LockFileCouldNotOpen)
 
     FString theFile(FStringFC(),
                     "%s/%s",
-                    ClusterLock::LOCK_PATH,
+                    InterProcessLock::LOCK_PATH,
                     name.c_str());
     FileSystemImpl fs;
     FString dir(FStringFC(),
                 "%s/%s",
-                ClusterLock::LOCK_PATH,
+                InterProcessLock::LOCK_PATH,
                 dirToMake);
 
     // delete the dir if it exists first
@@ -200,13 +202,13 @@ TEST_F(ClusterLockTest, LockFileCouldNotOpen)
 
     hlog(HLOG_INFO, "attempting to lock %s", name.c_str());
 
-    ASSERT_THROW(ClusterLock theLock(name, 1),
-                 EClusterLockFile);
+    ASSERT_THROW(InterProcessLock theLock(name, 1),
+                 EInterProcessLockFile);
 
     // create the dir
     fs.MakeDir(dir);
 
-    ClusterLock theSameLock(name, 1);
+    InterProcessLock theSameLock(name, 1);
 
     verifyFileHasEntryInProcLocks(theFile);
 }
@@ -239,7 +241,7 @@ public:
     void Lock(void) { FTRACE; mQueue.Add(make_shared<Event>("lock")); Notify(); }
     /**
      * Unlock() will notify this LockThread to unlock the named
-     * ClusterLock.
+     * InterProcessLock.
      */
     void Unlock(void) { FTRACE; mQueue.Add(make_shared<Event>("unlock")); Notify(); }
     /**
@@ -290,7 +292,7 @@ protected:
         return NULL;
     }
     FString mLockName;
-    ClusterLock mLock;
+    InterProcessLock mLock;
     bool mHasLock;
     EventQueue mQueue;
 
@@ -308,13 +310,13 @@ protected:
     AutoUnlockMutex mHoldLock;
 };
 
-TEST_F(ClusterLockTest, MultiThreaded)
+TEST_F(InterProcessLockOnBoxTest, MultiThreaded)
 {
     FString name("MultiThreaded");
     LockThread t1(name), t2(name);
     ASSERT_EQ(false, t1.HasLock());
     ASSERT_EQ(false, t2.HasLock());
-    ASSERT_EQ(0u, ClusterLock::NumLocks());
+    ASSERT_EQ(0u, InterProcessLock::NumLocks());
     t1.Lock();
     ASSERT_NO_THROW(t1.Wait());
     t2.Lock();
@@ -323,27 +325,27 @@ TEST_F(ClusterLockTest, MultiThreaded)
     usleep(100000);
     ASSERT_EQ(true, t1.HasLock());
     ASSERT_EQ(false, t2.HasLock());
-    ASSERT_EQ(1u, ClusterLock::NumLocks());
+    ASSERT_EQ(1u, InterProcessLock::NumLocks());
     t1.Unlock();
     ASSERT_NO_THROW(t1.Wait());
     ASSERT_NO_THROW(t2.Wait());
     ASSERT_EQ(false, t1.HasLock());
     ASSERT_EQ(true, t2.HasLock());
-    ASSERT_EQ(1u, ClusterLock::NumLocks());
+    ASSERT_EQ(1u, InterProcessLock::NumLocks());
     t1.Lock();
     usleep(100000);
     ASSERT_EQ(false, t1.HasLock());
     ASSERT_EQ(true, t2.HasLock());
-    ASSERT_EQ(1u, ClusterLock::NumLocks());
+    ASSERT_EQ(1u, InterProcessLock::NumLocks());
     t2.Unlock();
     ASSERT_NO_THROW(t2.Wait());
     ASSERT_NO_THROW(t1.Wait());
     ASSERT_EQ(true, t1.HasLock());
     ASSERT_EQ(false, t2.HasLock());
-    ASSERT_EQ(1u, ClusterLock::NumLocks());
+    ASSERT_EQ(1u, InterProcessLock::NumLocks());
     t1.Unlock();
     ASSERT_NO_THROW(t1.Wait());
     ASSERT_EQ(false, t1.HasLock());
     ASSERT_EQ(false, t2.HasLock());
-    ASSERT_EQ(0u, ClusterLock::NumLocks());
+    ASSERT_EQ(0u, InterProcessLock::NumLocks());
 };

@@ -1,5 +1,5 @@
-// ClusterLock.cpp
-#include "ClusterLock.h"
+// InterProcessLock.cpp
+#include "InterProcessLock.h"
 #include "FTrace.h"
 #include "SystemCallUtil.h"
 #include <sys/syscall.h>
@@ -9,10 +9,10 @@
 #include <boost/make_shared.hpp>
 
 // constants
-const char* Forte::ClusterLock::LOCK_PATH = "/var/lock";
-const unsigned Forte::ClusterLock::DEFAULT_TIMEOUT = 120;
-const int Forte::ClusterLock::TIMER_SIGNAL = SIGRTMIN + 10;
-const char* Forte::ClusterLock::VALID_LOCK_CHARS =
+const char* Forte::InterProcessLock::LOCK_PATH = "/var/lock";
+const unsigned Forte::InterProcessLock::DEFAULT_TIMEOUT = 120;
+const int Forte::InterProcessLock::TIMER_SIGNAL = SIGRTMIN + 10;
+const char* Forte::InterProcessLock::VALID_LOCK_CHARS =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
     "0123456789"
@@ -20,16 +20,16 @@ const char* Forte::ClusterLock::VALID_LOCK_CHARS =
 
 
 // statics
-Forte::Mutex Forte::ClusterLock::sMutex;
-std::map<Forte::FString, boost::shared_ptr<Forte::Mutex> > Forte::ClusterLock::sMutexMap;
-bool Forte::ClusterLock::sSigactionInitialized = false;
+Forte::Mutex Forte::InterProcessLock::sMutex;
+std::map<Forte::FString, boost::shared_ptr<Forte::Mutex> > Forte::InterProcessLock::sMutexMap;
+bool Forte::InterProcessLock::sSigactionInitialized = false;
 
 using namespace Forte;
 using namespace boost;
 // -----------------------------------------------------------------------------
 
 // ctor/dtor
-ClusterLock::ClusterLock(const FString& name, unsigned timeout)
+InterProcessLock::InterProcessLock(const FString& name, unsigned timeout)
     : mName(name)
     , mFD(-1)
     , mTimer()
@@ -38,7 +38,7 @@ ClusterLock::ClusterLock(const FString& name, unsigned timeout)
     Lock(name, timeout);
 }
 
-ClusterLock::ClusterLock(const FString& name, unsigned timeout,
+InterProcessLock::InterProcessLock(const FString& name, unsigned timeout,
                          const Forte::FString& errorString)
     : mName(name)
     , mFD(-1)
@@ -49,7 +49,7 @@ ClusterLock::ClusterLock(const FString& name, unsigned timeout,
 }
 
 
-ClusterLock::ClusterLock()
+InterProcessLock::InterProcessLock()
     : mFD(-1)
     , mTimer()
 {
@@ -57,19 +57,19 @@ ClusterLock::ClusterLock()
 }
 
 
-ClusterLock::~ClusterLock()
+InterProcessLock::~InterProcessLock()
 {
     Unlock();
 }
 
 
 // helpers
-void ClusterLock::sig_action(int sig, siginfo_t *info, void *context)
+void InterProcessLock::sig_action(int sig, siginfo_t *info, void *context)
 {
     // cout << pthread_self() << "  caught signal " << sig << endl;
 }
 
-void ClusterLock::init()
+void InterProcessLock::init()
 {
     struct sigaction sa;
     sigevent_t se;
@@ -87,7 +87,7 @@ void ClusterLock::init()
             // init sigaction (once per process)
             memset(&sa, 0, sizeof(sa));
             sigemptyset(&sa.sa_mask);
-            sa.sa_sigaction = &ClusterLock::sig_action;
+            sa.sa_sigaction = &InterProcessLock::sig_action;
             sa.sa_flags = SA_SIGINFO;
             sigaction(TIMER_SIGNAL, &sa, NULL);
             sSigactionInitialized = true;
@@ -108,13 +108,13 @@ void ClusterLock::init()
     catch (EPosixTimerInit& e)
     {
         // translate error to what we are expected to throw
-        throw EClusterLockUnvailable(FStringFC(),
+        throw EInterProcessLockUnvailable(FStringFC(),
                                      "LOCK_TIMER_FAIL|||%s",
                                      e.what());
     }
 }
 
-void ClusterLock::checkAndClearFromMutexMap(const Forte::FString& name)
+void InterProcessLock::checkAndClearFromMutexMap(const Forte::FString& name)
 {
     AutoUnlockMutex lock(sMutex);
     std::map<FString, shared_ptr<Mutex> >::const_iterator i =
@@ -142,7 +142,7 @@ void ClusterLock::checkAndClearFromMutexMap(const Forte::FString& name)
 }
 
 // lock/unlock
-void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& errorString)
+void InterProcessLock::Lock(const FString& name, unsigned timeout, const FString& errorString)
 {
     FTRACE2("name='%s' timeout=%u", name.c_str(), timeout);
 
@@ -154,12 +154,12 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
     // validate name
     if (name.find_first_not_of(VALID_LOCK_CHARS) != NOPOS)
     {
-        throw EClusterLock("LOCK_INVALID_NAME|||" + name);
+        throw EInterProcessLock("LOCK_INVALID_NAME|||" + name);
     }
 
     if (name.empty())
     {
-        throw EClusterLock("LOCK_INVALID_NAME");
+        throw EInterProcessLock("LOCK_INVALID_NAME");
     }
 
     // prepend default path?
@@ -168,7 +168,7 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
     // changing lock names?
     if (filename != mName && (!mName.empty()))
     {
-        hlog(HLOG_INFO, "ClusterLock - reusing lock with a different name");
+        hlog(HLOG_INFO, "InterProcessLock - reusing lock with a different name");
         Unlock();
     }
     mName = filename;
@@ -212,7 +212,7 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
                 mMutex.reset();
                 checkAndClearFromMutexMap(mName);
 
-                throw EClusterLockFile(
+                throw EInterProcessLockFile(
                     errorString.empty() ? "LOCK_FAIL|||" + mName
                     + "|||" + errStr.c_str() :
                     errorString);
@@ -264,22 +264,22 @@ void ClusterLock::Lock(const FString& name, unsigned timeout, const FString& err
         if (timed_out)
         {
             if (!errorString.empty())
-                throw EClusterLockTimeout(errorString);
+                throw EInterProcessLockTimeout(errorString);
             else
-                throw EClusterLockTimeout("LOCK_TIMEOUT|||" + mName);
+                throw EInterProcessLockTimeout("LOCK_TIMEOUT|||" + mName);
         }
         else
         {
             if (!errorString.empty())
-                throw EClusterLock(errorString);
+                throw EInterProcessLock(errorString);
             else
-                throw EClusterLock("LOCK_FAIL|||" + mName);
+                throw EInterProcessLock("LOCK_FAIL|||" + mName);
         }
     }
 }
 
 
-void ClusterLock::Unlock()
+void InterProcessLock::Unlock()
 {
     FTRACE2("name='%s'", mName.c_str());
 

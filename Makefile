@@ -43,7 +43,6 @@ SRCS =	\
 	ActiveObjectThread.cpp \
 	Base64.cpp \
 	AdvisoryLock.cpp \
-	ClusterLock.cpp \
 	CheckedValue.cpp \
 	CheckedValueStore.cpp \
 	Clock.cpp \
@@ -71,6 +70,7 @@ SRCS =	\
 	GUIDGenerator.cpp \
 	INotify.cpp \
 	IOManager.cpp \
+	InterProcessLock.cpp \
 	LogManager.cpp \
 	LogTimer.cpp \
 	MD5.cpp \

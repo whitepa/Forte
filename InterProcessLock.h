@@ -1,38 +1,36 @@
-#ifndef __forte__cluster_lock_h
-#define __forte__cluster_lock_h
+#ifndef __forte__InterProcessLock_h
+#define __forte__InterProcessLock_h
 
 #include "Types.h"
-#include "AutoMutex.h"
 #include "AdvisoryLock.h"
 #include "AutoFD.h"
 #include "FileSystemImpl.h"
 #include "PosixTimer.h"
-#include "ThreadKey.h"
 #include <csignal>
 #include <ctime>
 #include "boost/shared_ptr.hpp"
 
 namespace Forte{
 
-    EXCEPTION_CLASS(EClusterLock);
+    EXCEPTION_CLASS(EInterProcessLock);
 
-    EXCEPTION_SUBCLASS(EClusterLock,
-                       EClusterLockTimeout);
+    EXCEPTION_SUBCLASS(EInterProcessLock,
+                       EInterProcessLockTimeout);
 
-    EXCEPTION_SUBCLASS(EClusterLock,
-                       EClusterLockUnvailable);
+    EXCEPTION_SUBCLASS(EInterProcessLock,
+                       EInterProcessLockUnvailable);
 
-    EXCEPTION_SUBCLASS(EClusterLock,
-                       EClusterLockFile);
+    EXCEPTION_SUBCLASS(EInterProcessLock,
+                       EInterProcessLockFile);
 // -----------------------------------------------------------------------------
 
-    class ClusterLock
+    class InterProcessLock
     {
     public:
-        ClusterLock();
-        ClusterLock(const Forte::FString& name, unsigned timeout = 120);
-        ClusterLock(const Forte::FString& name, unsigned timeout, const Forte::FString& errorString);
-        virtual ~ClusterLock();
+        InterProcessLock();
+        InterProcessLock(const Forte::FString& name, unsigned timeout = 120);
+        InterProcessLock(const Forte::FString& name, unsigned timeout, const Forte::FString& errorString);
+        virtual ~InterProcessLock();
 
         void Unlock();
         void Lock(const Forte::FString& name, unsigned timeout, const Forte::FString& errorString = "");

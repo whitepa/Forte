@@ -54,7 +54,6 @@ GSRCS = AutoMutexUnitTest.cpp \
 	CheckedValueStoreUnitTest.cpp \
 	CheckedValueUnitTest.cpp \
 	ClockUnitTest.cpp \
-	ClusterLockUnitTest.cpp \
 	ConditionUnitTest.cpp \
 	ConditionFileLoggerUnitTest.cpp \
 	ConditionAsyncLoggerUnitTest.cpp \
@@ -160,8 +159,6 @@ PROG_DEPS_OBJS_PDUPeerImplUnitTest = \
 	../$(TARGETDIR)/PDUPeerImpl.o \
 
 PROG_DEPS_OBJS_ClockUnitTest =
-
-PROG_DEPS_OBJS_ClusterLockUnitTest =
 
 PROG_DEPS_OBJS_ConditionUnitTest =
 
