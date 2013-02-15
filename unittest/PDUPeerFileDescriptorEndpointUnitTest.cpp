@@ -84,8 +84,17 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest, IsPassedDataViaDataIn)
     size_t len;
     shared_array<char> buf = makeTestPDU(pdu, len);
 
-    Forte::PDUPeerFileDescriptorEndpoint peer(-1);
-    peer.DataIn(len, buf.get());
+    int fds[2];
+    socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
+    Forte::AutoFD fd1(fds[0]);
+    Forte::AutoFD fd2(fds[1]);
+
+    Forte::PDUPeerFileDescriptorEndpoint peer(fd1);
+    send(fd2, buf.get(), len, 0);
+    struct epoll_event event;
+    event.events = EPOLLIN;
+    peer.HandleEPollEvent(event);
+
 
     Forte::PDU out;
     bool received = peer.RecvPDU(out);
@@ -102,12 +111,22 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest, KeepsIncomingPDUsInAQueue)
     Forte::PDU pdu;
     size_t len;
     shared_array<char> buf = makeTestPDU(pdu, len);
-    Forte::PDUPeerFileDescriptorEndpoint peer(-1);
+
+    int fds[2];
+    socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
+    Forte::AutoFD fd1(fds[0]);
+    Forte::AutoFD fd2(fds[1]);
+
+    Forte::PDUPeerFileDescriptorEndpoint peer(fd1);
 
     for (int i = 0; i < 3; ++i)
     {
-        peer.DataIn(len, buf.get());
+        send(fd2, buf.get(), len, 0);
     }
+
+    struct epoll_event event;
+    event.events = EPOLLIN;
+    peer.HandleEPollEvent(event);
 
     Forte::PDU out;
     for (int i = 0; i < 3; ++i)
@@ -169,8 +188,9 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest, HandlesPDUsInternally)
 class AsyncDataLoaderThread : public Forte::Thread
 {
 public:
-    AsyncDataLoaderThread(Forte::PDUPeerFileDescriptorEndpoint& peer)
+    AsyncDataLoaderThread(Forte::PDUPeerFileDescriptorEndpoint& peer, int fd)
         : mPeer(peer),
+          mFD(fd),
           mReceiveCount(0)
         {
             initialized();
@@ -193,7 +213,10 @@ protected:
 
         for (int i = 0; i < 100; ++i)
         {
-            mPeer.DataIn(len, buf.get());
+            send(mFD, buf.get(), len, 0);
+            struct epoll_event event;
+            event.events = EPOLLIN;
+            mPeer.HandleEPollEvent(event);
             {
                 AutoUnlockMutex lock(mReceiveCountMutex);
                 mReceiveCount++;
@@ -204,6 +227,7 @@ protected:
 
 protected:
     Forte::PDUPeerFileDescriptorEndpoint& mPeer;
+    int mFD;
     Forte::Mutex mReceiveCountMutex;
     int mReceiveCount;
 };
@@ -213,8 +237,13 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest,
 {
     FTRACE;
 
-    Forte::PDUPeerFileDescriptorEndpoint peer(0, 512, 768);
-    AsyncDataLoaderThread t(peer);
+    int fds[2];
+    socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
+    Forte::AutoFD fd1(fds[0]);
+    Forte::AutoFD fd2(fds[1]);
+
+    Forte::PDUPeerFileDescriptorEndpoint peer(fd1, 512, 768);
+    AsyncDataLoaderThread t(peer, fd2);
 
     sleep(1);
     ASSERT_EQ(t.GetReceiveCount(), 3);

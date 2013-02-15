@@ -49,7 +49,6 @@ namespace Forte
 
         void SetFD(int FD);
         int GetFD(void) const { return mFD; }
-        void DataIn(const size_t len, const char *buf);
         virtual void SendPDU(const Forte::PDU &pdu);
 
         void SetEPollFD(int epollFD);
@@ -99,8 +98,8 @@ namespace Forte
         void lockedRemoveFDFromEPoll();
         void lockedAddFDToEPoll();
 
-        void lockedDataIn(const size_t len, const char *buf);
         void callbackIfPDUReady();
+        void bufferEnsureHasSpace();
 
     protected:
         mutable Forte::Mutex mReceiveMutex;

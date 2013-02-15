@@ -39,69 +39,64 @@ void Forte::PDUPeerFileDescriptorEndpoint::HandleEPollEvent(
 
     if (e.events & EPOLLIN)
     {
-        char recvBuffer[2048];
-        size_t bufferSize = 2048;
+        const int flagsPeek = MSG_PEEK | MSG_DONTWAIT;
+        char peekBuffer;
+        int len;
 
+        while ((len = recv(mFD, &peekBuffer, 1, flagsPeek)) == -1
+               && errno == EINTR) {}
+
+        if (len < 0)
         {
-            int flags = MSG_PEEK | MSG_DONTWAIT;
-            int len;
-
-            while (
-                (len = recv(mFD, recvBuffer, bufferSize, flags)) == -1
-                && errno == EINTR)
+            //TODO: handle these errors more specifically
+            // for now, HLOG_ERR
+            // EAGAIN or EWOULDBLOCK
+            // EBADF
+            // ECONNREFUSED
+            // EFAULT
+            // EINVAL
+            // ENOMEM
+            // ENOTCONN
+            // ENOTSOCK
+            hlog(HLOG_ERR, "recv failed: %s",
+                 SystemCallUtil::GetErrorDescription(errno).c_str());
+            //handleFileDescriptorClose(e);
+        }
+        else if (len == 0)
+        {
+            hlog(HLOG_DEBUG2, "epoll_event was socket shutdown");
+            // sub classes should override for specialization of FD loss
+            handleFileDescriptorClose(e);
+        }
+        else
+        {
+            const int flags(MSG_DONTWAIT);
+            while (len > 0)
             {
-            }
-
-            if (len < 0)
-            {
-                //TODO: handle these errors more specifically
-                // for now, HLOG_ERR
-                // EAGAIN or EWOULDBLOCK
-                // EBADF
-                // ECONNREFUSED
-                // EFAULT
-                // EINVAL
-                // ENOMEM
-                // ENOTCONN
-                // ENOTSOCK
-                hlog(HLOG_ERR, "recv failed: %s",
-                     SystemCallUtil::GetErrorDescription(errno).c_str());
-                //handleFileDescriptorClose(e);
-            }
-            else if (len == 0)
-            {
-                hlog(HLOG_DEBUG2, "epoll_event was socket shutdown");
-                // sub classes should override for specialization of FD loss
-                handleFileDescriptorClose(e);
-            }
-            else
-            {
-                while (len > 0)
                 {
+                    AutoUnlockMutex lock(mReceiveMutex);
+                    bufferEnsureHasSpace();
+
+                    while ((len = recv(mFD,
+                                       mPDUBuffer.get() + mCursor,
+                                       mBufSize - mCursor,
+                                       flags)) == -1
+                           && errno == EINTR) {}
+
+                    if (len < 0)
                     {
-                        AutoUnlockMutex lock(mReceiveMutex);
-                        flags = MSG_DONTWAIT;
-
-                        while (
-                            (len = recv(mFD, recvBuffer, bufferSize, 0)) == -1
-                            && errno == EINTR)
-                        {
-                        }
-
-                        hlog(HLOG_DEBUG2,
-                             "received %d bytes on fd %d", len, mFD.Fd());
-                        lockedDataIn(len, recvBuffer);
-
-                        flags = MSG_PEEK | MSG_DONTWAIT;
-                        while (
-                            (len = recv(mFD, recvBuffer, bufferSize, flags)) == -1
-                            && errno == EINTR)
-                        {
-                        }
-
+                        if (errno != EWOULDBLOCK)
+                            hlog(HLOG_ERR,
+                                 "recv failed: %s",
+                                 SystemCallUtil
+                                 ::GetErrorDescription(errno).c_str());
                     }
-                    callbackIfPDUReady();
+                    else
+                    {
+                        mCursor += len;
+                    }
                 }
+                callbackIfPDUReady();
             }
         }
     }
@@ -114,31 +109,18 @@ void Forte::PDUPeerFileDescriptorEndpoint::HandleEPollEvent(
     }
 }
 
-void Forte::PDUPeerFileDescriptorEndpoint::DataIn(
-    const size_t len, const char *buf)
-{
-    {
-        AutoUnlockMutex lock(mReceiveMutex);
-        lockedDataIn(len, buf);
-    }
-
-    callbackIfPDUReady();
-}
-
-void Forte::PDUPeerFileDescriptorEndpoint::lockedDataIn(
-    const size_t len, const char *buf)
+void Forte::PDUPeerFileDescriptorEndpoint::bufferEnsureHasSpace()
 {
     FTRACE;
     try
     {
-        //while (thisPDUWillOverflowBuffer())
-        while (len + mCursor >= mBufSize
+        while (mCursor == mBufSize
                && mBufSize + mBufStepSize > mBufMaxSize)
         {
             mBufferFullCondition.Wait();
         }
 
-        while ((len + mCursor) >= mBufSize)
+        while (mCursor == mBufSize)
         {
             size_t newsize = mBufSize + mBufStepSize;
 
@@ -159,10 +141,6 @@ void Forte::PDUPeerFileDescriptorEndpoint::lockedDataIn(
     {
         throw EPeerBufferOutOfMemory();
     }
-    memcpy(mPDUBuffer.get() + mCursor, buf, len);
-    hlog(HLOG_DEBUG2, "received data; oldCursor=%llu newCursor=%llu",
-         (unsigned long long) mCursor, (unsigned long long) mCursor + len);
-    mCursor += len;
 }
 
 void Forte::PDUPeerFileDescriptorEndpoint::callbackIfPDUReady()
