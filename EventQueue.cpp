@@ -48,12 +48,12 @@ void EventQueue::Add(shared_ptr<Event> e)
     // check for NULL event
     if (!e)
         throw EEventQueueEventInvalid();
-    if (mShutdown)
-        throw EEventQueueShutdown();
     if (mMode == QUEUE_MODE_BLOCKING)
         mMaxDepth.Wait();
-    // \TODO fix this race condition
     AutoUnlockMutex lock(mMutex);
+    if (mShutdown)
+        throw EEventQueueShutdown();
+    // \TODO fix this race condition
     if (mMode != QUEUE_MODE_BLOCKING && mMaxDepth.TryWait() == -1 && errno == EAGAIN)
     {
         // max depth

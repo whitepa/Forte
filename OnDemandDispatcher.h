@@ -42,6 +42,7 @@ namespace Forte
             const int maxDepth,
             const char *name);
         virtual ~OnDemandDispatcher();
+        virtual void Shutdown();
         virtual void Pause(void);
         virtual void Resume(void);
         virtual void Enqueue(shared_ptr<Event> e);
@@ -56,8 +57,6 @@ namespace Forte
         int GetRunningEvents(int maxEvents,
                              std::list<shared_ptr<Event> > &runningEvents);
         bool StopRunningEvent(shared_ptr<Event> &runningEvent);
-
-        virtual void Shutdown();
 
     protected:
         unsigned int mMaxThreads;

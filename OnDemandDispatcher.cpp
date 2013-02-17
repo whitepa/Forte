@@ -141,7 +141,7 @@ Forte::OnDemandDispatcher::~OnDemandDispatcher()
 {
     FTRACE;
 
-    if (!mShutdown)
+    if (!IsShuttingDown())
     {
         try
         {
@@ -157,10 +157,9 @@ Forte::OnDemandDispatcher::~OnDemandDispatcher()
 void Forte::OnDemandDispatcher::Shutdown()
 {
     FTRACE;
-    // stop accepting new events
-    mEventQueue.Shutdown();
-    // set the shutdown flag
-    mShutdown = true;
+
+    Dispatcher::Shutdown();
+
     // wait for the manager thread to exit!
     // (this allows all worker threads to safely exit and unregister themselves
     //  before this destructor exits; otherwise bad shit happens when this object
@@ -172,12 +171,14 @@ void Forte::OnDemandDispatcher::Shutdown()
 void Forte::OnDemandDispatcher::Pause(void)
 {
     FTRACE;
+    AutoUnlockMutex lock(mNotifyLock);
     mPaused = 1;
 }
 
 void Forte::OnDemandDispatcher::Resume(void)
 {
     FTRACE;
+    AutoUnlockMutex lock(mNotifyLock);
     mPaused = 0;
     mNotify.Signal();
 }

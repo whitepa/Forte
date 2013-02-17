@@ -45,13 +45,13 @@ void * Thread::startThread(void *obj)
     LogThreadInfo logThread(*thr);
     if (thr->mThreadName.empty())
         thr->mThreadName.Format("unknown-%u", (unsigned)thr->mThread);
-    if (!thr->mThreadShutdown)
+    if (!thr->IsShuttingDown())
         hlog(HLOG_DEBUG2, "thread initialized");
 
     // run the thread
     try
     {
-        if (!thr->mThreadShutdown) retval = thr->run();
+        if (!thr->IsShuttingDown()) retval = thr->run();
     }
     catch (EThreadShutdown &e)
     {
@@ -68,7 +68,7 @@ void * Thread::startThread(void *obj)
     }
 
     hlog(HLOG_DEBUG2, "thread shutting down");
-    thr->mThreadShutdown = true;
+    thr->Shutdown();
 
     // notify that shutdown is complete
     AutoUnlockMutex lock(thr->mShutdownCompleteLock);
@@ -188,6 +188,9 @@ Thread::~Thread()
 void Thread::Shutdown(void)
 {
     FTRACE;
-    mThreadShutdown = true;
+    {
+        AutoUnlockMutex lock(mNotifyLock);
+        mThreadShutdown = true;
+    }
     Notify();
 }

@@ -36,9 +36,10 @@ Logfile::~Logfile()
 
 void Logfile::Write(const LogMsg& msg)
 {
+    AutoUnlockMutex lock(mMutex);
     if (mOut)
     {
-        (*mOut) << FormatMsg(msg);
+        (*mOut) << formatMsg(msg);
         mOut->flush();
     }
 }
@@ -127,14 +128,11 @@ void Logfile::FilterList(std::vector<LogFilter> &filters)
         filters.push_back(LogFilter(fp.first, fp.second));
 }
 
-FString Logfile::FormatMsg(const LogMsg &msg)
+FString Logfile::formatMsg(const LogMsg &msg)
 {
+    if (mFormatMask)
     {
-        AutoUnlockMutex lock(mMutex);
-        if (mFormatMask)
-        {
-            return CustomFormatMsg(msg);
-        }
+        return customFormatMsg(msg, mFormatMask);
     }
 
     FString levelstr, formattedMsg;
@@ -167,16 +165,9 @@ FString Logfile::FormatMsg(const LogMsg &msg)
     return formattedMsg;
 }
 
-FString Logfile::CustomFormatMsg(const LogMsg &msg)
+FString Logfile::customFormatMsg(const LogMsg &msg, const int formatMask)
 {
     FString formattedMsg, tmp;
-
-    unsigned int formatMask(0);
-
-    {
-        AutoUnlockMutex lock(mMutex);
-        formatMask = mFormatMask;
-    }
 
     if (formatMask & HLOG_FORMAT_TIMESTAMP)
     {
@@ -343,7 +334,7 @@ void SysLogfile::Write(const LogMsg& msg)
     if (msg.mLevel & HLOG_EMERG) level = LOG_EMERG;
 
     // log to syslog
-    syslog(LOG_DAEMON | level, "%s", FormatMsg(msg).c_str());
+    syslog(LOG_DAEMON | level, "%s", formatMsg(msg).c_str());
 }
 
 void SysLogfile::WriteRaw(int level, const Forte::FString& line)
@@ -351,7 +342,7 @@ void SysLogfile::WriteRaw(int level, const Forte::FString& line)
     syslog(LOG_DAEMON | level, "%s", line.c_str());
 }
 
-FString SysLogfile::FormatMsg(const LogMsg &msg)
+FString SysLogfile::formatMsg(const LogMsg &msg)
 {
     FString levelstr, formattedMsg;
     levelstr = GetLevelStr(msg.mLevel);

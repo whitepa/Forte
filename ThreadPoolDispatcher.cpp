@@ -205,11 +205,11 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
     disp.mRequestHandler->Init();
 
     // pull events from the request queue
-    while (!mThreadShutdown)
+    while (!Thread::IsShuttingDown())
     {
         AutoUnlockMutex lock(disp.mNotifyLock);
         while (disp.mPaused == false &&
-               !mThreadShutdown)
+               !Thread::IsShuttingDown())
         {
             shared_ptr<Event> event(disp.mEventQueue.Get());
             if (!event) break;
@@ -251,7 +251,7 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
 //        hlog(HLOG_DEBUG4, "waiting for events...");
         disp.mNotify.TimedWait(1);  // wake up every second
         disp.mSpareThreadSem.TryWait();
-        if (mThreadShutdown) break;
+        if (Thread::IsShuttingDown()) break;
         // see if we need to run periodic
         struct timespec now;
         mMonotonicClock.GetTime(now);
@@ -291,17 +291,16 @@ Forte::ThreadPoolDispatcher::ThreadPoolDispatcher(
 Forte::ThreadPoolDispatcher::~ThreadPoolDispatcher()
 {
     FTRACE;
-    if (!mShutdown)
+    if (!IsShuttingDown())
         Shutdown();
 }
 
 void Forte::ThreadPoolDispatcher::Shutdown(void)
 {
     FTRACE;
-    // stop accepting new events
-    mEventQueue.Shutdown();
-    // set the shutdown flag
-    mShutdown = true;
+
+    Dispatcher::Shutdown();
+
     // wait for the manager thread to exit!
     // (this allows all worker threads to safely exit and unregister themselves
     //  before this destructor exits; otherwise bad shit happens when this object
@@ -312,11 +311,13 @@ void Forte::ThreadPoolDispatcher::Shutdown(void)
 
 void Forte::ThreadPoolDispatcher::Pause(void)
 {
+    AutoUnlockMutex lock(mNotifyLock);
     mPaused = 1;
 }
 
 void Forte::ThreadPoolDispatcher::Resume(void)
 {
+    AutoUnlockMutex lock(mNotifyLock);
     mPaused = 0;
     mNotify.Broadcast();
 }

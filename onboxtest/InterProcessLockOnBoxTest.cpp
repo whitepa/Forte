@@ -267,7 +267,7 @@ public:
     bool HasLock(void) { return mHasLock; }
 protected:
     virtual void * run(void) {
-        while (!mThreadShutdown)
+        while (!Thread::IsShuttingDown())
         {
             shared_ptr<Event> e;
             while (e = mQueue.Get())

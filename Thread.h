@@ -56,7 +56,10 @@ namespace Forte
         void WaitForInitialize(void);
 
         // is a thread flagged to be shut down?
-        bool IsShuttingDown(void) { return mThreadShutdown; }
+        bool IsShuttingDown(void) const {
+            Forte::AutoUnlockMutex lock(mNotifyLock);
+            return mThreadShutdown;
+        }
 
     private:
         // static callback for pthread_once
@@ -116,13 +119,12 @@ namespace Forte
 
         bool mInitialized;
         bool mDeletingCalled;
-    protected:
+
         bool mThreadShutdown;
 
-    private:
         bool mNotified;
 
-        Mutex mNotifyLock;
+        mutable Mutex mNotifyLock;
         ThreadCondition mNotifyCond;
 
         bool mShutdownComplete;

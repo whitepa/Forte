@@ -17,7 +17,7 @@ using namespace Forte;
 
 void * Forte::MockProcessManagerThread::run(void)
 {
-    while (!mThreadShutdown)
+    while (!Thread::IsShuttingDown())
     {
         interruptibleSleep(Timespec::FromSeconds(1));
     }

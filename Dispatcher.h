@@ -57,13 +57,17 @@ namespace Forte
             return mThreads.size();
         }
 
-        virtual void Shutdown() = 0;
+        virtual void Shutdown();
+        bool IsShuttingDown() {
+            AutoUnlockMutex lock(mNotifyLock);
+            return mShutdown;
+        }
 
         FString mDispatcherName;
 
     protected:
         bool mPaused;
-        volatile bool mShutdown;
+        bool mShutdown;
         std::vector<shared_ptr<DispatcherThread> > mThreads;
         boost::shared_ptr<RequestHandler> mRequestHandler;
         Mutex mThreadsLock;

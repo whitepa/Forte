@@ -76,7 +76,7 @@ void * Forte::ReceiverThread::run(void)
     if (epoll_ctl(efd, EPOLL_CTL_ADD, m, &ev) < 0)
         throw EReceiverThreadPollAdd(SystemCallUtil::GetErrorDescription(errno));
 
-    while (!mThreadShutdown)
+    while (!Thread::IsShuttingDown())
     {
         struct sockaddr_in in_addr;
         socklen_t len = sizeof(in_addr);
@@ -100,7 +100,7 @@ void * Forte::ReceiverThread::run(void)
 
         hlog(HLOG_DEBUG, "events=0x%x", events[0].events);
 
-        if (mThreadShutdown)
+        if (Thread::IsShuttingDown())
         {
             break;
         }

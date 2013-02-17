@@ -32,3 +32,13 @@ DispatcherThread::~DispatcherThread()
 {
     FTRACE;
 }
+
+void Forte::Dispatcher::Shutdown(void)
+{
+    FTRACE;
+    // stop accepting new events
+    mEventQueue.Shutdown();
+    // set the shutdown flag
+    AutoUnlockMutex lock(mNotifyLock);
+    mShutdown = true;
+}

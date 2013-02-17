@@ -35,14 +35,18 @@ namespace Forte
         void Add(shared_ptr<Event> e);
         shared_ptr<Event> Get(void);
         shared_ptr<Event> Peek(void);
-        inline bool Accepting(void) { return (!mShutdown && ((mMaxDepth.GetValue() > 0) ? true : false));}
+        inline bool Accepting(void) {
+            AutoUnlockMutex lock(mMutex);
+            return (!mShutdown && ((mMaxDepth.GetValue() > 0) ? true : false));
+        }
         inline int Depth(void) {AutoUnlockMutex lock(mMutex); return mQueue.size();};
-
-        inline void SetMode(QueueMode mode) { mMode = mode; };
 
         /// shutdown prevents the queue from accepting any more events via Add().
         /// This operation is (currently) not reversible.
-        inline void Shutdown(void) { mShutdown = true; };
+        inline void Shutdown(void) {
+            AutoUnlockMutex lock(mMutex);
+            mShutdown = true;
+        }
 
         /// waitUntilEmpty will cause the caller to block until the event
         /// queue is emptied.  If the queue is already empty upon calling
@@ -65,7 +69,7 @@ namespace Forte
         int mLastDepth;
 
     protected:
-        QueueMode mMode;
+        const QueueMode mMode;
         bool mShutdown;
         std::list<shared_ptr<Event> > mQueue;
         Semaphore mMaxDepth;

@@ -115,8 +115,6 @@ namespace Forte
         void FilterList(std::vector<LogFilter> &filters);
 
         virtual void Write(const LogMsg& msg);
-        virtual FString FormatMsg(const LogMsg &msg);
-        virtual FString CustomFormatMsg(const LogMsg &msg);
         virtual bool Reopen() { return false; }  // true is reopened, false is not
         static FString GetLevelStr(int level);
 
@@ -136,12 +134,16 @@ namespace Forte
         const FString mPath;
         std::ostream * const mOut;
         const bool mDelStream;
+    protected:
+        virtual FString formatMsg(const LogMsg &msg);
     private:
+        virtual FString customFormatMsg(const LogMsg &msg, const int formatMask);
+
         unsigned mLogMask; // bitmask of desired log levels
         unsigned int mFormatMask; // bitmask of desired log fields
         // source file specific log masks
         std::map<FString,unsigned int> mFileMasks;
-        mutable Forte::RecursiveMutex mMutex;
+        mutable Forte::Mutex mMutex;
     };
 
     class SysLogfile : public Logfile {
@@ -151,10 +153,10 @@ namespace Forte
         virtual ~SysLogfile();
         virtual void Write(const LogMsg& msg);
         virtual void WriteRaw(int level, const Forte::FString& line);
-        virtual FString FormatMsg(const LogMsg &msg);
         virtual bool Reopen() { return true; }
         FString GetIdent() const { return mIdent; }
     protected:
+        virtual FString formatMsg(const LogMsg &msg);
         const FString mIdent;
     };
 
