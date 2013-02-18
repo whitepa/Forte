@@ -6,6 +6,7 @@
 #include "AutoFD.h"
 #include "PDUPeer.h"
 #include <boost/shared_array.hpp>
+#include "Semaphore.h"
 
 namespace Forte
 {
@@ -20,7 +21,9 @@ namespace Forte
             unsigned int bufSize = RECV_BUFFER_SIZE,
             unsigned int bufMaxSize = DEFAULT_MAX_BUFFER_SIZE,
             unsigned int bufStepSize = RECV_BUFFER_SIZE) :
+            mFDLock(),
             mFD(fd),
+            mBufferFullCondition(mFDLock),
             mEPollFD(-1),
             mCursor(0),
             mBufSize(bufSize),
@@ -93,9 +96,10 @@ namespace Forte
     protected:
         mutable Forte::Mutex mFDLock;
         AutoFD mFD;
+        mutable Forte::ThreadCondition mBufferFullCondition;
         mutable Forte::Mutex mEPollLock;
         int mEPollFD;
-        size_t mCursor;
+        size_t volatile mCursor;
         size_t mBufSize;
         size_t mBufMaxSize;
         size_t mBufStepSize;

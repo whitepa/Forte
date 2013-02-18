@@ -166,22 +166,71 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest, HandlesPDUsInternally)
     }
 }
 
-TEST_F(PDUPeerFileDescriptorEndpointUnitTest, DataInBufferOverflowTest)
+class AsyncDataLoaderThread : public Forte::Thread
+{
+public:
+    AsyncDataLoaderThread(Forte::PDUPeerFileDescriptorEndpoint& peer)
+        : mPeer(peer),
+          mReceiveCount(0)
+        {
+            initialized();
+        }
+
+    ~AsyncDataLoaderThread() {
+        deleting();
+    }
+
+    int GetReceiveCount() {
+        AutoUnlockMutex lock(mReceiveCountMutex);
+        return mReceiveCount;
+    }
+
+protected:
+    void* run() {
+        Forte::PDU pdu;
+        size_t len;
+        shared_array<char> buf = makeTestPDU(pdu, len);
+
+        for (int i = 0; i < 100; ++i)
+        {
+            mPeer.DataIn(len, buf.get());
+            {
+                AutoUnlockMutex lock(mReceiveCountMutex);
+                mReceiveCount++;
+            }
+        }
+        return NULL;
+    }
+
+protected:
+    Forte::PDUPeerFileDescriptorEndpoint& mPeer;
+    Forte::Mutex mReceiveCountMutex;
+    int mReceiveCount;
+};
+
+TEST_F(PDUPeerFileDescriptorEndpointUnitTest,
+       BlocksOnBufferFullUntilRecvPDUIsCalled)
 {
     FTRACE;
 
-    Forte::PDU pdu;
-    size_t len;
-    shared_array<char> buf = makeTestPDU(pdu, len);
-
     Forte::PDUPeerFileDescriptorEndpoint peer(0, 512, 768);
+    AsyncDataLoaderThread t(peer);
 
-    for (int i = 0; i < 3; ++i)
+    sleep(1);
+    ASSERT_EQ(t.GetReceiveCount(), 3);
+
+    PDU pdu;
+    while (t.GetReceiveCount() != 100)
     {
-        peer.DataIn(len, buf.get());
+        while (peer.RecvPDU(pdu))
+        {
+        }
+        usleep(10000);
     }
+    ASSERT_EQ(100, t.GetReceiveCount());
 
-    ASSERT_THROW(peer.DataIn(len, buf.get()), EPeerBufferOverflow);
+    t.Shutdown();
+    t.WaitForShutdown();
 }
 
 TEST_F(PDUPeerFileDescriptorEndpointUnitTest, ThrowESendFailedOnBrokenPipe)

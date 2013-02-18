@@ -46,22 +46,22 @@ void Forte::PDUPeerFileDescriptorEndpoint::HandleEPollEvent(
         int len = recv(mFD, recvBuffer, bufferSize, 0);
         if (len < 0)
         {
-            // TODO:
-            // EINTR
-
-            //TODO: handle these errors more specifically
-            // for now, HLOG_ERR
-            // EAGAIN or EWOULDBLOCK
-            // EBADF
-            // ECONNREFUSED
-            // EFAULT
-            // EINVAL
-            // ENOMEM
-            // ENOTCONN
-            // ENOTSOCK
-            hlog(HLOG_ERR, "recv failed: %s",
-                 SystemCallUtil::GetErrorDescription(errno).c_str());
-            //handleFileDescriptorClose(e);
+            if (errno != EINTR)
+            {
+                //TODO: handle these errors more specifically
+                // for now, HLOG_ERR
+                // EAGAIN or EWOULDBLOCK
+                // EBADF
+                // ECONNREFUSED
+                // EFAULT
+                // EINVAL
+                // ENOMEM
+                // ENOTCONN
+                // ENOTSOCK
+                hlog(HLOG_ERR, "recv failed: %s",
+                     SystemCallUtil::GetErrorDescription(errno).c_str());
+                //handleFileDescriptorClose(e);
+            }
         }
         else if (len == 0)
         {
@@ -151,16 +151,28 @@ void Forte::PDUPeerFileDescriptorEndpoint::lockedRemoveFDFromEPoll()
     }
 }
 
-void Forte::PDUPeerFileDescriptorEndpoint::DataIn(const size_t len, const char *buf)
+void Forte::PDUPeerFileDescriptorEndpoint::DataIn(
+    const size_t len, const char *buf)
 {
     FTRACE;
     {
         AutoUnlockMutex lock(mFDLock);
-        try {
-            while ((len + mCursor) >= mBufSize) {
+        try
+        {
+            //while (thisPDUWillOverflowBuffer())
+            while (len + mCursor >= mBufSize
+                   && mBufSize + mBufStepSize > mBufMaxSize)
+            {
+                mBufferFullCondition.Wait();
+            }
+
+            while ((len + mCursor) >= mBufSize)
+            {
                 size_t newsize = mBufSize + mBufStepSize;
+
                 if (newsize > mBufMaxSize)
-                    throw EPeerBufferOverflow();
+                    hlog_and_throw(HLOG_ERR, EPeerBufferOverflow());
+
                 char *tmpstr = new char[newsize];
                 memset (tmpstr, 0, newsize);
                 if (mBufSize)
@@ -170,7 +182,9 @@ void Forte::PDUPeerFileDescriptorEndpoint::DataIn(const size_t len, const char *
                 hlog(HLOG_DEBUG,
                      "PDU new size %llu", (unsigned long long)mBufSize);
             }
-        } catch (std::bad_alloc &e) {
+        }
+        catch (std::bad_alloc &e)
+        {
             throw EPeerBufferOutOfMemory();
         }
         memcpy(mPDUBuffer.get() + mCursor, buf, len);
@@ -275,5 +289,7 @@ bool Forte::PDUPeerFileDescriptorEndpoint::RecvPDU(Forte::PDU &out)
     hlog(HLOG_DEBUG2, "found valid PDU: oldCursor=%zu newCursor=%zu",
          mCursor, mCursor - len);
     mCursor -= len;
+
+    mBufferFullCondition.Signal();
     return true;
 }
