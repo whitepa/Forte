@@ -72,7 +72,9 @@ namespace Forte
         PDUHeader mHeader;
         boost::shared_array<char> mPayload;
     };
+
     std::ostream& operator<<(std::ostream& os, const PDU &obj);
+    std::ostream& operator<<(std::ostream& os, const PDUHeader &obj);
 };
 
 #endif

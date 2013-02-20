@@ -57,19 +57,29 @@ bool PDU::operator==(const PDU &other) const
 
 std::ostream& Forte::operator<<(std::ostream& os, const PDU &obj)
 {
-    unsigned int payloadSize = obj.GetPayloadSize();
-    void *payload = obj.GetPayload<void>();
+
     os << "PDU " << &obj << endl;
-    os << "\tversion\t\t= " << obj.GetVersion() << endl;
-    os << "\topcode\t\t= " << obj.GetOpcode() << endl;
-    os << "\tpayloadSize\t= " << payloadSize << endl;
-    os << "\tpayload\t\t= " << (payload) << endl;
-    if (payloadSize && payload != NULL)
+    os << obj.GetHeader();
+    unsigned int payloadSize = obj.GetPayloadSize();
+    if (payloadSize)
     {
-        FString str;
-        str.assign((const char*)payload, payloadSize);
-        os << "Payload = |" << str.HexDump().c_str() << "|" << endl;
+        void *payload = obj.GetPayload<void>();
+        if (payload != NULL)
+        {
+            FString str;
+            str.assign((const char*)payload, payloadSize);
+            os << "Payload = |" << str.HexDump().c_str() << "|" << endl;
+        }
     }
+    return os;
+}
+
+std::ostream& Forte::operator<<(std::ostream& os, const PDUHeader &obj)
+{
+    os << "PDUHeader" << endl;
+    os << "\tversion\t\t= " << obj.version << endl;
+    os << "\topcode\t\t= " << obj.opcode << endl;
+    os << "\tpayloadSize\t= " << obj.payloadSize << endl;
     return os;
 }
 
