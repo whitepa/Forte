@@ -17,7 +17,10 @@ void IORequest::Begin()
 {
     mIOManager.lock()->SubmitRequest(shared_from_this());
 }
-
+void IORequest::Cancel()
+{
+    mIOManager.lock()->CancelRequest(shared_from_this());
+}
 void IORequest::SetOp(IORequest::OperationType op)
 {
     switch (op) {

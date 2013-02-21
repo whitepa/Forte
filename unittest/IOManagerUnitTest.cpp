@@ -412,5 +412,94 @@ TEST_F(IOManagerUnitTest, ReadWriteMix)
     free(buf);
 }
 
+// @TODO the CancelRequest test will need to be an onbox test which
+// uses a real hardware device.  This test will not work agains a
+// file, since the native linux AIO functionality serializes all
+// access to a file, and the request is already complete at the
+// completion of the io_submit call.
+
+// TEST_F(IOManagerUnitTest, CancelRequest)
+// {
+//     FTRACE;
+//     // populate the file with some data
+//     system(FString("/bin/dd bs=1024 count=1 seek=500000000 if=/dev/zero of=" + mTmpfile));
+
+//     // Open the file with direct IO
+//     AutoFD fd(open(mTmpfile, O_RDWR | O_DIRECT));
+//     ASSERT_NE(fd.GetFD(), -1);
+
+//     boost::shared_ptr<IOManager> iomgr = boost::make_shared<IOManager>(512);
+
+//     ssize_t total = 1024 * 1024 * 256;
+//     ssize_t each = 1024 * 1024 * 16;
+//     char *buf = 0;
+//     ASSERT_EQ(0, posix_memalign((void **)&buf, /*align*/4096, /*size*/total));
+//     memset(buf, 1, total);
+//     for(int i = 0; i < (ssize_t)(total/sizeof(int)); ++i)
+//     {
+//         int *a = (int *)(buf + sizeof(int) * i);
+//         if (*a != 0x01010101)
+//             hlog(HLOG_ERR, "a != 0:  i=%d buf=%p addr=%p",
+//                  i, buf, (int *)(buf + sizeof(int) * i));
+//         ASSERT_EQ(0x01010101, *a);
+//     }
+//     std::map<uint64_t, boost::shared_ptr<IORequest> > requestMap;
+//     boost::shared_ptr<IORequest> req;
+//     uint64_t reqnum;
+//     for (int i = 0; i < total/each; ++i)
+//     {
+//         // submit IO request
+//         req = iomgr->NewRequest();
+//         if (i % 2 == 0)
+//             req->SetOp(IORequest::READ);
+//         else
+//             req->SetOp(IORequest::WRITE);
+//         req->SetCallback(IOManagerUnitTest::Notify);
+//         req->SetUserData(this);
+//         req->SetBuffer(buf+(each*i), each);
+//         req->SetOffset(each*i);
+//         req->SetFD(fd);
+//         reqnum = req->GetRequestNumber();
+//         hlog(HLOG_INFO, "[BEFORE BEGIN]");
+//         ASSERT_NO_THROW(req->Begin(););
+//         hlog(HLOG_INFO, "[AFTER BEGIN]");
+//         if (i == total/each - 1)
+//         {
+//             hlog(HLOG_INFO, "************** CANCELING request %lu", reqnum);
+//             EXPECT_NO_THROW(req->Cancel());
+//         }
+//         requestMap[reqnum] = req;
+//     }
+//     Wait(total/each - 1);
+//     usleep(100000);
+//     foreach (const IORequestPair &p, requestMap)
+//     {
+//         const IORequestPtr &req(p.second);
+//         // hlog(HLOG_INFO, "req %lu got result %ld %s", req->GetRequestNumber(),
+//         //      req->GetResult(), req->GetResult() > 0 ? "" : strerror(-req->GetResult()));
+//         if (req->GetRequestNumber() == reqnum)
+//         {
+//             // should be canceled
+//             EXPECT_EQ(-1, req->GetResult());
+//         }
+//         else
+//         {
+//             EXPECT_EQ(each, req->GetResult());
+//         }
+//     }
+//     for(int i = 0; i < (ssize_t)(total/sizeof(int)); ++i)
+//     {
+//         int *a = (int *)(buf + sizeof(int) * i);
+//         int b = i / ((total/each) / sizeof(int));
+//         if ((b % 2 == 0 && *a != 0) ||
+//             (b % 2 != 0 && *a != 0x01010101))
+//             hlog(HLOG_ERR, "a has unexpected value of 0x%x:  i=%d b=%d buf=%p addr=%p",
+//                  *a, i, b, buf, (int *)(buf + sizeof(int) * i));
+//         ASSERT_EQ((b % 2 == 0) ? 0 : 0x01010101, *a);
+//     }
+//     ASSERT_EQ(total/each, mNumCompletions);
+//     free(buf);
+// }
+
 // Test aligned read with an odd buffer size, make sure only the
 // desired size of the target buffer is modified.

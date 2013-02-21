@@ -8,6 +8,7 @@
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/noncopyable.hpp>
 #include <libaio.h>
 
 namespace Forte
@@ -19,9 +20,12 @@ namespace Forte
     EXCEPTION_SUBCLASS(EIOManager, EIORequest);
     EXCEPTION_SUBCLASS2(EIORequest, EIORequestStillInProgress,
                         "The IO request is still in progress");
+    EXCEPTION_SUBCLASS2(EIORequest, EIORequestCancelFailed,
+                        "The IO request could not be canceled");
     class IOManager;
 
-    class IORequest : public boost::enable_shared_from_this<IORequest>
+    class IORequest : public boost::enable_shared_from_this<IORequest>,
+                      private boost::noncopyable_::noncopyable
     {
     public:
         typedef enum {
@@ -33,6 +37,7 @@ namespace Forte
         IORequest(const boost::shared_ptr<IOManager>& ioManager);
 
         void Begin();
+        void Cancel();
         void SetOp(IORequest::OperationType op);
         void SetBuffer(void *buf, size_t len);
         void SetOffset(off_t off);
@@ -137,6 +142,7 @@ namespace Forte
 
         // should be called by an IORequest
         void SubmitRequest(const boost::shared_ptr<IORequest> &req) {
+            FTRACE;
             AutoUnlockMutex lock(mLock);
             int res;
             while ((res = io_submit(mIOContext, 1, req->GetIOCBs())) < 0)
@@ -161,6 +167,31 @@ namespace Forte
                 throw EIOSubmitFailed();
             // take ownership of request
             mPendingRequests[req->GetRequestNumber()] = req;
+        }
+
+        // should be called by an IORequest
+        void CancelRequest(const boost::shared_ptr<IORequest> &req) {
+            AutoUnlockMutex lock(mLock);
+            int res;
+            struct io_event result;
+            result.obj = NULL;
+            while ((res = io_cancel(mIOContext, req->GetIOCBs()[0], &result)) < 0)
+            {
+                if (-res == EINTR)
+                {
+                    continue;
+                }
+                SystemCallUtil::ThrowErrNoException(-res, "io_cancel");
+            }
+            if (result.obj == NULL ||
+                reinterpret_cast<uint64_t>(
+                    result.obj->data) != req->GetRequestNumber())
+                boost::throw_exception(EIORequestCancelFailed(
+                                           "io_cancel succeeded but request was not canceled"));
+            mPendingRequests.erase(req->GetRequestNumber());
+            req->SetResult(-1); // @TODO better error reporting for
+                                // this, like AsyncRequest for
+                                // example.
         }
 
         void HandleCompletionEvent(const struct io_event *event) {
