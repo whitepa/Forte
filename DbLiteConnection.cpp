@@ -122,7 +122,7 @@ bool DbLiteConnection::Close()
 
     if (sqlite3_close(mDB) == SQLITE_OK)
     {
-        hlog(HLOG_DEBUG, "[%s] close complete [%p/%p]", mDBName.c_str(), this, mDB);
+        hlog(HLOG_DEBUG2, "[%s] close complete [%p/%p]", mDBName.c_str(), this, mDB);
         mDB = NULL;
         return true;
     }

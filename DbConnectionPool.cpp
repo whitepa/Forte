@@ -167,7 +167,7 @@ DbConnection& DbConnectionPool::GetDbConnection() {
         throw EDbConnectionPool(err.c_str());
     }
 
-    hlog(HLOG_DEBUG, "Returning connection [%p]", pDb);
+    hlog(HLOG_DEBUG2, "Returning connection [%p]", pDb);
     return *pDb;
 }
 
