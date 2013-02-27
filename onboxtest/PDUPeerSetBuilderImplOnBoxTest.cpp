@@ -169,7 +169,7 @@ public:
         SocketAddressVector addresses;
         for (int i=0; i<total; i++)
         {
-            addresses.push_back(make_pair("127.0.0.1", 11000 + i));
+            addresses.push_back(make_pair("127.0.0.1", 13000 + i));
         }
 
         // caller must ensure mTestPeers is correct size
@@ -188,48 +188,50 @@ public:
 TEST_F(PDUPeerSetBuilderImplOnBoxTest, IDIsIPAndPortAs64BitInt)
 {
     FTRACE;
-    SocketAddress listenAddress(make_pair("127.0.0.1", 11001));
+    SocketAddress listenAddress(make_pair("127.0.0.1", 13001));
 
-    //2130706433 | 11001
-    //0x7F000001 << 32 | 0x2af9
-    //0x7F00000100000000 | 0x2af9
-    // = 0x7F0000010000044D
-    // = 9151314447111826169
+    //2130706433 | 13001
+    //0x7F000001 << 32 | 0x32C9
+    //0x7F00000100000000 | 0x32C9
+    // = 0x7F000001000032C9
+    // = 9151314447111828169
 
-    ASSERT_EQ(9151314447111826169,
+    ASSERT_EQ(9151314447111828169,
               PDUPeerSetBuilderImpl::SocketAddressToID(listenAddress));
 }
 
 TEST_F(PDUPeerSetBuilderImplOnBoxTest, ConstructorSetsUpBasics)
 {
     FTRACE;
-    SocketAddress listenAddress(make_pair("127.0.0.1", 11001));
+    SocketAddress listenAddress(make_pair("127.0.0.1", 13001));
 
     SocketAddressVector addresses;
     addresses.push_back(listenAddress);
-    addresses.push_back(make_pair("127.0.0.1", 11002));
-    addresses.push_back(make_pair("127.0.0.1", 11003));
+    addresses.push_back(make_pair("127.0.0.1", 13002));
+    addresses.push_back(make_pair("127.0.0.1", 13003));
 
     PDUPeerSetBuilderImpl peerSet(listenAddress, addresses);
 
-    //2130706433 | 11001
-    //0x7F00000100000000 | 0x2af9
-    // = 0x7F00000100002AF9
-    // = 9151314447111826169
+    //2130706433 | 13001
+    //0x7F000001 << 32 | 0x32C9
+    //0x7F00000100000000 | 0x32C9
+    // = 0x7F000001000032C9
+    // = 9151314447111828169
 
-    ASSERT_EQ(9151314447111826169, peerSet.GetID());
+    ASSERT_EQ(9151314447111828169,
+              PDUPeerSetBuilderImpl::SocketAddressToID(listenAddress));
 }
 
 TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanDispatchWithoutThrowing)
 {
     FTRACE;
 
-    SocketAddress listenAddress(make_pair("127.0.0.1", 11001));
+    SocketAddress listenAddress(make_pair("127.0.0.1", 13001));
 
     SocketAddressVector addresses;
     addresses.push_back(listenAddress);
-    addresses.push_back(make_pair("127.0.0.1", 11002));
-    addresses.push_back(make_pair("127.0.0.1", 11003));
+    addresses.push_back(make_pair("127.0.0.1", 13002));
+    addresses.push_back(make_pair("127.0.0.1", 13003));
 
     PDUPeerSetBuilderImpl peerSet(listenAddress, addresses);
 

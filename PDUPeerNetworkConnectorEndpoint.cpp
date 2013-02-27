@@ -63,11 +63,18 @@ void Forte::PDUPeerNetworkConnectorEndpoint::handleFileDescriptorClose(
     FTRACE;
 
     AutoUnlockMutex lock(mConnectionMutex);
-    AutoUnlockMutex epolllock(mEPollLock);
 
-    lockedRemoveFDFromEPoll();
-    close(mFD);
-    mFD = -1;
+    // this is a bit tricky and i'm not fond of it, but when we call
+    // connectOrEnqueueRetry below, if we do reconnect we will want to
+    // re-add the new FD to our epollFD, so we cannot be holding this
+    // lock at the time. quick fix 
+    {
+        AutoUnlockMutex epolllock(mEPollLock);
+
+        lockedRemoveFDFromEPoll();
+        close(mFD);
+        mFD = -1;
+    }
 
     PDUPeerEventPtr event(new PDUPeerEvent());
     event->mEventType = PDUPeerDisconnectedEvent;
