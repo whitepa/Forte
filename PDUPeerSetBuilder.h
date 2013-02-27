@@ -6,7 +6,7 @@
 
 namespace Forte
 {
-    class PDUPeerSetBuilder
+    class PDUPeerSetBuilder : public Forte::Object
     {
     public:
         PDUPeerSetBuilder() {}
