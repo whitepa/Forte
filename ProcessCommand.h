@@ -3,10 +3,37 @@
 
 #include "FString.h"
 #include "ProcessManager.h"
+#include "SSHRunner.h"
 #include "LogManager.h"
 
 namespace Forte
 {
+
+template <class Executor>
+int Execute(Executor* executor,
+            const Forte::FString& command,
+            Forte::FString& output,
+            Forte::FString& errorOutput);
+
+template <>
+inline int Execute<Forte::ProcessManager>(Forte::ProcessManager* executor,
+                                   const Forte::FString& command,
+                                   Forte::FString& output,
+                                   Forte::FString& errorOutput)
+{
+    return executor->CreateProcessAndGetResult(
+                command, output, errorOutput, false);
+}
+
+template <>
+inline int Execute<Forte::SSHRunner>(Forte::SSHRunner* executor,
+                              const Forte::FString& command,
+                              Forte::FString& output,
+                              Forte::FString& errorOutput)
+{
+    return executor->Run(command, &output, &errorOutput);
+}
+
 
 /**
     * @class ProcessCommand
@@ -17,7 +44,7 @@ namespace Forte
     * template 'Response' can be derived from ProcessCommandResponse
     *
     */
-template<class Request, class Response>
+template<class Request, class Response, class Executor=Forte::ProcessManager>
 class ProcessCommand
 {
 public:
@@ -37,55 +64,54 @@ public:
         hlogstream(HLOG_DEBUG, mRequest);
 
         // don't throw when command returns non-zero status code
-        int result = mProcessManager->CreateProcessAndGetResult(
-            mRequest.AsString(), output, errorOutput, false);
+        int result(Execute<Executor>(mExecutor.get(), mRequest.AsString(), output, errorOutput));
         response_type response(output, errorOutput, result);
         hlogstream(HLOG_DEBUG, response);
         return response;
     }
 
-    explicit ProcessCommand(Forte::ProcessManagerPtr processManager)
-        :mProcessManager(processManager), mRequest()
+    explicit ProcessCommand(boost::shared_ptr<Executor> executor)
+        :mExecutor(executor), mRequest()
     {
     }
 
     template<typename A0>
-    explicit ProcessCommand(Forte::ProcessManagerPtr processManager,
+    explicit ProcessCommand(boost::shared_ptr<Executor> executor,
                             const A0& a0)
-        :mProcessManager(processManager), mRequest(a0)
+        :mExecutor(executor), mRequest(a0)
     {
     }
 
     template<typename A0, typename A1>
-    explicit ProcessCommand(Forte::ProcessManagerPtr processManager,
+    explicit ProcessCommand(boost::shared_ptr<Executor> executor,
                             const A0& a0, const A1& a1)
-        :mProcessManager(processManager), mRequest(a0, a1)
+        :mExecutor(executor), mRequest(a0, a1)
     {
     }
 
     template<typename A0, typename A1, typename A2>
-    explicit ProcessCommand(Forte::ProcessManagerPtr processManager,
+    explicit ProcessCommand(boost::shared_ptr<Executor> executor,
                             const A0& a0, const A1& a1, const A2& a2)
-        :mProcessManager(processManager), mRequest(a0, a1, a2)
+        :mExecutor(executor), mRequest(a0, a1, a2)
     {
     }
 
     template<typename A0, typename A1, typename A2, typename A3>
-    explicit ProcessCommand(Forte::ProcessManagerPtr processManager,
+    explicit ProcessCommand(boost::shared_ptr<Executor> executor,
                             const A0& a0, const A1& a1, const A2& a2, const A3& a3)
-        :mProcessManager(processManager), mRequest(a0, a1, a2, a3)
+        :mExecutor(executor), mRequest(a0, a1, a2, a3)
     {
     }
 
     template<typename A0, typename A1, typename A2, typename A3, typename A4>
-    explicit ProcessCommand(Forte::ProcessManagerPtr processManager,
+    explicit ProcessCommand(boost::shared_ptr<Executor> executor,
                             const A0& a0, const A1& a1, const A2& a2, const A3& a3, const A4& a4)
-        :mProcessManager(processManager), mRequest(a0, a1, a2, a3, a4)
+        :mExecutor(executor), mRequest(a0, a1, a2, a3, a4)
     {
     }
 
 private:
-    Forte::ProcessManagerPtr mProcessManager;
+    boost::shared_ptr<Executor> mExecutor;
     const request_type mRequest;
 }; // ProcessCommand
 
@@ -165,6 +191,12 @@ public:
     {
         return mResponse;
     }
+
+    int GetReturnCode() const
+    {
+        return mReturnCode;
+    }
+
 protected:
     explicit ProcessCommandResponse(const Forte::FString& response,
                                     const Forte::FString& errorResponse,
