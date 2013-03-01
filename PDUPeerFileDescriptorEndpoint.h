@@ -43,6 +43,10 @@ namespace Forte
 
         virtual ~PDUPeerFileDescriptorEndpoint() {}
 
+        virtual void Begin() {
+            //No customization on FD PDUPeer Endpoint
+        }
+
         void SetFD(int FD);
         int GetFD(void) const { return mFD; }
         void DataIn(const size_t len, const char *buf);
@@ -80,10 +84,12 @@ namespace Forte
         void Close(void) { mFD.Close(); }
 
         virtual bool IsConnected(void) const {
+            AutoUnlockMutex fdlock(mFDLock);
             return (mFD != -1);
         }
 
         virtual bool OwnsFD(int fd) const {
+            AutoUnlockMutex fdlock(mFDLock);
             return (mFD != -1 && mFD == fd);
         }
 

@@ -24,6 +24,10 @@ namespace Forte
 
         virtual ~PDUPeerNetworkConnectorEndpoint() {}
 
+        virtual void Begin() {
+            CheckConnections();
+        }
+
         void CheckConnections();
 
         /**

@@ -35,6 +35,7 @@ public:
     TestPeer(const SocketAddress& myListenAddress,
              const SocketAddressVector& peerAddresses)
         : mCallbackCount(0),
+          mConnectEventCount(0),
           mPeerAddresses(peerAddresses),
           mListenAddress(myListenAddress)
         {
@@ -43,13 +44,15 @@ public:
         }
 
     void InstantiatePeerSet() {
+        const bool createInProcessPDUPeer(true);
         mPeerSet.reset(
             new PDUPeerSetBuilderImpl(
                 mListenAddress,
                 mPeerAddresses,
                 boost::bind(&TestPeer::EventCallback, this, _1),
                 2, // min threads
-                4  // max threads
+                4, // max threads
+                createInProcessPDUPeer
                 ));
     }
 
@@ -58,6 +61,8 @@ public:
     }
 
     void EventCallback(PDUPeerEventPtr event) {
+        AutoUnlockMutex lock(mEventCallbackMutex);
+
         switch (event->mEventType)
         {
         case PDUPeerReceivedPDUEvent:
@@ -77,6 +82,10 @@ public:
             break;
 
         case PDUPeerConnectedEvent:
+            mConnectEventCount++;
+            hlogstream(HLOG_INFO, "connected event for " << mPeerID);
+            break;
+
         case PDUPeerDisconnectedEvent:
         default:
             break;
@@ -87,7 +96,11 @@ public:
     uint64_t mPeerID;
     Forte::Mutex mPeerDataMutex;
     std::list<PDUPtr> mReceivedPDUList;
+
+    Forte::Mutex mEventCallbackMutex;
     int mCallbackCount;
+    int mConnectEventCount;
+
     SocketAddressVector mPeerAddresses;
     SocketAddress mListenAddress;
 };
@@ -239,6 +252,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanDispatchWithoutThrowing)
     peerSet.BroadcastAsync(pdu);
 }
 
+
 TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanProvideConnectionStatusOnPeers)
 {
     FTRACE;
@@ -292,6 +306,40 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanProvideConnectionStatusOnPeers)
     EXPECT_TRUE(isConnected(2,0));
     EXPECT_FALSE(isConnected(0,1));
     EXPECT_FALSE(isConnected(2,1));
+}
+
+TEST_F(PDUPeerSetBuilderImplOnBoxTest, AllPeersReceiveConnectEvent)
+{
+    FTRACE;
+
+    setupThreePeers();
+
+    DeadlineClock deadline;
+    deadline.ExpiresInSeconds(10);
+    while (!deadline.Expired())
+    {
+        bool allConnected(true);
+        foreach(const TestPeerPtr& peer, mTestPeers)
+        {
+            foreach(const TestPeerPtr& peer2, mTestPeers)
+            {
+                if (!peer->mPeerSet->GetPeer(peer2->mPeerID)->IsConnected())
+                {
+                    allConnected = false;
+                }
+            }
+        }
+
+        if (allConnected)
+            break;
+
+        usleep(10000);
+    }
+
+    foreach(const TestPeerPtr& peer, mTestPeers)
+    {
+        EXPECT_EQ(3, peer->mConnectEventCount);
+    }
 }
 
 TEST_F(PDUPeerSetBuilderImplOnBoxTest, AllPeersReceiveABroadcastPDUFromFirst)

@@ -60,8 +60,6 @@ boost::shared_ptr<PDUPeerEndpoint> PDUPeerEndpointFactoryImpl::Create(
             new PDUPeerNetworkConnectorEndpoint(
                 outgoingPeerSetID, dispatcher, connectToSocketAddress));
 
-        p->CheckConnections();
-
         return p;
     }
 }

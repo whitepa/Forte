@@ -12,6 +12,7 @@ namespace Forte
         GMockPDUPeer() {}
         ~GMockPDUPeer() {}
 
+        MOCK_METHOD0(Begin, void());
         MOCK_CONST_METHOD0(GetFD, int());
         MOCK_CONST_METHOD1(OwnsFD, bool(int fd));
         MOCK_METHOD1(AddFD, void(int fd));

@@ -37,6 +37,11 @@ namespace Forte
         PDUPeer() {}
         virtual ~PDUPeer() {}
 
+        // having a Begin method allows the whole PDUPeerSet to be up
+        // and ready before starting to connect, handle connections,
+        // epoll events, etc
+        virtual void Begin() = 0;
+
         // In cases where there is a single FD we will provide it to
         // consumers. This is largely to support existing PDUPeer
         // implementations that rely on the underying file

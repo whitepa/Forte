@@ -17,6 +17,13 @@ namespace Forte
         PDUPeerInProcessEndpoint();
         virtual ~PDUPeerInProcessEndpoint();
 
+        virtual void Begin() {
+            PDUPeerEventPtr event(new PDUPeerEvent());
+            event->mEventType = PDUPeerConnectedEvent;
+            if (mEventCallback)
+                mEventCallback(event);
+        }
+
         virtual void SendPDU(const Forte::PDU &pdu);
         virtual bool IsPDUReady() const;
         virtual bool RecvPDU(Forte::PDU &out);

@@ -32,6 +32,12 @@ Forte::PDUPeerSetImpl::PDUPeerSetImpl(
 void Forte::PDUPeerSetImpl::StartPolling()
 {
     mPollThread.reset(new PDUPollThread(*this));
+
+    foreach (const IntPDUPeerPtrPair& p, mPDUPeers)
+    {
+        PDUPeerPtr peer(p.second);
+        peer->Begin();
+    }
 }
 
 Forte::PDUPeerSetImpl::~PDUPeerSetImpl()

@@ -83,6 +83,8 @@ namespace Forte
         PDUPeerEndpoint() {}
         virtual ~PDUPeerEndpoint() {}
 
+        virtual void Begin() = 0;
+
         // as we move towards multiple FDs per peer, this will be
         // AddFD. GetFD will become GetFDs. PDUPeerEndpoint becomes
         // owner of this FD and will be responsible for closing it.

@@ -54,6 +54,10 @@ namespace Forte
 
         virtual ~PDUPeerImpl() {}
 
+        virtual void Begin() {
+            mEndpoint->Begin();
+        }
+
         const uint64_t GetID() const { return mConnectingPeerID; }
 
         virtual int GetFD() const {

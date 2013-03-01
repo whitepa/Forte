@@ -12,6 +12,7 @@ namespace Forte
         GMockPDUPeerEndpoint() {}
         ~GMockPDUPeerEndpoint() {}
 
+        MOCK_METHOD0(Begin, void());
         MOCK_METHOD1(SendPDU, void(const Forte::PDU &pdu));
         MOCK_CONST_METHOD0(IsPDUReady, bool());
         MOCK_CONST_METHOD0(IsConnected, bool());
