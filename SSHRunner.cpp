@@ -141,6 +141,28 @@ SSHRunner::~SSHRunner()
     }
 }
 
+bool SSHRunner::RunQuiet( const FString &command)
+{
+    FString output, errOutput;
+    if (SSHRunner::Run(command, &output, &errOutput) != 0)
+        return false;
+    return true;
+}
+
+int SSHRunner::Run( const FString &command)
+{
+    FString output, errOutput;
+    int ret;
+    ret = SSHRunner::Run(command, &output, &errOutput);
+    if (ret != 0)
+    {
+        hlog(HLOG_DEBUG, "Command failed: (%s)", command.c_str());
+        hlog(HLOG_DEBUG, "  Output: (%s)", output.c_str());
+        hlog(HLOG_DEBUG, "  Error: (%s)", errOutput.c_str());
+    }
+    return ret;
+}
+
 int SSHRunner::Run(
     const FString &command,
     FString *output,

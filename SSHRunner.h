@@ -67,6 +67,10 @@ namespace Forte
                         FString *output,
                         FString *errorOutput);
 
+        bool RunQuiet(const FString &command);
+
+        int Run(const FString &command);
+
         virtual void GetFile(const FString &remotePath,
                              const FString &loclPath);
 
