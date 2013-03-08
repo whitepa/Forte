@@ -103,6 +103,7 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
 }
 
 Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl()
+    :mID(0)
 {
     // begin worker thread setup
     mWorkHandler.reset(new PDUPeerSetWorkHandler());
