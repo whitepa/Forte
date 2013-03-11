@@ -46,7 +46,7 @@ void* Forte::ThreadPoolDispatcherManager::run(void)
     }
     // loop until shutdown
     int lastNew = 0;
-    while (!disp.mShutdown)
+    while (!disp.IsShuttingDown())
     {
         interruptibleSleep(Timespec::FromMillisec(1000), false);
 
@@ -61,7 +61,7 @@ void* Forte::ThreadPoolDispatcherManager::run(void)
         //hlog(HLOG_DEBUG4,
         //"ThreadPool Manager Loop: %d threads; %d spare; %d needed",
         //currentThreads, spareThreads, newThreadsNeeded);
-        if (!disp.mShutdown && newThreadsNeeded > 0)
+        if (!disp.IsShuttingDown() && newThreadsNeeded > 0)
         {
             numNew = (lastNew == 0) ? 1 : lastNew * 2;
 

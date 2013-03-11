@@ -85,7 +85,7 @@ Forte::ProcessFutureImpl::~ProcessFutureImpl()
 
 void Forte::ProcessFutureImpl::SetProcessCompleteCallback(ProcessCompleteCallback processCompleteCallback)
 {
-    if(mState != STATE_READY)
+    if(getState() != STATE_READY)
     {
         hlog(HLOG_ERR, "tried setting the process complete callback after the process had been started");
         throw EProcessFutureStarted();
@@ -95,7 +95,7 @@ void Forte::ProcessFutureImpl::SetProcessCompleteCallback(ProcessCompleteCallbac
 
 void Forte::ProcessFutureImpl::SetCurrentWorkingDirectory(const FString &cwd)
 {
-    if(mState != STATE_READY)
+    if(getState() != STATE_READY)
     {
         hlog(HLOG_ERR, "tried setting the current working directory after the process had been started");
         throw EProcessFutureStarted();
@@ -105,7 +105,8 @@ void Forte::ProcessFutureImpl::SetCurrentWorkingDirectory(const FString &cwd)
 
 void Forte::ProcessFutureImpl::SetEnvironment(const StrStrMap *env)
 {
-    if(mState != STATE_READY)
+    int state = getState();
+    if(state != STATE_READY)
     {
         hlog(HLOG_ERR, "tried setting the environment after the process had been started");
         throw EProcessFutureStarted();
@@ -119,7 +120,9 @@ void Forte::ProcessFutureImpl::SetEnvironment(const StrStrMap *env)
 
 void Forte::ProcessFutureImpl::SetInputFilename(const FString &infile)
 {
-    if(mState != STATE_READY)
+    int state = getState();
+
+    if(state != STATE_READY)
     {
         hlog(HLOG_ERR, "tried setting the input filename after the process had been started");
         throw EProcessFutureStarted();
@@ -129,7 +132,9 @@ void Forte::ProcessFutureImpl::SetInputFilename(const FString &infile)
 
 void Forte::ProcessFutureImpl::SetOutputFilename(const FString &outfile)
 {
-    if(mState != STATE_READY)
+    int state = getState();
+
+    if(state != STATE_READY)
     {
         hlog(HLOG_ERR, "tried setting the output filename after the process had been started");
         throw EProcessFutureStarted();
@@ -139,7 +144,9 @@ void Forte::ProcessFutureImpl::SetOutputFilename(const FString &outfile)
 
 void Forte::ProcessFutureImpl::SetErrorFilename(const FString &errorfile)
 {
-    if(mState != STATE_READY)
+    int state = getState();
+
+    if(state != STATE_READY)
     {
         hlog(HLOG_ERR, "tried setting the error filename after the process had been started");
         throw EProcessFutureStarted();
@@ -162,7 +169,7 @@ void Forte::ProcessFutureImpl::run()
     if (!mManagementChannel)
         throw EProcessFutureHandleInvalid();
 
-    if (mState != STATE_READY)
+    if (getState() != STATE_READY)
         throw EProcessFutureStarted();
 
     // we must set the state prior to sending the start PDU to avoid a race
@@ -217,7 +224,7 @@ void Forte::ProcessFutureImpl::run()
     // wait for the process to change state
     MonotonicClock mtc;
     AutoUnlockMutex lock(mWaitLock);
-    while (mState == STATE_STARTING)
+    while (getState() == STATE_STARTING)
     {
         mWaitCond.TimedWait(mtc.GetTime() + Timespec::FromMillisec(100));
     }
@@ -226,7 +233,10 @@ void Forte::ProcessFutureImpl::run()
 
 void Forte::ProcessFutureImpl::setState(int state)
 {
-    mState = state;
+    {
+        AutoUnlockMutex lock(mStateLock);
+        mState = state;
+    }
     if (isInTerminalState())
     {
         if (mProcessCompleteCallback)
@@ -237,7 +247,7 @@ void Forte::ProcessFutureImpl::setState(int state)
         // set the future
         try
         {
-            switch (mState)
+            switch (getState())
             {
             case STATE_EXITED:
             {
@@ -335,7 +345,7 @@ void Forte::ProcessFutureImpl::setState(int state)
 
 void Forte::ProcessFutureImpl::GetResult()
 {
-    if(mState == STATE_READY)
+    if(getState() == STATE_READY)
     {
         hlog(HLOG_ERR, "tried waiting on a process that has not been started");
         throw EProcessFutureNotRunning();
@@ -346,7 +356,7 @@ void Forte::ProcessFutureImpl::GetResult()
 
 void Forte::ProcessFutureImpl::GetResultTimed(const Timespec &timeout)
 {
-    if(mState == STATE_READY)
+    if(getState() == STATE_READY)
     {
         hlog(HLOG_ERR, "tried waiting on a process that has not been started");
         throw EProcessFutureNotRunning();
@@ -389,7 +399,7 @@ void Forte::ProcessFutureImpl::Signal(int signum)
 
 unsigned int Forte::ProcessFutureImpl::GetStatusCode()
 {
-    if(mState == STATE_READY)
+    if(getState() == STATE_READY)
     {
         hlog(HLOG_ERR, "tried grabbing the status code from a process that hasn't been started");
         throw EProcessFutureNotStarted();
@@ -404,7 +414,9 @@ unsigned int Forte::ProcessFutureImpl::GetStatusCode()
 
 Forte::ProcessFuture::ProcessTerminationType Forte::ProcessFutureImpl::GetProcessTerminationType()
 {
-    if(mState == STATE_READY)
+    int state = getState();
+
+    if(state == STATE_READY)
     {
         hlog(HLOG_ERR, "tried grabbing the termination type from a process that hasn't been started");
         throw EProcessFutureNotStarted();
@@ -414,9 +426,9 @@ Forte::ProcessFuture::ProcessTerminationType Forte::ProcessFutureImpl::GetProces
         hlog(HLOG_ERR, "tried grabbing the termination type from a process that hasn't completed yet");
         throw EProcessFutureNotFinished();
     }
-    else if (mState == STATE_EXITED)
+    else if (state == STATE_EXITED)
         return ProcessExited;
-    else if (mState == STATE_KILLED)
+    else if (state == STATE_KILLED)
         return ProcessKilled;
     else // STATE_ERROR or other
         return ProcessUnknownTermination;
@@ -424,7 +436,7 @@ Forte::ProcessFuture::ProcessTerminationType Forte::ProcessFutureImpl::GetProces
 
 FString Forte::ProcessFutureImpl::GetOutputString()
 {
-    if(mState == STATE_READY)
+    if(getState() == STATE_READY)
     {
         hlog(HLOG_ERR, "tried grabbing the output from a process that hasn't been started");
         throw EProcessFutureNotStarted();
@@ -470,7 +482,7 @@ FString Forte::ProcessFutureImpl::GetOutputString()
 
 FString Forte::ProcessFutureImpl::GetErrorString()
 {
-    if(mState == STATE_READY)
+    if(getState() == STATE_READY)
     {
         hlog(HLOG_ERR, "tried grabbing the error from a process that hasn't been started");
         throw EProcessFutureNotStarted();

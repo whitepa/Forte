@@ -279,11 +279,17 @@ namespace Forte
          */
         void setState(int state);
 
+        int getState() {
+            AutoUnlockMutex lock(mStateLock);
+            return mState;
+        }
+
         bool isInTerminalState(void) {
-            return (mState == STATE_ERROR ||
-                    mState == STATE_EXITED ||
-                    mState == STATE_KILLED ||
-                    mState == STATE_ABANDONED);
+            int state = getState();
+            return (state == STATE_ERROR ||
+                    state == STATE_EXITED ||
+                    state == STATE_KILLED ||
+                    state == STATE_ABANDONED);
         }
 
         /**
@@ -295,9 +301,10 @@ namespace Forte
          * @return bool
          */
         bool isInActiveState(void) {
-            return (mState == STATE_STARTING ||
-                    mState == STATE_RUNNING ||
-                    mState == STATE_STOPPED);
+            int state = getState();
+            return (state == STATE_STARTING ||
+                    state == STATE_RUNNING ||
+                    state == STATE_STOPPED);
         }
 
         /**
@@ -308,8 +315,9 @@ namespace Forte
          * @return bool
          */
         bool isInRunningState(void) {
-            return (mState == STATE_RUNNING ||
-                    mState == STATE_STOPPED);
+            int state = getState();
+            return (state == STATE_RUNNING ||
+                    state == STATE_STOPPED);
         }
 
         /**
@@ -376,6 +384,7 @@ namespace Forte
             STATE_UNKNOWN
         };
         int mState;
+        Mutex mStateLock;
 
         Mutex mWaitLock;
         ThreadCondition mWaitCond;
