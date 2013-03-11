@@ -558,7 +558,7 @@ int FileSystemImpl::ScanDir(const FString& path, std::vector<FString> &namelist)
         }
 
     }
-    return (int)namelist.size();
+    return static_cast<int>(namelist.size());
 }
 
 void FileSystemImpl::MakeDirAt(int dir_fd, const FString& path, mode_t mode)

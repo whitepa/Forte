@@ -24,14 +24,15 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
       mPeerSocketAddresses(peers),
       mPDUPeerEndpointFactory(new PDUPeerEndpointFactoryImpl())
 {
-    FTRACE2("%llu", (unsigned long long) mID);
+    FTRACE2("%llu", static_cast<unsigned long long>(mID));
 
     hlogstream(HLOG_INFO, "My pdu peer id is " << mID
          << " based on " << listenAddress.first << ":" << listenAddress.second);
 
     // begin worker thread setup
     FString workerDispatcherName(
-        FStringFC(), "PDUWorkDispatcher-%llu", (unsigned long long) mID);
+        FStringFC(), "PDUWorkDispatcher-%llu",
+        static_cast<unsigned long long>(mID));
     mWorkHandler.reset(new PDUPeerSetWorkHandler());
     mWorkDispatcher.reset(
         new ThreadPoolDispatcher(
@@ -131,7 +132,7 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl()
 
 Forte::PDUPeerSetBuilderImpl::~PDUPeerSetBuilderImpl()
 {
-    FTRACE2("%llu", (unsigned long long) mID);
+    FTRACE2("%llu", static_cast<unsigned long long>(mID));
 
     if (mReceiverThread)
     {
@@ -164,7 +165,7 @@ uint64_t Forte::PDUPeerSetBuilderImpl::SocketAddressToID(const SocketAddress& sa
     //TODO: need to handle the case of 0.0.0.0
     if (inet_pton(AF_INET, sa.first.c_str(), &sa_in.sin_addr) == 1)
     {
-        addrAsBinary = (int32_t) sa_in.sin_addr.s_addr;
+        addrAsBinary = static_cast<int32_t>(sa_in.sin_addr.s_addr);
         // switch to host ordering
         addrAsBinary = ntohl(addrAsBinary);
 

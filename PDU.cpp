@@ -120,8 +120,9 @@ std::ostream& Forte::operator<<(std::ostream& os, const PDU &obj)
         if (payload != NULL)
         {
             FString str;
-            str.assign((const char*)payload,
-                       std::min(payloadSize, (unsigned int) 255));
+            str.assign(
+                reinterpret_cast<const char*>(const_cast<const void*>(payload)),
+                std::min(payloadSize, static_cast<unsigned int>(255)));
             os << "Payload = "
                << "[" << payloadSize << "]" << endl
                << "|" << str.HexDump().c_str() << "|" << endl;
@@ -137,8 +138,9 @@ std::ostream& Forte::operator<<(std::ostream& os, const PDU &obj)
         if (optionalData && optionalData->GetData() != NULL)
         {
             FString str;
-            str.assign((const char*)optionalData->GetData(),
-                       std::min(optionalDataSize, (unsigned int) 255));
+            str.assign(
+                reinterpret_cast<const char*>(optionalData->GetData()),
+                std::min(optionalDataSize, static_cast<unsigned int>(255)));
 
             os << "OptionalData = "
                << "[" << optionalDataSize << "]" << endl

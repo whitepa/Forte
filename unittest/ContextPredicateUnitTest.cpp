@@ -15,6 +15,8 @@ static const char *validStrArray[] = {
     NULL
 };
 
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+
 class ContextPredicateTest : public ::testing::Test
 {
 public:
@@ -42,6 +44,8 @@ public:
         return make_tuple(false, MonotonicClock().GetTime());
     }
 };
+
+#pragma GCC diagnostic warning "-Wold-style-cast"
 
 TEST_F (ContextPredicateTest, s_test1)
 {

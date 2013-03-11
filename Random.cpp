@@ -15,7 +15,7 @@ FString Random::GetSecureRandomData(unsigned int length)
         throw ERandom("unable to open /dev/random");
     char *data = new char[length+1];
     device.read(data, length);
-    FString randomString(std::string(data, (size_t)length));
+    FString randomString(std::string(data, static_cast<size_t>(length)));
     delete [] data;
     return randomString;
 }
@@ -28,7 +28,7 @@ FString Random::GetRandomData(unsigned int length)
         throw ERandom("unable to open /dev/urandom");
     char *data = new char[length+1];
     device.read(data, length);
-    FString randomString(std::string(data, (size_t)length));
+    FString randomString(std::string(data, static_cast<size_t>(length)));
     delete [] data;
     return randomString;
 }
@@ -40,6 +40,6 @@ unsigned int Random::GetRandomUInt(void)
     if (!device.good())
         throw ERandom("unable to open /dev/urandom");
     unsigned int r;
-    device.read((char *)&r, sizeof(unsigned int));
+    device.read(reinterpret_cast<char *>(&r), sizeof(unsigned int));
     return r;
 }

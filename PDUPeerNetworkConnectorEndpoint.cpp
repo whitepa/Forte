@@ -98,7 +98,9 @@ void Forte::PDUPeerNetworkConnectorEndpoint::connect()
     sa.sin_family = AF_INET;
     sa.sin_port = htons(mConnectToAddress.second);
 
-    if (::connect(sock, (const struct sockaddr*) &sa, sizeof(sa)) == -1)
+    if (::connect(sock,
+                  const_cast<const struct sockaddr *>(reinterpret_cast<struct sockaddr*>(&sa)),
+                  sizeof(sa)) == -1)
     {
         hlogstream(HLOG_DEBUG2, "could not connect to "
                    << mConnectToAddress.first

@@ -14,6 +14,8 @@
 #include "PDU.h"
 #include "SystemCallUtil.h"
 
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+
 bool Forte::ProcessMonitor::sGotSIGCHLD = false;
 
 Forte::ProcessMonitor::ProcessMonitor(int argc, char *argv[]) :

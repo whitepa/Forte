@@ -72,13 +72,13 @@ int DbLiteResult::LiteData::Load(sqlite3_stmt *stmt)
             }
             else if (type == SQLITE_BLOB)
             {
-                val.first.assign((const char*)sqlite3_column_blob(stmt, i),
+                val.first.assign(reinterpret_cast<const char*>(sqlite3_column_blob(stmt, i)),
                                  sqlite3_column_bytes(stmt, i));
                 val.second = false;
             }
             else
             {
-                val.first = (const char*)sqlite3_column_text(stmt, i);
+                val.first = reinterpret_cast<const char*>(sqlite3_column_text(stmt, i));
                 val.second = false;
             }
 

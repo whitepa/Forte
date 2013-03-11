@@ -1,4 +1,9 @@
+%top {
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+}
+
 %{
+
 #include "Forte.h"
 #include "boost/any.hpp"
 #include "boost/shared_ptr.hpp"

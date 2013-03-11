@@ -22,6 +22,8 @@ using namespace Forte;
 
 LogManager logManager;
 
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+
 class ProcessManagerTest : public ::testing::Test
 {
 public:
@@ -35,6 +37,8 @@ public:
     };
 
 };
+
+#pragma GCC diagnostic warning "-Wold-style-cast"
 
 TEST_F(ProcessManagerTest, Runs100ProcessesInUnder10Seconds)
 {

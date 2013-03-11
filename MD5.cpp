@@ -76,22 +76,22 @@ static unsigned char PADDING[64] = {
    Rotation is separate from addition to prevent recomputation.
 */
 #define FF(a, b, c, d, x, s, ac) {                      \
-        (a) += F ((b), (c), (d)) + (x) + (UINT4)(ac);   \
+        (a) += F ((b), (c), (d)) + (x) + static_cast<UINT4>(ac);   \
         (a) = ROTATE_LEFT ((a), (s));                   \
         (a) += (b);                                     \
     }
 #define GG(a, b, c, d, x, s, ac) {                      \
-        (a) += G ((b), (c), (d)) + (x) + (UINT4)(ac);   \
+        (a) += G ((b), (c), (d)) + (x) + static_cast<UINT4>(ac);   \
         (a) = ROTATE_LEFT ((a), (s));                   \
         (a) += (b);                                     \
     }
 #define HH(a, b, c, d, x, s, ac) {                      \
-        (a) += H ((b), (c), (d)) + (x) + (UINT4)(ac);   \
+        (a) += H ((b), (c), (d)) + (x) + static_cast<UINT4>(ac);   \
         (a) = ROTATE_LEFT ((a), (s));                   \
         (a) += (b);                                     \
     }
 #define II(a, b, c, d, x, s, ac) {                      \
-        (a) += I ((b), (c), (d)) + (x) + (UINT4)(ac);   \
+        (a) += I ((b), (c), (d)) + (x) + static_cast<UINT4>(ac);   \
         (a) = ROTATE_LEFT ((a), (s));                   \
         (a) += (b);                                     \
     }
@@ -118,14 +118,14 @@ void MD5Update (MD5_CTX *context, unsigned char *input, unsigned int inputLen)
     unsigned int i, index, partLen;
 
     /* Compute number of bytes mod 64 */
-    index = (unsigned int)((context->count[0] >> 3) & 0x3F);
+    index = static_cast<unsigned int>((context->count[0] >> 3) & 0x3F);
 
     /* Update number of bits */
-    if ((context->count[0] += ((UINT4)inputLen << 3))
+    if ((context->count[0] += (static_cast<UINT4>(inputLen) << 3))
 
-        < ((UINT4)inputLen << 3))
+        < (static_cast<UINT4>(inputLen) << 3))
         context->count[1]++;
-    context->count[1] += ((UINT4)inputLen >> 29);
+    context->count[1] += (static_cast<UINT4>(inputLen) >> 29);
 
     partLen = 64 - index;
 
@@ -133,7 +133,8 @@ void MD5Update (MD5_CTX *context, unsigned char *input, unsigned int inputLen)
      */
     if (inputLen >= partLen) {
         MD5_memcpy
-            ((POINTER)&context->buffer[index], (POINTER)input, partLen);
+            (static_cast<POINTER>(&context->buffer[index]),
+             static_cast<POINTER>(input), partLen);
         MD5Transform (context->state, context->buffer);
 
         for (i = partLen; i + 63 < inputLen; i += 64)
@@ -146,7 +147,8 @@ void MD5Update (MD5_CTX *context, unsigned char *input, unsigned int inputLen)
 
     /* Buffer remaining input */
     MD5_memcpy
-        ((POINTER)&context->buffer[index], (POINTER)&input[i],
+        (static_cast<POINTER>(&context->buffer[index]),
+         static_cast<POINTER>(&input[i]),
          inputLen-i);
 }
 
@@ -163,7 +165,7 @@ void MD5Final (unsigned char digest[16], MD5_CTX *context)
 
     /* Pad out to 56 mod 64.
      */
-    index = (unsigned int)((context->count[0] >> 3) & 0x3f);
+    index = static_cast<unsigned int>((context->count[0] >> 3) & 0x3f);
     padLen = (index < 56) ? (56 - index) : (120 - index);
     MD5Update (context, PADDING, padLen);
 
@@ -175,7 +177,7 @@ void MD5Final (unsigned char digest[16], MD5_CTX *context)
 
     /* Zeroize sensitive information.
      */
-    MD5_memset ((POINTER)context, 0, sizeof (*context));
+    MD5_memset (reinterpret_cast<POINTER>(context), 0, sizeof (*context));
 }
 
 /* MD5 basic transformation. Transforms state based on block.
@@ -267,7 +269,7 @@ static void MD5Transform (UINT4 state[4], unsigned char block[64])
     /* Zeroize sensitive information.
 
      */
-    MD5_memset ((POINTER)x, 0, sizeof (x));
+    MD5_memset (reinterpret_cast<POINTER>(x), 0, sizeof (x));
 }
 
 /* Encodes input (UINT4) into output (unsigned char). Assumes len is
@@ -278,10 +280,10 @@ static void Encode (unsigned char *output, UINT4 *input, unsigned int len)
     unsigned int i, j;
 
     for (i = 0, j = 0; j < len; i++, j += 4) {
-        output[j] = (unsigned char)(input[i] & 0xff);
-        output[j+1] = (unsigned char)((input[i] >> 8) & 0xff);
-        output[j+2] = (unsigned char)((input[i] >> 16) & 0xff);
-        output[j+3] = (unsigned char)((input[i] >> 24) & 0xff);
+        output[j] = static_cast<unsigned char>(input[i] & 0xff);
+        output[j+1] = static_cast<unsigned char>((input[i] >> 8) & 0xff);
+        output[j+2] = static_cast<unsigned char>((input[i] >> 16) & 0xff);
+        output[j+3] = static_cast<unsigned char>((input[i] >> 24) & 0xff);
     }
 }
 
@@ -293,8 +295,10 @@ static void Decode (UINT4 *output, unsigned char *input, unsigned int len)
     unsigned int i, j;
 
     for (i = 0, j = 0; j < len; i++, j += 4)
-        output[i] = ((UINT4)input[j]) | (((UINT4)input[j+1]) << 8) |
-            (((UINT4)input[j+2]) << 16) | (((UINT4)input[j+3]) << 24);
+        output[i] = (static_cast<UINT4>(input[j])) |
+            ((static_cast<UINT4>(input[j+1])) << 8) |
+            ((static_cast<UINT4>(input[j+2])) << 16) |
+            ((static_cast<UINT4>(input[j+3])) << 24);
 }
 
 /* Note: Replace "for loop" with standard memcpy if possible.

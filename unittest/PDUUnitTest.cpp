@@ -163,7 +163,7 @@ TEST_F(PDUUnitTest, CanRequestMemAlignedOptionalData)
     EXPECT_EQ(optionalDataSize, pdu.GetOptionalDataSize());
     EXPECT_TRUE(memcmp(data->mData,
                        pdu.GetOptionalData()->GetData(), optionalDataSize) == 0);
-    EXPECT_EQ(0, ((uint64_t) pdu.GetOptionalData()->GetData()) % 512);
+    EXPECT_EQ(0, (reinterpret_cast<unsigned long long>(pdu.GetOptionalData()->GetData())) % 512);
 }
 
 TEST_F(PDUUnitTest, CompareIdentity)

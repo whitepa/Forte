@@ -14,6 +14,8 @@
 
 using namespace Forte;
 
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+
 // this thread just loops and accepts connections
 void * Forte::ReceiverThread::run(void)
 {
@@ -43,7 +45,7 @@ void * Forte::ReceiverThread::run(void)
         throw EReceiverThread(
             FStringFC(), "invalid bind IP: %s", mBindIP.c_str());
 
-    if (::bind(m, (struct sockaddr*)&bind_addr, sizeof(struct sockaddr_in)) == -1)
+    if (::bind(m, reinterpret_cast<struct sockaddr*>(&bind_addr), sizeof(struct sockaddr_in)) == -1)
         throw EReceiverThread(FStringFC(), "failed to bind: %s",
                               SystemCallUtil::GetErrorDescription(errno).c_str());
 
@@ -63,7 +65,7 @@ void * Forte::ReceiverThread::run(void)
     // behavior is to close all file descriptors in the forked child
     // process *before* you do the exec.  We'll leave this in anyway:
     int flags = fcntl(m, F_GETFD);
-    fcntl(m, F_SETFD, (long)(flags | FD_CLOEXEC));
+    fcntl(m, F_SETFD, static_cast<long>(flags | FD_CLOEXEC));
 
     struct epoll_event ev;
     ev.events = EPOLLIN;
@@ -107,7 +109,7 @@ void * Forte::ReceiverThread::run(void)
 
         if (events[0].events & EPOLLIN)
         {
-            s = accept(m, (struct sockaddr *)&in_addr, &len);
+            s = accept(m, reinterpret_cast<struct sockaddr *>(&in_addr), &len);
         }
         else
         {

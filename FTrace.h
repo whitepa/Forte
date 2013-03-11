@@ -84,7 +84,7 @@ namespace Forte
         {
             va_list args;
             va_start(args, fmt);
-            mArgumentBuffer = (char *)malloc(MAX_BUFFER_SIZE);
+            mArgumentBuffer = static_cast<char *>(malloc(MAX_BUFFER_SIZE));
             vsnprintf(mArgumentBuffer, MAX_BUFFER_SIZE, fmt, args);
 
             _hlog(mFN.c_str(), mFile, mLine,
@@ -95,7 +95,7 @@ namespace Forte
         FunctionEntry(const char* functionName, const char *file, int line, const Forte::FString& message)
             : mFN(functionName), mFile(file), mLine(line), mArgumentBuffer(NULL)
         {
-            mArgumentBuffer = (char *)malloc(MAX_BUFFER_SIZE);
+            mArgumentBuffer = static_cast<char *>(malloc(MAX_BUFFER_SIZE));
             strncpy(mArgumentBuffer, message.c_str(), MAX_BUFFER_SIZE);
             _hlog(mFN.c_str(), mFile, mLine, HLOG_TRACE, "ENTER (%s)", mArgumentBuffer);
         }

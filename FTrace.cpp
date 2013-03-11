@@ -68,10 +68,10 @@ FTraceThreadInfo::~FTraceThreadInfo()
 FTraceThreadInfo* FTrace::getThreadInfo(void)
 {
     FTraceThreadInfo *i = reinterpret_cast<FTraceThreadInfo *>(sTraceKey.Get());
-    if (i == (void*)1) return NULL;  // (void*)1 means we hit a recursion loop
+    if (i == reinterpret_cast<void*>(1)) return NULL;  // (void*)1 means we hit a recursion loop
     if (i == NULL)
     {
-        sTraceKey.Set((void*)1);
+        sTraceKey.Set(reinterpret_cast<void*>(1));
         i = new FTraceThreadInfo();
         sTraceKey.Set(i);
     }
@@ -237,7 +237,7 @@ void FTrace::DumpProfiling(unsigned int num)
         profileSet.insert(*pd);
     }
     hlog(HLOG_DEBUG, "profiling information collected on %llu distinct functions",
-         (unsigned long long) i.profileData.size());
+         static_cast<unsigned long long>(i.profileData.size()));
     if (num == 0)
         num = profileSet.size();
     unsigned int c = 0;
@@ -246,12 +246,12 @@ void FTrace::DumpProfiling(unsigned int num)
         if (c++ >= num) break;
         hlog(HLOG_DEBUG, "%016llx: %lld calls, "
              "%04lld.%06lld spent, %04lld.%06lld total",
-             (unsigned long long) pd.mFunction,
-             (unsigned long long) pd.mCalls,
-             (unsigned long long) pd.mSpent.tv_sec,
-             (unsigned long long) pd.mSpent.tv_usec,
-             (unsigned long long) pd.mTotalSpent.tv_sec,
-             (unsigned long long) pd.mTotalSpent.tv_usec);
+             reinterpret_cast<unsigned long long>(pd.mFunction),
+             static_cast<unsigned long long>(pd.mCalls),
+             static_cast<unsigned long long>(pd.mSpent.tv_sec),
+             static_cast<unsigned long long>(pd.mSpent.tv_usec),
+             static_cast<unsigned long long>(pd.mTotalSpent.tv_sec),
+             static_cast<unsigned long long>(pd.mTotalSpent.tv_usec));
         if (pd.mStackSample.size() > 0)
         {
             FString stack;
@@ -267,7 +267,7 @@ FString & FTrace::formatStack(const std::list<void *> &stack, FString &out)
     std::list<void *>::const_iterator i;
     for(i = stack.begin(); i != stack.end(); ++i)
     {
-        out.append(FString(FStringFC(), "%s%016llx", (first)?"":", ",(unsigned long long)*i));
+        out.append(FString(FStringFC(), "%s%016llx", (first)?"":", ",reinterpret_cast<unsigned long long>(*i)));
         first = false;
     }
     return out;

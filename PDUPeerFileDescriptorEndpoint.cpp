@@ -7,7 +7,7 @@
 
 void Forte::PDUPeerFileDescriptorEndpoint::SetFD(int fd)
 {
-    FTRACE2("%d, %d", mEPollFD, (int) mFD);
+    FTRACE2("%d, %d", mEPollFD, static_cast<int>(mFD));
     AutoUnlockMutex fdlock(mFDLock);
 
     removeFDFromEPoll();
@@ -22,7 +22,7 @@ void Forte::PDUPeerFileDescriptorEndpoint::SetFD(int fd)
 
 void Forte::PDUPeerFileDescriptorEndpoint::SetEPollFD(int epollFD)
 {
-    FTRACE2("%d, %d", epollFD, (int) mFD);
+    FTRACE2("%d, %d", epollFD, static_cast<int>(mFD));
     AutoUnlockMutex fdlock(mFDLock);
 
     removeFDFromEPoll();
@@ -135,8 +135,7 @@ void Forte::PDUPeerFileDescriptorEndpoint::bufferEnsureHasSpace()
                 memcpy(tmpstr, mPDUBuffer.get(), mBufSize);
             mPDUBuffer.reset(tmpstr);
             mBufSize = newsize;
-            hlog(HLOG_DEBUG,
-                 "PDU new size %llu", (unsigned long long)mBufSize);
+            hlog(HLOG_DEBUG, "PDU new size %zu", mBufSize);
         }
     }
     catch (std::bad_alloc &e)
@@ -190,7 +189,8 @@ void Forte::PDUPeerFileDescriptorEndpoint::addFDToEPoll()
 
     if (mFD != -1 && mEPollFD != -1)
     {
-        hlog(HLOG_DEBUG2, "add fd %d to epoll fd %d", (int) mFD, mEPollFD);
+        hlog(HLOG_DEBUG2,
+             "add fd %d to epoll fd %d", static_cast<int>(mFD), mEPollFD);
         struct epoll_event ev;
         ev.events = EPOLLIN | EPOLLERR | EPOLLRDHUP;
         // NOTE: ptr and fd are in the same union, so reversing this
@@ -203,8 +203,8 @@ void Forte::PDUPeerFileDescriptorEndpoint::addFDToEPoll()
             throw EPDUPeerSetEPollFD(
                 FString(FStringFC(),
                         "epoll : %d, fd: %d, %s",
-                        (int) mEPollFD,
-                        (int) mFD,
+                        static_cast<int>(mEPollFD),
+                        static_cast<int>(mFD),
                         SystemCallUtil::GetErrorDescription(errno).c_str()));
         }
     }
@@ -262,7 +262,8 @@ void Forte::PDUPeerFileDescriptorEndpoint::SendPDU(const Forte::PDU &pdu)
             len = pdu.GetOptionalDataSize();
             offset = 0;
             const char*
-                optionalData = (const char*) pdu.GetOptionalData()->GetData();
+                optionalData =
+                reinterpret_cast<const char*>(pdu.GetOptionalData()->GetData());
 
             hlog(HLOG_DEBUG2,
                  "sending %zu bytes of optional data on fd %d",
@@ -314,7 +315,8 @@ bool Forte::PDUPeerFileDescriptorEndpoint::lockedIsPDUReady(void) const
         return false;
     }
 
-    Forte::PDUHeader *pduHeader = (Forte::PDUHeader*)mPDUBuffer.get();
+    Forte::PDUHeader *pduHeader =
+        reinterpret_cast<Forte::PDUHeader*>(mPDUBuffer.get());
 
     // Validate PDU
     if (pduHeader->version != Forte::PDU::PDU_VERSION)

@@ -8,7 +8,7 @@ using namespace Forte;
 
 void DbRow::CheckRange(const DbResultRow& row, int index)
 {
-    if (index < 0 || index >= (int)row.size())
+    if (index < 0 || index >= static_cast<int>(row.size()))
         throw ForteDbRowException(FStringFC(), "Software Error: index %d out of range", index);
 }
 

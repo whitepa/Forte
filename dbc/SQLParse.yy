@@ -1,4 +1,5 @@
 %{
+#pragma GCC diagnostic ignored "-Wold-style-cast"
 
 #include "Forte.h"
 #include "boost/any.hpp"

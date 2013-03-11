@@ -25,8 +25,8 @@ FString & Forte::RandomGenerator::GetRandomData(unsigned int length, FString &ou
     {
         ret = read(mRandomDevice, const_cast<char *>(out.c_str()), length);
     }
-    while (ret != (int)length && errno == EINTR);
-    if (ret != (int)length)
+    while (ret != static_cast<int>(length) && errno == EINTR);
+    if (ret != static_cast<int>(length))
         throw ERandomGeneratorFailed(SystemCallUtil::GetErrorDescription(errno));
     return out;
 }
@@ -35,6 +35,8 @@ unsigned int Forte::RandomGenerator::GetRandomUInt(void)
     unsigned int r;
     FString data;
     GetRandomData(sizeof(unsigned int), data);
-    memcpy((void *)&r, (const void *)data.c_str(), sizeof(unsigned int));
+    memcpy(reinterpret_cast<void *>(&r),
+           static_cast<const void *>(data.c_str()),
+           sizeof(unsigned int));
     return r;
 }

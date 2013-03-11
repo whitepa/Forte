@@ -36,7 +36,7 @@ namespace Forte
             mShutdownCompleteCondition(mShutdownCompleteLock)
             {
                 pthread_create(&mThread, NULL, Thread::startThread, this);
-                mThreadID = (unsigned int) mThread;
+                mThreadID = static_cast<unsigned int>(mThread);
             }
         virtual ~Thread();
 

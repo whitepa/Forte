@@ -302,7 +302,7 @@ TEST_F(FStringTest, ImplodeExplodeBinaryFStringTest)
 
     ASSERT_EQ(components.size(), componentsTest.size());
 
-    for (int i=0; i < (int)components.size(); i++)
+    for (int i=0; i < static_cast<int>(components.size()); i++)
     {
         ASSERT_STREQ( components[i], componentsTest[i] );
     }

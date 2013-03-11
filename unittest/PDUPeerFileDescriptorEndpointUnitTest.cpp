@@ -173,7 +173,7 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest, HandlesPDUsInternally)
         memset(events, 0, 32*sizeof(struct epoll_event));
         fdReadyCount = epoll_wait(epollFD, events, 32, 1000);
         EXPECT_EQ(1, fdReadyCount);
-        ASSERT_EQ((int) fd2, events[0].data.fd);
+        ASSERT_EQ(static_cast<int>(fd2), events[0].data.fd);
         ASSERT_EQ(endpoint2.GetFD(), events[0].data.fd);
 
         endpoint2.HandleEPollEvent(events[0]);
@@ -299,7 +299,7 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest, ThrowESendFailedOnBrokenPipe)
         memset(events, 0, 32*sizeof(struct epoll_event));
         fdReadyCount = epoll_wait(epollFD, events, 32, 1000);
         EXPECT_EQ(1, fdReadyCount);
-        ASSERT_EQ((int) fd2, events[0].data.fd);
+        ASSERT_EQ(static_cast<int>(fd2), events[0].data.fd);
         ASSERT_EQ(endpoint2.GetFD(), events[0].data.fd);
 
         endpoint2.HandleEPollEvent(events[0]);

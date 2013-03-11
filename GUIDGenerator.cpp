@@ -73,7 +73,7 @@ void Forte::GUIDGenerator::ToString(
             s << "-";
         }
 
-        s << std::setw(2) << std::setfill('0') << std::hex << (int) existing[i];
+        s << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(existing[i]);
     }
     out = s.str();
 }

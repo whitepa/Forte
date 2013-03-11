@@ -20,7 +20,7 @@ void OpenSSLInitializer_lockingCallback(int mode, int n, const char *file, int l
 }
 
 unsigned long OpenSSLInitializer_threadIdCallback() {
-    return (unsigned long)pthread_self();
+    return static_cast<unsigned long>(pthread_self());
 }
 
 struct CRYPTO_dynlock_value *

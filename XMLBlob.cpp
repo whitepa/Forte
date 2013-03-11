@@ -11,10 +11,10 @@ XMLBlob::XMLBlob(const char *rootName
     ) :
     readOnly(false)
 {
-    doc = xmlNewDoc(BAD_CAST "1.0");
+    doc = xmlNewDoc(reinterpret_cast<xmlChar *>(const_cast<char *>("1.0")));
 
     // create the root node
-    root = xmlNewNode(NULL, BAD_CAST rootName);
+    root = xmlNewNode(NULL, reinterpret_cast<xmlChar *>(const_cast<char *>(rootName)));
     xmlDocSetRootElement(doc, root);
 
     current = root;
@@ -35,7 +35,7 @@ XMLBlob::XMLBlob(const FString &in) :
 
 void XMLBlob::BeginChild(const char *name)
 {
-    current = xmlNewChild(current, NULL, BAD_CAST name, NULL);
+    current = xmlNewChild(current, NULL, reinterpret_cast<xmlChar *>(const_cast<char *>(name)), NULL);
 }
 
 void XMLBlob::EndChild(void)
@@ -48,7 +48,7 @@ void XMLBlob::AddAttribute(const char *name, const char *value)
 {
     FString stripped;
     stripControls(stripped, value);
-    xmlNewProp(current, BAD_CAST name, BAD_CAST stripped.c_str());
+    xmlNewProp(current, reinterpret_cast<xmlChar *>(const_cast<char *>(name)), reinterpret_cast<xmlChar *>(const_cast<char *>(stripped.c_str())));
 }
 
 void XMLBlob::AddDataAttribute(const char *name, const char *value)
@@ -57,7 +57,7 @@ void XMLBlob::AddDataAttribute(const char *name, const char *value)
     {
         FString stripped;
         stripControls(stripped, value);
-        xmlNewProp(lastData, BAD_CAST name, BAD_CAST stripped.c_str());
+        xmlNewProp(lastData, reinterpret_cast<xmlChar *>(const_cast<char *>(name)), reinterpret_cast<xmlChar *>(const_cast<char *>(stripped.c_str())));
     }
 }
 
@@ -76,12 +76,12 @@ void XMLBlob::AddDataToNode(xmlNodePtr node, const char *name, const char *value
 {
     FString stripped;
     stripControls(stripped, value);
-    lastData = xmlNewTextChild(current, NULL, BAD_CAST name, BAD_CAST stripped.c_str());
+    lastData = xmlNewTextChild(current, NULL, reinterpret_cast<xmlChar *>(const_cast<char *>(name)), reinterpret_cast<xmlChar *>(const_cast<char *>(stripped.c_str())));
 }
 void XMLBlob::AddDataToNodeRaw(xmlNodePtr node, const char *name, const char *value)
 {
     FString stripped;
-    lastData = xmlNewTextChild(current, NULL, BAD_CAST name, BAD_CAST value);
+    lastData = xmlNewTextChild(current, NULL, reinterpret_cast<xmlChar *>(const_cast<char *>(name)), reinterpret_cast<xmlChar *>(const_cast<char *>(value)));
 }
 
 void XMLBlob::ToString(FString &out,
@@ -91,7 +91,7 @@ void XMLBlob::ToString(FString &out,
     xmlChar *buf;
     int bufsize;
     xmlDocDumpFormatMemoryEnc(doc, &buf, &bufsize, "UTF-8", (pretty) ? 1 : 0);
-    out.assign((const char *)buf, bufsize);
+    out.assign(reinterpret_cast<const char *>(buf), bufsize);
     xmlFree(buf);
 }
 

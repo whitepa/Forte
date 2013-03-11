@@ -21,10 +21,10 @@ int Base64::Encode(const char *data, int size, FString &out)
     int c;
     const unsigned char *q;
 
-    p = s = (char*)malloc(size*4/3+4);
+    p = s = static_cast<char*>(malloc(size*4/3+4));
     if (p == NULL)
         return -1;
-    q = (const unsigned char*)data;
+    q = reinterpret_cast<const unsigned char*>(data);
     i=0;
     for(i = 0; i < size;){
         c=q[i++];

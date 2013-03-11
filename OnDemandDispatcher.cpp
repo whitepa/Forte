@@ -68,7 +68,7 @@ void * Forte::OnDemandDispatcherManager::run(void)
                     new OnDemandDispatcherWorker(disp, event)));
 
             hlog(HLOG_DEBUG2, "Number of threads in queue : %d",
-                 (int) disp.mThreads.size());
+                 static_cast<int>(disp.mThreads.size()));
         }
 
         if (disp.mShutdown)

@@ -57,8 +57,8 @@ void* Forte::ThreadPoolDispatcherManager::run(void)
         int newThreadsNeeded =
             disp.mEventQueue.Depth() + disp.mMinSpareThreads - spareThreads;
         int numNew = 0;
-        if (newThreadsNeeded < (int)disp.mMinThreads - currentThreads)
-            newThreadsNeeded = (int)disp.mMinThreads - currentThreads;
+        if (newThreadsNeeded < static_cast<int>(disp.mMinThreads) - currentThreads)
+            newThreadsNeeded = static_cast<int>(disp.mMinThreads) - currentThreads;
         //hlog(HLOG_DEBUG4,
         //"ThreadPool Manager Loop: %d threads; %d spare; %d needed",
         //currentThreads, spareThreads, newThreadsNeeded);
@@ -99,8 +99,8 @@ void* Forte::ThreadPoolDispatcherManager::run(void)
                 }
             }
         }
-        else if (spareThreads > (int)disp.mMaxSpareThreads &&
-                 spareThreads > (int)disp.mMinSpareThreads)
+        else if (spareThreads > static_cast<int>(disp.mMaxSpareThreads) &&
+                 spareThreads > static_cast<int>(disp.mMinSpareThreads))
         {
             // too many spare threads, shut one down
             hlog(HLOG_DEBUG2, "have %d spare threads, need between %u and %u",
@@ -277,7 +277,7 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
         struct timespec now;
         mMonotonicClock.GetTime(now);
         if (disp.mRequestHandler->mTimeout != 0 &&
-            (unsigned int)
+            static_cast<unsigned int>
             (now.tv_sec - mLastPeriodicCall) > disp.mRequestHandler->mTimeout)
         {
             disp.mRequestHandler->Periodic();

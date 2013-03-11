@@ -84,7 +84,7 @@ TEST_F(IOManagerUnitTest, DirectIOFileReadAligned)
     // Allocate a buffer
     char *buf = 0;
     size_t len = 4096;
-    ASSERT_EQ(0, posix_memalign((void **)&buf, /*align*/4096, /*size*/len));
+    ASSERT_EQ(0, posix_memalign(reinterpret_cast<void **>(&buf), /*align*/4096, /*size*/len));
     memset(buf, 0, len);
 
     boost::shared_ptr<IOManager> iomgr = boost::make_shared<IOManager>(32);
@@ -119,7 +119,7 @@ TEST_F(IOManagerUnitTest, DirectIOFileReadUnaligned)
     // Allocate a buffer
     char *buf = 0;
     size_t len = 1024;
-    ASSERT_EQ(0, posix_memalign((void **)&buf, /*align*/4096, /*size*/4096));
+    ASSERT_EQ(0, posix_memalign(reinterpret_cast<void **>(&buf), /*align*/4096, /*size*/4096));
     memset(buf, 0, len);
 
     boost::shared_ptr<IOManager> iomgr = boost::make_shared<IOManager>(32);
@@ -154,7 +154,7 @@ TEST_F(IOManagerUnitTest, DirectIOFileWriteAligned)
     // Allocate a buffer
     char *buf = 0;
     size_t len = 4096;
-    ASSERT_EQ(0, posix_memalign((void **)&buf, /*align*/4096, /*size*/len));
+    ASSERT_EQ(0, posix_memalign(reinterpret_cast<void **>(&buf), /*align*/4096, /*size*/len));
     memset(buf, 65, len);
 
     boost::shared_ptr<IOManager> iomgr = boost::make_shared<IOManager>(32);
@@ -187,7 +187,7 @@ TEST_F(IOManagerUnitTest, DirectIOFileWriteUnaligned)
     // Allocate a buffer
     char *buf = 0;
     ssize_t len = 1024;
-    ASSERT_EQ(0, posix_memalign((void **)&buf, /*align*/4096, /*size*/4096));
+    ASSERT_EQ(0, posix_memalign(reinterpret_cast<void **>(&buf), /*align*/4096, /*size*/4096));
     off_t interval = 64;
     int i = 0;
     for (off_t offset = 0; offset < 4096; offset += interval)
@@ -232,18 +232,18 @@ TEST_F(IOManagerUnitTest, MultipleReads)
     ssize_t total = 512*512;
     ssize_t each = 512;
     char *buf = 0;
-    ASSERT_EQ(0, posix_memalign((void **)&buf, /*align*/4096, /*size*/total));
+    ASSERT_EQ(0, posix_memalign(reinterpret_cast<void **>(&buf), /*align*/4096, /*size*/total));
     memset(buf, 1, total);
-    for(int i = 0; i < (ssize_t)(total/sizeof(int)); ++i)
+    for(unsigned int i = 0; i < (total/sizeof(int)); ++i)
     {
-        int *a = (int *)(buf + sizeof(int) * i);
+        int *a = reinterpret_cast<int *>(buf + sizeof(int) * i);
         if (*a != 0x01010101)
-            hlog(HLOG_ERR, "a != 0:  i=%d buf=%p addr=%p",
-                 i, buf, (int *)(buf + sizeof(int) * i));
+            hlog(HLOG_ERR, "a != 0:  i=%u buf=%p addr=%p",
+                 i, buf, reinterpret_cast<int *>(buf + sizeof(int) * i));
         ASSERT_EQ(0x01010101, *a);
     }
     std::map<uint64_t, boost::shared_ptr<IORequest> > requestMap;
-    for (int i = 0; i < total / each; ++i)
+    for (unsigned int i = 0; i < total / each; ++i)
     {
         // submit IO request
         boost::shared_ptr<IORequest> req = iomgr->NewRequest();
@@ -266,12 +266,12 @@ TEST_F(IOManagerUnitTest, MultipleReads)
         //      req->GetResult(), req->GetResult() > 0 ? "" : strerror(-req->GetResult()));
         EXPECT_EQ(each, req->GetResult());
     }
-    for(int i = 0; i < (ssize_t)(total/sizeof(int)); ++i)
+    for(unsigned int i = 0; i < (total/sizeof(int)); ++i)
     {
-        int *a = (int *)(buf + sizeof(int) * i);
+        int *a = reinterpret_cast<int *>(buf + sizeof(int) * i);
         if (*a != 0)
-            hlog(HLOG_ERR, "a != 0:  i=%d buf=%p addr=%p",
-                 i, buf, (int *)(buf + sizeof(int) * i));
+            hlog(HLOG_ERR, "a != 0:  i=%u buf=%p addr=%p",
+                 i, buf, reinterpret_cast<int *>(buf + sizeof(int) * i));
         ASSERT_EQ(0, *a);
     }
     ASSERT_EQ(total/each, mNumCompletions);
@@ -297,14 +297,14 @@ TEST_F(IOManagerUnitTest, MultipleWrites)
     ssize_t total = 512*512;
     ssize_t each = 512;
     char *buf = 0;
-    ASSERT_EQ(0, posix_memalign((void **)&buf, /*align*/4096, /*size*/total));
+    ASSERT_EQ(0, posix_memalign(reinterpret_cast<void **>(&buf), /*align*/4096, /*size*/total));
     memset(buf, 1, total);
-    for(int i = 0; i < (ssize_t)(total/sizeof(int)); ++i)
+    for(unsigned int i = 0; i < (total/sizeof(int)); ++i)
     {
-        int *a = (int *)(buf + sizeof(int) * i);
+        int *a = reinterpret_cast<int *>(buf + sizeof(int) * i);
         if (*a != 0x01010101)
-            hlog(HLOG_ERR, "a != 0:  i=%d buf=%p addr=%p",
-                 i, buf, (int *)(buf + sizeof(int) * i));
+            hlog(HLOG_ERR, "a != 0:  i=%u buf=%p addr=%p",
+                 i, buf, reinterpret_cast<int *>(buf + sizeof(int) * i));
         ASSERT_EQ(0x01010101, *a);
     }
     std::map<uint64_t, boost::shared_ptr<IORequest> > requestMap;
@@ -331,12 +331,12 @@ TEST_F(IOManagerUnitTest, MultipleWrites)
         //      req->GetResult(), req->GetResult() > 0 ? "" : strerror(-req->GetResult()));
         EXPECT_EQ(each, req->GetResult());
     }
-    for(int i = 0; i < (ssize_t)(total/sizeof(int)); ++i)
+    for(unsigned int i = 0; i < (total/sizeof(int)); ++i)
     {
-        int *a = (int *)(buf + sizeof(int) * i);
+        int *a = reinterpret_cast<int *>(buf + sizeof(int) * i);
         if (*a != 0x01010101)
-            hlog(HLOG_ERR, "a != 0x01010101:  i=%d buf=%p addr=%p",
-                 i, buf, (int *)(buf + sizeof(int) * i));
+            hlog(HLOG_ERR, "a != 0x01010101:  i=%u buf=%p addr=%p",
+                 i, buf, reinterpret_cast<int *>(buf + sizeof(int) * i));
         ASSERT_EQ(0x01010101, *a);
     }
     ASSERT_EQ(total/each, mNumCompletions);
@@ -361,14 +361,14 @@ TEST_F(IOManagerUnitTest, ReadWriteMix)
     ssize_t total = 512*512;
     ssize_t each = 512;
     char *buf = 0;
-    ASSERT_EQ(0, posix_memalign((void **)&buf, /*align*/4096, /*size*/total));
+    ASSERT_EQ(0, posix_memalign(reinterpret_cast<void **>(&buf), /*align*/4096, /*size*/total));
     memset(buf, 1, total);
-    for(int i = 0; i < (ssize_t)(total/sizeof(int)); ++i)
+    for(unsigned int i = 0; i < (total/sizeof(int)); ++i)
     {
-        int *a = (int *)(buf + sizeof(int) * i);
+        int *a = reinterpret_cast<int *>(buf + sizeof(int) * i);
         if (*a != 0x01010101)
-            hlog(HLOG_ERR, "a != 0:  i=%d buf=%p addr=%p",
-                 i, buf, (int *)(buf + sizeof(int) * i));
+            hlog(HLOG_ERR, "a != 0:  i=%u buf=%p addr=%p",
+                 i, buf, reinterpret_cast<int *>(buf + sizeof(int) * i));
         ASSERT_EQ(0x01010101, *a);
     }
     std::map<uint64_t, boost::shared_ptr<IORequest> > requestMap;
@@ -398,14 +398,14 @@ TEST_F(IOManagerUnitTest, ReadWriteMix)
         //      req->GetResult(), req->GetResult() > 0 ? "" : strerror(-req->GetResult()));
         EXPECT_EQ(each, req->GetResult());
     }
-    for(int i = 0; i < (ssize_t)(total/sizeof(int)); ++i)
+    for(unsigned int i = 0; i < (total/sizeof(int)); ++i)
     {
-        int *a = (int *)(buf + sizeof(int) * i);
+        int *a = reinterpret_cast<int *>(buf + sizeof(int) * i);
         int b = i / ((total/each) / sizeof(int));
         if ((b % 2 == 0 && *a != 0) ||
             (b % 2 != 0 && *a != 0x01010101))
-            hlog(HLOG_ERR, "a has unexpected value of 0x%x:  i=%d b=%d buf=%p addr=%p",
-                 *a, i, b, buf, (int *)(buf + sizeof(int) * i));
+            hlog(HLOG_ERR, "a has unexpected value of 0x%x:  i=%u b=%d buf=%p addr=%p",
+                 *a, i, b, buf, reinterpret_cast<int *>(buf + sizeof(int) * i));
         ASSERT_EQ((b % 2 == 0) ? 0 : 0x01010101, *a);
     }
     ASSERT_EQ(total/each, mNumCompletions);

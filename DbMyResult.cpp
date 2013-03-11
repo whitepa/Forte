@@ -36,7 +36,7 @@ DbMyResult::MyData::MyData(MYSQL_RES *res)
     {
         mResult = res;
         mRow = NULL;
-        mNumCols = (size_t)mysql_num_fields(mResult);
+        mNumCols = static_cast<size_t>(mysql_num_fields(mResult));
     }
 }
 
@@ -95,7 +95,7 @@ size_t DbMyResult::MyData::GetFieldLength(size_t i)
     if (mResult == NULL) return 0;
     unsigned long *lengths = mysql_fetch_lengths(mResult);
     if (lengths == NULL) return 0;
-    return (size_t)lengths[i];
+    return static_cast<size_t>(lengths[i]);
 }
 
 size_t DbMyResult::MyData::GetNumRows()

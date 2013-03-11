@@ -17,7 +17,7 @@ XMLNode::XMLNode(const FString& name, xmlNodePtr parent)
 {
     FString stripped;
     stripControls(stripped, name);
-    mNode = xmlNewChild(parent, NULL, BAD_CAST stripped.c_str(), NULL);
+    mNode = xmlNewChild(parent, NULL, reinterpret_cast<xmlChar*>(const_cast<char*>(stripped.c_str())), NULL);
 }
 
 
@@ -33,7 +33,7 @@ FString XMLNode::GetPath() const
     str = xmlGetNodePath(mNode);
     if (str != NULL)
     {
-        ret.assign( (const char*) str);
+        ret.assign(const_cast<const char*>(reinterpret_cast<char*>(str)));
         xmlFree(str);
     }
     return ret;
@@ -44,11 +44,11 @@ FString XMLNode::GetProp(const char *name) const
     FString ret;
     xmlChar *str;
 
-    str = xmlGetProp(mNode, BAD_CAST name);
+    str = xmlGetProp(mNode, reinterpret_cast<xmlChar*>(const_cast<char*>(name)));
 
     if (str != NULL)
     {
-        ret = (const char*)str;
+        ret = const_cast<const char*>(reinterpret_cast<char*>(str));
         xmlFree(str);
     }
 
@@ -60,13 +60,13 @@ void XMLNode::SetProp(const char *name, const char *value)
 {
     FString stripped;
     stripControls(stripped, value);
-    xmlSetProp(mNode, BAD_CAST name, BAD_CAST stripped.c_str());
+    xmlSetProp(mNode, reinterpret_cast<xmlChar*>(const_cast<char*>(name)), reinterpret_cast<xmlChar*>(const_cast<char*>(stripped.c_str())));
 }
 
 
 void XMLNode::DelProp(const char *name)
 {
-    xmlUnsetProp(mNode, BAD_CAST name);
+    xmlUnsetProp(mNode, reinterpret_cast<xmlChar*>(const_cast<char*>(name)));
 }
 
 
@@ -79,7 +79,7 @@ FString XMLNode::GetText() const
 
     if (str != NULL)
     {
-        ret = (const char*)str;
+        ret = const_cast<const char*>(reinterpret_cast<char*>(str));
         xmlFree(str);
     }
 
@@ -103,8 +103,8 @@ void XMLNode::XPathStr(FString &resultString, const Forte::FString &xpath)
     ctxt->node = mNode;
 
     shared_ptr<xmlXPathObject> result(
-            xmlXPathEval((const xmlChar*) xpath.c_str(), ctxt.get()),
-            bind(xmlXPathFreeObject, _1));
+        xmlXPathEval(reinterpret_cast<const xmlChar*>(xpath.c_str()),
+                     ctxt.get()), bind(xmlXPathFreeObject, _1));
 
     if (!result)
         throw ForteXMLDocException("XPath query invalid");
@@ -115,7 +115,7 @@ void XMLNode::XPathStr(FString &resultString, const Forte::FString &xpath)
     }
     else if(result->type == XPATH_STRING)
     {
-        resultString = FString((char *) result->stringval);
+        resultString = FString(reinterpret_cast<char *>(result->stringval));
     }
     else if(result->type == XPATH_BOOLEAN)
     {
@@ -132,12 +132,12 @@ void XMLNode::XPathStr(FString &resultString, const Forte::FString &xpath)
             if (result->nodesetval->nodeTab[i]->type == XML_ATTRIBUTE_NODE)
             {
                 // There should be only one child for each attribute node, a text
-                resultString = resultString + FString((char *) result->nodesetval->nodeTab[i]->children->content);
+                resultString = resultString + FString(reinterpret_cast<char *>(result->nodesetval->nodeTab[i]->children->content));
                 //resultString = resultString + FString((char *) xmlNodeGetContent(result->nodesetval->nodeTab[i]);
             }
             else if (result->nodesetval->nodeTab[i]->type == XML_TEXT_NODE)
             {
-                resultString = resultString + FString((char *) result->nodesetval->nodeTab[i]->content);
+                resultString = resultString + FString(reinterpret_cast<char *>(result->nodesetval->nodeTab[i]->content));
             }
             else
             {
@@ -161,8 +161,8 @@ void XMLNode::Find(std::vector<XMLNode> &nodes, const Forte::FString &xpath)
     ctxt->node = mNode;
 
     shared_ptr<xmlXPathObject> result(
-            xmlXPathEval((const xmlChar*) xpath.c_str(), ctxt.get()),
-            bind(xmlXPathFreeObject, _1));
+        xmlXPathEval(reinterpret_cast<const xmlChar*>(xpath.c_str()),
+                     ctxt.get()), bind(xmlXPathFreeObject, _1));
 
     if (!result)
         throw ForteXMLDocException("XPath query invalid");

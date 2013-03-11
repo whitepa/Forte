@@ -83,7 +83,7 @@ namespace Forte
 // operations
     public:
         inline void Init() { MD5Init(&mCTX); }
-        inline void Update(const void *data, unsigned size) { MD5Update(&mCTX, (unsigned char*)data, size); }
+        inline void Update(const void *data, unsigned size) { MD5Update(&mCTX, reinterpret_cast<unsigned char*>(const_cast<void*>(data)), size); }
         inline void Final() { MD5Final(md5, &mCTX); }
         MD5& operator=(const MD5& other)
             {

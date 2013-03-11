@@ -99,7 +99,7 @@ void InterProcessLock::init()
     se.sigev_value.sival_ptr = this;
     se.sigev_signo = TIMER_SIGNAL;
     se.sigev_notify = SIGEV_SIGNAL | SIGEV_THREAD_ID;
-    se._sigev_un._tid = (long int)syscall(SYS_gettid);
+    se._sigev_un._tid = static_cast<long int>(syscall(SYS_gettid));
 
     try
     {
@@ -246,7 +246,7 @@ void InterProcessLock::Lock(const FString& name, unsigned timeout, const FString
         else
         {
             hlog(HLOG_WARN, "%u could not get lock on file, not timed out: %s",
-                 (unsigned int) pthread_self(),
+                 static_cast<unsigned>(pthread_self()),
                  SystemCallUtil::GetErrorDescription(errno).c_str());
         }
 

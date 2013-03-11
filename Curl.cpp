@@ -30,7 +30,7 @@ static size_t curlInternalDataCB(void *buffer, size_t size,
 {
     if (userp != NULL)
     {
-        ((Curl*) userp)->mBuf.append((char*) buffer, size * nmemb);
+        static_cast<Curl*>(userp)->mBuf.append(static_cast<char*>(buffer), size * nmemb);
         return size * nmemb;
     }
     return 0;

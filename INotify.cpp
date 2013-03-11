@@ -106,6 +106,8 @@ bool INotify::IsWatch(const int& fd) const
     return (mWatchFds.find(fd) != mWatchFds.end());
 }
 
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+
 INotify::EventVector INotify::Read(const unsigned long& ms)
 {
     AutoUnlockMutex guard(mMutex);
@@ -134,7 +136,7 @@ INotify::EventVector INotify::Read(const unsigned long& ms)
         {
             for (ssize_t i=0; i < length;)
             {
-                struct inotify_event *event = (struct inotify_event *) &buffer[i];
+                struct inotify_event *event = reinterpret_cast<struct inotify_event *>(&buffer[i]);
 
                 if (event->wd != mKickerWatchFd)
                 {
@@ -168,6 +170,8 @@ INotify::EventVector INotify::Read(const unsigned long& ms)
 
     return events;
 }
+
+#pragma GCC diagnostic warning "-Wold-style-cast"
 
 void INotify::Interrupt()
 {

@@ -117,7 +117,7 @@ namespace Forte
                 for (int i = 0; i < n; ++i)
                 {
                     hlog(HLOG_DEBUG4, "received IO completion for request %lu",
-                         (long)events[i].obj->data);
+                         reinterpret_cast<long>(events[i].obj->data));
                     HandleCompletionEvent(&events[i]);
                 }
             }
@@ -164,7 +164,7 @@ namespace Forte
         }
 
         void HandleCompletionEvent(const struct io_event *event) {
-            uint64_t requestNum = (uint64_t)event->obj->data;
+            uint64_t requestNum = reinterpret_cast<uint64_t>(event->obj->data);
             boost::shared_ptr<IORequest> req;
             {
                 AutoUnlockMutex lock(mLock);

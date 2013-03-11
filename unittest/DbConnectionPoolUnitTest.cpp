@@ -91,7 +91,7 @@ protected:
     virtual size_t PopulateData(DbConnection& db)
     {
         const size_t rows(100);
-        for (int i = 0; i < (int)rows; i++)
+        for (int i = 0; i < static_cast<int>(rows); i++)
         {
             EXPECT_TRUE(db.Execute(FString(FStringFC(),"INSERT INTO test VALUES (%d, %d)", i, rand())));
         }

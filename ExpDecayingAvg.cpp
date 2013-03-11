@@ -71,7 +71,7 @@ void ExpDecayingAvgData::update(void)
 //         mInput, mLastInput, mLastAvg, mLastRate);
     float diff = mInput - mLastInput;
     mLastInput = mInput;
-    mLastRate += (1.0 - expf((float)-UPDATE_DELAY / (float)mDampingTime))*(diff - mLastRate);
-    mLastAvg += (1.0 - expf((float)-UPDATE_DELAY / (float)mDampingTime))*(mInput - mLastAvg);
+    mLastRate += (1.0 - expf(static_cast<float>(-UPDATE_DELAY) / static_cast<float>(mDampingTime)))*(diff - mLastRate);
+    mLastAvg += (1.0 - expf(static_cast<float>(-UPDATE_DELAY) / static_cast<float>(mDampingTime)))*(mInput - mLastAvg);
     if (mResetInputUponUpdate) mInput = 0.0;
 }

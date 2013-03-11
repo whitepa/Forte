@@ -18,7 +18,9 @@ XMLTextNode::XMLTextNode(const FString& name, const FString& text,
     {
         stripped = text;
     }
-    mNode = xmlNewTextChild(parent, NULL, BAD_CAST name.c_str(), BAD_CAST stripped.c_str());
+    mNode = xmlNewTextChild(parent, NULL,
+                            reinterpret_cast<xmlChar*>(const_cast<char*>(name.c_str())),
+                            reinterpret_cast<xmlChar*>(const_cast<char*>(stripped.c_str())));
 }
 
 #endif

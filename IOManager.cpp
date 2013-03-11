@@ -67,12 +67,12 @@ void* IORequest::GetUserData(void) const
 // Called only by IOManager
 void IORequest::SetRequestNumber(uint64_t reqNum)
 {
-    mIOCB.data = (void *)reqNum;
+    mIOCB.data = reinterpret_cast<void *>(reqNum);
 }
 
 uint64_t IORequest::GetRequestNumber(void) const
 {
-    return (uint64_t)mIOCB.data;
+    return reinterpret_cast<uint64_t>(mIOCB.data);
 }
 
 struct iocb ** IORequest:: GetIOCBs(void)

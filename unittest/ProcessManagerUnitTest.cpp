@@ -21,6 +21,8 @@ LogManager logManager;
 
 static FString mProcMonLocation;
 
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+
 class ProcessManagerTest : public ::testing::Test
 {
 public:

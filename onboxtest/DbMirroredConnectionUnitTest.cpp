@@ -102,7 +102,7 @@ protected:
     virtual size_t PopulateData(DbConnection& db)
     {
         const size_t rows(10);
-        for (int i = 0; i < (int)rows; i++)
+        for (int i = 0; i < static_cast<int>(rows); i++)
         {
             FString insertSql;
             insertSql.Format("INSERT INTO test VALUES (%d, %d)", i, rand());

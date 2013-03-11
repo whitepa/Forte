@@ -36,8 +36,8 @@ XMLNode XMLDoc::CreateDocument(const FString& root_name)
 {
     xmlNodePtr root;
     if (mDoc != NULL) xmlFreeDoc(mDoc);
-    mDoc = xmlNewDoc(BAD_CAST "1.0");
-    root = xmlNewNode(NULL, BAD_CAST root_name.c_str());
+    mDoc = xmlNewDoc(reinterpret_cast<xmlChar *>(const_cast<char*>("1.0")));
+    root = xmlNewNode(NULL, reinterpret_cast<xmlChar *>(const_cast<char*>(root_name.c_str())));
     xmlDocSetRootElement(mDoc, root);
     return root;
 }
@@ -57,7 +57,7 @@ FString XMLDoc::ToString() const
     }
     xmlSaveDoc(savePtr, mDoc);
     xmlSaveClose(savePtr);
-    ret.assign((const char *) buf->content, buf->use);
+    ret.assign(reinterpret_cast<const char *>(buf->content), buf->use);
     return ret;
 }
 

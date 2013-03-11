@@ -50,7 +50,7 @@ namespace Forte
         PDUPeerPtr PeerCreate(int fd);
 
         void PeerAddFD(uint64_t peerID, int fd) {
-            FTRACE2("%llu, %d", (unsigned long long) peerID, fd);
+            FTRACE2("%llu, %d", static_cast<unsigned long long>(peerID), fd);
             AutoUnlockMutex peerSetLock(mPDUPeerLock);
             std::map<uint64_t, PDUPeerPtr>::iterator i;
             i = mPDUPeers.find(peerID);

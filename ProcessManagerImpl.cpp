@@ -154,6 +154,8 @@ void Forte::ProcessManagerImpl::abandonProcess(const boost::shared_ptr<Forte::PD
     mPeerSet->PeerDelete(peer);
 }
 
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+
 void Forte::ProcessManagerImpl::startMonitor(
     boost::shared_ptr<Forte::ProcessFutureImpl> ph)
 {
@@ -262,6 +264,8 @@ void Forte::ProcessManagerImpl::startMonitor(
         throw;
     }
 }
+
+#pragma GCC diagnostic warning "-Wold-style-cast"
 
 boost::shared_ptr<Forte::PDUPeer> Forte::ProcessManagerImpl::addPeer(int fd)
 {

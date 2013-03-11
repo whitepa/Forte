@@ -31,6 +31,7 @@ int ProcRunner::RunNoTimeout(const FString& command,
     return Run(command, cwd, output, PROC_RUNNER_NO_TIMEOUT);
 }
 
+#pragma GCC diagnostic ignored "-Wold-style-cast"
 
 int ProcRunner::Run(const FString& command,
                     const FString& cwd,
@@ -70,7 +71,10 @@ int ProcRunner::Run(const FString& command,
     // open temp log file
     if (log_child || (output != NULL))
     {
-        stmp.Format("%u.%u.%u", (unsigned)getpid(), (unsigned)time(NULL), (unsigned)rand());
+        stmp.Format("%u.%u.%u",
+                    static_cast<unsigned>(getpid()),
+                    static_cast<unsigned>(time(NULL)),
+                    static_cast<unsigned>(rand()));
         filename.Format("/tmp/child-%s.log", stmp.c_str());
         unlink(filename);
     }
@@ -368,6 +372,7 @@ int ProcRunner::Run(const FString& command,
     return ret;
 }
 
+#pragma GCC diagnostic warning "-Wold-style-cast"
 
 int ProcRunner::RunBackground(const FString& command, const FString& cwd,
                               const StrStrMap *env, bool detach, int *pidReturn)

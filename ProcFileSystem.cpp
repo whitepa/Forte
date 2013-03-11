@@ -128,7 +128,7 @@ void ProcFileSystem::PidOf(const FString& runningProg, std::vector<pid_t>& pids)
             if (programName == runningProg)
             {
                 hlog(HLOG_DEBUG, "found match");
-                pids.push_back((pid_t) pid.AsInteger());
+                pids.push_back(static_cast<pid_t>(pid.AsInteger()));
             }
         }
     }
@@ -192,7 +192,7 @@ void ProcFileSystem::SetOOMScore(pid_t pid, const FString &score)
 
         throw EProcFileSystem(errstr);
     }
-    if ((size_t)::write(fd, score.c_str(), score.length()) != score.length())
+    if (static_cast<size_t>(::write(fd, score.c_str(), score.length())) != score.length())
     {
         errstr = strerror_r(errno, errmsg, 256);
         hlog(LOG_ERR,"error writing %s, error :%s",

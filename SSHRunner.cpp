@@ -334,6 +334,8 @@ void SSHRunner::GetFile(const FString &remotePath, const FString &localPath)
     channel = NULL;
 }
 
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+
 int SSHRunner::waitSocket(int socket_fd, LIBSSH2_SESSION *session)
 {
     struct timeval timeout;
@@ -394,7 +396,7 @@ int SSHRunner::createSocketAndConnect(
         throw ESocketError(stmp);
     }
 
-    if(connect(sock, (struct sockaddr *)&s, sizeof(s)) < 0)
+    if(connect(sock, reinterpret_cast<struct sockaddr *>(&s), sizeof(s)) < 0)
     {
         int theErrNo=errno;
         close(sock);
@@ -411,6 +413,8 @@ int SSHRunner::createSocketAndConnect(
 
     return sock;
 }
+
+#pragma GCC diagnostic warning "-Wold-style-cast"
 
 FString SSHRunner::getErrorString()
 {

@@ -25,7 +25,7 @@ void Murmur64::Init(uint64_t seed)
 
 void Murmur64::Update(const void *data, size_t size)
 {
-    const char *cdata = (const char*)(data);
+    const char *cdata = reinterpret_cast<const char*>(data);
     const size_t b = (mLen % 8);
     const size_t n = (8 - b) % 8;
 
@@ -54,7 +54,7 @@ void Murmur64::Update(const void *data, size_t size)
     case 2:
     case 1:
     {
-        char *ck = (char*)&mK;
+        char *ck = reinterpret_cast<char*>(&mK);
         memcpy(ck + b, cdata, n);
 #ifdef DEBUG_MURMUR
         hlog(HLOG_DEBUG4, "mK = %016llx  [after alignment]", mK);
@@ -74,7 +74,7 @@ void Murmur64::Update(const void *data, size_t size)
     }
 
     // do 8-byte chunks
-    const uint64_t *data64 = (const uint64_t*)(cdata + n);
+    const uint64_t *data64 = reinterpret_cast<const uint64_t*>(cdata + n);
     const uint64_t *end64 = data64 + ((size - n) / 8);
     const size_t leftover = ((size - n) % 8);
     uint64_t k;
@@ -95,7 +95,7 @@ void Murmur64::Update(const void *data, size_t size)
     }
 
     // do leftover bytes
-    const char *edata = (const char*)(end64);
+    const char *edata = reinterpret_cast<const char*>(end64);
 
     switch (leftover)
     {
@@ -153,7 +153,7 @@ void Murmur64::Final()
 FString Murmur64::ToStr() const
 {
     FString ret;
-    ret.Format("%016llx", (unsigned long long) mHash);
+    ret.Format("%016llx", static_cast<unsigned long long>(mHash));
     return ret;
 }
 

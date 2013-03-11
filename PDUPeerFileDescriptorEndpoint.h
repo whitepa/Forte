@@ -31,7 +31,7 @@ namespace Forte
             mFDLock(),
             mFD(fd)
             {
-                FTRACE2("%d", (int) mFD);
+                FTRACE2("%d", static_cast<int>(mFD));
 
                 if (mBufMaxSize < mBufSize)
                     mBufMaxSize = mBufSize;

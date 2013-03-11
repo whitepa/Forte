@@ -108,7 +108,7 @@ FString::FString(const struct sockaddr *sa)
     if (sa->sa_family == AF_INET)
     {
         char buf[INET_ADDRSTRLEN];
-        if (!inet_ntop(sa->sa_family, &(((struct sockaddr_in *)sa)->sin_addr),
+        if (!inet_ntop(sa->sa_family, &((reinterpret_cast<struct sockaddr_in *>(const_cast<struct sockaddr*>(sa)))->sin_addr),
                        buf, INET_ADDRSTRLEN))
             throw EFString(SystemCallUtil::GetErrorDescription(errno));
         assign(buf);
@@ -116,7 +116,7 @@ FString::FString(const struct sockaddr *sa)
     else if (sa->sa_family == AF_INET6)
     {
         char buf[INET6_ADDRSTRLEN];
-        if (!inet_ntop(sa->sa_family, &(((struct sockaddr_in *)sa)->sin_addr),
+        if (!inet_ntop(sa->sa_family, &((reinterpret_cast<struct sockaddr_in *>(const_cast<struct sockaddr*>(sa)))->sin_addr),
                        buf, INET6_ADDRSTRLEN))
             throw EFString(SystemCallUtil::GetErrorDescription(errno));
         assign(buf);
@@ -494,10 +494,10 @@ int FString::Tokenize(const char *delim, std::vector<std::string> &components, s
     return components.size();
 }
 
-#define CLEAN_CHAR_VECTOR(vec)          \
-    foreach (const char *str, vec)      \
-        if (str)                        \
-            free((void*)str);           \
+#define CLEAN_CHAR_VECTOR(vec)		\
+    foreach (const char *str, vec)	\
+        if (str)			\
+            free(reinterpret_cast<void*>(const_cast<char*>(str)));      \
     vec.clear();
 
 int FString::Tokenize(const char *delim, std::vector<char*> &components, size_t max_parts) const
@@ -757,6 +757,8 @@ FString FString::ShellEscape() const
     return "'" + ret + "'";
 }
 
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+
 int FString::ExplodeBinary(std::vector<FString> &components) const
 {
     components.clear();
@@ -788,11 +790,13 @@ FString& FString::ImplodeBinary(const std::vector<FString> &components)
     {
         uint16_t len = i->size();
         len = htons(len);
-        append((char *) &len, sizeof(len));
+        append(reinterpret_cast<char *>(&len), sizeof(len));
         append(*i);
     }
     return *this;
 }
+
+#pragma GCC diagnostic warning "-Wold-style-cast"
 
 void FString::OFormat(const FString &format, const std::vector<std::string> &parameters)
 {

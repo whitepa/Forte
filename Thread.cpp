@@ -34,7 +34,7 @@ void * Thread::startThread(void *obj)
     pthread_setspecific(sThreadKey, obj);
 
     void *retval = NULL;
-    Thread *thr = (Thread *)obj;
+    Thread *thr = reinterpret_cast<Thread *>(obj);
     // wait until the thread has been fully initialized
     {
         AutoUnlockMutex lock(thr->mNotifyLock);
@@ -44,7 +44,8 @@ void * Thread::startThread(void *obj)
     // inform the log manager of this thread
     LogThreadInfo logThread(*thr);
     if (thr->mThreadName.empty())
-        thr->mThreadName.Format("unknown-%u", (unsigned)thr->mThread);
+        thr->mThreadName.Format("unknown-%u",
+                                static_cast<unsigned>(thr->mThread));
     if (!thr->IsShuttingDown())
         hlog(HLOG_DEBUG2, "thread initialized");
 

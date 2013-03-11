@@ -260,12 +260,12 @@ namespace Forte
         /**
          *Creates a new string beginning at character p and continuing n places over.
          **/
-        FString Mid(int p, int n = (int)NOPOS) const { if (p >= (int)length()) return ""; else return substr(p, n); }
+        FString Mid(int p, int n = static_cast<int>(NOPOS)) const { if (p >= static_cast<int>(length())) return ""; else return substr(p, n); }
 
         /**
          *Takes the right n characters, creates a brand new string and returns it to you.
          **/
-        FString Right(int n) const { if (n > (int)length()) return *this; else return substr(length() - n, n); }
+        FString Right(int n) const { if (n > static_cast<int>(length())) return *this; else return substr(length() - n, n); }
 
         /**
          *Compares two strings using strcmp. ( strcmp(c_str(), str); )

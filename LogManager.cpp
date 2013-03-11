@@ -156,7 +156,7 @@ FString Logfile::formatMsg(const LogMsg &msg)
     formattedMsg.Format("%02d/%02d/%02d %02d:%02d:%02d.%03d %s%s%s|%s%s() %s%s\n",
                         lt.tm_mon + 1, lt.tm_mday, lt.tm_year % 100,
                         lt.tm_hour, lt.tm_min, lt.tm_sec,
-                        (int)(msg.mTime.tv_usec/1000),
+                        static_cast<int>(msg.mTime.tv_usec/1000),
                         levelstr.c_str(),
                         thread.c_str(),
                         fileLine.c_str(), offset.c_str(),
@@ -176,7 +176,7 @@ FString Logfile::customFormatMsg(const LogMsg &msg, const int formatMask)
         tmp.Format("%02d/%02d/%02d %02d:%02d:%02d.%03d",
                    lt.tm_mon + 1, lt.tm_mday, lt.tm_year % 100,
                    lt.tm_hour, lt.tm_min, lt.tm_sec,
-                   (int)(msg.mTime.tv_usec/1000));
+                   static_cast<int>(msg.mTime.tv_usec/1000));
 
         formattedMsg = tmp;
     }
@@ -725,7 +725,7 @@ void LogManager::LogMsgString(const char * func, const char * fullfile, int line
         AutoUnlockMutex lock(mLogMutex);
         copy(mLogfiles.begin(), mLogfiles.end(), back_inserter(logfiles));
 
-        LogThreadInfo *ti = (LogThreadInfo *)mThreadInfoKey.Get();
+        LogThreadInfo *ti = static_cast<LogThreadInfo *>(mThreadInfoKey.Get());
         if (ti != NULL)
             msg.mThread = &(ti->mThread);
         msg.mLevel = level;

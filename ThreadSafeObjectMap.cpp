@@ -71,7 +71,7 @@ void Forte::ThreadSafeObjectMap::Dump(void)
     {
         const FString &name(p.first);
         const ObjectPtr &ptr(p.second);
-        int count = (int) ptr.use_count();
+        int count = static_cast<int>(ptr.use_count());
         // count > 0 will always be at least 2 due to the foreach
         // subtract one to account for that.
         if (count > 0) --count;

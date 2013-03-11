@@ -52,7 +52,7 @@ TEST_F(FileSystemImplOnBoxTest, TouchFileAndTestTimes)
     FString fileName = "/tmp/TouchFileAndTestTimes_onboxtest_file";
 
     struct stat st;
-    long long int currTime = (int64_t)time(0);
+    long long int currTime = static_cast<int64_t>(time(0));
     f.Touch(fileName);
 
     if (f.Stat(fileName, &st))
@@ -62,7 +62,8 @@ TEST_F(FileSystemImplOnBoxTest, TouchFileAndTestTimes)
     else
     {
         hlog(HLOG_INFO, "currTime=%lld aTime=%lld mTime=%lld", currTime,
-                 (long long int)st.st_atime, (long long int)st.st_mtime);
+             static_cast<long long int>(st.st_atime),
+             static_cast<long long int>(st.st_mtime));
         ASSERT_LT(abs(st.st_atime - currTime), 2);
         ASSERT_LT(abs(st.st_mtime - currTime), 2);
     }
