@@ -92,6 +92,11 @@ public:
         }
     }
 
+    int GetConnectedCount() {
+        AutoUnlockMutex lock(mPeerDataMutex);
+        return mCallbackCount;
+    }
+
     PDUPeerSetBuilderPtr mPeerSet;
     uint64_t mPeerID;
     Forte::Mutex mPeerDataMutex;
@@ -357,7 +362,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, AllPeersReceiveABroadcastPDUFromFirst)
         bool callbacksDone(true);
         foreach(const TestPeerPtr& peer, mTestPeers)
         {
-            if (peer->mCallbackCount == 0)
+            if (peer->GetConnectedCount() == 0)
             {
                 callbacksDone = false;
             }
@@ -372,7 +377,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, AllPeersReceiveABroadcastPDUFromFirst)
     PDUPtr expected = makePDUPtr();
     foreach(const TestPeerPtr& peer, mTestPeers)
     {
-        ASSERT_EQ(1, peer->mCallbackCount);
+        ASSERT_EQ(1, peer->GetConnectedCount());
         ASSERT_EQ(1, peer->mReceivedPDUList.size());
         expectEqual(expected, peer->mReceivedPDUList.front());
     }
@@ -393,7 +398,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, AllPeersReceiveABroadcastPDUFromMiddle)
         bool callbacksDone(true);
         foreach(const TestPeerPtr& peer, mTestPeers)
         {
-            if (peer->mCallbackCount == 0)
+            if (peer->GetConnectedCount() == 0)
             {
                 callbacksDone = false;
             }
@@ -408,7 +413,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, AllPeersReceiveABroadcastPDUFromMiddle)
     PDUPtr expected = makePDUPtr();
     foreach(const TestPeerPtr& peer, mTestPeers)
     {
-        ASSERT_EQ(1, peer->mCallbackCount);
+        ASSERT_EQ(1, peer->GetConnectedCount());
         ASSERT_EQ(1, peer->mReceivedPDUList.size());
         expectEqual(expected, peer->mReceivedPDUList.front());
     }
@@ -429,7 +434,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, AllPeersReceiveABroadcastPDUFromLast)
         bool callbacksDone(true);
         foreach(const TestPeerPtr& peer, mTestPeers)
         {
-            if (peer->mCallbackCount == 0)
+            if (peer->GetConnectedCount() == 0)
             {
                 callbacksDone = false;
             }
@@ -444,7 +449,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, AllPeersReceiveABroadcastPDUFromLast)
     PDUPtr expected = makePDUPtr();
     foreach(const TestPeerPtr& peer, mTestPeers)
     {
-        ASSERT_EQ(1, peer->mCallbackCount);
+        ASSERT_EQ(1, peer->GetConnectedCount());
         ASSERT_EQ(1, peer->mReceivedPDUList.size());
         expectEqual(expected, peer->mReceivedPDUList.front());
     }
@@ -464,8 +469,8 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, StopsReceivingEventsIfCallbackIsDisabled)
     while (!deadline.Expired())
     {
         bool callbacksDone(true);
-        if (mTestPeers[0]->mCallbackCount > 0
-            && mTestPeers[2]->mCallbackCount > 0)
+        if (mTestPeers[0]->GetConnectedCount() > 0
+            && mTestPeers[2]->GetConnectedCount() > 0)
         {
             callbacksDone = false;
         }
@@ -478,7 +483,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, StopsReceivingEventsIfCallbackIsDisabled)
 
     sleep(1);
 
-    ASSERT_EQ(0, mTestPeers[1]->mCallbackCount);
+    ASSERT_EQ(0, mTestPeers[1]->GetConnectedCount());
 }
 
 TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanBroadcastAtLeast50PDUsFromEach)
@@ -502,7 +507,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanBroadcastAtLeast50PDUsFromEach)
         bool callbacksDone(true);
         foreach(const TestPeerPtr& peer, mTestPeers)
         {
-            if (peer->mCallbackCount < 150)
+            if (peer->GetConnectedCount() < 150)
             {
                 callbacksDone = false;
             }
@@ -516,7 +521,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanBroadcastAtLeast50PDUsFromEach)
 
     foreach(const TestPeerPtr& peer, mTestPeers)
     {
-        ASSERT_EQ(150, peer->mCallbackCount);
+        ASSERT_EQ(150, peer->GetConnectedCount());
         ASSERT_EQ(150, peer->mReceivedPDUList.size());
 
         while (!peer->mReceivedPDUList.empty())
@@ -553,7 +558,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, PDUWillComeAcrossIfConnectorDiesAndRestar
     while (!deadline.Expired())
     {
         bool callbacksDone(true);
-        if (mTestPeers[1]->mCallbackCount < 1)
+        if (mTestPeers[1]->GetConnectedCount() < 1)
         {
             callbacksDone = false;
         }
@@ -564,7 +569,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, PDUWillComeAcrossIfConnectorDiesAndRestar
         usleep(10000);
     }
 
-    ASSERT_EQ(1, mTestPeers[1]->mCallbackCount);
+    ASSERT_EQ(1, mTestPeers[1]->GetConnectedCount());
     ASSERT_EQ(1, mTestPeers[1]->mReceivedPDUList.size());
     expectEqual(pdu, mTestPeers[1]->mReceivedPDUList.front());
 }
@@ -594,7 +599,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, PDUWillComeAcrossIfAcceptorDiesAndRestart
     while (!deadline.Expired())
     {
         bool callbacksDone(true);
-        if (mTestPeers[0]->mCallbackCount < 1)
+        if (mTestPeers[0]->GetConnectedCount() < 1)
         {
             callbacksDone = false;
         }
@@ -605,7 +610,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, PDUWillComeAcrossIfAcceptorDiesAndRestart
         usleep(10000);
     }
 
-    ASSERT_EQ(1, mTestPeers[0]->mCallbackCount);
+    ASSERT_EQ(1, mTestPeers[0]->GetConnectedCount());
     ASSERT_EQ(1, mTestPeers[0]->mReceivedPDUList.size());
     expectEqual(pdu, mTestPeers[0]->mReceivedPDUList.front());
 }
@@ -648,7 +653,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanEnque100PDUsForDownPeer)
     while (!deadline.Expired())
     {
         bool callbacksDone(true);
-        if (mTestPeers[0]->mCallbackCount < 100)
+        if (mTestPeers[0]->GetConnectedCount() < 100)
         {
             callbacksDone = false;
         }
@@ -659,7 +664,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanEnque100PDUsForDownPeer)
         usleep(10000);
     }
 
-    ASSERT_EQ(100, mTestPeers[0]->mCallbackCount);
+    ASSERT_EQ(100, mTestPeers[0]->GetConnectedCount());
     ASSERT_EQ(100, mTestPeers[0]->mReceivedPDUList.size());
     const TestPeerPtr& peer(mTestPeers[0]);
     while (!peer->mReceivedPDUList.empty())
@@ -701,7 +706,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, PeersRecoverOnRestartsWithinTimeout)
         foreach(const TestPeerPtr& peer, mTestPeers)
         {
             // have peer 1 come up somewhere in the middle
-            if (peer->mCallbackCount < 3)
+            if (peer->GetConnectedCount() < 3)
             {
                 callbacksDone = false;
             }
@@ -725,7 +730,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, PeersRecoverOnRestartsWithinTimeout)
         bool callbacksDone(true);
         foreach(const TestPeerPtr& peer, mTestPeers)
         {
-            if (peer->mCallbackCount < 100)
+            if (peer->GetConnectedCount() < 100)
             {
                 callbacksDone = false;
             }
@@ -739,7 +744,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, PeersRecoverOnRestartsWithinTimeout)
 
     foreach(const TestPeerPtr& peer, mTestPeers)
     {
-        ASSERT_EQ(100, peer->mCallbackCount);
+        ASSERT_EQ(100, peer->GetConnectedCount());
         ASSERT_EQ(100, peer->mReceivedPDUList.size());
 
         while (!peer->mReceivedPDUList.empty())
@@ -773,7 +778,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest,
         bool callbacksDone(true);
         foreach(const TestPeerPtr& peer, mTestPeers)
         {
-            if (peer->mCallbackCount < 3000)
+            if (peer->GetConnectedCount() < 3000)
             {
                 callbacksDone = false;
             }
@@ -787,7 +792,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest,
 
     foreach(const TestPeerPtr& peer, mTestPeers)
     {
-        ASSERT_EQ(3000, peer->mCallbackCount);
+        ASSERT_EQ(3000, peer->GetConnectedCount());
         ASSERT_EQ(3000, peer->mReceivedPDUList.size());
 
         while (!peer->mReceivedPDUList.empty())
@@ -824,8 +829,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, DISABLED_ProperlyReleasesPDUs)
             {
                 {
                     AutoUnlockMutex lock(peer->mPeerDataMutex);
-                    if (peer->mCallbackCount != 0
-                        && peer->mReceivedPDUList.size() != 0)
+                    if (peer->mReceivedPDUList.size() != 0)
                     {
                         break;
                     }
@@ -834,20 +838,17 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, DISABLED_ProperlyReleasesPDUs)
                 usleep(1000);
             }
 
-            ASSERT_EQ(1, peer->mCallbackCount);
             ASSERT_EQ(1, peer->mReceivedPDUList.size());
             expectEqual(pdu, peer->mReceivedPDUList.front());
 
             // clear what we recv'd
             peer->mReceivedPDUList.pop_front();
-            peer->mCallbackCount--;
         }
         //hlog(HLOG_DEBUG, "All Peers received 1 matching pdu");
     }
 
     foreach(const TestPeerPtr& peer, mTestPeers)
     {
-        ASSERT_EQ(0, peer->mCallbackCount);
         ASSERT_EQ(0, peer->mReceivedPDUList.size());
     }
     hlogstream(HLOG_INFO, "sent " << i << " pdus");
