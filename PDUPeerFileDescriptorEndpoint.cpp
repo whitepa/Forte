@@ -236,7 +236,7 @@ void Forte::PDUPeerFileDescriptorEndpoint::SendPDU(const Forte::PDU &pdu)
     while (len > 0)
     {
         int sent = send(mFD, sendBuf.get()+offset, len, flags);
-        if (sent < 0)
+        if (sent < 0 && errno != EINTR)
             hlog_and_throw(
                 HLOG_DEBUG,
                 EPeerSendFailed(
