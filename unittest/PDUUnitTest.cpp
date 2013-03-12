@@ -115,6 +115,56 @@ TEST_F(PDUUnitTest, ConstructWithPackedStructPayload)
     EXPECT_EQ(0, pdu.GetOptionalDataSize());
 }
 
+TEST_F(PDUUnitTest, ConstructWithPayloadSetOptionalData)
+{
+    FTRACE;
+
+    Opcode2Payload payload;
+    size_t payloadSize = sizeof(payload);
+    payload.int64Data = 10000;
+    payload.int32Data = 100;
+    strcpy(payload.smallCString, "test data 1");
+
+    size_t optionalDataSize = 100;
+
+    PDU pdu(Opcode2, payloadSize, &payload);
+
+    boost::shared_ptr<PDUOptionalData> data(
+        new PDUOptionalData(optionalDataSize, 0));
+    memset(data->mData, 1, optionalDataSize);
+
+    pdu.SetOptionalData(data);
+
+    EXPECT_EQ(Opcode2, pdu.GetOpcode());
+    EXPECT_EQ(payloadSize, pdu.GetPayloadSize());
+    EXPECT_EQ(payload, *(pdu.GetPayload<Opcode2Payload>()));
+    EXPECT_EQ(optionalDataSize, pdu.GetOptionalDataSize());
+    EXPECT_TRUE(memcmp(data->mData,
+                       pdu.GetOptionalData(),
+                       optionalDataSize) == 0);
+}
+
+TEST_F(PDUUnitTest, CanRequestMemAlignedOptionalData)
+{
+    FTRACE;
+
+    size_t optionalDataSize = 100;
+    boost::shared_ptr<PDUOptionalData> data(
+        new PDUOptionalData(optionalDataSize,
+                            PDU_OPTIONAL_DATA_ATTRIBUTE_MEMALIGN_512));
+    memset(data->mData, 1, optionalDataSize);
+
+    PDU pdu(Opcode3, 0, NULL);
+    pdu.SetOptionalData(data);
+
+    EXPECT_EQ(Opcode3, pdu.GetOpcode());
+    EXPECT_EQ(0, pdu.GetPayloadSize());
+    EXPECT_EQ(NULL, pdu.GetPayload<Opcode2Payload>());
+    EXPECT_EQ(optionalDataSize, pdu.GetOptionalDataSize());
+    EXPECT_TRUE(memcmp(data->mData, pdu.GetOptionalData(), optionalDataSize) == 0);
+    EXPECT_EQ(0, ((uint64_t) pdu.GetOptionalData()) % 512);
+}
+
 TEST_F(PDUUnitTest, CompareIdentity)
 {
     FTRACE;
@@ -193,3 +243,118 @@ TEST_F(PDUUnitTest, PackedStructPayloadComparesByMemory)
 
     EXPECT_EQ(pdu1, pdu2);
 }
+
+TEST_F(PDUUnitTest, CompareWithPayloadAndOptionalData)
+{
+    FTRACE;
+
+    Opcode2Payload payload;
+    size_t payloadSize = sizeof(payload);
+    payload.int64Data = 10000;
+    payload.int32Data = 100;
+    memset(payload.smallCString, 0, sizeof(payload.smallCString));
+    strcpy(payload.smallCString, "test data 1");
+
+    size_t optionalDataSize = 100;
+    boost::shared_ptr<PDUOptionalData> data(
+        new PDUOptionalData(optionalDataSize,
+                            PDU_OPTIONAL_DATA_ATTRIBUTE_MEMALIGN_512));
+    memset(data->mData, 1, optionalDataSize);
+
+
+    PDU pdu1(Opcode2, payloadSize, &payload);
+    pdu1.SetOptionalData(data);
+
+    Opcode2Payload payload2;
+    payload2.int64Data = 10000;
+    payload2.int32Data = 100;
+    memset(payload2.smallCString, 0, sizeof(payload.smallCString));
+    strcpy(payload2.smallCString, "test data 1");
+
+    boost::shared_ptr<PDUOptionalData> data2(
+        new PDUOptionalData(optionalDataSize,
+                            PDU_OPTIONAL_DATA_ATTRIBUTE_MEMALIGN_512));
+    memset(data2->mData, 1, optionalDataSize);
+
+    PDU pdu2(Opcode2, payloadSize, &payload2);
+    pdu2.SetOptionalData(data2);
+
+    EXPECT_EQ(pdu1, pdu2);
+}
+
+TEST_F(PDUUnitTest, ACopiedPDUIsEqualToTheOriginal)
+{
+    FTRACE;
+
+    Opcode2Payload payload;
+    size_t payloadSize = sizeof(payload);
+    payload.int64Data = 10000;
+    payload.int32Data = 100;
+    memset(payload.smallCString, 0, sizeof(payload.smallCString));
+    strcpy(payload.smallCString, "test data 1");
+
+    size_t optionalDataSize = 100;
+    boost::shared_ptr<PDUOptionalData> data(
+        new PDUOptionalData(optionalDataSize,
+                            PDU_OPTIONAL_DATA_ATTRIBUTE_MEMALIGN_512));
+    memset(data->mData, 1, optionalDataSize);
+
+
+    PDU pdu1(Opcode2, payloadSize, &payload);
+    pdu1.SetOptionalData(data);
+
+    PDU pdu2 = pdu1;
+
+    EXPECT_EQ(pdu1, pdu2);
+}
+
+/* a lot code depends on these semantics to work. will update that
+ * code in the next pdu revision.
+
+TEST_F(PDUUnitTest, PoorlyConstructedPDUsDoNotSegfault)
+{
+    FTRACE;
+
+    Opcode2Payload payload;
+    size_t payloadSize = sizeof(payload);
+    payload.int64Data = 10000;
+    payload.int32Data = 100;
+    memset(payload.smallCString, 0, sizeof(payload.smallCString));
+    strcpy(payload.smallCString, "test data 1");
+
+    size_t optionalDataSize = 100;
+    scoped_array<char> buf(new char[optionalDataSize]);
+    memset(buf.get(), 1, optionalDataSize);
+
+    PDU pdu1(Opcode2, payloadSize, &payload, optionalDataSize, buf.get());
+
+    PDU pdu2;
+    EXPECT_FALSE(pdu1 == pdu2);
+
+    EXPECT_ANY_THROW(PDU pdu3(Opcode2, 10000, NULL));
+    //EXPECT_FALSE(pdu1 == pdu3);
+
+    EXPECT_ANY_THROW(PDU pdu4(Opcode2, 10000, NULL, 400, NULL));
+    //EXPECT_FALSE(pdu1 == pdu4);
+
+    char buf20[20] = {0};
+    EXPECT_ANY_THROW(PDU pdu5(Opcode2, 20, &buf20, 400, NULL));
+    //EXPECT_FALSE(pdu1 == pdu5);
+
+    // don't think we can protect against these, they are not
+    // PoorlyConstructed, they are HorriblyConstructed
+
+    //PDU pdu6(Opcode2, 10000, &buf20, 400, &buf20);
+    //EXPECT_FALSE(pdu1 == pdu6);
+
+    //PDU pdu7(Opcode2, 0, NULL, 400, &buf20);
+    //EXPECT_FALSE(pdu1 == pdu7);
+
+    PDU pdu8(Opcode2, 5, &buf20);
+    EXPECT_FALSE(pdu1 == pdu8);
+
+    PDU pdu9(Opcode2, 5, &buf20, 5, &buf20);
+    EXPECT_FALSE(pdu1 == pdu9);
+}
+*/
+

@@ -5,12 +5,20 @@ using namespace Forte;
 
 boost::shared_array<char> PDU::CreateSendBuffer(const PDU &pdu) {
     boost::shared_array<char> res;
-    unsigned int len = sizeof(Forte::PDUHeader) + pdu.mHeader.payloadSize;
+    unsigned int len =
+        sizeof(Forte::PDUHeader)
+        + pdu.mHeader.payloadSize;
+
     char *buf = new char[len];
     memset(buf, 0, len);
+    // header
     memcpy(buf, &pdu.mHeader, sizeof(Forte::PDUHeader));
-    memcpy(buf+sizeof(Forte::PDUHeader), pdu.mPayload.get(),
+
+    // payload
+    memcpy(buf+sizeof(Forte::PDUHeader),
+           pdu.mPayload.get(),
            pdu.mHeader.payloadSize);
+
     res.reset(buf);
     return res;
 }
@@ -23,7 +31,7 @@ void PDU::SetHeader(const PDUHeader &header)
 void PDU::SetPayload(const unsigned int len, const void *data)
 {
     mHeader.payloadSize = len;
-    if (len)
+    if (len > 0)
     {
         char *newPayload = new char[mHeader.payloadSize];
         memset(newPayload, 0, mHeader.payloadSize);
@@ -37,27 +45,68 @@ void PDU::SetPayload(const unsigned int len, const void *data)
     }
 }
 
+void PDU::SetOptionalData(
+    const boost::shared_ptr<PDUOptionalData>& optionalData)
+{
+    mOptionalData = optionalData;
+    mHeader.optionalDataSize = mOptionalData->mSize;
+    mHeader.optionalDataAttributes = mOptionalData->mAttributes;
+}
+
+
+const void* PDU::GetOptionalData() const
+{
+    if (mOptionalData)
+    {
+        return mOptionalData->mData;
+    }
+    return NULL;
+}
+
 bool PDU::operator==(const PDU &other) const
 {
-    bool res = (mHeader.version == other.mHeader.version &&
-                mHeader.opcode == other.mHeader.opcode &&
-                mHeader.payloadSize == other.mHeader.payloadSize);
+    bool res =
+        mHeader.version == other.mHeader.version
+        && mHeader.opcode == other.mHeader.opcode
+        && mHeader.payloadSize == other.mHeader.payloadSize
+        && mHeader.optionalDataSize == other.mHeader.optionalDataSize
+        && mHeader.optionalDataAttributes == other.mHeader.optionalDataAttributes
+        ;
+
     hlogstream(HLOG_DEBUG2, "A(" << this << ") vs B(" << &other << ")" <<
                endl << *this << endl << other << endl);
-    if (res && mHeader.payloadSize &&
-        mPayload.get() != NULL &&
-        other.mPayload.get() != NULL)
+
+    // what happens here if only 1 payload is NULL? seems like we
+    // would falsely reutrn true, but also that is a different error
+    // where the size is gt 0 but the payload is NULL
+    if (res
+        && mHeader.payloadSize
+        && mPayload.get() != NULL
+        && other.mPayload.get() != NULL)
     {
-        res = res &&
-            (memcmp(mPayload.get(), other.mPayload.get(),
-                    mHeader.payloadSize) == 0);
+        res = res
+            && (memcmp(mPayload.get(),
+                       other.mPayload.get(),
+                       mHeader.payloadSize) == 0);
     }
+
+    if (res
+        && mHeader.optionalDataSize
+        && mOptionalData.get() != NULL
+        && other.mOptionalData.get() != NULL)
+    {
+        res = res
+            && (memcmp(mOptionalData->mData,
+                       other.mOptionalData->mData,
+                       mHeader.optionalDataSize) == 0);
+    }
+
+
     return res;
 }
 
 std::ostream& Forte::operator<<(std::ostream& os, const PDU &obj)
 {
-
     os << "PDU " << &obj << endl;
     os << obj.GetHeader();
     unsigned int payloadSize = obj.GetPayloadSize();
@@ -74,6 +123,23 @@ std::ostream& Forte::operator<<(std::ostream& os, const PDU &obj)
                << "|" << str.HexDump().c_str() << "|" << endl;
         }
     }
+
+    unsigned int optionalDataSize = obj.GetOptionalDataSize();
+    if (optionalDataSize)
+    {
+        const void *optionalData = obj.GetOptionalData();
+        if (optionalData != NULL)
+        {
+            FString str;
+            str.assign((const char*)optionalData,
+                       std::min(optionalDataSize, (unsigned int) 255));
+
+            os << "OptionalData = "
+               << "[" << optionalDataSize << "]" << endl
+               << "|" << str.HexDump().c_str() << "|" << endl;
+        }
+    }
+
     return os;
 }
 
@@ -83,6 +149,8 @@ std::ostream& Forte::operator<<(std::ostream& os, const PDUHeader &obj)
     os << "\tversion\t\t= " << obj.version << endl;
     os << "\topcode\t\t= " << obj.opcode << endl;
     os << "\tpayloadSize\t= " << obj.payloadSize << endl;
+    os << "\toptionalDataSize\t= " << obj.optionalDataSize << endl;
+    os << "\toptionalDataAttributes\t= " << obj.optionalDataAttributes << endl;
     return os;
 }
 

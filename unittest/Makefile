@@ -74,6 +74,7 @@ GSRCS = AutoMutexUnitTest.cpp \
 	PDUPeerInProcessEndpointUnitTest.cpp \
 	PDUPeerNetworkAcceptorEndpointUnitTest.cpp \
 	PDUPeerNetworkConnectorEndpointUnitTest.cpp \
+	PDUUnitTest.cpp \
 	PidFileUnitTest.cpp \
 	ProcessManagerUnitTest.cpp \
 	ProcessCommandUnitTest.cpp \
@@ -158,6 +159,9 @@ PROG_DEPS_OBJS_PDUPeerNetworkConnectorEndpointUnitTest = \
 PROG_DEPS_OBJS_PDUPeerImplUnitTest = \
 	../$(TARGETDIR)/PDU.o \
 	../$(TARGETDIR)/PDUPeerImpl.o \
+
+PROG_DEPS_OBJS_PDUUnitTest = \
+	../$(TARGETDIR)/PDU.o \
 
 PROG_DEPS_OBJS_ClockUnitTest =
 

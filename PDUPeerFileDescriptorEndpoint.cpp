@@ -219,20 +219,20 @@ void Forte::PDUPeerFileDescriptorEndpoint::removeFDFromEPoll()
 
 void Forte::PDUPeerFileDescriptorEndpoint::SendPDU(const Forte::PDU &pdu)
 {
-    FTRACE;
+    FTRACESTREAM(pdu);
 
     try
     {
         AutoUnlockMutex lock(mSendMutex);
         size_t offset = 0;
-        size_t len = sizeof(Forte::PDUHeader) + pdu.GetPayloadSize();
+        size_t len =
+            sizeof(Forte::PDUHeader)
+            + pdu.GetPayloadSize();
+
         hlog(HLOG_DEBUG2, "sending %zu bytes on fd %d, payloadsize = %u",
              len, mFD.GetFD(), pdu.GetPayloadSize());
 
-        // TODO? seems like we could do this without copying everything
-        // into a single buffer
-
-        // Put PDU header & payload contents into single buffer for sending
+        // Put PDU header payload contents into single buffer for sending
         boost::shared_array<char> sendBuf = PDU::CreateSendBuffer(pdu);
 
         int flags = MSG_NOSIGNAL;
@@ -249,6 +249,31 @@ void Forte::PDUPeerFileDescriptorEndpoint::SendPDU(const Forte::PDU &pdu)
             offset += sent;
             len -= sent;
         }
+
+        if (pdu.GetOptionalDataSize() > 0)
+        {
+            len = pdu.GetOptionalDataSize();
+            offset = 0;
+            const char* optionalData = (const char*) pdu.GetOptionalData();
+
+            hlog(HLOG_DEBUG2,
+                 "sending %zu bytes of optional data on fd %d",
+                 len, mFD.GetFD());
+
+            while (len > 0)
+            {
+                int sent = send(mFD, optionalData+offset, len, flags);
+                if (sent < 0)
+                    hlog_and_throw(
+                        HLOG_DEBUG,
+                        EPeerSendFailed(
+                            FStringFC(),
+                            "%s",
+                            SystemCallUtil::GetErrorDescription(errno).c_str()));
+                offset += sent;
+                len -= sent;
+            }
+        }
     }
     catch (Exception& e)
     {
@@ -256,7 +281,7 @@ void Forte::PDUPeerFileDescriptorEndpoint::SendPDU(const Forte::PDU &pdu)
         // and potentially recover from is ENOBUFS. rather than add a
         // special case for that situation, going to handle the other
         // 90% and close the connection in this case.
-
+        hlogstream(HLOG_DEBUG, "caught exception sending: " << e.what());
         handleFileDescriptorClose();
         throw;
     }
@@ -280,17 +305,30 @@ bool Forte::PDUPeerFileDescriptorEndpoint::lockedIsPDUReady(void) const
              mCursor, minPDUSize);
         return false;
     }
+
     Forte::PDUHeader *pduHeader = (Forte::PDUHeader*)mPDUBuffer.get();
 
     // Validate PDU
     if (pduHeader->version != Forte::PDU::PDU_VERSION)
     {
-        hlog(HLOG_DEBUG2, "invalid PDU version");
+        //TODO: this should probably close the fd, this stream will
+        //never recover
+        if (hlog_ratelimit(60))
+            hlogstream(HLOG_ERR, "invalid PDU version."
+                       << " expected " << Forte::PDU::PDU_VERSION
+                       << " received " << pduHeader->version);
         throw EPDUVersionInvalid();
     }
-    // \TODO figure out how to do proper opcode validation
 
-    if (mCursor >= minPDUSize + pduHeader->payloadSize)
+    // \TODO figure out how to do proper opcode validation.
+    //
+    // one way to do it would be to ask for a valid opcode range, then
+    // verify that the opcode is at least within the accepted
+    // parameters. other than that might need to leave it up to the
+    // consumers.
+
+    if (mCursor >=
+        (minPDUSize + pduHeader->payloadSize + pduHeader->optionalDataSize))
         return true;
     else
         return false;
@@ -304,20 +342,46 @@ bool Forte::PDUPeerFileDescriptorEndpoint::RecvPDU(Forte::PDU &out)
 
     Forte::PDUHeader *pduHeader =
         reinterpret_cast<Forte::PDUHeader*>(mPDUBuffer.get());
-    size_t len = sizeof(Forte::PDUHeader) + pduHeader->payloadSize;;
+
+    size_t len = sizeof(Forte::PDUHeader) + pduHeader->payloadSize;
+
     hlog(HLOG_DEBUG2, "found valid PDU: len=%zu", len);
-    // \TODO this memmove() based method is inefficient.  Implement a
-    // proper ring-buffer.
+
     out.SetHeader(*pduHeader);
     out.SetPayload(out.GetPayloadSize(),
                    mPDUBuffer.get()+sizeof(Forte::PDUHeader));
 
-    // now, move the rest of the buffer and cursor back by 'len' bytes
-    memmove(mPDUBuffer.get(), mPDUBuffer.get() + len, mBufSize - len);
-    memset(mPDUBuffer.get() + mBufSize - len, 0, len);
+    if (pduHeader->optionalDataSize > 0)
+    {
+        boost::shared_ptr<Forte::PDUOptionalData> data(
+            new Forte::PDUOptionalData(
+                pduHeader->optionalDataSize,
+                pduHeader->optionalDataAttributes));
+
+        memcpy(
+            data->mData,
+            mPDUBuffer.get() + sizeof(Forte::PDUHeader) + pduHeader->payloadSize,
+            pduHeader->optionalDataSize);
+
+        out.SetOptionalData(data);
+    }
+
+    // \TODO this memmove() based method is inefficient.  Implement a
+    // proper ring-buffer.
+
+    // move the rest of the buffer and cursor back by 'len' bytes
+    size_t totalBufferConsumed = len + pduHeader->optionalDataSize;
+    memmove(mPDUBuffer.get(),
+            mPDUBuffer.get() + totalBufferConsumed,
+            mBufSize - totalBufferConsumed);
+
+    memset(mPDUBuffer.get() + mBufSize - totalBufferConsumed,
+           0,
+           totalBufferConsumed);
+
     hlog(HLOG_DEBUG2, "found valid PDU: oldCursor=%zu newCursor=%zu",
-         mCursor, mCursor - len);
-    mCursor -= len;
+         mCursor, mCursor - totalBufferConsumed);
+    mCursor -= totalBufferConsumed;
 
     mBufferFullCondition.Signal();
     return true;
