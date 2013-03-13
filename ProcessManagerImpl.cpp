@@ -28,6 +28,7 @@
 #include <dirent.h>
 #include <fcntl.h>
 
+using namespace boost;
 using namespace Forte;
 
 const int Forte::ProcessManagerImpl::MAX_RUNNING_PROCS = 128;

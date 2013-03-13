@@ -3,6 +3,7 @@
 #include "Foreach.h"
 #include "FTrace.h"
 
+using namespace boost;
 using namespace Forte;
 
 /////////////////////////// On demand dispatcher

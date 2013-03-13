@@ -24,13 +24,14 @@ namespace Forte
         virtual ~ActiveObject() {Shutdown(true,false);}
 
         template<typename ResultType>
-        shared_ptr<Forte::Future<ResultType> > InvokeAsync(
+        boost::shared_ptr<Forte::Future<ResultType> > InvokeAsync(
             boost::function<ResultType(void)> callback) {
             if (mIsShutdown || (!mActiveObjectThreadPtr))
                 throw_exception(EActiveObjectShuttingDown());
-            shared_ptr<Future<ResultType> > future(make_shared<Future<ResultType> >());
+            boost::shared_ptr<Future<ResultType> > future(
+                boost::make_shared<Future<ResultType> >());
             mActiveObjectThreadPtr->Enqueue(
-                make_shared<ConcreteInvocation<ResultType> >(future, callback));
+                boost::make_shared<ConcreteInvocation<ResultType> >(future, callback));
             return future;
         }
         bool IsCancelled(void) {

@@ -126,7 +126,7 @@ void * Forte::ReceiverThread::run(void)
             continue;
         }
 
-        boost::shared_ptr<RequestEvent> e = make_shared<RequestEvent>();
+        boost::shared_ptr<RequestEvent> e = boost::make_shared<RequestEvent>();
         e->mFD = s;
         // mark the time of accept
         gettimeofday(&(e->mTime), NULL);

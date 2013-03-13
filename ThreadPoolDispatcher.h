@@ -71,16 +71,16 @@ namespace Forte
         virtual void Shutdown(void);
         virtual void Pause(void);
         virtual void Resume(void);
-        virtual void Enqueue(shared_ptr<Event> e);
+        virtual void Enqueue(boost::shared_ptr<Event> e);
         virtual bool Accepting(void);
         inline int GetQueuedEvents(
-            int maxEvents, std::list<shared_ptr<Event> > &queuedEvents)
+            int maxEvents, std::list<boost::shared_ptr<Event> > &queuedEvents)
             {
                 return mEventQueue.GetEvents(maxEvents, queuedEvents);
             }
 
         int GetRunningEvents(
-            int maxEvents, std::list<shared_ptr<Event> > &runningEvents);
+            int maxEvents, std::list<boost::shared_ptr<Event> > &runningEvents);
 
     protected:
         unsigned int mMinThreads;

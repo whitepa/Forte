@@ -7,6 +7,8 @@
 #include "Types.h"
 #include <netinet/tcp.h>
 
+using namespace boost;
+
 Forte::PDUPeerNetworkConnectorEndpoint::PDUPeerNetworkConnectorEndpoint(
     uint64_t myPeerSetID,
     DispatcherPtr dispatcher,

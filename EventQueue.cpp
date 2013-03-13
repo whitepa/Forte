@@ -1,6 +1,7 @@
 #include "EventQueue.h"
 #include "LogManager.h"
 
+using namespace boost;
 using namespace Forte;
 
 #define EVQ_MAX_DEPTH 65536
@@ -43,7 +44,7 @@ EventQueue::~EventQueue()
     mEmptyCondition.Broadcast();
 }
 
-void EventQueue::Add(shared_ptr<Event> e)
+void EventQueue::Add(boost::shared_ptr<Event> e)
 {
     // check for NULL event
     if (!e)

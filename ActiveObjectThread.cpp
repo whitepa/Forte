@@ -3,6 +3,7 @@
 
 #define MAX_QUEUED_CALLS 128
 
+using namespace boost;
 using namespace Forte;
 
 ActiveObjectThread::ActiveObjectThread() :

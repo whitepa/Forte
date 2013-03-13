@@ -39,7 +39,7 @@ namespace Forte
     private:
         Forte::EventQueue mQueue;
         Forte::Mutex mLock;
-        shared_ptr<Forte::AsyncInvocation> mCurrentAsyncInvocation;
+        boost::shared_ptr<Forte::AsyncInvocation> mCurrentAsyncInvocation;
     };
     
 };

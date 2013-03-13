@@ -26,7 +26,7 @@ namespace Forte
     public:
         GMockDispatcher()
             : Dispatcher(
-                make_shared<NoOpRequestHandler>(),
+                boost::make_shared<NoOpRequestHandler>(),
                 1,
                 "GMockDispatcher")
             {}

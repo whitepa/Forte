@@ -2,6 +2,10 @@
 #include "LogManager.h"
 
 using namespace std;
+using namespace boost;
+using namespace boost::gregorian;
+using namespace boost::local_time;
+using namespace boost::posix_time;
 using namespace Forte;
 
 FTime::FTime(const char *timezoneDatafile)

@@ -3,7 +3,6 @@
 
 #include "Dispatcher.h"
 #include <boost/scoped_ptr.hpp>
-using namespace boost;
 
 namespace Forte
 {
@@ -22,7 +21,7 @@ namespace Forte
     public:
         OnDemandDispatcherWorker(
             OnDemandDispatcher &disp,
-            shared_ptr<Event> event);
+            boost::shared_ptr<Event> event);
 
         virtual ~OnDemandDispatcherWorker();
 
@@ -45,18 +44,18 @@ namespace Forte
         virtual void Shutdown();
         virtual void Pause(void);
         virtual void Resume(void);
-        virtual void Enqueue(shared_ptr<Event> e);
+        virtual void Enqueue(boost::shared_ptr<Event> e);
         virtual bool Accepting(void);
 
         inline int GetQueuedEvents(
             int maxEvents,
-            std::list<shared_ptr<Event> > &queuedEvents)
+            std::list<boost::shared_ptr<Event> > &queuedEvents)
             {
                 return mEventQueue.GetEvents(maxEvents, queuedEvents);
             }
         int GetRunningEvents(int maxEvents,
-                             std::list<shared_ptr<Event> > &runningEvents);
-        bool StopRunningEvent(shared_ptr<Event> &runningEvent);
+                             std::list<boost::shared_ptr<Event> > &runningEvents);
+        bool StopRunningEvent(boost::shared_ptr<Event> &runningEvent);
 
     protected:
         unsigned int mMaxThreads;

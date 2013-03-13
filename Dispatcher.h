@@ -34,7 +34,7 @@ namespace Forte
     class Dispatcher : public Object
     {
     public:
-        Dispatcher(shared_ptr<RequestHandler> reqHandler,
+        Dispatcher(boost::shared_ptr<RequestHandler> reqHandler,
                    int maxQueueDepth, const char *name);
         virtual ~Dispatcher();
 
@@ -68,7 +68,7 @@ namespace Forte
     protected:
         bool mPaused;
         bool mShutdown;
-        std::vector<shared_ptr<DispatcherThread> > mThreads;
+        std::vector<boost::shared_ptr<DispatcherThread> > mThreads;
         boost::shared_ptr<RequestHandler> mRequestHandler;
         Mutex mThreadsLock;
         Mutex mNotifyLock;
@@ -95,7 +95,7 @@ namespace Forte
         Dispatcher &mDispatcher;
         // pointer to the event being handled by this thread, NULL if idle.
         // YOU MUST LOCK dispatcher's mNotifyMutex while accessing this data
-        shared_ptr<Event> mEventPtr;
+        boost::shared_ptr<Event> mEventPtr;
     };
 };
 
