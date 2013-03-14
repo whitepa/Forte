@@ -26,7 +26,6 @@ LIBS = \
 	$(OS_LIBS)
 
 PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
-	$(TARGETDIR)/AutoMutexOnBoxTest \
 	$(TARGETDIR)/FileSystemImplOnBoxTest \
 	$(TARGETDIR)/INotifyUnitTest \
 	$(TARGETDIR)/InterProcessLockOnBoxTest \

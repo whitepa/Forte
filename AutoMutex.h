@@ -1,5 +1,3 @@
-// #SCQAD TEST: ONBOX: AutoMutexOnBoxTest
-
 #ifndef _AutoMutex_h
 #define _AutoMutex_h
 #include <pthread.h>
