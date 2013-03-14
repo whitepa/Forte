@@ -55,6 +55,7 @@ GSRCS = AutoMutexUnitTest.cpp \
 	CheckedValueStoreUnitTest.cpp \
 	CheckedValueUnitTest.cpp \
 	ClockUnitTest.cpp \
+	CollectorUnitTest.cpp \
 	ConditionUnitTest.cpp \
 	ConditionFileLoggerUnitTest.cpp \
 	ConditionAsyncLoggerUnitTest.cpp \
@@ -202,6 +203,9 @@ PROG_DEPS_OBJS_StateMachineDoIntervalUnitTest =
 PROG_DEPS_OBJS_CheckedValueStoreUnitTest =  ../$(TARGETDIR)/CheckedValueStore.o
 
 PROG_DEPS_OBJS_CheckedValueUnitTest =  ../$(TARGETDIR)/CheckedValue.o
+
+PROG_DEPS_OBJS_CollectorUnitTest = ../$(TARGETDIR)/CheckedValueStore.o \
+				   ../$(TARGETDIR)/Collector.o
 
 PROG_DEPS_OBJS_PidFileUnitTest =  ../$(TARGETDIR)/PidFile.o
 
