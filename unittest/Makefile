@@ -68,6 +68,7 @@ GSRCS = AutoMutexUnitTest.cpp \
 	IOManagerUnitTest.cpp \
 	LoggingUnitTest.cpp \
 	LogManagerUnitTest.cpp \
+	OnDemandDispatcherUnitTest.cpp \
 	PDUPeerFileDescriptorEndpointUnitTest.cpp \
 	PDUPeerImplUnitTest.cpp \
 	PDUPeerInProcessEndpointUnitTest.cpp \

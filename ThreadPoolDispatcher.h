@@ -22,8 +22,6 @@
  * myDispatcher->Shutdown will provide a smoother destruct experience.
  */
 
-
-
 namespace Forte
 {
     EXCEPTION_CLASS(EThreadPoolDispatcher);
@@ -41,7 +39,7 @@ namespace Forte
         virtual void *run(void);
     };
 
-    class ThreadPoolDispatcherWorker : public DispatcherThread
+    class ThreadPoolDispatcherWorker : public DispatcherWorkerThread
     {
     public:
         ThreadPoolDispatcherWorker(ThreadPoolDispatcher &disp);

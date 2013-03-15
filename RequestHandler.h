@@ -15,6 +15,7 @@ namespace Forte
         virtual void Handler(Event *e) = 0;
         virtual void Busy(void) = 0;
         virtual void Periodic(void) = 0;
+        // called by each thread when it starts
         virtual void Init(void) = 0;
         virtual void Cleanup(void) = 0;
         unsigned int mTimeout;

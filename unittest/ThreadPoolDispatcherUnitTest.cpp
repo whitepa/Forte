@@ -78,12 +78,35 @@ protected:
 class TestRequestHandler : public RequestHandler
 {
 public:
-    TestRequestHandler() : RequestHandler(0), mHandledRequests(0) {}
+    TestRequestHandler()
+        : RequestHandler(0),
+          mCondition(mHandledRequestsMutex),
+          mHandledRequests(0)
+        {
+        }
     virtual ~TestRequestHandler() {}
+
+    int GetHandledRequestCount() const {
+        AutoUnlockMutex lock(mHandledRequestsMutex);
+        return mHandledRequests;
+    }
+
+    void WaitForRequestHandled(int minHandled=1) {
+        AutoUnlockMutex lock(mHandledRequestsMutex);
+
+        while (mHandledRequests < minHandled)
+        {
+            mCondition.Wait();
+        }
+    }
 
     void Handler(Event *e) {
         FTRACE;
-        mHandledRequests++;
+        {
+            AutoUnlockMutex lock(mHandledRequestsMutex);
+            mHandledRequests++;
+            mCondition.Signal();
+        }
 
         TestEvent* event = dynamic_cast<TestEvent*>(e);
         if (event != NULL)
@@ -112,6 +135,9 @@ public:
         FTRACE;
     }
 
+protected:
+    mutable Forte::Mutex mHandledRequestsMutex;
+    mutable Forte::ThreadCondition mCondition;
     int mHandledRequests;
 };
 
@@ -163,10 +189,12 @@ TEST_F(ThreadPoolDispatcherUnitTest, ConstructDelete)
             "TestThreadPool"
             )
         );
+
+    dispatcher->Shutdown();
 }
 
 
-TEST_F(ThreadPoolDispatcherUnitTest, ConstructDeleteWithEnqueuedEvent)
+TEST_F(ThreadPoolDispatcherUnitTest, ConstructDeleteAfterHandledEvent)
 {
     FTRACE;
 
@@ -195,13 +223,14 @@ TEST_F(ThreadPoolDispatcherUnitTest, ConstructDeleteWithEnqueuedEvent)
 
     dispatcher->Enqueue(make_shared<TestEventDoOutput>());
 
-    //TODO: wait more intelligently for these events to finish
-    sleep(1);
+    testHandler->WaitForRequestHandled();
 
-    ASSERT_EQ(1, testHandler->mHandledRequests);
+    ASSERT_EQ(1, testHandler->GetHandledRequestCount());
+
+    dispatcher->Shutdown();
 }
 
-TEST_F(ThreadPoolDispatcherUnitTest, WorkersCanWorkUntilShutdown)
+TEST_F(ThreadPoolDispatcherUnitTest, WorkersCanWorkUntilSignalled)
 {
     FTRACE;
 
@@ -240,11 +269,11 @@ TEST_F(ThreadPoolDispatcherUnitTest, WorkersCanWorkUntilShutdown)
 
     ASSERT_EQ(0, dispatcher->GetQueuedEvents(maxEvents, events));
     ASSERT_EQ(5, dispatcher->GetRunningEvents(maxEvents, events));
-    ASSERT_EQ(5, testHandler->mHandledRequests);
+    ASSERT_EQ(5, testHandler->GetHandledRequestCount());
 
     dispatcher->Shutdown();
 
-    ASSERT_EQ(5, testHandler->mHandledRequests);
+    ASSERT_EQ(5, testHandler->GetHandledRequestCount());
 }
 
 TEST_F(ThreadPoolDispatcherUnitTest, WorkersCanReenqueueSelves)

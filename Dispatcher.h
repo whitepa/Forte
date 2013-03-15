@@ -30,6 +30,7 @@ namespace Forte
                         "Request handler is invalid");
 
     class DispatcherThread;
+    class DispatcherWorkerThread;
 
     class Dispatcher : public Object
     {
@@ -68,7 +69,7 @@ namespace Forte
     protected:
         bool mPaused;
         bool mShutdown;
-        std::vector<boost::shared_ptr<DispatcherThread> > mThreads;
+        std::vector<boost::shared_ptr<DispatcherWorkerThread> > mThreads;
         boost::shared_ptr<RequestHandler> mRequestHandler;
         Mutex mThreadsLock;
         Mutex mNotifyLock;
@@ -85,14 +86,53 @@ namespace Forte
         DispatcherThread(Dispatcher &dispatcher);
         virtual ~DispatcherThread();
 
+    protected:
+        Dispatcher &mDispatcher;
+    };
+
+    class DispatcherWorkerThread : public DispatcherThread
+    {
+        friend class ThreadPoolDispatcher;
+        friend class OnDemandDispatcher;
+    public:
+        DispatcherWorkerThread(Dispatcher &dispatcher,
+                               const boost::shared_ptr<Event>& e);
+        virtual ~DispatcherWorkerThread();
+
         /**
          * HasEvent() returns whether this thread is currently
          * assigned an event.
          */
-        bool HasEvent(void) { return mEventPtr; }
+        bool HasEvent(void) {
+            AutoUnlockMutex lock(mEventMutex);
+            return mEventPtr;
+        }
 
     protected:
-        Dispatcher &mDispatcher;
+        void setEvent(const boost::shared_ptr<Event>& event) {
+            AutoUnlockMutex lock(mEventMutex);
+            mEventPtr = event;
+        }
+
+        void clearEvent() {
+            AutoUnlockMutex lock(mEventMutex);
+            mEventPtr.reset();
+        }
+
+        Event* getRawEventPointer() {
+            AutoUnlockMutex lock(mEventMutex);
+            return mEventPtr.get(); // modeling current usage
+        }
+
+        boost::shared_ptr<Event> getEvent() {
+            return mEventPtr;
+        }
+
+
+    private:
+        // a very small lock to protect just the event
+        Forte::Mutex mEventMutex;
+
         // pointer to the event being handled by this thread, NULL if idle.
         // YOU MUST LOCK dispatcher's mNotifyMutex while accessing this data
         boost::shared_ptr<Event> mEventPtr;

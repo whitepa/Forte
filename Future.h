@@ -37,8 +37,15 @@ namespace Forte
             SetException(boost::copy_exception(EFutureDropped()));
         }
 
-        virtual bool IsCancelled() const { AutoUnlockMutex lock(mLock); return mCancelled; }
-        virtual bool IsReady() const { return mResultReady; }
+        virtual bool IsCancelled() const {
+            AutoUnlockMutex lock(mLock);
+            return mCancelled;
+        }
+
+        virtual bool IsReady() const {
+            AutoUnlockMutex lock(mLock);
+            return mResultReady;
+        }
 
         virtual ResultType GetResultTimed(const Timespec &timeout) {
             AutoUnlockMutex lock(mLock);

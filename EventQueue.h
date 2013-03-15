@@ -27,7 +27,11 @@ namespace Forte
 
         EventQueue(QueueMode mode = QUEUE_MODE_BLOCKING);
         EventQueue(int maxdepth, QueueMode mode = QUEUE_MODE_BLOCKING);
-        EventQueue(int maxdepth, ThreadCondition *notifier, QueueMode mode = QUEUE_MODE_BLOCKING);
+        EventQueue(
+            int maxdepth,
+            Mutex* notifierMutex,
+            ThreadCondition* notifier,
+            QueueMode mode = QUEUE_MODE_BLOCKING);
         virtual ~EventQueue();
 
         void Add(boost::shared_ptr<Event> e);
@@ -74,8 +78,8 @@ namespace Forte
         Semaphore mMaxDepth;
         Mutex mMutex;
         ThreadCondition mEmptyCondition;
-        ThreadCondition *mNotify; // @TODO this is broken, we would
-                                  // need the associated mutex.
+        Mutex* mNotifyMutex;
+        ThreadCondition* mNotify;
     };
 };
 #endif

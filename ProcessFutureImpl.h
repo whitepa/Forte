@@ -279,7 +279,7 @@ namespace Forte
          */
         void setState(int state);
 
-        int getState() {
+        int getState() const {
             AutoUnlockMutex lock(mStateLock);
             return mState;
         }
@@ -384,7 +384,7 @@ namespace Forte
             STATE_UNKNOWN
         };
         int mState;
-        Mutex mStateLock;
+        mutable Mutex mStateLock;
 
         Mutex mWaitLock;
         ThreadCondition mWaitCond;

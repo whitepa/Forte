@@ -11,6 +11,7 @@ EventQueue::EventQueue(QueueMode mode) :
     mShutdown(false),
     mMaxDepth(EVQ_MAX_DEPTH),
     mEmptyCondition(mMutex),
+    mNotifyMutex(NULL),
     mNotify(NULL)
 {
 }
@@ -20,15 +21,20 @@ EventQueue::EventQueue(int maxdepth, QueueMode mode) :
     mShutdown(false),
     mMaxDepth((maxdepth <= EVQ_MAX_DEPTH) ? maxdepth : EVQ_MAX_DEPTH),
     mEmptyCondition(mMutex),
+    mNotifyMutex(NULL),
     mNotify(NULL)
 {
 }
 
-EventQueue::EventQueue(int maxdepth, ThreadCondition *notifier, QueueMode mode) :
+EventQueue::EventQueue(int maxdepth,
+                       Mutex* notifierMutex,
+                       ThreadCondition* notifier,
+                       QueueMode mode) :
     mMode(mode),
     mShutdown(false),
     mMaxDepth((maxdepth <= EVQ_MAX_DEPTH) ? maxdepth : EVQ_MAX_DEPTH),
     mEmptyCondition(mMutex),
+    mNotifyMutex(notifierMutex),
     mNotify(notifier)
 {
 }
@@ -51,35 +57,45 @@ void EventQueue::Add(boost::shared_ptr<Event> e)
         throw EEventQueueEventInvalid();
     if (mMode == QUEUE_MODE_BLOCKING)
         mMaxDepth.Wait();
-    AutoUnlockMutex lock(mMutex);
-    if (mShutdown)
-        throw EEventQueueShutdown();
-    // \TODO fix this race condition
-    if (mMode != QUEUE_MODE_BLOCKING && mMaxDepth.TryWait() == -1 && errno == EAGAIN)
     {
-        // max depth
-        if (mMode == QUEUE_MODE_DROP_OLDEST || mMode == QUEUE_MODE_DROP_OLDEST_LOG)
+        AutoUnlockMutex lock(mMutex);
+        if (mShutdown)
+            throw EEventQueueShutdown();
+        // \TODO fix this race condition
+        if (mMode != QUEUE_MODE_BLOCKING
+            && mMaxDepth.TryWait() == -1
+            && errno == EAGAIN)
         {
-            // delete the oldest entry
-            std::list<shared_ptr<Event> >::iterator i;
-            i = mQueue.begin();
-            if (i != mQueue.end())
+            // max depth
+            if (mMode == QUEUE_MODE_DROP_OLDEST || mMode == QUEUE_MODE_DROP_OLDEST_LOG)
             {
-                if (mMode == QUEUE_MODE_DROP_OLDEST_LOG && (*i))
-                    hlog(HLOG_INFO, "Event queue full: dropping oldest event (%s)", (*i)->mName.c_str());
-                mQueue.pop_front();
-                mMaxDepth.Post();
+                // delete the oldest entry
+                std::list<shared_ptr<Event> >::iterator i;
+                i = mQueue.begin();
+                if (i != mQueue.end())
+                {
+                    if (mMode == QUEUE_MODE_DROP_OLDEST_LOG && (*i))
+                        hlog(HLOG_INFO, "Event queue full: dropping oldest event (%s)", (*i)->mName.c_str());
+                    mQueue.pop_front();
+                    mMaxDepth.Post();
+                }
             }
+            else if (mMode == QUEUE_MODE_THROW)
+                throw EEventQueueFull();
+            else
+                throw EEventQueue(FStringFC(), "invalid queue mode %d", mMode);
         }
-        else if (mMode == QUEUE_MODE_THROW)
-            throw EEventQueueFull();
-        else
-            throw EEventQueue(FStringFC(), "invalid queue mode %d", mMode);
+        mQueue.push_back(e);
     }
-    mQueue.push_back(e);
+
     // \TODO check for a deep queue, and warn
+
     // signal appropriate threads
-    if (mNotify) mNotify->Signal();
+    if (mNotify)
+    {
+        AutoUnlockMutex lock(*mNotifyMutex);
+        mNotify->Signal();
+    }
 }
 
 shared_ptr<Event> EventQueue::Get(void)

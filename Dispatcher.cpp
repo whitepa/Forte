@@ -3,32 +3,26 @@
 
 using namespace Forte;
 
-Forte::Dispatcher::Dispatcher(boost::shared_ptr<RequestHandler> reqHandler, 
-                              int maxQueueDepth, const char *name) :
-    mDispatcherName(name),
-    mPaused(false),
-    mShutdown(false),
-    mRequestHandler(reqHandler),
-    mNotify(mNotifyLock),
-    mEventQueue(maxQueueDepth, &mNotify)
+////////////////////////////////////////////////////////////////////////////////
+// Dispatcher
+Forte::Dispatcher::Dispatcher(
+    boost::shared_ptr<RequestHandler> reqHandler,
+    int maxQueueDepth,
+    const char *name)
+    : mDispatcherName(name),
+      mPaused(false),
+      mShutdown(false),
+      mRequestHandler(reqHandler),
+      mNotify(mNotifyLock),
+      mEventQueue(maxQueueDepth, &mNotifyLock, &mNotify)
 {
     FTRACE;
 
     if (!mRequestHandler)
         throw EDispatcherReqHandlerInvalid();
 }
+
 Forte::Dispatcher::~Dispatcher()
-{
-    FTRACE;
-}
-
-DispatcherThread::DispatcherThread(Dispatcher &dispatcher) :
-    mDispatcher(dispatcher)
-{
-    FTRACE;
-}
-
-DispatcherThread::~DispatcherThread()
 {
     FTRACE;
 }
@@ -42,3 +36,40 @@ void Forte::Dispatcher::Shutdown(void)
     AutoUnlockMutex lock(mNotifyLock);
     mShutdown = true;
 }
+
+// End Dispatcher
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+// DispatcherThread
+DispatcherThread::DispatcherThread(Dispatcher &dispatcher)
+    : mDispatcher(dispatcher)
+{
+    FTRACE;
+}
+
+DispatcherThread::~DispatcherThread()
+{
+    FTRACE;
+}
+
+// End DispatcherThread
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+// DispatcherWorkerThread
+DispatcherWorkerThread::DispatcherWorkerThread(
+    Dispatcher &dispatcher,
+    const boost::shared_ptr<Event>& e)
+    : DispatcherThread(dispatcher),
+      mEventPtr(e)
+{
+    FTRACE;
+}
+
+DispatcherWorkerThread::~DispatcherWorkerThread()
+{
+    FTRACE;
+}
+// End DispatcherWorkerThread
+////////////////////////////////////////////////////////////////////////////////

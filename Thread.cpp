@@ -109,7 +109,6 @@ void Thread::deleting()
 void Thread::WaitForShutdown()
 {
     AutoUnlockMutex lock(mShutdownCompleteLock);
-    if (mShutdownComplete) return;
     while (!mShutdownComplete)
         mShutdownCompleteCondition.Wait();
 }

@@ -55,6 +55,8 @@ void ActiveObjectThread::DropQueue(void)
 }
 void ActiveObjectThread::CancelRunning(void)
 {
+    AutoUnlockMutex lock(mLock);
+
     if (mCurrentAsyncInvocation)
         mCurrentAsyncInvocation->Cancel();
 }

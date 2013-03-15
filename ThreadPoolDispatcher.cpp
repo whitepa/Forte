@@ -14,6 +14,7 @@ Forte::ThreadPoolDispatcherManager::ThreadPoolDispatcherManager(
     ThreadPoolDispatcher &disp)
     : DispatcherThread(disp)
 {
+    FTRACE;
     initialized();
 }
 
@@ -106,7 +107,7 @@ void* Forte::ThreadPoolDispatcherManager::run(void)
                  spareThreads, disp.mMinSpareThreads, disp.mMaxSpareThreads);
 
             AutoUnlockMutex lock(disp.mThreadsLock);
-            std::vector<shared_ptr<DispatcherThread> >::iterator i =
+            std::vector<shared_ptr<DispatcherWorkerThread> >::iterator i =
                 disp.mThreads.begin();
             //TODO? should thread pool dispatcher try to kill idle
             //threads first?
@@ -134,7 +135,7 @@ void* Forte::ThreadPoolDispatcherManager::run(void)
     // tell all workers to shutdown
     {
         AutoUnlockMutex lock(disp.mThreadsLock);
-        foreach (shared_ptr<DispatcherThread> &thr, disp.mThreads)
+        foreach (shared_ptr<DispatcherWorkerThread> &thr, disp.mThreads)
         {
             if (thr)
             {
@@ -157,6 +158,24 @@ void* Forte::ThreadPoolDispatcherManager::run(void)
     {
         // now delete all the threads
         AutoUnlockMutex lock(disp.mThreadsLock);
+
+        // our dispatcher is waiting for us to shutdown. our workers
+        // have a reference to the dispatcher. we have to ensure our
+        // workers exit before we do so their Dispatcher& does not
+        // become invalid
+        foreach (shared_ptr<DispatcherWorkerThread> &thr, disp.mThreads)
+        {
+            if (thr)
+            {
+                hlog(HLOG_DEBUG3, "waiting for thread %s to shutdown",
+                     thr->mThreadName.c_str());
+                thr->WaitForShutdown();
+            }
+            else
+                hlog(HLOG_ERR,
+                     "invalid thread pointer in dispatcher thread vector");
+        }
+
         disp.mThreads.clear();
         // TODO: timed deletion of all threads, give up after a while
     }
@@ -166,7 +185,10 @@ void* Forte::ThreadPoolDispatcherManager::run(void)
 
 Forte::ThreadPoolDispatcherWorker::ThreadPoolDispatcherWorker(
     ThreadPoolDispatcher &disp)
-    : DispatcherThread(disp),
+    : DispatcherWorkerThread(
+        disp,
+        boost::shared_ptr<Event>() // work will pull events from queue
+        ),
       mMonotonicClock(),
       mLastPeriodicCall(mMonotonicClock.GetTime().AsSeconds())
 {
@@ -213,16 +235,15 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
         {
             shared_ptr<Event> event(disp.mEventQueue.Get());
             if (!event) break;
-            // set event pointer here
-            mEventPtr = event;
+            setEvent(event);
             // set start time
-            gettimeofday(&(mEventPtr->mStartTime), NULL);
+            gettimeofday(&(event->mStartTime), NULL);
             {
                 AutoLockMutex unlock(disp.mNotifyLock);
                 // process the request
                 try
                 {
-                    disp.mRequestHandler->Handler(event.get());
+                    disp.mRequestHandler->Handler(getRawEventPointer());
                 }
                 catch (EThreadShutdown &e)
                 {
@@ -244,7 +265,7 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
             }
             // mNotifyLock is LOCKED here
             // unset event pointer
-            mEventPtr.reset();
+            clearEvent();
             // event will be deleted HERE
         }
         disp.mSpareThreadSem.Post();
@@ -326,7 +347,7 @@ void Forte::ThreadPoolDispatcher::Enqueue(shared_ptr<Event> e)
 {
     //FTRACE;
 
-    if (mShutdown)
+    if (IsShuttingDown())
         throw EThreadPoolDispatcherShuttingDown(
             "dispatcher is shutting down; no new events are being accepted");
     mEventQueue.Add(e);
@@ -346,11 +367,11 @@ int Forte::ThreadPoolDispatcher::GetRunningEvents(
     AutoUnlockMutex thrLock(mThreadsLock);
 
     int count = 0;
-    foreach (shared_ptr<DispatcherThread> dt, mThreads)
+    foreach (shared_ptr<DispatcherWorkerThread> dt, mThreads)
     {
-        if (dt->mEventPtr)
+        if (dt->HasEvent())
         {
-            runningEvents.push_back(dt->mEventPtr);
+            runningEvents.push_back(dt->getEvent());
             ++count;
         }
     }

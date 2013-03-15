@@ -32,17 +32,24 @@ void * Forte::OnDemandDispatcherManager::run(void)
         // environment.
         {
             AutoUnlockMutex thrLock(disp.mThreadsLock);
-            std::vector<shared_ptr<DispatcherThread> >::iterator i;
+            std::vector<shared_ptr<DispatcherWorkerThread> >::iterator i;
             i = disp.mThreads.begin();
             while(i != disp.mThreads.end())
             {
-                shared_ptr<DispatcherThread> element = *i;
-                // OnDemandDispatcher workers are guaranteed to be
-                // finished if HasEvent() returns false.
+                shared_ptr<DispatcherWorkerThread> element = *i;
+                // OnDemandDispatcher workers are done with the work
+                // handler if HasEvent() returns false.
                 if (!element->HasEvent())
                 {
+                    // this WaitForShutdown should be near
+                    // instantaneous. if this needs to be moved out of
+                    // the main loop that would an optimization.
+                    // without this here, thr can become invalid in
+                    // Thread::startThread when thr->Shutdown is called
+                    element->WaitForShutdown();
                     i = disp.mThreads.erase(i);
-                } else
+                }
+                else
                 {
                     i++;
                 }
@@ -57,7 +64,7 @@ void * Forte::OnDemandDispatcherManager::run(void)
 
             AutoUnlockMutex thrLock(disp.mThreadsLock);
             disp.mThreads.push_back(
-                shared_ptr<DispatcherThread>(
+                shared_ptr<DispatcherWorkerThread>(
                     new OnDemandDispatcherWorker(disp, event)));
 
             hlog(HLOG_DEBUG2, "Number of threads in queue : %d",
@@ -76,11 +83,18 @@ void * Forte::OnDemandDispatcherManager::run(void)
     // signal any workers to shutdown
     {
         AutoUnlockMutex thrlock(disp.mThreadsLock);
-        foreach (shared_ptr<DispatcherThread> &thr, disp.mThreads)
+        foreach (shared_ptr<DispatcherWorkerThread> &thr, disp.mThreads)
         {
             if (thr)
                 thr->Shutdown();
         }
+
+        foreach (shared_ptr<DispatcherWorkerThread> &thr, disp.mThreads)
+        {
+            if (thr)
+                thr->WaitForShutdown();
+        }
+
 
         // delete all threads
         disp.mThreads.clear();
@@ -91,11 +105,10 @@ void * Forte::OnDemandDispatcherManager::run(void)
 
 Forte::OnDemandDispatcherWorker::OnDemandDispatcherWorker(
     OnDemandDispatcher &disp,
-    shared_ptr<Event> event)
-    : DispatcherThread(disp)
+    const shared_ptr<Event>& event)
+    : DispatcherWorkerThread(disp, event)
 {
     FTRACE;
-    mEventPtr = event;
     initialized();
 }
 
@@ -115,10 +128,10 @@ void * Forte::OnDemandDispatcherWorker::run()
     OnDemandDispatcher &disp(dynamic_cast<OnDemandDispatcher&>(mDispatcher));
     mThreadName.Format("%s-od-%u", disp.mDispatcherName.c_str(), GetThreadID());
     disp.mRequestHandler->Init();
-    disp.mRequestHandler->Handler(mEventPtr.get());
+    disp.mRequestHandler->Handler(getRawEventPointer());
+    clearEvent();
     // thread is complete at this point, resetting our event pointer
     // will cause the manager to reap us
-    mEventPtr.reset();
 
     return NULL;
 }
@@ -204,7 +217,7 @@ int Forte::OnDemandDispatcher::GetRunningEvents(
     AutoUnlockMutex thrLock(mThreadsLock);
     int count = 0;
     // loop through the dispatcher threads
-    foreach (shared_ptr<DispatcherThread> &thr, mThreads)
+    foreach (shared_ptr<DispatcherWorkerThread> &thr, mThreads)
     {
         // copy each event
         if (thr && thr->mEventPtr)
@@ -221,7 +234,7 @@ bool Forte::OnDemandDispatcher::StopRunningEvent(shared_ptr<Event> &runningEvent
     AutoUnlockMutex lock(mNotifyLock);
     AutoUnlockMutex thrLock(mThreadsLock);
 
-    foreach (shared_ptr<DispatcherThread> &thr, mThreads)
+    foreach (shared_ptr<DispatcherWorkerThread> &thr, mThreads)
     {
         // copy each event
         if (thr && (thr->mEventPtr == runningEvent))

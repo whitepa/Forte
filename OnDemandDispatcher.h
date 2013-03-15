@@ -11,17 +11,17 @@ namespace Forte
     {
     public:
         OnDemandDispatcherManager(OnDemandDispatcher &disp);
-        virtual ~OnDemandDispatcherManager() { deleting();};
+        virtual ~OnDemandDispatcherManager() { deleting(); };
     protected:
         virtual void *run(void);
     };
 
-    class OnDemandDispatcherWorker : public DispatcherThread
+    class OnDemandDispatcherWorker : public DispatcherWorkerThread
     {
     public:
         OnDemandDispatcherWorker(
             OnDemandDispatcher &disp,
-            boost::shared_ptr<Event> event);
+            const boost::shared_ptr<Event>& event);
 
         virtual ~OnDemandDispatcherWorker();
 

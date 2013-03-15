@@ -141,7 +141,7 @@ void Forte::ProcessManagerImpl::abandonProcess(const boost::shared_ptr<Forte::PD
     // here.
 
     // order of declarations is important!
-    // boost::shared_ptr<ProcessFuture> processPtr;
+    //boost::shared_ptr<ProcessFuture> processPtr;
     {
         AutoUnlockMutex lock(mProcessesLock);
         ProcessMap::iterator i = mProcesses.find(peer->GetFD());
@@ -400,6 +400,7 @@ void Forte::ProcessManagerImpl::errorCallback(PDUPeer &peer)
     // p needs to declared first and then lock, so that
     // they get destructed appropiately
     boost::shared_ptr<ProcessFutureImpl> p;
+
     AutoUnlockMutex lock(mProcessesLock);
     ProcessMap::iterator i;
     if ((i = mProcesses.find(fd)) == mProcesses.end())
