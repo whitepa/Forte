@@ -16,7 +16,7 @@ namespace Forte
     EXCEPTION_SUBCLASS(EMockProcessManager, EMockProcessManagerUnableToOpenErrorFile);
     EXCEPTION_SUBCLASS(EMockProcessManager, EMockProcessManagerUnableToExec);
     EXCEPTION_SUBCLASS(EMockProcessManager, EMockProcessManagerUnknownMessage);
-    
+
     struct ExpectedCommandResponse
     {
         FString mCommand;
@@ -25,7 +25,7 @@ namespace Forte
         int mResponseCode;
         Timespec mDuration;
     };
-    typedef boost::shared_ptr<ExpectedCommandResponse> ExpectedCommandResponsePtr; 
+    typedef boost::shared_ptr<ExpectedCommandResponse> ExpectedCommandResponsePtr;
 
     class MockProcessManagerThread : public Thread
     {
@@ -110,7 +110,7 @@ namespace Forte
 
         virtual bool IsProcessMapEmpty(void) { throw EUnimplemented(); }
 
-        virtual std::list<Forte::FString> GetCommandInvocationList(void) { 
+        virtual std::list<Forte::FString> GetCommandInvocationList(void) {
             return mCommandInvocationList;
         }
 
@@ -123,7 +123,7 @@ namespace Forte
         Mutex mCommandListLock;
         std::map<Forte::FString, ExpectedCommandResponsePtr> mCommandResponseMap;
         std::queue<ExpectedCommandResponsePtr> mCommandResponseQueue;
-        std::map<Forte::FString, unsigned int> mCommandInvocationCount; // number of times this command/response was invoked 
+        std::map<Forte::FString, unsigned int> mCommandInvocationCount; // number of times this command/response was invoked
         std::list<Forte::FString> mCommandInvocationList;
         bool mHadUnexpectedCommand;
 

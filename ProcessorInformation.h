@@ -11,8 +11,8 @@ namespace Forte
     class Processor
     {
     public:
-        Processor(const ProcFileSystem::CPUInfoPtr info) : 
-            mInfo(info), 
+        Processor(const ProcFileSystem::CPUInfoPtr info) :
+            mInfo(info),
             mClockFrequencyInHertz(info->mClockFrequencyInMegaHertz * 1000000) {}
 
         const ProcFileSystem::CPUInfoPtr mInfo;

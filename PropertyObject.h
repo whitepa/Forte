@@ -12,7 +12,7 @@ namespace Forte
 {
     EXCEPTION_CLASS(EPropertyObject);
     EXCEPTION_SUBCLASS2(EPropertyObject, EPropertyObjectNoKey, "Key does not exist");
-    
+
     class PropertyObject : public Object
     {
     public:

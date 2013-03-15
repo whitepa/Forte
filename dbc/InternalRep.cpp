@@ -53,8 +53,8 @@ void ParseContext::validate(void)
 //        cout << TC(Table,fk.mTable).mName << " :: " << fk.mName << endl;
 //    }
     // XXX make sure all foreign keys have one and only one primary
-    
-    
+
+
 }
 
 void ParseContext::generateCPP(void)
@@ -73,11 +73,11 @@ void ParseContext::generateMk(void)
     FILE *m;
     FString mFilename;
     if (!mMakefileName.empty())
-        mFilename.Format("%s/%s", 
+        mFilename.Format("%s/%s",
                          ParseContext::get().getOutputPath().c_str(),
                          mMakefileName.c_str());
     else
-        mFilename.Format("%s/dbc_generated_srcs.mk", 
+        mFilename.Format("%s/dbc_generated_srcs.mk",
                          ParseContext::get().getOutputPath().c_str());
     if ((m = fopen(mFilename, "w"))==NULL)
         throw Exception(FStringFC(), "unable to open file '%s'", mFilename.c_str());
@@ -169,18 +169,18 @@ ForeignKey::ForeignKey(const char *name, YYSTYPE colvalues, YYSTYPE flags) :
         if (a->GetType() == typeid(ColumnValue))
         {
             ColumnValue &cv(TC(ColumnValue,a));
-            if (mFlags & FK_OPT_PRIMARY) 
+            if (mFlags & FK_OPT_PRIMARY)
             {
                 if (cv.mValueSet)
                     throw Exception("Values must not be set in foreign key references"
                                      " for primary tables");
-                
+
             }
             cv.linkToColumn(LASTTABLE());
             mColValues.push_back(a);
         }
     }
-    
+
     // insert this Foreign Key into the global structure
     // first, check all other table references of this foreign key
     foreach (YYSTYPE p, PC().mForeignKeys)
@@ -278,7 +278,7 @@ FString ForeignKey::paramStr(const ForeignKey &callee, bool orig) const
             if (orig)
                 params.push_back(thisColumn.cOriginalName()); // using original name
             else
-                params.push_back(thisColumn.cName()); // using original name                
+                params.push_back(thisColumn.cName()); // using original name
             ++i2;
         }
         else // more columns in c1
@@ -307,7 +307,7 @@ FString ForeignKey::localParamStr(const char *prefix) const
         const ColumnValue &c(TC(ColumnValue,a));
         const TableColumn &col(TC(TableColumn,c.mColumn));
         if (c.mValueSet) continue;
-        params.push_back(FString(FStringFC(), "%s %s%s", 
+        params.push_back(FString(FStringFC(), "%s %s%s",
                                  col.cPODType().c_str(), prefix, col.mName.c_str()));
     }
     FString paramStr;
@@ -406,13 +406,13 @@ void TableCount::generateCPP(const Table &t, FILE *h, FILE *c)
     foreach(YYSTYPE a, mColumns)
     {
         const TableColumn &tc(TC(TableColumn,a));
-        keyParamV.push_back(FString(FStringFC(), 
+        keyParamV.push_back(FString(FStringFC(),
                                     "%s %s", tc.cPODType().c_str(), tc.mName.c_str()));
     }
     keyParamStr.Implode(", ", keyParamV);
 
     fprintf(h, "    static unsigned int %s(Forte::DbConnection &db, %s);\n", mName.c_str(), keyParamStr.c_str());
-    fprintf(c, "unsigned int %s::%s(Forte::DbConnection &db, %s)\n", 
+    fprintf(c, "unsigned int %s::%s(Forte::DbConnection &db, %s)\n",
             t.mClassname.c_str(), mName.c_str(), keyParamStr.c_str());
     fprintf(c, "{\n");
     fprintf(c, "    Forte::FString sql;\n");
@@ -442,7 +442,7 @@ void TableSelector::generateCPP(const Table &t, FILE *h, FILE *c)
     foreach(YYSTYPE a, mColumns)
     {
         const TableColumn &tc(TC(TableColumn,a));
-        keyParamV.push_back(FString(FStringFC(), 
+        keyParamV.push_back(FString(FStringFC(),
                                     "%s %s", tc.cPODType().c_str(), tc.mName.c_str()));
     }
     // if locking was specified, generate the lock string
@@ -460,7 +460,7 @@ void TableSelector::generateCPP(const Table &t, FILE *h, FILE *c)
     else if (mFlags & SELECTOR_LOCK_SHARED)
         lockStr = "LOCK IN SHARE MODE";
     fprintf(h, "    static Forte::DbResult %s(Forte::DbConnection &db, %s%s);\n", mName.c_str(), keyParamStr.c_str(), lockDefault.c_str());
-    fprintf(c, "Forte::DbResult %s::%s(Forte::DbConnection &db, %s)\n", 
+    fprintf(c, "Forte::DbResult %s::%s(Forte::DbConnection &db, %s)\n",
             t.mClassname.c_str(), mName.c_str(), keyParamStr.c_str());
     fprintf(c, "{\n");
     fprintf(c, "    Forte::FString sql;\n");
@@ -498,13 +498,13 @@ void TableDeletor::generateCPP(const Table &t, FILE *h, FILE *c)
     foreach(YYSTYPE a, mColumns)
     {
         const TableColumn &tc(TC(TableColumn,a));
-        keyParamV.push_back(FString(FStringFC(), 
+        keyParamV.push_back(FString(FStringFC(),
                                     "%s %s", tc.cPODType().c_str(), tc.mName.c_str()));
     }
     keyParamStr.Implode(", ", keyParamV);
 
     fprintf(h, "    static void %s(Forte::DbConnection &db, %s);\n", mName.c_str(), keyParamStr.c_str());
-    fprintf(c, "void %s::%s(Forte::DbConnection &db, %s)\n", 
+    fprintf(c, "void %s::%s(Forte::DbConnection &db, %s)\n",
             t.mClassname.c_str(), mName.c_str(), keyParamStr.c_str());
     fprintf(c, "{\n");
     fprintf(c, "    Forte::FString sql;\n");
@@ -533,13 +533,13 @@ void TableExistor::generateCPP(const Table &t, FILE *h, FILE *c)
     foreach(YYSTYPE a, mColumns)
     {
         const TableColumn &tc(TC(TableColumn,a));
-        keyParamV.push_back(FString(FStringFC(), 
+        keyParamV.push_back(FString(FStringFC(),
                                     "%s %s", tc.cPODType().c_str(), tc.mName.c_str()));
     }
     keyParamStr.Implode(", ", keyParamV);
 
     fprintf(h, "    static bool %s(Forte::DbConnection &db, %s);\n", mName.c_str(), keyParamStr.c_str());
-    fprintf(c, "bool %s::%s(Forte::DbConnection &db, %s)\n", 
+    fprintf(c, "bool %s::%s(Forte::DbConnection &db, %s)\n",
             t.mClassname.c_str(), mName.c_str(), keyParamStr.c_str());
     fprintf(c, "{\n");
     fprintf(c, "    Forte::FString sql;\n");
@@ -569,7 +569,7 @@ void TableLookup::generateCPP(const Table &t, FILE *h, FILE *c)
     foreach(YYSTYPE a, mColumns)
     {
         const TableColumn &tc(TC(TableColumn,a));
-        keyParamV.push_back(FString(FStringFC(), 
+        keyParamV.push_back(FString(FStringFC(),
                                     "%s %s", tc.cPODType().c_str(), tc.mName.c_str()));
     }
     keyParamStr.Implode(", ", keyParamV);
@@ -579,7 +579,7 @@ void TableLookup::generateCPP(const Table &t, FILE *h, FILE *c)
 
     fprintf(h, "    static %s %s(Forte::DbConnection &db, %s);\n", retcol.cTypeName().c_str(),
             mName.c_str(), keyParamStr.c_str());
-    fprintf(c, "%s %s::%s(Forte::DbConnection &db, %s)\n", 
+    fprintf(c, "%s %s::%s(Forte::DbConnection &db, %s)\n",
             retcol.cTypeName().c_str(), t.mClassname.c_str(), mName.c_str(), keyParamStr.c_str());
     fprintf(c, "{\n");
     fprintf(c, "    Forte::FString sql;\n");
@@ -630,7 +630,7 @@ void TableCtor::generateCPP(const Table &t, FILE *h, FILE *c)
     foreach(YYSTYPE a, mColumns)
     {
         const TableColumn &tc(TC(TableColumn,a));
-        keyParamV.push_back(FString(FStringFC(), 
+        keyParamV.push_back(FString(FStringFC(),
                                     "%s %s", tc.cPODType().c_str(), tc.mName.c_str()));
     }
     keyParamStr.Implode(", ", keyParamV);
@@ -648,7 +648,7 @@ Table::~Table()
 }
 
 
-Table::Table(const char *name, YYSTYPE elements) : 
+Table::Table(const char *name, YYSTYPE elements) :
     Object(name)
 {
     mClassname.Format("db_%s", name);
@@ -707,19 +707,19 @@ void Table::generateCode(void) const
     FILE *h, *c;
     FString filename;
     FString filenameBase = PC().getFilenamePrefix() + mFilenameBase;
-    filename.Format("%s/%s.h", 
+    filename.Format("%s/%s.h",
                     ParseContext::get().getOutputPath().c_str(),
                     filenameBase.c_str());
     cout << "Writing file " << filename << endl;
     if ((h = fopen(filename, "w"))==NULL)
         throw Exception(FStringFC(), "unable to open file '%s'", filename.c_str());
-    filename.Format("%s/%s.cpp", 
+    filename.Format("%s/%s.cpp",
                     ParseContext::get().getOutputPath().c_str(),
                     filenameBase.c_str());
     cout << "Writing file " << filename << endl;
     if ((c = fopen(filename, "w"))==NULL)
         throw Exception(FStringFC(), "unable to open file '%s'", filename.c_str());
-    
+
     cAutogenComment(h);
     cAutogenComment(c);
     fprintf(h, "#ifndef __dbc__%s_h__\n", filenameBase.c_str());
@@ -791,9 +791,9 @@ void Table::generateCode(void) const
     genFKRestrict(h,c);
     genFKUpdate(h,c);
     genFKDelete(h,c);
-    
+
     if (mOptions & OPT_CUSTOM)  includeCustom(h,c);
-    fprintf(h, "\n");    
+    fprintf(h, "\n");
     fprintf(h, "public:\n");
     // member variables (columns):
     foreach(YYSTYPE c, mColumns)
@@ -877,7 +877,7 @@ void Table::genCtor(FILE *h, FILE *c) const
     if (initStr.empty())
         fprintf(c, "%s::%s()\n", mClassname.c_str(), mClassname.c_str());
     else
-        fprintf(c, "%s::%s() :\n        %s\n", 
+        fprintf(c, "%s::%s() :\n        %s\n",
                 mClassname.c_str(), mClassname.c_str(), initStr.c_str());
     fprintf(c, "{\n");
     fprintf(c, "    dbc_original_loaded = false;\n");
@@ -887,7 +887,7 @@ void Table::genRowCtor(FILE *h, FILE *c) const
 {
     fprintf(h, "    %s(const Forte::DbResultRow &row);\n", mClassname.c_str());
     fprintf(c, "%s::%s(const Forte::DbResultRow &row)\n", mClassname.c_str(), mClassname.c_str());
-    fprintf(c, "{\n    Set(row);\n}\n");   
+    fprintf(c, "{\n    Set(row);\n}\n");
 }
 void Table::genPrimaryCtor(FILE *h, FILE *c) const
 {
@@ -919,14 +919,14 @@ void Table::genPrimaryCtor(FILE *h, FILE *c) const
 //        printf("  Column %s has options 0x%x\n", tc.mName.c_str(), tc.mOptions);
         if (tc.mOptions & OPT_IN_PRIMARY_KEY)
         {
-            keyParamV.push_back(FString(FStringFC(), 
+            keyParamV.push_back(FString(FStringFC(),
                                         "%s %s", tc.cPODType().c_str(), tc.mName.c_str()));
         }
     }
     keyParamStr.Implode(", ", keyParamV);
 
     fprintf(h, "    %s(Forte::DbConnection &db, %s);\n", mClassname.c_str(), keyParamStr.c_str());
-    fprintf(c, "%s::%s(Forte::DbConnection &db, %s)\n", 
+    fprintf(c, "%s::%s(Forte::DbConnection &db, %s)\n",
             mClassname.c_str(), mClassname.c_str(), keyParamStr.c_str());
     fprintf(c, "{\n");
     fprintf(c, "    Forte::DbResult res = %s::SelectPrimaryKey(db, %s);\n",
@@ -951,7 +951,7 @@ void Table::genSet(FILE *h, FILE *c) const
     {
         const TableColumn &tc(TC(TableColumn,a));
         if (tc.mOptions & OPT_IN_PRIMARY_KEY)
-            fprintf(c, "    %s = %s = %s(row, %d);\n", tc.cName().c_str(), 
+            fprintf(c, "    %s = %s = %s(row, %d);\n", tc.cName().c_str(),
                     tc.cOriginalName().c_str(), tc.cGetter().c_str(), i++);
         else
             fprintf(c, "    %s = %s(row, %d);\n", tc.cName().c_str(), tc.cGetter().c_str(), i++);
@@ -986,7 +986,7 @@ void Table::genSelect(FILE *h, FILE *c) const
     fprintf(c, "Forte::DbResult %s::Select(Forte::DbConnection &db, const char *appendSql)\n", mClassname.c_str());
     fprintf(c, "{\n");
     fprintf(c, "    Forte::FString sql;\n");
-    fprintf(c, "    sql.Format(\"SELECT %s FROM %s %s \");\n", 
+    fprintf(c, "    sql.Format(\"SELECT %s FROM %s %s \");\n",
             colstr.c_str(), mName.c_str(), (mAlias.empty())?"":mAlias.c_str());
     fprintf(c, "    if (appendSql) sql.append(appendSql);\n");
     fprintf(c, "    return Forte::DbUtil::DbStore(db, Forte::SelectDbSqlStatement(sql));\n");
@@ -998,7 +998,7 @@ void Table::genCount(FILE *h, FILE *c) const
     fprintf(c, "unsigned int %s::Count(Forte::DbConnection &db, const char *appendSql)\n", mClassname.c_str());
     fprintf(c, "{\n");
     fprintf(c, "    Forte::FString sql;\n");
-    fprintf(c, "    sql.Format(\"SELECT COUNT(*) FROM %s %s \");\n", 
+    fprintf(c, "    sql.Format(\"SELECT COUNT(*) FROM %s %s \");\n",
             mName.c_str(), (mAlias.empty())?"":mAlias.c_str());
     fprintf(c, "    if (appendSql) sql.append(appendSql);\n");
     fprintf(c, "    Forte::DbResult res = Forte::DbUtil::DbStore(db, Forte::SelectDbSqlStatement(sql));\n");
@@ -1069,14 +1069,14 @@ void Table::genSelectPrimaryKey(FILE *h, FILE *c) const
         const TableColumn &tc(TC(TableColumn,a));
         if (tc.mOptions & OPT_IN_PRIMARY_KEY)
         {
-            keyParamV.push_back(FString(FStringFC(), 
+            keyParamV.push_back(FString(FStringFC(),
                                         "%s %s", tc.cPODType().c_str(), tc.mName.c_str()));
         }
     }
     keyParamStr.Implode(", ", keyParamV);
 
     fprintf(h, "    static Forte::DbResult SelectPrimaryKey(Forte::DbConnection &db, %s);\n", keyParamStr.c_str());
-    fprintf(c, "Forte::DbResult %s::SelectPrimaryKey(Forte::DbConnection &db, %s)\n", 
+    fprintf(c, "Forte::DbResult %s::SelectPrimaryKey(Forte::DbConnection &db, %s)\n",
             mClassname.c_str(), keyParamStr.c_str());
     fprintf(c, "{\n");
     fprintf(c, "    Forte::FString sql;\n");
@@ -1260,7 +1260,7 @@ void Table::genInsert(FILE *h, FILE *c, bool keynoauto, bool set) const
 
     fprintf(c, "    Forte::DbUtil::DbExecute(db, Forte::InsertDbSqlStatement(sql));\n");
     if (mAutoIncrementColumn)
-        fprintf(c, "    %s = db.InsertID();\n", 
+        fprintf(c, "    %s = db.InsertID();\n",
                 TC(TableColumn,mAutoIncrementColumn).cName().c_str());
     // set original key data columns
     fprintf(c, "    SetOrig();\n");
@@ -1417,7 +1417,7 @@ void Table::callFKRestrict(FILE *c, bool update) const
                     (!update && (other.mFlags & FK_OPT_DELETE_RESTRICT)))
                 {
                     fprintf(c, "    %s::restrictFK%s%d(db, %s);\n",
-                            otherTable.mClassname.c_str(), 
+                            otherTable.mClassname.c_str(),
                             fk.mName.c_str(), other.mID, fk.paramStr(other).c_str());
                 }
             }
@@ -1440,7 +1440,7 @@ void Table::genFKRestrict(FILE *h, FILE *c) const
             const TableColumn &tc(TC(TableColumn,colValue.mColumn));
             if (colValue.mValueSet)
             {
-                formatStrV.push_back(FString(FStringFC(), "%s = %s", 
+                formatStrV.push_back(FString(FStringFC(), "%s = %s",
                                              tc.mName.c_str(), colValue.sqlValue().c_str()));
             }
             else
@@ -1451,13 +1451,13 @@ void Table::genFKRestrict(FILE *h, FILE *c) const
         }
         formatStr.Implode(" AND ", formatStrV);
         formatParams.Implode(", ", formatParamV);
-        fprintf(h, "    static void restrictFK%s%d(Forte::DbConnection &db, %s);\n", 
+        fprintf(h, "    static void restrictFK%s%d(Forte::DbConnection &db, %s);\n",
                 fk.mName.c_str(), fk.mID, fk.localParamStr().c_str());
         fprintf(c, "void %s::restrictFK%s%d(Forte::DbConnection &db, %s)\n", mClassname.c_str(),
                 fk.mName.c_str(), fk.mID, fk.localParamStr().c_str());
         fprintf(c, "{\n");
         fprintf(c, "    Forte::FString sql;\n");
-        fprintf(c, "    sql.Format(\"SELECT 1 FROM %s WHERE %s LIMIT 1 \",\n", 
+        fprintf(c, "    sql.Format(\"SELECT 1 FROM %s WHERE %s LIMIT 1 \",\n",
                 mName.c_str(), formatStr.c_str());
         fprintf(c, "               %s);\n", formatParams.c_str());
         fprintf(c, "    Forte::DbResult res = Forte::DbUtil::DbStore(db, Forte::SelectDbSqlStatement(sql));\n");
@@ -1486,7 +1486,7 @@ void Table::genFKUpdate(FILE *h, FILE *c) const
             const TableColumn &tc(TC(TableColumn,colValue.mColumn));
             if (colValue.mValueSet)
             {
-                formatStrV.push_back(FString(FStringFC(), "%s = %s", 
+                formatStrV.push_back(FString(FStringFC(), "%s = %s",
                                              tc.mName.c_str(), colValue.sqlValue().c_str()));
             }
             else
@@ -1501,13 +1501,13 @@ void Table::genFKUpdate(FILE *h, FILE *c) const
         formatParams.Implode(", ", formatParamV);
         setStr.Implode(", ", setStrV);
         setParams.Implode(", ", setParamV);
-        fprintf(h, "    static void updateFK%s%d(Forte::DbConnection &db, %s, %s);\n", 
+        fprintf(h, "    static void updateFK%s%d(Forte::DbConnection &db, %s, %s);\n",
                 fk.mName.c_str(), fk.mID, fk.localParamStr().c_str(), fk.localParamStr("orig_").c_str());
         fprintf(c, "void %s::updateFK%s%d(Forte::DbConnection &db, %s, %s)\n", mClassname.c_str(),
                 fk.mName.c_str(), fk.mID, fk.localParamStr().c_str(),fk.localParamStr("orig_").c_str());
         fprintf(c, "{\n");
         fprintf(c, "    Forte::FString sql;\n");
-        fprintf(c, "    sql.Format(\"UPDATE %s SET %s WHERE %s \",\n", 
+        fprintf(c, "    sql.Format(\"UPDATE %s SET %s WHERE %s \",\n",
                 mName.c_str(), setStr.c_str(), formatStr.c_str());
         fprintf(c, "               %s, %s);\n", setParams.c_str(), formatParams.c_str());
         fprintf(c, "    Forte::DbUtil::DbExecute(db, Forte::UpdateDbSqlStatement(sql));\n");
@@ -1580,7 +1580,7 @@ void Table::genFKDelete(FILE *h, FILE *c) const
             const TableColumn &tc(TC(TableColumn,colValue.mColumn));
             if (colValue.mValueSet)
             {
-                formatStrV.push_back(FString(FStringFC(), "%s = %s", 
+                formatStrV.push_back(FString(FStringFC(), "%s = %s",
                                              tc.mName.c_str(), colValue.sqlValue().c_str()));
             }
             else
@@ -1591,13 +1591,13 @@ void Table::genFKDelete(FILE *h, FILE *c) const
         }
         formatStr.Implode(" AND ", formatStrV);
         formatParams.Implode(", ", formatParamV);
-        fprintf(h, "    static void deleteFK%s%d(Forte::DbConnection &db, %s);\n", 
+        fprintf(h, "    static void deleteFK%s%d(Forte::DbConnection &db, %s);\n",
                 fk.mName.c_str(), fk.mID, fk.localParamStr().c_str());
         fprintf(c, "void %s::deleteFK%s%d(Forte::DbConnection &db, %s)\n", mClassname.c_str(),
                 fk.mName.c_str(), fk.mID, fk.localParamStr().c_str());
         fprintf(c, "{\n");
         fprintf(c, "    Forte::FString sql;\n");
-        fprintf(c, "    sql.Format(\"DELETE FROM %s WHERE %s \",\n", 
+        fprintf(c, "    sql.Format(\"DELETE FROM %s WHERE %s \",\n",
                 mName.c_str(), formatStr.c_str());
         fprintf(c, "               %s);\n", formatParams.c_str());
         fprintf(c, "    Forte::DbUtil::DbExecute(db, Forte::DeleteDbSqlStatement(sql));\n");
@@ -1660,11 +1660,11 @@ void Table::genDeleteMe(FILE *h, FILE *c, bool where) const
     fprintf(h, "    void DeleteMe(Forte::DbConnection &db, bool cascade = true);\n");
     fprintf(c, "void %s::DeleteMe(Forte::DbConnection &db, bool cascade)\n", mClassname.c_str());
     fprintf(c, "{\n");
-    
+
     fprintf(c, "    if (cascade) {\n");
     callFKRestrict(c, false);
     fprintf(c, "    }\n");
-    
+
     fprintf(c, "    Forte::FString sql;\n");
     fprintf(c, "    sql.Format(\"DELETE FROM %s \"\n", mName.c_str());
     fprintf(c, "               \"WHERE %%s \",\n");
@@ -1689,7 +1689,7 @@ void Table::genDeleteMe(FILE *h, FILE *c, bool where) const
                 if (other.mFlags & FK_OPT_DELETE_CASCADE)
                 {
                     fprintf(c, "        %s::deleteFK%s%d(db, %s);\n",
-                            otherTable.mClassname.c_str(), fk.mName.c_str(), 
+                            otherTable.mClassname.c_str(), fk.mName.c_str(),
                             other.mID, fk.paramStr(other).c_str());
                 }
             }
@@ -1829,7 +1829,7 @@ bool Table::genSetValueSql(FILE *h, FILE *c) const
     FString valueStr;
     FString paramStr;
     bool empty = true;
-    
+
     foreach(YYSTYPE a, mColumns)
     {
         TableColumn &tc(TC(TableColumn,a));
@@ -1860,7 +1860,7 @@ bool Table::genKeyColumnSql(FILE *h, FILE *c) const
     std::vector<FString> columnStrV;
     FString columnStr;
     bool empty = true;
-    
+
     foreach(YYSTYPE a, mColumns)
     {
         TableColumn &tc(TC(TableColumn,a));
@@ -1879,7 +1879,7 @@ bool Table::genKeyColumnSql(FILE *h, FILE *c) const
     fprintf(c, "    return \"%s\";\n", columnStr.c_str());
     fprintf(c, "}\n\n");
     return true;
-    
+
 }
 bool Table::genKeyValueSql(FILE *h, FILE *c) const
 {
@@ -1922,7 +1922,7 @@ bool Table::genKeyNoAutoColumnSql(FILE *h, FILE *c) const
     std::vector<FString> columnStrV;
     FString columnStr;
     bool empty = true;
-    
+
     foreach(YYSTYPE a, mColumns)
     {
         TableColumn &tc(TC(TableColumn,a));
@@ -2064,7 +2064,7 @@ bool TableColumn::cTypeNeedsZeroInit(void) const
         mType->GetType() == typeid(IntType) ||
         mType->GetType() == typeid(TinyIntType))
         return true;
-    else 
+    else
         return false;
 }
 FString TableColumn::cPODType(void) const
@@ -2129,7 +2129,7 @@ FString TableColumn::cName(void) const
             !word.CompareNoCase("guid") ||
             !word.CompareNoCase("xml") ||
             !word.CompareNoCase("xsl") ||
-            !word.CompareNoCase("css")) 
+            !word.CompareNoCase("css"))
             word.MakeUpper();
         else
             // capitalize the word

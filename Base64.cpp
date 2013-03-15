@@ -20,7 +20,7 @@ int Base64::Encode(const char *data, int size, FString &out)
     int i;
     int c;
     const unsigned char *q;
-    
+
     p = s = (char*)malloc(size*4/3+4);
     if (p == NULL)
         return -1;
@@ -70,7 +70,7 @@ int Base64::Decode(const char *in, FString &out)
             break;
         }
         c*=64;
-        
+
         if ((x = pos(p[1]))==-1) throw EBase64("invalid base64 data");
         c+=x;
         c*=64;
@@ -82,7 +82,7 @@ int Base64::Decode(const char *in, FString &out)
             c+=x;
         }
         c*=64;
-        
+
         if (p[3] == '=') done++;
         else
         {

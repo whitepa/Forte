@@ -200,7 +200,7 @@ public:
 protected:
     explicit ProcessCommandResponse(const Forte::FString& response,
                                     const Forte::FString& errorResponse,
-                                    int returnCode) : 
+                                    int returnCode) :
         mResponse(response), mErrorResponse(errorResponse),
         mReturnCode(returnCode)
     {

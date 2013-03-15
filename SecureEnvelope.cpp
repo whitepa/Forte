@@ -4,8 +4,8 @@
 
 using namespace Forte;
 
-FString & SecureEnvelopeEncoder::Encode(const FString &accountNumber, 
-                                        unsigned int numClear, 
+FString & SecureEnvelopeEncoder::Encode(const FString &accountNumber,
+                                        unsigned int numClear,
                                         FString &out)
 {
     if (accountNumber.length() < numClear || accountNumber.find_first_of('$') != std::string::npos)

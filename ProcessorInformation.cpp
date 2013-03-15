@@ -3,7 +3,7 @@
 
 using namespace Forte;
 
-ProcessorInformation::ProcessorInformation(ProcFileSystemPtr pfs) : 
+ProcessorInformation::ProcessorInformation(ProcFileSystemPtr pfs) :
     mProcFileSystem(pfs)
 {
     FTRACE;

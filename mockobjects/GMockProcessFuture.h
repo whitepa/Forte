@@ -8,9 +8,9 @@ namespace Forte
     class GMockProcessFuture : public ProcessFuture
     {
     public:
-        MOCK_METHOD1(SetProcessCompleteCallback, 
+        MOCK_METHOD1(SetProcessCompleteCallback,
                      void(ProcessFuture::ProcessCompleteCallback));
-        MOCK_METHOD0(GetProcessCompleteCallback, 
+        MOCK_METHOD0(GetProcessCompleteCallback,
                      ProcessFuture::ProcessCompleteCallback(void));
         MOCK_METHOD1(SetCurrentWorkingDirectory, void(const FString&));
         MOCK_METHOD1(SetEnvironment, void(const StrStrMap *));
@@ -23,7 +23,7 @@ namespace Forte
         MOCK_METHOD0(IsRunning, bool(void));
         MOCK_METHOD0(GetProcessPID, pid_t(void));
         MOCK_METHOD0(GetStatusCode, unsigned int(void));
-        MOCK_METHOD0(GetProcessTerminationType, 
+        MOCK_METHOD0(GetProcessTerminationType,
                      ProcessFuture::ProcessTerminationType(void));
         MOCK_METHOD0(GetOutputString, FString(void));
         MOCK_METHOD0(GetErrorString, FString(void));

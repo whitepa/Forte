@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
         FILE* outputFilePointer;
         pr.Run("/bin/rm ./dlfile", "", NULL, 120);
         outputFilePointer = fopen("./dlfile", "wx");
-        
+
         if (outputFilePointer == NULL)
         {
             hlog(HLOG_ERR, "could not create outputFile");
@@ -130,8 +130,8 @@ int main(int argc, char *argv[])
         if (dlFile != dlInternalBuf)
         {
             hlog(HLOG_ERR, "dlFile != to dlInternalBuf");
-            hlog(HLOG_INFO, "dlFile: %s\n dlInternalBuf: %s\n", 
-                 dlFile.c_str(), 
+            hlog(HLOG_INFO, "dlFile: %s\n dlInternalBuf: %s\n",
+                 dlFile.c_str(),
                  dlInternalBuf.c_str());
             throw Exception("");
         }

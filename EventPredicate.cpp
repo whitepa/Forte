@@ -34,7 +34,7 @@ bool Forte::EventPredicate::Evaluate(const Forte::Event &e)
     else if (mType == NOT)
     {
         if (mOperands.size() != 1)
-            throw EEventPredicateInvalid(FStringFC(), 
+            throw EEventPredicateInvalid(FStringFC(),
                                     "NOT operator requires one operand (has %u)",
                                     (unsigned)mOperands.size());
         return !(mOperands[0]->Evaluate(e));

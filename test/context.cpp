@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE ( context_test1 )
 
     // verify invalid keys throws
     BOOST_CHECK_THROW(c.Get<LogManager>("forte.logManager"), EInvalidKey);
-    
+
     c.Set("forte.config", ObjectPtr(new ServiceConfig()));
 
     BOOST_CHECK_THROW(c.Get<ServiceConfig>("forte.config.fail"), EInvalidKey);
@@ -105,47 +105,47 @@ BOOST_AUTO_TEST_CASE ( context_test1 )
     bll::bind( &Context::Get<TestClass>, bll::_1, "testobject");  // functor to retrieve object from context
 
 //  This works:
-    boost::function<shared_ptr<TestClass>(const Context&)> f = 
+    boost::function<shared_ptr<TestClass>(const Context&)> f =
         bll::bind(&Context::Get<TestClass>, bll::_1, "testobject");
     f(c);
-    boost::function<int(TestClass&)> g = 
+    boost::function<int(TestClass&)> g =
         bll::bind(&TestClass::getCount, bll::_1);
 
     // Not sure how to bind this such that 'c' is the parameter:
     g(*(f(c)));
 
 //    bll::bind( ,g(*(f(bll::_1))) == 1)
-    
+
 //    boost::function<bool(Context&)> h =
 //    bll::bind(f, bll::_1);
 //    (bll::unlambda(g)(*(bll::unlambda(f)(bll::_1))) == 1);
 //    boost::bind(bll::unlambda(g),
 
-    boost::function<bool(bool)> h = 
+    boost::function<bool(bool)> h =
         (bll::_1 == true);
     BOOST_CHECK( h(true) == true );
 
-//    boost::function<shared_ptr(Context&)> i = 
+//    boost::function<shared_ptr(Context&)> i =
     bll::bind(bll::unlambda(f),bll::_1);
 //    BOOST_CHECK( h(true) == true );
-        
+
 //    h(c);
 
     std::set<FString> validStrs;
     validStrs.insert("validStr");
     c.Set("checkedvalue", ObjectPtr(new CheckedStringEnum(validStrs)));
     c.Get<CheckedStringEnum>("checkedvalue")->Set("validStr");
-    
+
 //        bll::bind(bll::bind(&Context::GetRef<TestClass>, bll::_1, "testobject"),bll::_1);
 //    b(c);
-        
-//    boost::function<bool(Context&)> b = 
+
+//    boost::function<bool(Context&)> b =
     bll::bind(
         &Context::Get<CheckedStringEnum>, bll::_1, "checkedvalue");
 // == "validStr");
-    
-    
-//    int x = 
+
+
+//    int x =
 //        bll::bind<Forte::Context>(bll::bind( &Context::GetRef<TestClass>, bll::_1 )("testobject").getCount())(c);
 
 }

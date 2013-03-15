@@ -26,8 +26,8 @@ namespace Forte
         void ClearCommandResponseMap();
 
         void SetCommandResponse(
-            const FString& command, 
-            const FString& response, 
+            const FString& command,
+            const FString& response,
             int response_code=0
             );
 
@@ -41,7 +41,7 @@ namespace Forte
 
     protected:
         // we can use the mockprocrunner
-        // to get the functionality of the 
+        // to get the functionality of the
         // mockSSHRunner
         MockProcRunner mMockProcRunner;
     };

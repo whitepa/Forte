@@ -23,23 +23,23 @@ namespace Forte
 
         virtual void Load() {
             mHandle = dlopen (mPath.c_str(), RTLD_LAZY);
-            if (!mHandle) 
+            if (!mHandle)
             {
-                hlog(HLOG_ERR, "Error loading '%s':\n%s", mPath.c_str(), 
+                hlog(HLOG_ERR, "Error loading '%s':\n%s", mPath.c_str(),
                      dlerror());
-                throw EUnableToLoadLibrary(FStringFC(), 
+                throw EUnableToLoadLibrary(FStringFC(),
                                            "Error loading '%s'", mPath.c_str());
             }
             dlerror();    // Clear any existing error
         }
-        
+
         virtual ~AutoDynamicLibraryHandle() {
-            if (mHandle != NULL) 
+            if (mHandle != NULL)
             {
                 dlclose(mHandle);
             }
         }
-        
+
         virtual bool IsLoaded() {
             return (mHandle != NULL);
         }
@@ -47,7 +47,7 @@ namespace Forte
         virtual void *GetFunctionPointer(const Forte::FString& fName) {
             char *error = NULL;
             void *func = NULL;
-            
+
             if (!IsLoaded())
             {
                 hlog(HLOG_ERR, "Unable to get pointer to %s because the library %s is not loaded", fName.c_str(), mPath.c_str());
@@ -57,22 +57,22 @@ namespace Forte
             dlerror(); //clear any existing error
 
             func = dlsym(mHandle, fName.c_str());
-            if ((error = dlerror()) != NULL)  
+            if ((error = dlerror()) != NULL)
             {
-                hlog(HLOG_ERR, "Error loading symbol for '%s' in '%s':\n%s", 
+                hlog(HLOG_ERR, "Error loading symbol for '%s' in '%s':\n%s",
                      mPath.c_str(), fName.c_str(), error);
                 throw EUnableToLoadFunction(FStringFC(), "Error loading symbol for '%s' in '%s':\n%s", mPath.c_str(), fName.c_str(), error);
             }
-            
+
             return func;
         }
-        
+
         void *mHandle;
         Forte::FString mPath;
     };
     typedef boost::shared_ptr<AutoDynamicLibraryHandle> AutoDynamicLibraryHandlePtr;
 
-    class AutoDynamicLibraryHandleFactory 
+    class AutoDynamicLibraryHandleFactory
     {
     public:
         AutoDynamicLibraryHandleFactory() {}

@@ -14,7 +14,7 @@ class AdvisoryLock
 {
 public:
     AdvisoryLock(int fd, off64_t start, off64_t len, short whence = SEEK_SET);
-    
+
     /// getLock returns a lock description equivalent to the lock
     /// currently blocking us.
     AdvisoryLock GetLock(bool exclusive = false);
@@ -22,7 +22,7 @@ public:
     /// sharedLock will return true on success, false if the lock failed
     ///
     bool SharedLock(bool wait = true);
-    
+
     /// exclusiveLock will return true on success, false if the lock failed
     ///
     bool ExclusiveLock(bool wait = true);
@@ -40,7 +40,7 @@ protected:
 class AdvisoryAutoUnlock
 {
 public:
-    AdvisoryAutoUnlock(int fd, off64_t start, off64_t len, bool exclusive, 
+    AdvisoryAutoUnlock(int fd, off64_t start, off64_t len, bool exclusive,
                        short whence = SEEK_SET) :
         m_advisoryLock(fd, start, len, whence)
         {

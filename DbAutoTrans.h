@@ -22,7 +22,7 @@ namespace Forte
             {
                 if (db.HasPendingQueries())
                 {
-                    hlog(HLOG_ERR, 
+                    hlog(HLOG_ERR,
                          "new transaction created while queries pending");
                     db.Commit();
                 }
@@ -56,7 +56,7 @@ namespace Forte
                 hlog(HLOG_ERR, "Exception during AutoCommit");
             }
         }
-        
+
     protected:
         DbConnection &db;
 
@@ -76,7 +76,7 @@ namespace Forte
         _dbAutoTrans.line = __LINE__;           \
         try                                     \
         {
-            
+
 #define DbEndTrans()                                    \
     _dbTransCompleted = true;                           \
     }                                                   \

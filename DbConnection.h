@@ -31,10 +31,10 @@ namespace Forte
         virtual ~DbConnection();
 
         // initialization
-        virtual bool Init(const FString& db, 
-                          const FString& user, 
+        virtual bool Init(const FString& db,
+                          const FString& user,
                           const FString& pass,
-                          const FString& host = "localhost", 
+                          const FString& host = "localhost",
                           const FString& socket = "",
                           unsigned int retries = 20);
 
@@ -72,7 +72,7 @@ namespace Forte
         unsigned int mErrno;   // last database error code
         unsigned int mTries;   // number of tries it took to execute the last query
         virtual bool IsTemporaryError() const = 0;
-    
+
         // retry configuration
         unsigned int mRetries;     // number of times to retry failed queries / connections
         unsigned int mQueryRetryDelay; // delay between retries in milliseconds

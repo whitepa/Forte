@@ -34,7 +34,7 @@ public:
         unlink(TEST_DB);
         unlink(TEST_DB_BACKUP);
         mLogManager.BeginLogging("//stderr");
-        DbLiteConnection db(SQLITE_OPEN_READWRITE | 
+        DbLiteConnection db(SQLITE_OPEN_READWRITE |
                             SQLITE_OPEN_CREATE);
         db.Init(TEST_DB);
         ASSERT_NO_THROW(db.Execute(CREATE_TEST_TABLE));
@@ -75,7 +75,7 @@ TEST_F(DbLiteConnectionTest, Backup)
         DbResult res = dbBackup.Store("SELECT sum(a),sum(b) FROM test");
         ASSERT_TRUE(res.FetchRow(test2));
     }
-    hlog(HLOG_DEBUG, "1a=%d 1b=%d   2a=%d 2b=%d", 
+    hlog(HLOG_DEBUG, "1a=%d 1b=%d   2a=%d 2b=%d",
          test1.mA, test1.mB,
          test2.mA, test2.mB);
     EXPECT_EQ(test1.mA, test2.mA);
@@ -93,7 +93,7 @@ TEST_F(DbLiteConnectionTest, Backup)
 
 // TEST(DbLiteConnection, LockingWithTimeout)
 // {
-    
+
 // }
 
 // TEST(DbLiteConnection, SharedConnection)

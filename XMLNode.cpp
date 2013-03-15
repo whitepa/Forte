@@ -188,8 +188,8 @@ void XMLNode::Find(std::vector<XMLNode> &nodes, const Forte::FString &xpath)
     }
 }
 
-void XMLNode::stripControls(FString &dest,  
-                             const char *src 
+void XMLNode::stripControls(FString &dest,
+                             const char *src
     )
 {
     if (src == NULL)

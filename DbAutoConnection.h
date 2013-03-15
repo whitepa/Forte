@@ -17,7 +17,7 @@ namespace Forte
         DbAutoConnection(const Forte::Context &ctxt,
                          const char *poolname,
                          bool autocommit = true)
-            : mPoolPtr(ctxt.Get<DbConnectionPool>(poolname)), 
+            : mPoolPtr(ctxt.Get<DbConnectionPool>(poolname)),
               mDbConnection(mPoolPtr->GetDbConnection())
             {
                 // set autocommit appropriately
@@ -25,7 +25,7 @@ namespace Forte
             }
         DbAutoConnection(boost::shared_ptr<DbConnectionPool> poolPtr,
                          bool autocommit = true)
-            : mPoolPtr(poolPtr), 
+            : mPoolPtr(poolPtr),
               mDbConnection(mPoolPtr->GetDbConnection())
             {
                 FTRACE2("-,%s", (autocommit ? "TRUE" : "FALSE"));
@@ -38,8 +38,8 @@ namespace Forte
         // destructor would release the DB connection from a copy before
         // the original may be finished.  Plus, this would potentially
         // allow sharing of a db connection.
-        DbAutoConnection(const DbAutoConnection &other) : 
-            mPoolPtr(other.mPoolPtr), mDbConnection(other.mDbConnection) { 
+        DbAutoConnection(const DbAutoConnection &other) :
+            mPoolPtr(other.mPoolPtr), mDbConnection(other.mDbConnection) {
             // should never execute
             throw Exception();
         }
@@ -84,7 +84,7 @@ namespace Forte
         inline operator DbConnection& () const {
             return mDbConnection;
         };
-    
+
         // Dereference operator
         inline DbConnection& operator*() const {
             return mDbConnection;
@@ -94,7 +94,7 @@ namespace Forte
         inline DbConnection* operator->() const {
             return &mDbConnection;
         };
-    
+
     private:
         boost::shared_ptr<DbConnectionPool> mPoolPtr;
         DbConnection & mDbConnection;

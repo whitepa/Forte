@@ -40,7 +40,7 @@ int main2(int argc, char * const argv[])
 //    FTime::init("/usr/local/lib/date_time_zonespec.csv");
     OpenSSLInitializer sslInit;
     unsigned int numFailed = 0, numPassed = 0;
-    
+
     TEST("base64 class");
     FAILSTOP();
     FString data = "This is some data which we will be encoding in base64.";
@@ -81,8 +81,8 @@ int main2(int argc, char * const argv[])
 
     TEST("load keys");
     FAILSTOP();
-    FString::LoadFile("pubkey.pem", 0x100000, pubkey);    
-    FString::LoadFile("privkey.pem", 0x100000, privkey);    
+    FString::LoadFile("pubkey.pem", 0x100000, pubkey);
+    FString::LoadFile("privkey.pem", 0x100000, privkey);
     ENDTEST();
 
     TEST("base64 binary data");
@@ -183,7 +183,7 @@ int main2(int argc, char * const argv[])
         cout << *i << endl;
     }
     if (components.size() != 13) FAIL("should have found 13 components");
-    
+
     t = "A,B,C,D,";
     t.Explode(",", components);
     cout << t << endl;
@@ -266,7 +266,7 @@ int main2(int argc, char * const argv[])
     if (t.LineSplit(lines) != 3) FAIL("should have 3 lines");
     foreach(FString &line, lines) cout << "Line: " << line << endl;
     ENDTEST();
-    
+
     TEST("trim");
     FString t = " value\r\n";
     if (t.Trim().Compare("value"))
@@ -280,7 +280,7 @@ int main2(int argc, char * const argv[])
     if (t.Compare("Success"))
         FAIL("trim failed");
     ENDTEST();
-    
+
     TEST("Explode/trim 1");
     FString t = "Header: value ";
     std::vector<FString> args;
@@ -378,7 +378,7 @@ int main2(int argc, char * const argv[])
     if (a.IsUnsignedNumeric())
         FAIL("is unsigned numeric 5");
 
-    
+
     ENDTEST();
 
     SUMMARY();

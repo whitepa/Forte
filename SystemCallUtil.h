@@ -53,7 +53,7 @@ namespace Forte
         }
 
         static void ThrowErrNoException(int theErrNo, const FString& errDesc) {
-            hlog(HLOG_ERR, "errno %d (%s)", theErrNo, errDesc.c_str()); 
+            hlog(HLOG_ERR, "errno %d (%s)", theErrNo, errDesc.c_str());
 
             switch (theErrNo) {
             case 0:

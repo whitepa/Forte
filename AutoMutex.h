@@ -24,10 +24,10 @@ namespace Forte
     public:
 
         /**
-         *Initializes a mutex. While it is possible to specify attributes with attr, Scale 
+         *Initializes a mutex. While it is possible to specify attributes with attr, Scale
          *Computing does not use this feature. All initializations have attr set to NULL
-         *(same as type PTHREAD_MUTEX_DEFAULT). It is strongly recommended you avoid using a 
-         *specified attribute since it has not been tested in the Scale Computing system. 
+         *(same as type PTHREAD_MUTEX_DEFAULT). It is strongly recommended you avoid using a
+         *specified attribute since it has not been tested in the Scale Computing system.
          *If such usage is absolutely necessary, see the pthread_mutexattr_settype man page.
          *
          *Once a mutex attributes object is initialized, any function affecting the attributes
@@ -42,13 +42,13 @@ namespace Forte
 
         /**
          *Locks a mutex object and blocks access until a lock is acquired. Attempting to recursively lock
-         *the mutex results in undefined behavior. 
+         *the mutex results in undefined behavior.
          **/
         inline int Lock() {return pthread_mutex_lock(&mPThreadMutex);}
 
         /**
-         *If the object is already locked, Unlock() returns with the mutex object referenced in 
-         *&mPThreadMutex in the locked state with the calling thread as its owner. Attempting to 
+         *If the object is already locked, Unlock() returns with the mutex object referenced in
+         *&mPThreadMutex in the locked state with the calling thread as its owner. Attempting to
          *unlock a mutex if it was not locked by the calling thread results in undefined behavior. Attempting
          *to unlock the mutex if it is not locked results in undefined behavior.
          **/

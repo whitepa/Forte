@@ -11,7 +11,7 @@
 // the run() method.
 
 // Upon instantiation, a pthread will be created, but it will not call run()
-// until the value of mInitialized becomes true.  This allows the use of 
+// until the value of mInitialized becomes true.  This allows the use of
 // initialization lists in a subclass.  Calling initialized() in the body
 // of the subclass constructor will start the thread.
 
@@ -26,7 +26,7 @@ namespace Forte
     class Thread : virtual public Object
     {
     public:
-        inline Thread(void) : 
+        inline Thread(void) :
             mInitialized(false),
             mDeletingCalled(false),
             mThreadShutdown(false),
@@ -34,7 +34,7 @@ namespace Forte
             mNotifyCond(mNotifyLock),
             mShutdownComplete(false),
             mShutdownCompleteCondition(mShutdownCompleteLock)
-            { 
+            {
                 pthread_create(&mThread, NULL, Thread::startThread, this);
                 mThreadID = (unsigned int) mThread;
             }

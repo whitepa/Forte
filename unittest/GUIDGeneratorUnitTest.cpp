@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(GUIDGeneratorTest)
 {
     logManager.BeginLogging("//stderr");
     hlog(HLOG_INFO, "GUIDGenerator, verifying 1M unique GUIDs");
-    
+
     GUIDGenerator gg;
     std::set<FString> guids;
     unsigned int num = 1000000;

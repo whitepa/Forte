@@ -20,10 +20,10 @@ namespace Forte
     class MockProcRunner : public ProcRunner
     {
     public:
-        int Run(const FString& command, 
-                const FString& cwd, 
+        int Run(const FString& command,
+                const FString& cwd,
                 FString *output,
-                unsigned int timeout, 
+                unsigned int timeout,
                 const StrStrMap *env = NULL,
                 const FString &infile = "/dev/null");
 
@@ -34,8 +34,8 @@ namespace Forte
         void ClearCommandResponseMap();
 
         void SetCommandResponse(
-            const FString& command, 
-            const FString& response, 
+            const FString& command,
+            const FString& response,
             int response_code=0
             );
 

@@ -20,9 +20,9 @@ int main(int argc, char *argv[])
     ProcRunner runner;
     FileSystem fs;
     FString output;
-    
+
     runner.Run("./2minuteprocess", "", &output, 10);
-    
+
     if (fs.FileExists("./2minuteTouchfile"))
     {
         all_pass = false;
@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     }
 
     runner.Run("./2secondprocess", "", &output, 4);
-    
+
     if (!fs.FileExists("./2secondTouchfile"))
     {
         all_pass = false;

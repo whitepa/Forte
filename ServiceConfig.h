@@ -49,7 +49,7 @@ namespace Forte
          *
          * @param configFile
          */
-        virtual void ReadConfigFile(const char *configFile, 
+        virtual void ReadConfigFile(const char *configFile,
                                     ServiceConfigFileType type = INFO);
 
         /**
@@ -74,7 +74,7 @@ namespace Forte
          */
         virtual void Add(const char *key, const char *value);
 
-        /* 
+        /*
          * Removes a given key.
          *
          * @throws EServiceConfig on any error.
@@ -82,7 +82,7 @@ namespace Forte
          * @param key
          */
         virtual void Erase(const char *key);
-        
+
         virtual FString Get(const char *key) const;
         virtual int GetInteger(const char *key) const;
 
@@ -90,33 +90,33 @@ namespace Forte
         ValueType getValueByRegexKey(const Forte::FString &key)
         {
             ValueType value;
-        
+
             FString rootChild(key);
             rootChild.LeftString(".");
-        
+
             FString leafName(key);
             leafName.RightString(".");
-        
+
             FString middleStuff(key);
             middleStuff.ChopRight(".");
             middleStuff.ChopLeft(".");
-        
+
             FString propertyKey;
-        
+
             try
             {
                 propertyKey = GetFirstMatchingRegexExpressionKey(rootChild, middleStuff);
             }
             catch (EServiceConfigNoKey &e)
             {
-                hlog(HLOG_DEBUG, "Can't find regex match for (%s) under rootChild (%s)", 
+                hlog(HLOG_DEBUG, "Can't find regex match for (%s) under rootChild (%s)",
                         middleStuff.c_str(), rootChild.c_str());
                 throw;
             }
-        
+
             propertyKey.append(FString("/"));
             propertyKey.append(leafName);
-        
+
             try
             {
                 //value = Get<std::string>(boost::property_tree::ptree::path_type(propertyKey.c_str(), '/'));
@@ -141,10 +141,10 @@ namespace Forte
         {
             ValueType value;
             FString default_key_string(key);
-        
+
             FString leafName(key);
             leafName.RightString(".");
-        
+
             try
             {
                 value = ServiceConfig::getValueByRegexKey<ValueType>(key);
@@ -161,7 +161,7 @@ namespace Forte
                 catch (EServiceConfigNoKey &e)
                 {
                     // if this doesn't succeed, we have no legitimate value
-                    hlog(HLOG_WARN, "Conf resolver cannot get legit value for (%s)", 
+                    hlog(HLOG_WARN, "Conf resolver cannot get legit value for (%s)",
                             default_key_string.c_str());
                     throw;
                 }

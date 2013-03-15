@@ -96,7 +96,7 @@ void ControlFile<Header, Record>::getHeader(Header &userHeader)
         if (::read(mFD, &userHeader, sizeof(Header)) != sizeof(Header))
             throw ForteControlFileException(FStringFC(), "failed to read user header (%lu bytes) to control file '%s'",
                                              sizeof(Header), mFilename.c_str());
-    }    
+    }
 }
 
 template < typename Header, typename Record >
@@ -111,17 +111,17 @@ uint64_t ControlFile<Header, Record>::Enqueue(const Record &r)
     {
         //FileSystem::AdvisoryAutoUnlock lock(mFD, 0, sizeof(header_t), true);
         CF_WRITE_LOCK_HEADER;
-        
+
         header_t header;
         readHeader(header);
-        
+
         orig_eof = lseek64(mFD, 0, SEEK_END);
         if (header.n_total == 0)
             header.next_available = orig_eof;
 
         ++header.n_total;
         ++header.n_remaining;
-        
+
         // Enqueue the record
         FileSystem::AdvisoryAutoUnlock recordLock(mFD, 0, 0, true, SEEK_END); // lock after end of file
 
@@ -136,7 +136,7 @@ uint64_t ControlFile<Header, Record>::Enqueue(const Record &r)
                                              mFilename.c_str());
         }
         writeHeader(header);
-    
+
         fdatasync(mFD);
     }
     return orig_eof;
@@ -160,16 +160,16 @@ void ControlFile<Header, Record>::checkOpen(void)
     if ((bytesRead = ::read(mFD, &header, sizeof(header))) != sizeof(header))
         throw ForteControlFileException(FStringFC(), "Failed to read control file header to '%s': %s, "
                                          "expected %llu bytes, got %llu",
-                                         mFilename.c_str(), 
+                                         mFilename.c_str(),
                                          FileSystem::get()->strerror(errno).c_str(),
                                          (u64) sizeof(header),
                                          (u64) bytesRead);
 
     // get and validate record/header size
-    if (header.header_size != sizeof(header_t) || 
+    if (header.header_size != sizeof(header_t) ||
         header.user_header_size != sizeof(Header) ||
         header.record_size != sizeof(Record))
-        throw ForteControlFileException(FStringFC(), "Invalid control file '%s'", mFilename.c_str());        
+        throw ForteControlFileException(FStringFC(), "Invalid control file '%s'", mFilename.c_str());
 }
 
 
@@ -213,7 +213,7 @@ bool ControlFile<Header, Record>::claim(off64_t &offset/*OUT*/, Record &record/*
 //    inet_aton(NetUtil::get()->getMyPrivateIP(), &addr); TODO
         //wrapper.status = addr.s_addr;
         wrapper.status = 1;
-        
+
         // re-write record to claim it
         lseek64(mFD, offset, SEEK_SET);
 
@@ -226,7 +226,7 @@ bool ControlFile<Header, Record>::claim(off64_t &offset/*OUT*/, Record &record/*
         // update header
         header.n_claimed++;
         header.n_remaining--;
-        
+
         // need to find the next unclaimed record?
         if (header.n_remaining > 0)
         {
@@ -244,7 +244,7 @@ bool ControlFile<Header, Record>::claim(off64_t &offset/*OUT*/, Record &record/*
             }
             if (bytesRead == 0)
             {
-                throw ForteControlFileException("should have found a next record");                
+                throw ForteControlFileException("should have found a next record");
             }
         }
 
@@ -285,7 +285,7 @@ void ControlFile<Header, Record>::unclaim(off64_t offset)
                                              mFilename.c_str());
 
 //    inet_aton(NetUtil::get()->getMyPrivateIP(), &addr); TODO
-        
+
         // re-write record to unclaim it
         lseek64(mFD, offset, SEEK_SET);
         wrapper.status = CF_STATUS_QUEUED;
@@ -336,7 +336,7 @@ void ControlFile<Header, Record>::complete(off64_t offset, const Record &r)
         // make sure we have it claimed
         //if (wrapper.status != addr.s_addr) //TODO: update status to ip
         if (wrapper.status != 1)
-            throw ForteControlFileException(FStringFC(), 
+            throw ForteControlFileException(FStringFC(),
                                              "control file record at offset %llu returned"
                                              " status %u instead of claimed",
                                              (unsigned long long) offset, wrapper.status);
@@ -345,7 +345,7 @@ void ControlFile<Header, Record>::complete(off64_t offset, const Record &r)
 
         // copy record into wrapper
         memcpy(&wrapper.record, &r, sizeof(Record));
-        
+
         // re-write record to complete it
         lseek64(mFD, offset, SEEK_SET);
         wrapper.status = CF_STATUS_DONE;
@@ -364,8 +364,8 @@ void ControlFile<Header, Record>::complete(off64_t offset, const Record &r)
     // done
 }
 template < typename Header, typename Record >
-void ControlFile<Header, Record>::read(uint64_t recnum, 
-                                        Record &r /*OUT*/, 
+void ControlFile<Header, Record>::read(uint64_t recnum,
+                                        Record &r /*OUT*/,
                                         unsigned int &status /*OUT*/)
 {
     hlog(HLOG_DEBUG3, "ControlFile::%s()", __FUNCTION__);
@@ -379,7 +379,7 @@ void ControlFile<Header, Record>::read(uint64_t recnum,
         // verify recnum is feasible
         if (recnum >= header.n_total)
             throw ForteControlFileException(FStringFC(), "recnum %llu is out of range (max is %llu)",
-                                             (unsigned long long) recnum, 
+                                             (unsigned long long) recnum,
                                              (unsigned long long) header.n_total - 1);
 
         off64_t offset = header.header_size + header.user_header_size + recnum * sizeof(record_t);
@@ -387,10 +387,10 @@ void ControlFile<Header, Record>::read(uint64_t recnum,
         lseek(mFD, offset, SEEK_SET);
         record_t wrapper;
         if (::read(mFD, &wrapper, sizeof(wrapper)) != sizeof(wrapper))
-            throw ForteControlFileException(FStringFC(), 
+            throw ForteControlFileException(FStringFC(),
                                              "failed to read record number %llu in control file '%s': %s",
-                                             (unsigned long long) recnum, 
-                                             mFilename.c_str(), 
+                                             (unsigned long long) recnum,
+                                             mFilename.c_str(),
                                              FileSystem::get()->strerror(errno).c_str());
 
 //    inet_aton(NetUtil::get()->getMyPrivateIP(), &addr); TODO

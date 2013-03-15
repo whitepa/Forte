@@ -23,7 +23,7 @@ namespace Forte
      *
      * Supported Contraints:
      * EVENT_TYPE_EQUALS
-     * 
+     *
      */
 
     class EventPredicate;
@@ -42,10 +42,10 @@ namespace Forte
             mOperands = rhs.mOperands;
             return *this;
         };
-        EventPredicate(int type, 
+        EventPredicate(int type,
                          const FString &arg1) :
             mType(type), mArg1(arg1) {};
-        EventPredicate(int type, 
+        EventPredicate(int type,
                          const FString &arg1,
                          const FString &arg2) :
             mType(type), mArg1(arg1), mArg2(arg2) {};
@@ -64,7 +64,7 @@ namespace Forte
                          EventPredicatePtr op3) :
             mType(type)
             { mOperands.push_back(op1);mOperands.push_back(op2);mOperands.push_back(op3); }
-                         
+
         virtual ~EventPredicate() {};
 
         inline operator EventPredicatePtr() const
@@ -83,7 +83,7 @@ namespace Forte
         FString mArg1;
         FString mArg2;
         std::vector<EventPredicatePtr> mOperands;
-    };    
+    };
 };
 
 #endif

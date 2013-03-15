@@ -15,13 +15,13 @@ namespace Forte
                         "Active Object has no current invocation");
     EXCEPTION_SUBCLASS2(EActiveObjectThread, EActiveObjectThreadShuttingDown,
                         "Active Object thread shutting down");
-    
+
     class ActiveObjectThread : public Forte::Thread
     {
     public:
         ActiveObjectThread();
         virtual ~ActiveObjectThread();
-        
+
         virtual void * run(void);
 
         virtual void Enqueue(const boost::shared_ptr<AsyncInvocation> &ai);
@@ -41,7 +41,7 @@ namespace Forte
         Forte::Mutex mLock;
         boost::shared_ptr<Forte::AsyncInvocation> mCurrentAsyncInvocation;
     };
-    
+
 };
 
 #endif

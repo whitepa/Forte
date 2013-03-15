@@ -71,7 +71,7 @@ void MockProcessManager::QueueCommandResponse(const FString& command,
     expectedResponse->mResponseCode = responseCode;
     expectedResponse->mDuration = Forte::Timespec::FromMillisec(commandExecutionTime);
     mCommandResponseQueue.push(expectedResponse);
-    mCommandInvocationCount[command] = 0;    
+    mCommandInvocationCount[command] = 0;
 }
 
 unsigned int MockProcessManager::GetCommandInvocationCount(const FString& command)
@@ -101,7 +101,7 @@ boost::shared_ptr<ProcessFuture> MockProcessManager::CreateProcess(
 
     // look up the output string
     ExpectedCommandResponsePtr expectedResponse = lookupExpectedResponse(command);
-    
+
     boost::shared_ptr<MockProcessFuture> pf(
         new MockProcessFuture(command,
                               outputFilename,
@@ -125,7 +125,7 @@ boost::shared_ptr<ProcessFuture> MockProcessManager::CreateProcessDontRun(
 {
     FTRACE2("%s", command.c_str());
     throw EUnimplemented();
-    return boost::shared_ptr<ProcessFuture>();    
+    return boost::shared_ptr<ProcessFuture>();
 }
 
 int MockProcessManager::CreateProcessAndGetResult(
@@ -151,7 +151,7 @@ int MockProcessManager::CreateProcessAndGetResult(
 
 void MockProcessManager::RunProcess(boost::shared_ptr<ProcessFuture> ph)
 {
-    boost::shared_ptr<MockProcessFuture> mpf = 
+    boost::shared_ptr<MockProcessFuture> mpf =
         boost::dynamic_pointer_cast<MockProcessFuture>(ph);
     if (mpf->HasStarted())
         throw_exception(EProcessFutureStarted());

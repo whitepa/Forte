@@ -67,7 +67,7 @@ public:
     /// claim the next available record.
     ///
     bool Claim(off64_t &offset/*OUT*/, Record &r /*OUT*/);
-    
+
     /// unclaim a claimed record, does not update the record. This record
     /// will then be available for future 'claim' operations.
     ///
@@ -79,7 +79,7 @@ public:
 
     /// read a record #
     ///
-    void Read(uint64_t recnum, 
+    void Read(uint64_t recnum,
               Record &r /*OUT*/,
               unsigned int &status /*OUT*/);
 
@@ -94,10 +94,10 @@ public:
                      uint64_t& claimed  /*OUT*/,
                      time_t& last_progress_time /*OUT*/,
                      time_t update_if_older_than /*IN*/);
-    
+
     // accessors
     inline FString GetFilename() const { return mFilename; }
-    
+
 private:
     // helpers
     void CheckOpen(void);

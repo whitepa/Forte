@@ -239,7 +239,7 @@ void Curl::Perform()
     int errCode = curl_easy_perform(mHandle);
     if (errCode != CURLE_OK)
     {
-        FString err(FStringFC(), "CURL_FAIL_XFER|||%s|||%s", 
+        FString err(FStringFC(), "CURL_FAIL_XFER|||%s|||%s",
                     mErrorBuffer, mURL.c_str());
         throw CurlException(errCode, err);
     }

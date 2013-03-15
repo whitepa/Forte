@@ -27,7 +27,7 @@ TEST_F(MockProcessManagerTest, HappyPath)
     boost::shared_ptr<MockProcessManager> mpm(new MockProcessManager);
     FString outputString = "i slept for 3 secs";
     mpm->SetCommandResponse("/bin/sleep 3", outputString, "", 0);
-    
+
     boost::shared_ptr<ProcessFuture> ph = mpm->CreateProcess("/bin/sleep 3",
                                                              "./",
                                                              "sleepOutput.out");
@@ -42,7 +42,7 @@ TEST_F(MockProcessManagerTest, ProcessTimeout)
     FString outputString = "i slept for 3 secs";
     mpm->SetCommandResponse("/bin/sleep 3", outputString, "", 0, 3000);
     MonotonicClock clock;
-    
+
     boost::shared_ptr<ProcessFuture> ph = mpm->CreateProcess("/bin/sleep 3",
                                                              "./",
                                                              "sleepOutput.out");
@@ -59,7 +59,7 @@ TEST_F(MockProcessManagerTest, CommandNotSet)
 {
     boost::shared_ptr<MockProcessManager> mpm(new MockProcessManager);
     ASSERT_THROW(mpm->CreateProcess(
-                     "/bin/sleep 3"), 
+                     "/bin/sleep 3"),
                      EMockProcessManagerUnexpectedCommand);
 }
 
@@ -67,7 +67,7 @@ TEST_F(MockProcessManagerTest, NonZeroStatus)
 {
     boost::shared_ptr<MockProcessManager> mpm(new MockProcessManager);
     mpm->SetCommandResponse("/bin/sleep 3", "", "", 1);
-    
+
     boost::shared_ptr<ProcessFuture> ph = mpm->CreateProcess("/bin/sleep 3");
 
     ASSERT_THROW(ph->GetResult(), EProcessFutureTerminatedWithNonZeroStatus);
@@ -79,7 +79,7 @@ TEST_F(MockProcessManagerTest, MultipleProcesses)
     boost::shared_ptr<MockProcessManager> mpm(new MockProcessManager);
     mpm->SetCommandResponse("/bin/sleep 3", "", "", 0, 3000);
     mpm->SetCommandResponse("/bin/sleep 6", "", "", 0, 6000);
-    
+
     boost::shared_ptr<ProcessFuture> ph1 = mpm->CreateProcess("/bin/sleep 3");
     boost::shared_ptr<ProcessFuture> ph2 = mpm->CreateProcess("/bin/sleep 6");
 

@@ -2,9 +2,9 @@
 
 using namespace Forte;
 
-int MockProcRunner::Run(const FString& command, 
+int MockProcRunner::Run(const FString& command,
                         const FString& cwd,
-                        FString *output, 
+                        FString *output,
                         unsigned int timeout,
                         const StrStrMap *env,
                         const FString &infile)

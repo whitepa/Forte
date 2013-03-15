@@ -46,7 +46,7 @@ inline bool operator < (const struct timeval &a, const struct timeval &b)
 }
 
 ////timespec conversion functions///////////////////////////////////////////////
-inline struct timespec operator - (const struct timespec &a, 
+inline struct timespec operator - (const struct timespec &a,
                                    const struct timespec &b)
 {
     struct timespec result;
@@ -60,7 +60,7 @@ inline struct timespec operator - (const struct timespec &a,
     }
     return result;
 }
-inline struct timespec operator + (const struct timespec &a, 
+inline struct timespec operator + (const struct timespec &a,
                                    const struct timespec &b)
 {
     struct timespec result;

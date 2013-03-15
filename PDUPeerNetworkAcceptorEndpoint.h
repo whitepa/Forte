@@ -19,7 +19,7 @@ namespace Forte
         virtual ~PDUPeerNetworkAcceptorEndpoint() {}
 
         virtual void Begin() {
-            //TODO: don't start listening until here. 
+            //TODO: don't start listening until here.
         }
         virtual void SendPDU(const Forte::PDU &pdu);
 

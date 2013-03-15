@@ -58,13 +58,13 @@ int main(int argc, char *argv[])
 	all_pass = false;
 	hlog(HLOG_WARN, "missing validvalue4");
     }
-    
+
     if (config.Get("invalidvalue1") != "")
     {
 	all_pass = false;
 	hlog(HLOG_WARN, "have value for invalidvalue1");
     }
-    
+
     if (config.Get("invalidvalue2") != "")
     {
 	all_pass = false;

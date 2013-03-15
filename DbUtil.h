@@ -18,7 +18,7 @@ namespace Forte
 
         static inline DbResult DbStore(const char *func, DbConnection &db, const char* sql)
         {
-            hlog(HLOG_SQL, "[%s] Executing sql [%s] on [%p]", 
+            hlog(HLOG_SQL, "[%s] Executing sql [%s] on [%p]",
                  db.GetDbName().c_str(), sql, (&db));
 
             DbResult result;
@@ -41,7 +41,7 @@ namespace Forte
 
         static inline DbResult DbUse(const char *func, DbConnection &db, const char* sql)
         {
-            hlog(HLOG_SQL, "[%s] Executing sql [%s] on [%p]", 
+            hlog(HLOG_SQL, "[%s] Executing sql [%s] on [%p]",
                  db.GetDbName().c_str(), sql, (&db));
             DbResult result;
             if (!(result = db.Use(sql)))
@@ -63,7 +63,7 @@ namespace Forte
 
         static inline void DbExecute(const char *func, DbConnection &db, const char* sql)
         {
-            hlog(HLOG_SQL, "[%s] Executing sql [%s] on [%p]", 
+            hlog(HLOG_SQL, "[%s] Executing sql [%s] on [%p]",
                  db.GetDbName().c_str(), sql, (&db));
 
             if (!db.Execute(sql))
@@ -84,8 +84,8 @@ namespace Forte
 
         static inline DbResult DbStore(const char *func, DbConnection &db, const DbSqlStatement& sql)
         {
-            hlog(HLOG_SQL, "[%s] Executing sql [%s] on [%p]", 
-                 db.GetDbName().c_str(), 
+            hlog(HLOG_SQL, "[%s] Executing sql [%s] on [%p]",
+                 db.GetDbName().c_str(),
                  sql.GetStatement().c_str(),
                  (&db));
 
@@ -109,8 +109,8 @@ namespace Forte
 
         static inline DbResult DbUse(const char *func, DbConnection &db, const DbSqlStatement& sql)
         {
-            hlog(HLOG_SQL, "[%s] Executing sql [%s] on [%p]", 
-                 db.GetDbName().c_str(), 
+            hlog(HLOG_SQL, "[%s] Executing sql [%s] on [%p]",
+                 db.GetDbName().c_str(),
                  sql.GetStatement().c_str(),
                  (&db));
 
@@ -134,8 +134,8 @@ namespace Forte
 
         static inline void DbExecute(const char *func, DbConnection &db, const DbSqlStatement& sql)
         {
-            hlog(HLOG_SQL, "[%s] Executing sql [%s] on [%p]", 
-                 db.GetDbName().c_str(), 
+            hlog(HLOG_SQL, "[%s] Executing sql [%s] on [%p]",
+                 db.GetDbName().c_str(),
                  sql.GetStatement().c_str(),
                  (&db));
 

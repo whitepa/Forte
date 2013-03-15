@@ -76,7 +76,7 @@ namespace DBC {
         YYSTYPE setLastObject(YYSTYPE obj); // should be called with each new object parsed
         YYSTYPE getLastObject(void) { return mLastObj; }
         YYSTYPE getLastTable(void) { return mLastTable; }
-        
+
         const FString & getOutputPath(void) { return mOutputPath; }
         const FString & getIncludePath(void) { return mIncludePath; }
         const FString & getFilenamePrefix(void) { return mFilenamePrefix; }
@@ -98,9 +98,9 @@ namespace DBC {
         YYSTYPE mLastObj;
         YYSTYPE mLastTable;
         std::vector<YYSTYPE> mTables;
-        
+
         std::vector<YYSTYPE> mForeignKeys;
-        
+
         FString mOutputPath;
         FString mIncludePath;
         FString mFilenamePrefix;
@@ -111,7 +111,7 @@ namespace DBC {
     class Object {
     public:
         Object() : mOptions(OPT_NONE) {};
-        Object(const char *name, int options = OPT_NONE) : 
+        Object(const char *name, int options = OPT_NONE) :
             mName(name), mOptions(options) {};
         void addOptions(int options) { mOptions |= options; }
         FString mName;
@@ -165,10 +165,10 @@ namespace DBC {
 
     class IntType : public Object {
     public:
-        IntType(int size, int options = OPT_NONE) : 
-            mSize(size) 
+        IntType(int size, int options = OPT_NONE) :
+            mSize(size)
             { addOptions(options); }
-        
+
         int mSize;
     };
     class TinyIntType : public Object {
@@ -217,8 +217,8 @@ namespace DBC {
 
     class TableColumn : public Object {
     public:
-        TableColumn(const char *name, YYSTYPE type, int options) : 
-            Object(name), mType(type) { 
+        TableColumn(const char *name, YYSTYPE type, int options) :
+            Object(name), mType(type) {
             addOptions(options);
 
             // This hack is to allow OPT_UNSIGNED options set on the
@@ -339,16 +339,16 @@ namespace DBC {
 
         void setOutputFilename(const char *filenameBase)
         { mFilenameBase = filenameBase; /* XXX add conflict checking */ }
-        void setOutputClassname(const char *classname) 
+        void setOutputClassname(const char *classname)
         { mClassname = classname; /* XXX add conflict checking */ }
         void setAlias(const char *alias)
         { mAlias = alias; }
         void addInclude(const FString &file)
         { mIncludes.push_back(file); }
         inline FString aliasPrefix(void) const
-            { 
-                if (mAlias.empty()) 
-                    return ""; 
+            {
+                if (mAlias.empty())
+                    return "";
                 else
                     return FString(FStringFC(),"%s.",mAlias.c_str());
             }
@@ -364,7 +364,7 @@ namespace DBC {
         void addForeignKey(YYSTYPE name, YYSTYPE colvalues, YYSTYPE flags);
         void addCount(YYSTYPE name, YYSTYPE colvalues)
         {mCounts.push_back(YYSTYPE(new AnyPtr(new TableCount(TC(FString,name), colvalues))));}
-        
+
         // code generation:
         void generateCode(void) const;
         void includeCustom(FILE *h, FILE *c) const;

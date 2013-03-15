@@ -131,15 +131,15 @@ void DbConnection::DebugFile(const char *filename)
 void DbConnection::LogSql(const FString &sql, const struct timeval &executionTime)
 {
 #if defined(FORTE_NO_BOOST) || !defined(FORTE_WITH_DATETIME)
-    FString logMsg(FStringFC(), "%04u.%06u [%u]: %s", 
+    FString logMsg(FStringFC(), "%04u.%06u [%u]: %s",
                    (unsigned)executionTime.tv_sec, (unsigned)executionTime.tv_usec,
                    (unsigned)pthread_self(), sql.c_str());
 #else
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    FString logMsg(FStringFC(), "%04u.%06u %s.%03u [%u]: %s", 
-                   (unsigned)executionTime.tv_sec, (unsigned)executionTime.tv_usec, 
-                   FTime::to_str(tv.tv_sec, "US/Pacific").c_str(), 
+    FString logMsg(FStringFC(), "%04u.%06u %s.%03u [%u]: %s",
+                   (unsigned)executionTime.tv_sec, (unsigned)executionTime.tv_usec,
+                   FTime::to_str(tv.tv_sec, "US/Pacific").c_str(),
                    (unsigned)tv.tv_usec / 1000, (unsigned)pthread_self(), sql.c_str());
 #endif
     AutoUnlockMutex lock(sDebugOutputMutex);
@@ -252,7 +252,7 @@ const std::string& DbConnection::GetDbName() const
 }
 
 bool DbConnection::HasPendingQueries() const
-{ 
+{
     return mQueriesPending;
 }
 

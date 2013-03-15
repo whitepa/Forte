@@ -34,8 +34,8 @@ namespace Forte
         /// The XMLBlob destructor frees all internally allocated memory.
         ///
         virtual ~XMLBlob();
-    
-        /// Create a child element of the previously added node.  This effectively 'pushes' an element 
+
+        /// Create a child element of the previously added node.  This effectively 'pushes' an element
         /// on to a stack, such that all data nodes and child nodes added after this call will end up
         /// as children of this new node.
         ///
@@ -75,8 +75,8 @@ namespace Forte
         inline void AddData(const char *name, int value) { AddData(name, FString(value)); }
         inline void AddDataRaw(const char *name, int value) { AddDataRaw(name, FString(value)); }
         ///
-        /// Add a data node as a child of a previously added node.  This method is the only 
-        /// method in the  class which allows some kind of random access to the XML structure.  
+        /// Add a data node as a child of a previously added node.  This method is the only
+        /// method in the  class which allows some kind of random access to the XML structure.
         void AddDataToNode(xmlNodePtr node, const char *name, const char *value);
         void AddDataToNodeRaw(xmlNodePtr node, const char *name, const char *value);
 

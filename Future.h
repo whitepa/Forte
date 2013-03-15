@@ -8,7 +8,7 @@
 #include "Clock.h"
 #include "Util.h"
 #include <boost/exception_ptr.hpp>
-#include <boost/exception/diagnostic_information.hpp> 
+#include <boost/exception/diagnostic_information.hpp>
 
 namespace Forte
 {
@@ -79,7 +79,7 @@ namespace Forte
                 }
                 catch (boost::unknown_exception &e)
                 {
-                    hlog(HLOG_ERR, "Caught unknown exception: %s", 
+                    hlog(HLOG_ERR, "Caught unknown exception: %s",
                          boost::diagnostic_information(mException).c_str());
                     hlog_and_throw(HLOG_ERR, EFutureExceptionUnknown());
                 }
@@ -90,7 +90,7 @@ namespace Forte
         virtual ResultType GetResult() {
             return GetResultTimed(Timespec::FromSeconds(-1));
         }
-        
+
         virtual void SetResult(const ResultType &result) {
             AutoUnlockMutex lock(mLock);
             if (mResultReady)
@@ -164,7 +164,7 @@ namespace Forte
                 }
                 catch (boost::unknown_exception &e)
                 {
-                    hlog(HLOG_ERR, "Caught unknown exception: %s", 
+                    hlog(HLOG_ERR, "Caught unknown exception: %s",
                          boost::diagnostic_information(mException).c_str());
                     hlog_and_throw(HLOG_ERR, EFutureExceptionUnknown());
                 }
@@ -174,7 +174,7 @@ namespace Forte
         virtual void GetResult() {
             GetResultTimed(Timespec::FromSeconds(-1));
         }
-        
+
         virtual void SetResult(void) {
             AutoUnlockMutex lock(mLock);
             if (mResultReady)

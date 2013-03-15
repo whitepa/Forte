@@ -23,7 +23,7 @@ unsigned long OpenSSLInitializer_threadIdCallback() {
     return (unsigned long)pthread_self();
 }
 
-struct CRYPTO_dynlock_value * 
+struct CRYPTO_dynlock_value *
 OpenSSLInitializer_dynlockCreateCallback(const char *file, int line) {
     return new CRYPTO_dynlock_value;
 }
@@ -43,7 +43,7 @@ void OpenSSLInitializer_dynlockDestroyCallback(struct CRYPTO_dynlock_value *l,
     if (l != NULL) delete l;
 }
 
-/// Properly initializes the OpenSSL library for a threaded environment. 
+/// Properly initializes the OpenSSL library for a threaded environment.
 /// Declare one of these in main() if you are using OpenSSL in a multithreaded program.
 OpenSSLInitializer::OpenSSLInitializer() {
 

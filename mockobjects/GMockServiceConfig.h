@@ -17,10 +17,10 @@ namespace Forte
         MOCK_CONST_METHOD1(GetInteger, int(const char*));
         MOCK_METHOD0(Clear, void(void));
         MOCK_CONST_METHOD2(GetVectorKeys, void(const char *, FStringVector&));
-        MOCK_CONST_METHOD2(GetVectorKeys, 
+        MOCK_CONST_METHOD2(GetVectorKeys,
                            void(const boost::property_tree::ptree::path_type &,
                                 FStringVector &));
-        MOCK_CONST_METHOD3(GetVectorSubKey, void(const char*, const char*, 
+        MOCK_CONST_METHOD3(GetVectorSubKey, void(const char*, const char*,
                                                  FStringVector&));
         MOCK_METHOD1(WriteToConfigFile, void(const char *));
         MOCK_METHOD2(GetFirstMatchingRegexExpressionKey,

@@ -80,7 +80,7 @@ namespace Forte
         friend class Forte::ProcessManager;
     public:
         typedef boost::function<void (boost::shared_ptr<ProcessFuture>)> ProcessCompleteCallback;
-        
+
         enum ProcessTerminationType
         {
             ProcessExited,
@@ -109,7 +109,7 @@ namespace Forte
          * @return ProcessCompleteCallback object
          */
         virtual ProcessCompleteCallback GetProcessCompleteCallback() = 0;
-  
+
         /**
          * SetCurrentWorkingDirectory() sets the current working
          * directory the child process should use. This can only be
@@ -154,7 +154,7 @@ namespace Forte
         virtual void SetOutputFilename(const FString &outfile) = 0;
 
         /**
-         * SetErrorFilename() sets the output file to use. 
+         * SetErrorFilename() sets the output file to use.
          * stderr is redirected here.  Can only be called
          * on a process not yet run.
          *
@@ -197,7 +197,7 @@ namespace Forte
          * @return pid_t holding the child process id
          */
         virtual pid_t GetProcessPID() = 0;
-  
+
         /**
          * GetStatusCode() returns the status code from the terminated
          * process.  If the process was terminated abnormally via
@@ -208,14 +208,14 @@ namespace Forte
          * @return unisgned int holding the child status code
          */
         virtual unsigned int GetStatusCode() = 0;
-  
+
         /**
          * GetProcessTerminationType() returns the way the child process was terminated:
          *   ProcessExited
          *   ProcessKilled
          *   ProcessStopped
          *   ProcessUnknownTermination
-         * GetProcessTerminationType() will throw an exception if it is called before 
+         * GetProcessTerminationType() will throw an exception if it is called before
          * the child process is finished.
          *
          * @throw EProcessFutureNotFinished
@@ -250,7 +250,7 @@ namespace Forte
 
         /**
          * Cancel() sends signal 15 to the running process.
-         * 
+         *
          * @throw EProcessFutureNotRunning
          */
         virtual void Cancel() = 0;
@@ -265,7 +265,7 @@ namespace Forte
         virtual void SetManagementChannel(boost::shared_ptr<PDUPeer> managementChannel) = 0;
 
         virtual FString GetCommand() = 0;
-                
+
     protected:
     };
 

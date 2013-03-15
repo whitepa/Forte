@@ -117,7 +117,7 @@ void FTrace::Enter(void *fn, void *caller)
             i.reentry[depth].tv_usec = 0;
             i.spent[depth].tv_sec = 0;
             i.spent[depth].tv_usec = 0;
-            if (depth > 0) 
+            if (depth > 0)
             {
                 // update spent time on the caller
                 if (i.reentry[depth-1].tv_sec == 0 && i.reentry[depth-1].tv_usec == 0)

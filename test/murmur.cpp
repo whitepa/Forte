@@ -7,7 +7,7 @@ FString test(const FString& data, size_t buf_size)
     Murmur64 m;
     const char *cdata = (const char*)(data);
     size_t len, size = data.length();
-    
+
     while (size)
     {
         // get maximum update size
@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 
     TEST_NO_EXP(h1 = test(data, 100), "hash1 [100]");
     TEST(h1, h2, "hash1 [100] == hash1 [256]");
-    
+
     TEST_NO_EXP(h1 = test(data, 8), "hash1 [8]");
     TEST(h1, h2, "hash1 [8] == hash1 [256]");
 

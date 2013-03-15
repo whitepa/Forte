@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE ( int_test )
     LogManager logMgr;
     logMgr.BeginLogging();
     logMgr.SetGlobalLogMask(HLOG_ALL);
-    
+
     // uninitialized get should throw
     BOOST_CHECK_THROW(a.Get(), ECheckedValueUninitialized);
 
@@ -67,16 +67,16 @@ BOOST_AUTO_TEST_CASE ( int_test )
     // invalid
     a.Set("Four");
     BOOST_CHECK(a.Get() == "Four");
-    
-    a.SetMode(Forte::CheckedValue::INVALID_GET_THROWS | 
+
+    a.SetMode(Forte::CheckedValue::INVALID_GET_THROWS |
               Forte::CheckedValue::UNINITIALIZED_GET_THROWS);
     BOOST_CHECK_THROW(a.Get(), ECheckedValueInvalid);
 
     // should not throw:
     a.Set("Five");
     BOOST_CHECK_THROW(a.Get(), ECheckedValueInvalid);
-    a.SetMode(Forte::CheckedValue::INVALID_GET_THROWS | 
-              Forte::CheckedValue::INVALID_SET_THROWS | 
+    a.SetMode(Forte::CheckedValue::INVALID_GET_THROWS |
+              Forte::CheckedValue::INVALID_SET_THROWS |
               Forte::CheckedValue::UNINITIALIZED_GET_THROWS);
     BOOST_CHECK_THROW(a.Get(), ECheckedValueInvalid);
     BOOST_CHECK_THROW(a.Set("Six"), ECheckedValueInvalid);

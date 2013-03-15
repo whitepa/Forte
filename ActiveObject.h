@@ -18,8 +18,8 @@ namespace Forte
     class ActiveObject : virtual public Forte::Object
     {
     public:
-        ActiveObject() : 
-            mActiveObjectThreadPtr(new Forte::ActiveObjectThread()), 
+        ActiveObject() :
+            mActiveObjectThreadPtr(new Forte::ActiveObjectThread()),
             mIsShutdown(false) {};
         virtual ~ActiveObject() {Shutdown(true,false);}
 
@@ -46,7 +46,7 @@ namespace Forte
             mActiveObjectThreadPtr->SetName(name);
         }
 
-        void Shutdown(bool waitForQueueDrain = true, 
+        void Shutdown(bool waitForQueueDrain = true,
                       bool cancelRunning = false) {
             if (mIsShutdown) return; // @TODO: should we throw?
             mIsShutdown=true;

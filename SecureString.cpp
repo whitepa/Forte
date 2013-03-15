@@ -38,7 +38,7 @@ PublicKey::PublicKey(const KeyBuffer &keybuf, const char *passphrase)
 //    cout << "BIO_tell(): " << BIO_tell(keybuf.mBuf) << endl;
 //    cout << "BIO_reset(): " << BIO_reset(keybuf.mBuf) << endl;
 //    cout << "BIO_tell(): " << BIO_tell(keybuf.mBuf) << endl;
-    if ((mKey = PEM_read_bio_RSA_PUBKEY(keybuf.mBuf, NULL, NULL, 
+    if ((mKey = PEM_read_bio_RSA_PUBKEY(keybuf.mBuf, NULL, NULL,
                                           const_cast<void *>((const void*)passphrase)))==NULL)
     {
         ERR_load_crypto_strings();
@@ -89,12 +89,12 @@ RSAString::RSAString(const FString &plaintext, PublicKey &key)
                          (unsigned)(size - 11));
     unsigned char *ciphertext = new unsigned char[size];
     memset(ciphertext, 0, size);
-    if (RSA_public_encrypt(plaintext.length()+1, (const unsigned char *)plaintext.c_str(), 
+    if (RSA_public_encrypt(plaintext.length()+1, (const unsigned char *)plaintext.c_str(),
                            ciphertext, key.mKey, RSA_PKCS1_PADDING) == -1)
     {
         delete [] ciphertext;
         ERR_load_crypto_strings();
-        throw ESecureString(FStringFC(), "RSAString: Encryption failed: %s", 
+        throw ESecureString(FStringFC(), "RSAString: Encryption failed: %s",
                          ERR_error_string(ERR_get_error(), NULL));
     }
     // convert to text
@@ -104,7 +104,7 @@ RSAString::RSAString(const FString &plaintext, PublicKey &key)
 }
 RSAString::~RSAString()
 {
-    
+
 }
 void RSAString::GetPlainText(FString &plaintext/*OUT*/, PrivateKey &key)
 {
@@ -116,7 +116,7 @@ void RSAString::GetPlainText(FString &plaintext/*OUT*/, PrivateKey &key)
     Base64::Decode(mCiphertext, binCiphertext);
 //    cerr << "binCiphertext size is " << binCiphertext.length() << endl;
     int plainsize = 0;
-    if ((plainsize = RSA_private_decrypt(binCiphertext.length(), (const unsigned char *)binCiphertext.data(), 
+    if ((plainsize = RSA_private_decrypt(binCiphertext.length(), (const unsigned char *)binCiphertext.data(),
                                          plain, key.mKey, RSA_PKCS1_PADDING))<0)
     {
         delete [] plain;

@@ -78,7 +78,7 @@ void Murmur64::Update(const void *data, size_t size)
     const uint64_t *end64 = data64 + ((size - n) / 8);
     const size_t leftover = ((size - n) % 8);
     uint64_t k;
-    
+
     while (data64 != end64)
     {
         k = *data64++;

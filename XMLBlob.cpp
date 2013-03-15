@@ -95,8 +95,8 @@ void XMLBlob::ToString(FString &out,
     xmlFree(buf);
 }
 
-void XMLBlob::stripControls(FString &dest,  
-                            const char *src 
+void XMLBlob::stripControls(FString &dest,
+                            const char *src
     )
 {
     if (src == NULL)
@@ -105,10 +105,10 @@ void XMLBlob::stripControls(FString &dest,
         return;
     }
 
-    // By default all C programs have the "C" locale set, 
+    // By default all C programs have the "C" locale set,
     // which is a rather neutral locale with minimal locale information.
     // We need to set the locale to the default system locale which
-    // for us is usually "en_US.UTF-8". The will make sure that we 
+    // for us is usually "en_US.UTF-8". The will make sure that we
     // can appropiately decode UTF-8 strings.
     setlocale(LC_ALL,"");
 

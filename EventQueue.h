@@ -17,7 +17,7 @@ namespace Forte
     class EventQueue : public Object
     {
     public:
-        enum QueueMode 
+        enum QueueMode
         {
             QUEUE_MODE_BLOCKING = 0,
             QUEUE_MODE_DROP_OLDEST,
@@ -53,8 +53,8 @@ namespace Forte
         /// waitUntilEmpty will cause the caller to block until the event
         /// queue is emptied.  If the queue is already empty upon calling
         /// waitUntilEmpty(), it will return immediately.
-        inline void WaitUntilEmpty(void) { 
-            AutoUnlockMutex lock(mMutex); 
+        inline void WaitUntilEmpty(void) {
+            AutoUnlockMutex lock(mMutex);
             if (mQueue.empty())
                 return;
             else

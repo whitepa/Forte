@@ -16,7 +16,7 @@ namespace Forte
     EXCEPTION_SUBCLASS(ESSHRunner, ESessionError);
     EXCEPTION_SUBCLASS(ESSHRunner, ERunError);
     EXCEPTION_SUBCLASS(ESSHRunner, ESCPError);
-    
+
     /**
      * Class to ssh into a box and run commands.
      * Has no dependencies on keys installed on the
@@ -67,7 +67,7 @@ namespace Forte
                         FString *output,
                         FString *errorOutput);
 
-        virtual void GetFile(const FString &remotePath, 
+        virtual void GetFile(const FString &remotePath,
                              const FString &loclPath);
 
         FString GetIPAddress() {
@@ -86,7 +86,7 @@ namespace Forte
         FString mIPAddress;
         int mPort;
 
-        int createSocketAndConnect(const char *ipAddress, int portNumber); 
+        int createSocketAndConnect(const char *ipAddress, int portNumber);
         int waitSocket(int socket_fd, LIBSSH2_SESSION *session);
         FString getErrorString();
     };

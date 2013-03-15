@@ -31,7 +31,7 @@ bool DaemonUtil::ForkDaemon(void)
         hlog(HLOG_DEBUG, "fork succeeded, child PID is %d", pid);
         return false;
     }
-    
+
     // At this point we are executing as the child process
 
     // Change the file mode mask
@@ -56,7 +56,7 @@ bool DaemonUtil::ForkDaemon(void)
 
     // second child
     setsid();
-    
+
     return true;
 }
 

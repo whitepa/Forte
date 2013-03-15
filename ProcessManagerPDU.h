@@ -42,7 +42,7 @@ namespace Forte
         int param;
         char str[2048];
     } __attribute__((__packed__));
-    
+
     struct ProcessStatusPDU
     {
         int type;   // started, error, exited, killed, stopped

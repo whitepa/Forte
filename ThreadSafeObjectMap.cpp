@@ -32,7 +32,7 @@ void Forte::ThreadSafeObjectMap::Set(const char *key, ObjectPtr obj)
         if (mObjectMap.find(key) != mObjectMap.end())
         {
             replaced = mObjectMap[key];
-        }        
+        }
         mObjectMap[key] = obj;
     }
 }
@@ -74,7 +74,7 @@ void Forte::ThreadSafeObjectMap::Dump(void)
         int count = (int) ptr.use_count();
         // count > 0 will always be at least 2 due to the foreach
         // subtract one to account for that.
-        if (count > 0) --count; 
+        if (count > 0) --count;
         hlog(HLOG_DEBUG, "[%d] %s", count, name.c_str());
-    }    
+    }
 }

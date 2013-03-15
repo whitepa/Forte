@@ -87,5 +87,5 @@ FString MockProcessFuture::GetErrorString()
 
 void MockProcessFuture::SetErrorFilename(const FString &errorfile)
 {
-    
+
 }

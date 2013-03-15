@@ -57,7 +57,7 @@ void MockCurl::ClearBufferAfterURLPerform(const FString& url)
         mURLToBuffer.erase(it);
     }
 }
-void MockCurl::SetBufferAfterURLPerform(const FString& url, 
+void MockCurl::SetBufferAfterURLPerform(const FString& url,
                                         const FString& buffer)
 {
     FTRACE2("%s, %s", url.c_str(), buffer.c_str());

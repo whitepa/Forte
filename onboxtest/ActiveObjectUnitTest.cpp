@@ -69,8 +69,8 @@ public:
 protected:
     int OneSecondOperationNullary(void) { sleep(1); return 1; }
     int AddTwoNumbersVerySlowly(int a, int b) { sleep(1); return a + b; }
-    int AddTwoNumbersVerySlowlyCancellable(int a, int b) { 
-        int i = 0; 
+    int AddTwoNumbersVerySlowlyCancellable(int a, int b) {
+        int i = 0;
         while (i++ < 10)
         {
             if (IsCancelled()) boost::throw_exception(EActiveTesterCancelled());
@@ -86,18 +86,18 @@ protected:
 TEST_F(ActiveObjectTest, Simple)
 {
     ActiveTester a;
-    
+
     shared_ptr<Future<int> > future = a.PerformOneSecondOperationNullary();
     ASSERT_EQ(false, future->IsReady());
     usleep(1100000); // 1.1 sec
-    ASSERT_EQ(true, future->IsReady());    
+    ASSERT_EQ(true, future->IsReady());
     ASSERT_EQ(1, future->GetResult());
 };
 
 TEST_F(ActiveObjectTest, BlockingGetResult)
 {
     ActiveTester a;
-    
+
     MonotonicClock c;
     struct timespec start, end;
     start=c.GetTime();
@@ -105,7 +105,7 @@ TEST_F(ActiveObjectTest, BlockingGetResult)
     ASSERT_EQ(false, future->IsReady());
     ASSERT_EQ(1, future->GetResult());
     end = c.GetTime();
-    ASSERT_TRUE(Timespec::FromSeconds(1) < 
+    ASSERT_TRUE(Timespec::FromSeconds(1) <
                 Timespec(end - start));
 };
 
@@ -157,7 +157,7 @@ TEST_F(ActiveObjectTest, ShutdownThenInvokeShouldThrow)
     shared_ptr<Future<int> > future1 = a.PerformAddTwoNumbersVerySlowlyCancellable(1,2);
     a.Shutdown();
     shared_ptr<Future<int> > future3;
-    ASSERT_THROW(future3 = a.PerformAddTwoNumbersVerySlowlyCancellable(1,2), 
+    ASSERT_THROW(future3 = a.PerformAddTwoNumbersVerySlowlyCancellable(1,2),
                  EActiveObjectShuttingDown);
 }
 TEST_F(ActiveObjectTest, ShutdownAndClearQueue)

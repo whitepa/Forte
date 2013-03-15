@@ -92,10 +92,10 @@ public:
 //        curl_global_init(flags);
         Curl::Init(flags);
     }
-    ~CurlInitializer() 
+    ~CurlInitializer()
     {
 //        curl_global_cleanup();
-        Curl::Cleanup(); 
+        Curl::Cleanup();
     }
 };
 

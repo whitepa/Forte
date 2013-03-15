@@ -27,7 +27,7 @@ namespace Forte
          * @param url     the expected URL
          * @param buffer  the buffer to set when that URL is seen
          */
-        virtual void SetBufferAfterURLPerform(const FString& url, 
+        virtual void SetBufferAfterURLPerform(const FString& url,
                                               const FString& buffer);
         virtual void ClearBufferAfterURLPerform(const FString& url);
         std::map<FString, FString> mURLToBuffer;

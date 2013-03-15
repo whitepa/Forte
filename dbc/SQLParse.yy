@@ -27,9 +27,9 @@ using namespace DBC;
 %left '*' '/'
 %nonassoc UMINUS
 
-%token ALL AUTO_INCREMENT BIGINT BINARY BLOB BOOLEAN BT_STRING BY 
+%token ALL AUTO_INCREMENT BIGINT BINARY BLOB BOOLEAN BT_STRING BY
 %token CHAR CHARSET CREATE COUNT DATABASE DEFAULT DROP
-%token ENGINE EXISTS GRANT IDENTIFIED IF INDEX INSERT INT INTO KEY 
+%token ENGINE EXISTS GRANT IDENTIFIED IF INDEX INSERT INT INTO KEY
 %token LONGTEXT NULL_TOK ON TABLE TEXT TINYINT TO PRIMARY
 %token PRIVILEGES REPLACE SET UNIQUE UNSIGNED USE VALUES VARBINARY VARCHAR
 %token COMMIT_TOK BEGIN_TOK TRANSACTION_TOK EXCLUSIVE_TOK
@@ -81,7 +81,7 @@ param:
         |  FILENAME '(' STRING ')'   { LASTTABLE().setOutputFilename(TC(FString,$3));};
         |  CLASSNAME '(' STRING ')'  { LASTTABLE().setOutputClassname(TC(FString,$3)); };
         |  COUNT IDENT '(' column_list ')' { LASTTABLE().addCount($2, $4); };
-        |  SELECTOR IDENT '(' column_list ')' selector_flags 
+        |  SELECTOR IDENT '(' column_list ')' selector_flags
               { LASTTABLE().addSelector($2, $4, $6); };
         |  DELETOR IDENT '(' column_list ')' { LASTTABLE().addDeletor($2, $4); };
         |  CTOR '(' column_list ')'  { LASTTABLE().addCtor($3); };
@@ -99,7 +99,7 @@ param:
         |  NOCTOR                        { LASTTABLE().addOptions(OPT_NOCTOR); };
         |  CUSTOM                        { LASTTABLE().addOptions(OPT_CUSTOM); };
         |  CUSTOMSET                     { LASTTABLE().addOptions(OPT_CUSTOMSET); };
-        |  FK ident_or_text '(' column_opt_value_list ')' fk_opt_list 
+        |  FK ident_or_text '(' column_opt_value_list ')' fk_opt_list
               { LASTTABLE().addForeignKey($2, $4, $6); };
         ;
 selector_flags:
@@ -127,10 +127,10 @@ fk_opt:
       | ON UPDATE DELETE                { $$ = NEWOBJ(int(FK_OPT_UPDATE_DELETE)); }
       ;
 
-create:  CREATE TABLE opt_if_not_exists table_def 
+create:  CREATE TABLE opt_if_not_exists table_def
            { PC().mTables.push_back($4); }
        | CREATE DATABASE db_ident
-       | CREATE INDEX opt_if_not_exists index_def 
+       | CREATE INDEX opt_if_not_exists index_def
        ;
 
 drop:  DROP TABLE opt_if_exists table_ident ;
@@ -151,7 +151,7 @@ insert:
 
 replace:
         REPLACE INTO table_ident VALUES '(' literal_list ')' ;
-        
+
 begin:
         BEGIN_TOK EXCLUSIVE_TOK TRANSACTION_TOK;
 
@@ -162,7 +162,7 @@ set:
         SET IDENT_VAR EQ expr
 
 expr:
-        func_call 
+        func_call
       | literal
       ;
 
@@ -193,7 +193,7 @@ numliteral:
 */
 use:     USE db_ident ;
 
-table_ident: 
+table_ident:
         ident
       | db_ident '.' table_ident ;
 
@@ -201,15 +201,15 @@ index_ident:
         ident
       | db_ident '.' index_ident ;
 
-wildcard_table_ident: 
+wildcard_table_ident:
         ident
-      | db_ident '.' table_ident 
+      | db_ident '.' table_ident
       | db_ident '.' '*'
       ;
 
 db_ident: ident ;
 
-user_ident: 
+user_ident:
         ident_or_text
       | ident_or_text '@' ident_or_text ;
 
@@ -231,8 +231,8 @@ password:
         ident_or_text;
 
 table_def:
-        table_ident '(' table_element_list ')' opt_table_engine opt_default_charset 
-           { 
+        table_ident '(' table_element_list ')' opt_table_engine opt_default_charset
+           {
                $$ = NEWOBJ(Table(TC(FString,$1), $3));
            };
 
@@ -247,7 +247,7 @@ opt_default_charset:
 
 table_element_list:
         table_element
-           { 
+           {
                $$ = NEWOBJ(std::vector<YYSTYPE>);
                TC(std::vector<YYSTYPE>,$$).push_back($1);
            }
@@ -309,7 +309,7 @@ column_option:
 
 constraint_def:
         PRIMARY KEY opt_ident_or_text '(' column_list ')'
-          { 
+          {
             $$ = NEWOBJ(PrimaryKey(TC(FString,$3),$5));
           }
       | KEY opt_ident_or_text '(' column_list ')'  { }
@@ -332,8 +332,8 @@ column_list:
 
 column_opt_value_list:
         column_opt_value
-                { 
-                    $$ = NEWOBJ(std::vector<YYSTYPE>); 
+                {
+                    $$ = NEWOBJ(std::vector<YYSTYPE>);
                     TC(std::vector<YYSTYPE>,$$).push_back($1);
                 }
       | column_opt_value_list ',' column_opt_value

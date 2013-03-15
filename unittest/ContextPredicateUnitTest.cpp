@@ -51,7 +51,7 @@ TEST_F (ContextPredicateTest, s_test1)
     c1.Get<CheckedStringEnum>("string")->Set("One");
     c2.Get<CheckedStringEnum>("string")->Set("Two");
     Forte::ContextPredicatePtr cp1 = make_shared<ContextPredicate>(Forte::ContextPredicate::CHECKED_STRING_EQUALS,
-                               "string", "One");    
+                               "string", "One");
 
     EXPECT_TRUE( cp1->Evaluate(c1) );
     EXPECT_FALSE( cp1->Evaluate(c2) );

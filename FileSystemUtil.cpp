@@ -28,7 +28,7 @@ void FileSystemUtil::Mount(const FString&  filesystemType,
     FString  output;
     int ret;
 
-    if ((ret = mProcRunner.Run(cmd, "", &output, 
+    if ((ret = mProcRunner.Run(cmd, "", &output,
                                PROC_RUNNER_DEFAULT_TIMEOUT)) != 0)
     {
         hlog(HLOG_ERROR, "Unable to run '%s' [return code: %i] (%s)",
@@ -48,7 +48,7 @@ void FileSystemUtil::Unmount(const FString&  mountPath)
     FString  output;
     int ret;
 
-    if ((ret = mProcRunner.Run(cmd, "", &output, 
+    if ((ret = mProcRunner.Run(cmd, "", &output,
                                PROC_RUNNER_DEFAULT_TIMEOUT)) != 0)
     {
         hlog(HLOG_ERROR, "Unable to run '%s' [return code: %i] (%s)",
@@ -59,22 +59,22 @@ void FileSystemUtil::Unmount(const FString&  mountPath)
 }
 
 
-void FileSystemUtil::Format(const FString& devicePath, const FString& type, 
+void FileSystemUtil::Format(const FString& devicePath, const FString& type,
                             bool force)
 {
     FTRACE2("%s, %s", devicePath.c_str(), type.c_str());
-    
+
     FString cmd(FStringFC(), "/sbin/mkfs.%s %s %s", type.c_str(),
                 (force ? "-F" : ""), devicePath.c_str());
     FString output;
     int rtnCode;
 
-    if ((rtnCode = mProcRunner.Run(cmd, "", &output, 
+    if ((rtnCode = mProcRunner.Run(cmd, "", &output,
                                    PROC_RUNNER_DEFAULT_TIMEOUT)) != 0)
     {
         hlog(HLOG_ERROR, "Unable to run '%s' [return code: %i] (%s)",
              cmd.c_str(), rtnCode, output.c_str());
-        throw EDeviceFormat(FStringFC(), 
+        throw EDeviceFormat(FStringFC(),
                             "Unable to format '%s' [type: %s]",
                             devicePath.c_str(), type.c_str());
     }

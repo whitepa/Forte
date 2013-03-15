@@ -7,7 +7,7 @@
 
 namespace Forte
 {
-    class Object : public boost::enable_shared_from_this<Forte::Object>, 
+    class Object : public boost::enable_shared_from_this<Forte::Object>,
                    private boost::noncopyable_::noncopyable
     {
     public:

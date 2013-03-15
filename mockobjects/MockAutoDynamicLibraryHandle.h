@@ -12,13 +12,13 @@ namespace Forte
         MockAutoDynamicLibraryHandle(const Forte::FString &path) : AutoDynamicLibraryHandle(path), mLoaded(false) {
             FTRACE;
         }
-        
+
         virtual ~MockAutoDynamicLibraryHandle() {}
 
         void Load() {
             mLoaded = true;
         }
-        
+
         bool IsLoaded() { return mLoaded; }
         void *GetFunctionPointer(const Forte::FString& fName) {
             if (!mLoaded)

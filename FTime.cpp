@@ -89,14 +89,14 @@ time_t FTime::f_to_time_t(const char *filename, int line, const char * arg, cons
     }
     catch (std::exception &e)
     {
-        hlog(HLOG_ERR, "FTime::f_to_time_t(): called from %s:%d (argument %s): %s", 
+        hlog(HLOG_ERR, "FTime::f_to_time_t(): called from %s:%d (argument %s): %s",
              filename, line, arg, e.what());
         throw EFTime(FStringFC(), "Invalid time in argument '%s' (%s:%d): %s",
                      arg, filename, line, e.what());
     }
     catch (...)
     {
-        hlog(HLOG_ERR, "FTime::f_to_time_t(): called from %s:%d (argument %s); unknown exception", 
+        hlog(HLOG_ERR, "FTime::f_to_time_t(): called from %s:%d (argument %s); unknown exception",
              filename, line, arg);
         throw EFTime(FStringFC(), "Invalid time in argument '%s' (%s:%d); unknown exception",
                      arg, filename, line);
@@ -110,20 +110,20 @@ time_t FTime::f_to_time_t(const char *filename, int line, const char * arg, cons
 time_t FTime::f_to_time_t(const char *filename, int line, const char * arg, const std::string &timeStr, const char *tz)
 {
     ptime pt;
-    try 
+    try
     {
         pt = time_from_string(timeStr);
     }
     catch (std::exception &e)
     {
-        hlog(HLOG_ERR, "FTime::f_to_time_t(): called from %s:%d (argument %s): %s", 
+        hlog(HLOG_ERR, "FTime::f_to_time_t(): called from %s:%d (argument %s): %s",
              filename, line, arg, e.what());
         throw EFTime(FStringFC(), "Invalid time in argument '%s' (%s:%d): %s",
                      arg, filename, line, e.what());
     }
     catch (...)
     {
-        hlog(HLOG_ERR, "FTime::f_to_time_t(): called from %s:%d (argument %s); unknown exception", 
+        hlog(HLOG_ERR, "FTime::f_to_time_t(): called from %s:%d (argument %s); unknown exception",
              filename, line, arg);
         throw EFTime(FStringFC(), "Invalid time in argument '%s' (%s:%d); unknown exception",
                      arg, filename, line);

@@ -19,8 +19,8 @@ namespace Forte
     class ServerMain : public Object
     {
     public:
-        ServerMain(int argc, char * const argv[], 
-                   const char *getoptstr, const char *defaultConfig, 
+        ServerMain(int argc, char * const argv[],
+                   const char *getoptstr, const char *defaultConfig,
                    bool daemonize = true);
 
         /**
@@ -37,7 +37,7 @@ namespace Forte
         virtual void MainLoop();
         virtual void Usage();
         virtual void PrepareSigmask();
- 
+
         /**
          * Tell this server to shutdown
          */

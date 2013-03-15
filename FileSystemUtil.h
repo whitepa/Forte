@@ -24,7 +24,7 @@ namespace Forte
          * @param force        force the creation?
          * @throws EDeviceFormat
          */
-        void Format(const FString& devicePath, const FString &type, 
+        void Format(const FString& devicePath, const FString &type,
                     bool force=false);
 
         /**
@@ -35,7 +35,7 @@ namespace Forte
          * @param options    options to pass to mount -o
          * @throws EDeviceMount when the path cannot be mounted
          */
-        void Mount(const FString& filesystemType, const FString& devicePath, 
+        void Mount(const FString& filesystemType, const FString& devicePath,
                    const FString& mountPath, const FString& options);
         /**
          * Unmount the given mounted path
@@ -43,7 +43,7 @@ namespace Forte
          * @throws EDeviceUnmount when the path cannot be unmounted
          */
         void Unmount(const FString& mountPath);
-        
+
     protected:
         ProcRunner &mProcRunner;
     };

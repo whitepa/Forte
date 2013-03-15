@@ -9,7 +9,7 @@ int MockSSHRunner::Run(const FString &command,
                        FString *output,
                        FString *errorOutput)
 {
-    return mMockProcRunner.Run(command, 
+    return mMockProcRunner.Run(command,
                               "",
                               output,
                               PROC_RUNNER_NO_TIMEOUT);
@@ -31,8 +31,8 @@ void MockSSHRunner::ClearCommandResponseMap()
 }
 
 void MockSSHRunner::SetCommandResponse(
-    const FString& command, 
-    const FString& response, 
+    const FString& command,
+    const FString& response,
     int response_code
     )
 {

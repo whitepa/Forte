@@ -63,7 +63,7 @@ void SCSIUtil::RescanHost(int hostId)
     FTRACE2("%i", hostId);
 
     FString output;
-    FString cmd(FStringFC(), 
+    FString cmd(FStringFC(),
                 "/bin/echo - - - > /sys/class/scsi_host/host%i/scan", hostId);
     if (mProcRunner.Run(cmd, "", &output, PROC_RUNNER_NO_TIMEOUT) != 0)
     {

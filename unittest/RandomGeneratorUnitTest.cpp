@@ -17,7 +17,7 @@ LogManager logManager;
 BOOST_AUTO_TEST_CASE(RandomGeneratorTest)
 {
     hlog(HLOG_INFO, "RandomGenerator");
-    
+
     RandomGenerator rg;
     FString data;
     rg.GetRandomData(100, data);

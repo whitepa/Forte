@@ -289,7 +289,7 @@ int ServiceConfig::resolveInt(const Forte::FString &key)
     }
 }
 
-void ServiceConfig::GetVectorKeys(const char *key, 
+void ServiceConfig::GetVectorKeys(const char *key,
                                   FStringVector &vec /*OUT*/) const
 {
     vec.clear();
