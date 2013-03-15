@@ -68,12 +68,15 @@ Forte::PDUPeerSetImpl::~PDUPeerSetImpl()
 void Forte::PDUPeerSetImpl::PeerDelete(const shared_ptr<PDUPeer>& peer)
 {
     FTRACE;
-    AutoReadUnlock epollLock(mEPollLock);
-    AutoUnlockMutex lock(mPDUPeerLock);
 
     if (peer)
     {
         peer->TeardownEPoll();
+    }
+
+    if (peer)
+    {
+        AutoUnlockMutex lock(mPDUPeerLock);
         mPDUPeers.erase(peer->GetID());
     }
 }
@@ -81,17 +84,23 @@ void Forte::PDUPeerSetImpl::PeerDelete(const shared_ptr<PDUPeer>& peer)
 shared_ptr<PDUPeer> Forte::PDUPeerSetImpl::PeerCreate(int fd)
 {
     FTRACE2("%d", fd);
-    AutoReadUnlock epollLock(mEPollLock);
-    AutoUnlockMutex lock(mPDUPeerLock);
 
     //TODO: pass in a factory
     PDUPeerEndpointFactoryImpl f;
     // it should be ok to use the fd as the id. any network id of a
     // pdu peer will be a very large number well above 1024
     shared_ptr<PDUPeer> peer(new PDUPeerImpl(fd, mWorkDispatcher, f.Create(fd)));
-    mPDUPeers[peer->GetID()] = peer;
     peer->SetEventCallback(mEventCallback);
-    peer->SetEPollFD(mEPollFD);
+
+    {
+        AutoReadUnlock epollLock(mEPollLock);
+        peer->SetEPollFD(mEPollFD);
+    }
+
+    {
+        AutoUnlockMutex lock(mPDUPeerLock);
+        mPDUPeers[peer->GetID()] = peer;
+    }
 
     return peer;
 }
@@ -135,25 +144,30 @@ void Forte::PDUPeerSetImpl::BroadcastAsync(const PDUPtr& pdu)
 int Forte::PDUPeerSetImpl::SetupEPoll()
 {
     FTRACE;
-    AutoWriteUnlock pollLock(mEPollLock);
+
     AutoFD fd;
     {
-        if (mEPollFD != -1)
-            return mEPollFD; // already set up
-        fd = epoll_create(4);
-        if (fd == -1)
-            hlog_and_throw(HLOG_WARN,
-                           EPDUPeerSetPollCreate(
-                               SystemCallUtil::GetErrorDescription(errno)));
+        AutoWriteUnlock pollLock(mEPollLock);
+        {
+            if (mEPollFD != -1)
+                return mEPollFD; // already set up
+            fd = epoll_create(4);
+            if (fd == -1)
+                hlog_and_throw(HLOG_WARN,
+                               EPDUPeerSetPollCreate(
+                                   SystemCallUtil::GetErrorDescription(errno)));
+
+            mEPollFD = fd.Release();
+        }
     }
 
     AutoUnlockMutex lock(mPDUPeerLock);
     foreach (const IntPDUPeerPtrPair& p, mPDUPeers)
     {
         PDUPeerPtr peer(p.second);
-        peer->SetEPollFD(fd);
+        peer->SetEPollFD(mEPollFD);
     }
-    mEPollFD = fd.Release();
+
     hlog(HLOG_DEBUG2, "created epoll descriptor on fd %d", mEPollFD);
     return mEPollFD;
 }
@@ -162,19 +176,28 @@ void Forte::PDUPeerSetImpl::TeardownEPoll()
 {
     FTRACE;
 
-    AutoWriteUnlock lock(mEPollLock);
-    AutoUnlockMutex peerlock(mPDUPeerLock);
 
-    if (mEPollFD != -1)
     {
-        foreach (const IntPDUPeerPtrPair& p, mPDUPeers)
+        AutoReadUnlock lock(mEPollLock);
+        if (mEPollFD != -1)
         {
-            PDUPeerPtr peer(p.second);
-            peer->TeardownEPoll();
+            AutoUnlockMutex peerlock(mPDUPeerLock);
+            foreach (const IntPDUPeerPtrPair& p, mPDUPeers)
+            {
+                PDUPeerPtr peer(p.second);
+                peer->TeardownEPoll();
+            }
         }
+    }
 
-        close(mEPollFD);
-        mEPollFD = -1;
+    {
+        AutoWriteUnlock lock(mEPollLock);
+
+        if (mEPollFD != -1)
+        {
+            close(mEPollFD);
+            mEPollFD = -1;
+        }
     }
 }
 

@@ -9,11 +9,10 @@ void Forte::PDUPeerFileDescriptorEndpoint::SetFD(int fd)
 {
     FTRACE2("%d, %d", mEPollFD, (int) mFD);
     AutoUnlockMutex fdlock(mFDLock);
-    AutoUnlockMutex epolllock(mEPollLock);
 
-    lockedRemoveFDFromEPoll();
+    removeFDFromEPoll();
     mFD = fd;
-    lockedAddFDToEPoll();
+    addFDToEPoll();
 
     PDUPeerEventPtr event(new PDUPeerEvent());
     event->mEventType = PDUPeerConnectedEvent;
@@ -25,11 +24,10 @@ void Forte::PDUPeerFileDescriptorEndpoint::SetEPollFD(int epollFD)
 {
     FTRACE2("%d, %d", epollFD, (int) mFD);
     AutoUnlockMutex fdlock(mFDLock);
-    AutoUnlockMutex epolllock(mEPollLock);
 
-    lockedRemoveFDFromEPoll();
+    removeFDFromEPoll();
     mEPollFD = epollFD;
-    lockedAddFDToEPoll();
+    addFDToEPoll();
 }
 
 void Forte::PDUPeerFileDescriptorEndpoint::HandleEPollEvent(
@@ -50,7 +48,6 @@ void Forte::PDUPeerFileDescriptorEndpoint::HandleEPollEvent(
         {
             //TODO: handle these errors more specifically
             // for now, HLOG_ERR
-            // EAGAIN or EWOULDBLOCK
             // EBADF
             // ECONNREFUSED
             // EFAULT
@@ -60,13 +57,11 @@ void Forte::PDUPeerFileDescriptorEndpoint::HandleEPollEvent(
             // ENOTSOCK
             hlog(HLOG_ERR, "recv failed: %s",
                  SystemCallUtil::GetErrorDescription(errno).c_str());
-            //handleFileDescriptorClose(e);
         }
         else if (len == 0)
         {
             hlog(HLOG_DEBUG2, "epoll_event was socket shutdown");
-            // sub classes should override for specialization of FD loss
-            handleFileDescriptorClose(e);
+            handleFileDescriptorClose();
         }
         else
         {
@@ -105,7 +100,7 @@ void Forte::PDUPeerFileDescriptorEndpoint::HandleEPollEvent(
         || e.events & EPOLLHUP
         || e.events & EPOLLRDHUP)
     {
-        handleFileDescriptorClose(e);
+        handleFileDescriptorClose();
     }
 }
 
@@ -153,34 +148,36 @@ void Forte::PDUPeerFileDescriptorEndpoint::callbackIfPDUReady()
     }
 }
 
-void Forte::PDUPeerFileDescriptorEndpoint::handleFileDescriptorClose(
-    const struct epoll_event& e)
+void Forte::PDUPeerFileDescriptorEndpoint::handleFileDescriptorClose()
 {
     // default FileDescriptorEndpoint implemenation has no recourse
     // except to give up and issue the call back
     FTRACE;
-    AutoUnlockMutex fdlock(mFDLock);
-    AutoUnlockMutex lock(mEPollLock);
-
-    lockedRemoveFDFromEPoll();
-    close(mFD);
-    mFD = -1;
+    {
+        AutoUnlockMutex fdlock(mFDLock);
+        removeFDFromEPoll();
+        close(mFD);
+        mFD = -1;
+    }
 
     PDUPeerEventPtr event(new PDUPeerEvent());
     event->mEventType = PDUPeerDisconnectedEvent;
     if (mEventCallback)
         mEventCallback(event);
+
+    // sub classes should override for specialization of FD loss
+    fileDescriptorClosed();
 }
 
 void Forte::PDUPeerFileDescriptorEndpoint::TeardownEPoll()
 {
     FTRACE;
-    AutoUnlockMutex lock(mEPollLock);
-    lockedRemoveFDFromEPoll();
+    AutoUnlockMutex lock(mFDLock);
+    removeFDFromEPoll();
     mEPollFD = -1;
 }
 
-void Forte::PDUPeerFileDescriptorEndpoint::lockedAddFDToEPoll()
+void Forte::PDUPeerFileDescriptorEndpoint::addFDToEPoll()
 {
     FTRACE;
 
@@ -206,7 +203,7 @@ void Forte::PDUPeerFileDescriptorEndpoint::lockedAddFDToEPoll()
     }
 }
 
-void Forte::PDUPeerFileDescriptorEndpoint::lockedRemoveFDFromEPoll()
+void Forte::PDUPeerFileDescriptorEndpoint::removeFDFromEPoll()
 {
     FTRACE;
 
@@ -223,28 +220,45 @@ void Forte::PDUPeerFileDescriptorEndpoint::lockedRemoveFDFromEPoll()
 void Forte::PDUPeerFileDescriptorEndpoint::SendPDU(const Forte::PDU &pdu)
 {
     FTRACE;
-    AutoUnlockMutex lock(mSendMutex);
-    size_t offset = 0;
-    size_t len = sizeof(Forte::PDUHeader) + pdu.GetPayloadSize();
-    hlog(HLOG_DEBUG2, "sending %zu bytes on fd %d, payloadsize = %u",
-         len, mFD.GetFD(), pdu.GetPayloadSize());
 
-    // Put PDU header & payload contents into single buffer for sending
-    boost::shared_array<char> sendBuf = PDU::CreateSendBuffer(pdu);
-
-    int flags = MSG_NOSIGNAL;
-    while (len > 0)
+    try
     {
-        int sent = send(mFD, sendBuf.get()+offset, len, flags);
-        if (sent < 0 && errno != EINTR)
-            hlog_and_throw(
-                HLOG_DEBUG,
-                EPeerSendFailed(
-                    FStringFC(),
-                    "%s",
-                    SystemCallUtil::GetErrorDescription(errno).c_str()));
-        offset += sent;
-        len -= sent;
+        AutoUnlockMutex lock(mSendMutex);
+        size_t offset = 0;
+        size_t len = sizeof(Forte::PDUHeader) + pdu.GetPayloadSize();
+        hlog(HLOG_DEBUG2, "sending %zu bytes on fd %d, payloadsize = %u",
+             len, mFD.GetFD(), pdu.GetPayloadSize());
+
+        // TODO? seems like we could do this without copying everything
+        // into a single buffer
+
+        // Put PDU header & payload contents into single buffer for sending
+        boost::shared_array<char> sendBuf = PDU::CreateSendBuffer(pdu);
+
+        int flags = MSG_NOSIGNAL;
+        while (len > 0)
+        {
+            int sent = send(mFD, sendBuf.get()+offset, len, flags);
+            if (sent < 0 && errno != EINTR)
+                hlog_and_throw(
+                    HLOG_DEBUG,
+                    EPeerSendFailed(
+                        FStringFC(),
+                        "%s",
+                        SystemCallUtil::GetErrorDescription(errno).c_str()));
+            offset += sent;
+            len -= sent;
+        }
+    }
+    catch (Exception& e)
+    {
+        // it looks like the only error we could actually catch here
+        // and potentially recover from is ENOBUFS. rather than add a
+        // special case for that situation, going to handle the other
+        // 90% and close the connection in this case.
+
+        handleFileDescriptorClose();
+        throw;
     }
 }
 

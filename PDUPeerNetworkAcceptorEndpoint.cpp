@@ -19,7 +19,7 @@ void Forte::PDUPeerNetworkAcceptorEndpoint::SendPDU(const Forte::PDU &pdu)
     //PDUPeerFileDescriptorEndpoint, although we will need this when
     //we can have multiple fds, although, we may want to handle that
     //at the PDUPeerFileDescriptorEndpoint level as well
-    if (mFD == -1)
+    if (GetFD() == -1)
         throw ENotConnected();
 
     PDUPeerFileDescriptorEndpoint::SendPDU(pdu);

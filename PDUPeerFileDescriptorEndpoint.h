@@ -21,15 +21,15 @@ namespace Forte
             unsigned int bufSize = RECV_BUFFER_SIZE,
             unsigned int bufMaxSize = DEFAULT_MAX_BUFFER_SIZE,
             unsigned int bufStepSize = RECV_BUFFER_SIZE) :
-            mFDLock(),
-            mFD(fd),
             mBufferFullCondition(mReceiveMutex),
-            mEPollFD(-1),
             mCursor(0),
             mBufSize(bufSize),
             mBufMaxSize(bufMaxSize),
             mBufStepSize(bufStepSize),
-            mPDUBuffer(new char[mBufSize])
+            mPDUBuffer(new char[mBufSize]),
+            mEPollFD(-1),
+            mFDLock(),
+            mFD(fd)
             {
                 FTRACE2("%d", (int) mFD);
 
@@ -48,7 +48,10 @@ namespace Forte
         }
 
         void SetFD(int FD);
-        int GetFD(void) const { return mFD; }
+        int GetFD(void) const {
+            AutoUnlockMutex fdlock(mFDLock);
+            return mFD;
+        }
         virtual void SendPDU(const Forte::PDU &pdu);
 
         void SetEPollFD(int epollFD);
@@ -93,11 +96,10 @@ namespace Forte
         }
 
     protected:
-        virtual void handleFileDescriptorClose(const struct epoll_event& e);
+        // a notification mechanism for subclasses that have the
+        // ability to reconnect
+        virtual void fileDescriptorClosed() {}
         bool lockedIsPDUReady(void) const;
-        void lockedRemoveFDFromEPoll();
-        void lockedAddFDToEPoll();
-
         void callbackIfPDUReady();
         void bufferEnsureHasSpace();
 
@@ -105,16 +107,23 @@ namespace Forte
         mutable Forte::Mutex mReceiveMutex;
         mutable Forte::Mutex mSendMutex;
 
-        mutable Forte::Mutex mFDLock;
-        AutoFD mFD;
         mutable Forte::ThreadCondition mBufferFullCondition;
-        mutable Forte::Mutex mEPollLock;
-        int mEPollFD;
+
         size_t volatile mCursor;
         size_t mBufSize;
         size_t mBufMaxSize;
         size_t mBufStepSize;
         boost::shared_array<char> mPDUBuffer;
+
+    private:
+        void handleFileDescriptorClose();
+        void removeFDFromEPoll();
+        void addFDToEPoll();
+
+        int mEPollFD;
+
+        mutable Forte::Mutex mFDLock;
+        AutoFD mFD;
     };
 };
 #endif

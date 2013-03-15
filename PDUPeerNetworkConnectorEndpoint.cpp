@@ -18,9 +18,8 @@ Forte::PDUPeerNetworkConnectorEndpoint::PDUPeerNetworkConnectorEndpoint(
       mDispatcher(dispatcher),
       mConnectToAddress(connectToAddress)
 {
-    FTRACE2("%d", (int) mFD);
+    FTRACE;
 }
-
 
 void Forte::PDUPeerNetworkConnectorEndpoint::CheckConnections()
 {
@@ -32,7 +31,7 @@ void Forte::PDUPeerNetworkConnectorEndpoint::CheckConnections()
 
 void Forte::PDUPeerNetworkConnectorEndpoint::connectOrEnqueueRetry()
 {
-    if (mFD == -1)
+    if (GetFD() == -1)
     {
         try
         {
@@ -54,37 +53,16 @@ void Forte::PDUPeerNetworkConnectorEndpoint::connectOrEnqueueRetry()
                 sleep(1);
             }
 
-            mDispatcher->Enqueue(make_shared<CheckConnectionEvent>(GetPtr()));
+            mDispatcher->Enqueue(
+                boost::make_shared<CheckConnectionEvent>(GetPtr()));
         }
     }
 }
 
-void Forte::PDUPeerNetworkConnectorEndpoint::handleFileDescriptorClose(
-    const struct epoll_event& e)
+void Forte::PDUPeerNetworkConnectorEndpoint::fileDescriptorClosed()
 {
     FTRACE;
-
-    AutoUnlockMutex lock(mConnectionMutex);
-
-    // this is a bit tricky and i'm not fond of it, but when we call
-    // connectOrEnqueueRetry below, if we do reconnect we will want to
-    // re-add the new FD to our epollFD, so we cannot be holding this
-    // lock at the time. quick fix
-    {
-        AutoUnlockMutex epolllock(mEPollLock);
-
-        lockedRemoveFDFromEPoll();
-        close(mFD);
-        mFD = -1;
-    }
-
-    PDUPeerEventPtr event(new PDUPeerEvent());
-    event->mEventType = PDUPeerDisconnectedEvent;
-
-    if (mEventCallback)
-        mEventCallback(event);
-
-    connectOrEnqueueRetry();
+    mDispatcher->Enqueue(boost::make_shared<CheckConnectionEvent>(GetPtr()));
 }
 
 void Forte::PDUPeerNetworkConnectorEndpoint::connect()
@@ -161,7 +139,7 @@ void Forte::PDUPeerNetworkConnectorEndpoint::setTCPKeepAlive()
     static const int tcpKeepAliveCount(4);
     static const int tcpKeepAliveIntervalSeconds(10);
 
-    if (setsockopt(mFD, SOL_SOCKET, SO_KEEPALIVE,
+    if (setsockopt(GetFD(), SOL_SOCKET, SO_KEEPALIVE,
                    &tcpKeepAliveEnabled,
                    sizeof(tcpKeepAliveEnabled)) < 0)
     {
@@ -174,7 +152,7 @@ void Forte::PDUPeerNetworkConnectorEndpoint::setTCPKeepAlive()
              tcpKeepAliveEnabled);
 
         if (setsockopt(
-                mFD, SOL_TCP, TCP_KEEPCNT,
+                GetFD(), SOL_TCP, TCP_KEEPCNT,
                 &tcpKeepAliveCount,
                 sizeof(tcpKeepAliveCount)) < 0)
         {
@@ -189,7 +167,7 @@ void Forte::PDUPeerNetworkConnectorEndpoint::setTCPKeepAlive()
         }
 
         if (setsockopt(
-                mFD, SOL_TCP, TCP_KEEPINTVL,
+                GetFD(), SOL_TCP, TCP_KEEPINTVL,
                 &tcpKeepAliveIntervalSeconds,
                 sizeof(tcpKeepAliveIntervalSeconds)) < 0)
         {
@@ -213,7 +191,7 @@ void Forte::PDUPeerNetworkConnectorEndpoint::SendPDU(const Forte::PDU &pdu)
 
     try
     {
-        if (mFD == -1)
+        if (GetFD() == -1)
         {
             connect();
         }
@@ -223,8 +201,7 @@ void Forte::PDUPeerNetworkConnectorEndpoint::SendPDU(const Forte::PDU &pdu)
     catch (EPDUPeerEndpoint &e)
     {
         hlogstream(HLOG_DEBUG2, "Couldn't connect or lost connect: " << e.what());
-        mFD = -1;
-        mDispatcher->Enqueue(make_shared<CheckConnectionEvent>(GetPtr()));
+        mDispatcher->Enqueue(boost::make_shared<CheckConnectionEvent>(GetPtr()));
         throw;
     }
 }

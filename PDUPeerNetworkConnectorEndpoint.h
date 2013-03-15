@@ -42,9 +42,9 @@ namespace Forte
         }
 
     protected:
-        virtual void handleFileDescriptorClose(const struct epoll_event& e);
-        void connect();
+        virtual void fileDescriptorClosed();
         void connectOrEnqueueRetry();
+        void connect();
         void setTCPKeepAlive();
 
     protected:

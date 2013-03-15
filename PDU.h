@@ -14,6 +14,12 @@ namespace Forte
 {
     struct PDUHeader
     {
+        PDUHeader()
+            : version(0),
+              opcode(0),
+              payloadSize(0)
+            {}
+
         unsigned int version;
         unsigned int opcode;
         unsigned int payloadSize;

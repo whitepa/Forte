@@ -135,7 +135,24 @@ Forte::PDUPeerSetBuilderImpl::~PDUPeerSetBuilderImpl()
 {
     FTRACE2("%llu", (unsigned long long) mID);
 
+    if (mReceiverThread)
+    {
+        mReceiverThread->Shutdown();
+        mReceiverThread->WaitForShutdown();
+        mReceiverThread.reset();
+    }
+
     mPDUPeerSet->TeardownEPoll();
+    mPDUPeerSet.reset();
+
+    mWorkDispatcher->Shutdown();
+    mWorkDispatcher.reset();
+
+    if (mConnectionDispatcher)
+    {
+        mConnectionDispatcher->Shutdown();
+        mConnectionDispatcher.reset();
+    }
 }
 
 uint64_t Forte::PDUPeerSetBuilderImpl::SocketAddressToID(const SocketAddress& sa)

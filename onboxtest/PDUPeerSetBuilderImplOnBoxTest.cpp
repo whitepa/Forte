@@ -43,6 +43,10 @@ public:
             InstantiatePeerSet();
         }
 
+    ~TestPeer() {
+        DeletePeerSet();
+    }
+
     void InstantiatePeerSet() {
         const bool createInProcessPDUPeer(true);
         mPeerSet.reset(
@@ -57,7 +61,11 @@ public:
     }
 
     void DeletePeerSet() {
-        mPeerSet.reset();
+        if (mPeerSet)
+        {
+            mPeerSet->SetEventCallback(NULL);
+            mPeerSet.reset();
+        }
     }
 
     void EventCallback(PDUPeerEventPtr event) {
@@ -298,7 +306,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanProvideConnectionStatusOnPeers)
     EXPECT_TRUE(isConnected(2,1));
     EXPECT_TRUE(isConnected(2,2));
 
-    mTestPeers[1]->mPeerSet.reset();
+    mTestPeers[1]->DeletePeerSet();
 
     deadline.ExpiresInSeconds(10);
     while (!deadline.Expired()
