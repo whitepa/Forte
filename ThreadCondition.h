@@ -1,6 +1,7 @@
 #ifndef _ThreadCondition_h
 #define _ThreadCondition_h
 
+#include <iostream>
 #include <pthread.h>
 #include "AutoMutex.h"
 #include "Clock.h"
