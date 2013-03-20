@@ -133,7 +133,7 @@ DbConnection& DbConnectionPool::GetDbConnection() {
             if (!pDb->Init(mDbName, mDbUser, mDbPassword, mDbHost)) {
                 FString err;
                 err.Format("[%s] Could not initialize database connection: %s",
-                           mDbName.c_str(), pNewDb->mError.c_str());
+                           mDbName.c_str(), pNewDb->GetError().c_str());
                 throw EDbConnectionPool(err.c_str());
             }
         }
@@ -142,7 +142,7 @@ DbConnection& DbConnectionPool::GetDbConnection() {
             if (!pNewDb->Init(mDbName, mDbUser, mDbPassword, mDbHost, mDbSock)) {
                 FString err;
                 err.Format("[%s] Could not initialize socket database connection: %s",
-                           mDbName.c_str(), pNewDb->mError.c_str());
+                           mDbName.c_str(), pNewDb->GetError().c_str());
                 throw EDbConnectionPool(err.c_str());
             }
         }

@@ -44,7 +44,14 @@ public:
     uint64_t InsertID();
     uint64_t AffectedRows();
     FString Escape(const char *str);
+    FString GetError() const;
+    unsigned int GetErrno() const;
+    unsigned int GetTries() const;
     bool IsTemporaryError() const;
+
+    unsigned int GetRetries() const;
+    unsigned int GetQueryRetryDelay() const;
+
     void BackupDatabase(const FString &targetPath);
 
     bool Execute(const DbSqlStatement& statement);

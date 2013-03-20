@@ -68,14 +68,14 @@ namespace Forte
         void LogSql(const FString &sql, const struct timeval &executionTime);
 
         // error information
-        FString mError;        // last database error
-        unsigned int mErrno;   // last database error code
-        unsigned int mTries;   // number of tries it took to execute the last query
+        virtual FString GetError() const; // last database error
+        virtual unsigned int GetErrno() const; // last database error code
+        virtual unsigned int GetTries() const; // number of tries it took to execute the last query
         virtual bool IsTemporaryError() const = 0;
 
         // retry configuration
-        unsigned int mRetries;     // number of times to retry failed queries / connections
-        unsigned int mQueryRetryDelay; // delay between retries in milliseconds
+        virtual unsigned int GetRetries() const;
+        virtual unsigned int GetQueryRetryDelay() const;
 
         virtual void BackupDatabase(const FString &targetPath);
 
@@ -96,6 +96,13 @@ namespace Forte
         FString mCurrentQuery;
 
      protected:
+        FString mError;        // last database error
+        unsigned int mErrno;   // last database error code
+        unsigned int mTries;   // number of tries it took to execute the last query
+
+        unsigned int mRetries;     // number of times to retry failed queries / connections
+        unsigned int mQueryRetryDelay; // delay between retries in milliseconds
+
         bool mDidInit;
         bool mReconnect;
         bool mQueriesPending;

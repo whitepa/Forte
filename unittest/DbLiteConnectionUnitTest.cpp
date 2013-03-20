@@ -2,6 +2,7 @@
 #include <gmock/gmock.h>
 #include "LogManager.h"
 #include "DbLiteConnection.h"
+#include "DbUtil.h"
 
 using namespace Forte;
 
@@ -83,6 +84,26 @@ TEST_F(DbLiteConnectionTest, Backup)
     unlink(TEST_DB_BACKUP);
 }
 
+TEST_F(DbLiteConnectionTest, ConstraintTest)
+{
+    DbLiteConnection db;
+    ASSERT_TRUE(db.Init(TEST_DB));
+
+    db.AutoCommit(false);
+    ASSERT_TRUE(db.Execute("Insert INTO test VALUES (0, 0)"));
+    ASSERT_TRUE(db.Execute("Insert INTO test VALUES (1, 1)"));
+    try
+    {
+        DbExecute(db, "INSERT INTO test VALUES (1, 2)");
+        FAIL();
+    }
+    catch (DbException &e)
+    {
+        hlog(HLOG_INFO, "%s (%d)", e.what(), e.mDbErrno);
+        ASSERT_EQ(SQLITE_CONSTRAINT, e.mDbErrno);
+    }
+    db.Commit();
+}
 
 // TEST(DbLiteConnection, Locking)
 // {

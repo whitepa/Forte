@@ -21,10 +21,8 @@ DbConnection::DbConnection()
     mQueriesPending = false;
     mAutoCommit = true;
     mInTransaction = false;
-
     mErrno = 0;
     mTries = 0;
-
     mRetries = 20;              // default to 3 retries
     mQueryRetryDelay = 1000; // 1 second delay
 }
@@ -63,9 +61,9 @@ bool DbConnection::Execute2(const FString& sql)
 {
     if (!Execute(sql))
     {
-        hlog(HLOG_DEBUG, "DB Error: [%u] %s", mErrno, mError.c_str());
+        hlog(HLOG_DEBUG, "DB Error: [%u] %s", GetErrno(), GetError().c_str());
         hlog(HLOG_DEBUG, "SQL: %s", sql.c_str());
-        throw DbException(mError, mErrno, sql);
+        throw DbException(GetError(), GetErrno(), sql);
     }
 
     return true;
@@ -78,9 +76,9 @@ DbResult DbConnection::Store2(const FString& sql)
 
     if (!ret)
     {
-        hlog(HLOG_DEBUG, "DB Error: [%u] %s", mErrno, mError.c_str());
+        hlog(HLOG_DEBUG, "DB Error: [%u] %s", GetErrno(), GetError().c_str());
         hlog(HLOG_DEBUG, "SQL: %s", sql.c_str());
-        throw DbException(mError, mErrno, sql);
+        throw DbException(GetError(), GetErrno(), sql);
     }
 
     return ret;
@@ -93,9 +91,9 @@ DbResult DbConnection::Use2(const FString& sql)
 
     if (!ret)
     {
-        hlog(HLOG_DEBUG, "DB Error: [%u] %s", mErrno, mError.c_str());
+        hlog(HLOG_DEBUG, "DB Error: [%u] %s", GetErrno(), GetError().c_str());
         hlog(HLOG_DEBUG, "SQL: %s", sql.c_str());
-        throw DbException(mError, mErrno, sql);
+        throw DbException(GetError(), GetErrno(), sql);
     }
 
     return ret;
@@ -170,11 +168,11 @@ void DbConnection::Begin()
     if (!Execute(sql))
     {
         FString err(FStringFC(),
-                    "Begin failed: %s", mError.c_str());
+                    "Begin failed: %s", GetError().c_str());
         if (IsTemporaryError())
-            throw DbTempErrorException(err, mErrno);
+            throw DbTempErrorException(err, GetErrno());
         else
-            throw DbException(err, mErrno);
+            throw DbException(err, GetErrno());
     }
     mQueriesPending = true;
     mInTransaction = true;
@@ -192,11 +190,11 @@ void DbConnection::Commit()
     if (!Execute(sql))
     {
         FString err(FStringFC(),
-                    "Commit failed: %s", mError.c_str());
+                    "Commit failed: %s", GetError().c_str());
         if (IsTemporaryError())
-            throw DbTempErrorException(err, mErrno);
+            throw DbTempErrorException(err, GetErrno());
         else
-            throw DbException(err, mErrno);
+            throw DbException(err, GetErrno());
     }
 
     mQueriesPending = false;
@@ -215,11 +213,11 @@ void DbConnection::Rollback()
     if (!Execute(sql))
     {
         FString err(FStringFC(),
-                    "Rollback failed: %s", mError.c_str());
+                    "Rollback failed: %s", GetError().c_str());
         if (IsTemporaryError())
-            throw DbTempErrorException(err, mErrno);
+            throw DbTempErrorException(err, GetErrno());
         else
-            throw DbException(err, mErrno);
+            throw DbException(err, GetErrno());
     }
 
     mQueriesPending = false;
@@ -254,6 +252,31 @@ const std::string& DbConnection::GetDbName() const
 bool DbConnection::HasPendingQueries() const
 {
     return mQueriesPending;
+}
+
+FString DbConnection::GetError() const
+{
+    return mError;
+}
+
+unsigned int DbConnection::GetErrno() const
+{
+    return mErrno;
+}
+
+unsigned int DbConnection::GetTries() const
+{
+    return mTries;
+}
+
+unsigned int DbConnection::GetRetries() const
+{
+    return mRetries;
+}
+
+unsigned int DbConnection::GetQueryRetryDelay() const
+{
+    return mQueryRetryDelay;
 }
 
 #endif

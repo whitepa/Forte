@@ -489,9 +489,33 @@ FString DbMirroredConnection::Escape(const char *str)
     return mDbConnection->Escape(str);
 }
 
+FString DbMirroredConnection::GetError() const
+{
+    return mDbConnection->GetError();
+}
+unsigned int DbMirroredConnection::GetErrno() const
+{
+    return mDbConnection->GetErrno();
+}
+
+unsigned int DbMirroredConnection::GetTries() const
+{
+    return mDbConnection->GetTries();
+}
+
 bool DbMirroredConnection::IsTemporaryError() const
 {
     return mDbConnection->IsTemporaryError();
+}
+
+unsigned int DbMirroredConnection::GetRetries() const
+{
+    return mDbConnection->GetRetries();
+}
+
+unsigned int DbMirroredConnection::GetQueryRetryDelay() const
+{
+    return mDbConnection->GetQueryRetryDelay();
 }
 
 void DbMirroredConnection::BackupDatabase(const FString &targetPath)

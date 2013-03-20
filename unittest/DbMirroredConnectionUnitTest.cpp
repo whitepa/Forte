@@ -165,6 +165,26 @@ TEST_F(DbMirroredConnectionUnitTest, SqliteBackupDatabaseTest)
     DbConnectionPool pool("sqlite_mirrored", getDatabaseName().c_str());
     DbConnection& dbConnection(pool.GetDbConnection());
 
+
+    ASSERT_NO_THROW(DbExecute(dbConnection, "Insert INTO test VALUES (0, 0)"));
+    ASSERT_NO_THROW(DbExecute(dbConnection, "Insert INTO test VALUES (1, 1)"));
+    try
+    {
+        DbExecute(dbConnection, "INSERT INTO test VALUES (1, 2)");
+        FAIL();
+    }
+    catch (DbException &e)
+    {
+        hlog(HLOG_INFO, "%s (%d)", e.what(), e.mDbErrno);
+        ASSERT_EQ(SQLITE_CONSTRAINT, e.mDbErrno);
+    }
+}
+
+TEST_F(DbMirroredConnectionUnitTest, SqliteTestConstraintsError)
+{
+    DbConnectionPool pool("sqlite_mirrored", getDatabaseName().c_str());
+    DbConnection& dbConnection(pool.GetDbConnection());
+
     ASSERT_NO_THROW(dbConnection.BackupDatabase(getBackupDatabaseName().c_str()));
     pool.ReleaseDbConnection(dbConnection);
     pool.DeleteConnections();
