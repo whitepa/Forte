@@ -165,17 +165,19 @@ DbResult DbLiteConnection::Query(const FString& sql)
         mErrno = sqlite3_prepare_v2(mDB, remain, remain.length(), &stmt, &tail);
         if (stmt == NULL)
         {
-            hlog(HLOG_WARN, "[%s] sqlite3_prepare_v2 failed on [%s]. "
-                 "Error was %d.  Try %d of %d.",
-                 mDBName.c_str(), sql.c_str(), mErrno,
-                 (mRetries - tries_remaining + 1),
-                 mRetries);
             mTries++;
             switch (mErrno)
             {
             //// soft failures, keep retrying:
             case SQLITE_BUSY:
             case SQLITE_LOCKED:
+
+                hlog(HLOG_WARN, "[%s] sqlite3_prepare_v2 failed on [%s]. "
+                     "Error was %d.  Try %d of %d.",
+                     mDBName.c_str(), sql.c_str(), mErrno,
+                     (mRetries - tries_remaining + 1),
+                     mRetries);
+
                 --tries_remaining;
                 if (tries_remaining > 0)
                     usleep(50000); // sleep 50 milliseconds
@@ -183,6 +185,10 @@ DbResult DbLiteConnection::Query(const FString& sql)
 
                 //// hard failures, just fail immediately:
             default:
+                hlog(HLOG_WARN, "[%s] sqlite3_prepare_v2 failed on [%s]. "
+                     "Error was %d.  hard failure, will not retry.",
+                     mDBName.c_str(), sql.c_str(), mErrno);
+
                 tries_remaining = 0;
                 break;
             }
@@ -204,11 +210,6 @@ DbResult DbLiteConnection::Query(const FString& sql)
             if (mErrno != SQLITE_OK)
             {
                 res.Clear();
-                hlog(HLOG_WARN, "[%s] Load failed on [%s]. "
-                 "Error was %d.  Try %d of %d.",
-                 mDBName.c_str(), sql.c_str(), mErrno,
-                     (mRetries - tries_remaining + 1),
-                     mRetries);
 
                 switch (mErrno)
                 {
@@ -220,13 +221,20 @@ DbResult DbLiteConnection::Query(const FString& sql)
                     // you must rollback the entire transaction and start over
                     if (mInTransaction && (sql != "commit"))
                     {
-                        hlog(HLOG_DEBUG,
-                             "[%s] In a transaction. [%s] will be rolled back",
-                             mDBName.c_str(), sql.c_str());
+                        hlog(HLOG_WARN, "[%s] Load failed on [%s]. "
+                             "Error was %d. in a transaction, cannot retry",
+                             mDBName.c_str(), sql.c_str(), mErrno);
+
                         tries_remaining=0;
                     }
                     else
                     {
+                        hlog(HLOG_WARN, "[%s] Load failed on [%s]. "
+                             "Error was %d. Try %d of %d.",
+                             mDBName.c_str(), sql.c_str(), mErrno,
+                             (mRetries - tries_remaining + 1),
+                             mRetries);
+
                         //sqlite3_reset(stmt);
                         --tries_remaining;
                         if (tries_remaining > 0)
@@ -236,6 +244,10 @@ DbResult DbLiteConnection::Query(const FString& sql)
 
                     //// hard failures, just fail immediately:
                 default:
+                    hlog(HLOG_WARN, "[%s] Load failed on [%s]. "
+                         "Error was %d. hard failure, cannot retry",
+                         mDBName.c_str(), sql.c_str(), mErrno);
+
                     tries_remaining = 0;
                     break;
                 }
