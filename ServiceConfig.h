@@ -193,6 +193,21 @@ namespace Forte
             }
         }
 
+        template <typename ValueType>
+        ValueType Get(const boost::property_tree::ptree::path_type &key,
+                      const ValueType& defaultValue) const
+        {
+            AutoUnlockMutex lock(mMutex);
+            try
+            {
+                return mPTree.get<ValueType>(key, defaultValue);
+            }
+            catch (boost::property_tree::ptree_error &e)
+            {
+                boost::throw_exception(EServiceConfig(key.dump().c_str()));
+            }
+        }
+
         virtual void Clear();
 
         /**
