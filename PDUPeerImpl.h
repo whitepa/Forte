@@ -27,36 +27,53 @@ namespace Forte
     };
     typedef boost::shared_ptr<PDUHolder> PDUHolderPtr;
 
-    class PDUPeerImpl : public PDUPeer
+    class PDUPeerImpl;
+
+    // having one thread pool per PDUPeer is not as effecient as other
+    // methods, but it will move the ball forward. the current
+    // implementation allows several threads to get blocked on a
+    // single fd, and also needlessly enqueues several events. the
+    // thread will just sleep while there is nothing to do and get
+    // signaled when there is something enqueued.
+    class PDUPeerSendThread : public Forte::Thread
     {
     public:
-        PDUPeerImpl(uint64_t connectingPeerID,
-                    DispatcherPtr dispatcher,
-                    PDUPeerEndpointPtr endpoint,
-                    long pduPeerSendTimeout = 30,
-                    unsigned short queueSize = 1024,
-                    PDUPeerQueueType queueType = PDU_PEER_QUEUE_THROW)
-            : mConnectingPeerID(connectingPeerID),
-              mWorkDispatcher(dispatcher),
-              mEndpoint(endpoint),
-              mPDUPeerSendTimeout(pduPeerSendTimeout),
-              mQueueMaxSize(queueSize),
-              mQueueType(queueType),
-              mQueueSemaphore(mQueueMaxSize),
-              mPDUReadyToSendEventPending(false)
-            {
-                FTRACE;
-                mEndpoint->SetEventCallback(
-                    boost::bind(&PDUPeer::PDUPeerEndpointEventCallback,
-                                this,
-                                _1));
-            }
-
-        virtual ~PDUPeerImpl() {}
-
-        virtual void Begin() {
-            mEndpoint->Begin();
+        PDUPeerSendThread(
+            const boost::shared_ptr<PDUPeerImpl>& pduPeer)
+            : mPDUPeer(pduPeer) {
+            initialized();
         }
+
+        ~PDUPeerSendThread() {
+            deleting();
+        }
+    protected:
+        void* run();
+        boost::shared_ptr<PDUPeerImpl> mPDUPeer;
+    };
+
+    class PDUPeerImpl : public PDUPeer
+    {
+        friend class PDUPeerSendThread;
+    public:
+        /**
+         * PDUPeerImpl - a PDUPeer is an object that represents a
+         * virtual endpoint between to objects. the objects can be
+         * connected by various types of endpoints, like a file
+         * descriptor, a connecting or listening socket or shared memory
+         *
+         * @param pduResendTimeout if a pdu fails, the amount of time
+         * it should still retry. 0 means that if it does not send on
+         * the first time it will not retry
+         */
+        PDUPeerImpl(
+            uint64_t connectingPeerID,
+            PDUPeerEndpointPtr endpoint,
+            long pduResendTimeout = 0,
+            unsigned short queueSize = 1024,
+            PDUPeerQueueType queueType = PDU_PEER_QUEUE_THROW);
+
+        virtual void Begin();
 
         const uint64_t GetID() const { return mConnectingPeerID; }
 
@@ -76,7 +93,10 @@ namespace Forte
          * @return true if a PDU is ready, false otherwise
          */
         void EnqueuePDU(const PDUPtr &pdu);
-        virtual void SendNextPDU();
+        virtual unsigned int GetQueueSize() const {
+            AutoUnlockMutex lock(mPDUQueueMutex);
+            return mPDUQueue.size();
+        }
 
         virtual void SendPDU(const PDU& pdu);
 
@@ -91,6 +111,7 @@ namespace Forte
          *
          * @return true if a PDU was received, false if not.
          */
+        //TODO: boost::shared_ptr<Forte::PDU> RecvPDU() throws (ENoPDUReady, etc);
         bool RecvPDU(Forte::PDU &out);
 
         // we will add ourselves to the epoll fd that is passed in
@@ -101,70 +122,46 @@ namespace Forte
             FTRACE;
             mEndpoint->HandleEPollEvent(e);
         }
+
         virtual void TeardownEPoll() {
             mEndpoint->TeardownEPoll();
         }
 
+        virtual void Shutdown();
+
+        virtual ~PDUPeerImpl() {
+            if (!mShutdownCalled)
+            {
+                hlog(HLOG_ERR, "Shutdown not called before ~PDUPeerImp");
+            }
+            Shutdown();
+        }
+
     protected:
+        void sendLoop();
         void lockedEnqueuePDU(const PDUHolderPtr& pdu);
         bool isPDUExpired(PDUHolderPtr pduHolder);
         void emptyList();
 
-
     protected:
         uint64_t mConnectingPeerID;
-        boost::shared_ptr<Dispatcher> mWorkDispatcher;
         PDUPeerEndpointPtr mEndpoint;
+        long mPDUResendTimeout;
 
-        // only one PDUPeer should be in SendNextPDU currently, since
-        // there is only a single connection to send PDUs
-        // on. mSendMutex will ensure this is the case
-        mutable Forte::Mutex mSendMutex;
-
-        // mListLock will protect the list of PDUs to be sent
-        mutable Forte::Mutex mListLock;
-        std::list<PDUHolderPtr> mPDUList;
+        // mListMutex will protect the list of PDUs to be sent
+        mutable Forte::Mutex mPDUQueueMutex;
+        mutable Forte::ThreadCondition mPDUQueueNotEmptyCondition;
+        std::deque<PDUHolderPtr> mPDUQueue;
         MonotonicClock mClock;
-        long mPDUPeerSendTimeout;
 
         // limit size of queue
         unsigned short mQueueMaxSize;
         PDUPeerQueueType mQueueType;
         Semaphore mQueueSemaphore;
 
-        // there is currently a design issue for which this enables a
-        // hokey solution. the design is that enqueueing an event will
-        // block when the queue is full, but for the queue to empty,
-        // it requires a lock that we have. i think the two solutions
-        // that don't rquire a major refactoring (the refactoring is
-        // eventually needed) are to look at all the events and not
-        // enqueue duplicates, or keep track of a flag that tells us
-        // if we are currently sending, and if we are not sending,
-        // enqueue the event. going to try out the latter as it is
-        // less code and time intensive
-        bool mPDUReadyToSendEventPending;
-    };
+        boost::shared_ptr<PDUPeerSendThread> mSendThread;
 
-    class PDUReadyToSendEvent : public PDUEvent
-    {
-    public:
-        PDUReadyToSendEvent(const PDUPeerPtr& peer)
-            : mPeer(peer)
-            {
-                //FTRACE;
-            }
-
-        virtual ~PDUReadyToSendEvent() {
-            //FTRACE;
-        }
-
-        void DoWork() {
-            //FTRACE;
-            mPeer->SendNextPDU();
-        }
-
-    protected:
-        PDUPeerPtr mPeer;
+        bool mShutdownCalled;
     };
 
 };

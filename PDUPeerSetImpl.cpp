@@ -57,6 +57,16 @@ Forte::PDUPeerSetImpl::~PDUPeerSetImpl()
 
         mWorkDispatcher->Shutdown();
         mWorkDispatcher.reset();
+
+
+        AutoUnlockMutex lock(mPDUPeerLock);
+        foreach (const IntPDUPeerPtrPair& p, mPDUPeers)
+        {
+            p.second->TeardownEPoll();
+            p.second->Shutdown();
+        }
+
+        mPDUPeers.clear();
     }
     catch (Exception& e)
     {
@@ -72,6 +82,7 @@ void Forte::PDUPeerSetImpl::PeerDelete(const shared_ptr<PDUPeer>& peer)
     if (peer)
     {
         peer->TeardownEPoll();
+        peer->Shutdown();
     }
 
     if (peer)
@@ -89,7 +100,7 @@ shared_ptr<PDUPeer> Forte::PDUPeerSetImpl::PeerCreate(int fd)
     PDUPeerEndpointFactoryImpl f;
     // it should be ok to use the fd as the id. any network id of a
     // pdu peer will be a very large number well above 1024
-    shared_ptr<PDUPeer> peer(new PDUPeerImpl(fd, mWorkDispatcher, f.Create(fd)));
+    shared_ptr<PDUPeer> peer(new PDUPeerImpl(fd, f.Create(fd)));
     peer->SetEventCallback(mEventCallback);
 
     {
@@ -101,6 +112,7 @@ shared_ptr<PDUPeer> Forte::PDUPeerSetImpl::PeerCreate(int fd)
         AutoUnlockMutex lock(mPDUPeerLock);
         mPDUPeers[peer->GetID()] = peer;
     }
+    peer->Begin();
 
     return peer;
 }
@@ -176,7 +188,6 @@ void Forte::PDUPeerSetImpl::TeardownEPoll()
 {
     FTRACE;
 
-
     {
         AutoReadUnlock lock(mEPollLock);
         if (mEPollFD != -1)
@@ -184,8 +195,7 @@ void Forte::PDUPeerSetImpl::TeardownEPoll()
             AutoUnlockMutex peerlock(mPDUPeerLock);
             foreach (const IntPDUPeerPtrPair& p, mPDUPeers)
             {
-                PDUPeerPtr peer(p.second);
-                peer->TeardownEPoll();
+                p.second->TeardownEPoll();
             }
         }
     }
@@ -198,6 +208,17 @@ void Forte::PDUPeerSetImpl::TeardownEPoll()
             close(mEPollFD);
             mEPollFD = -1;
         }
+    }
+}
+
+void Forte::PDUPeerSetImpl::Shutdown()
+{
+    FTRACE;
+
+    AutoUnlockMutex peerlock(mPDUPeerLock);
+    foreach (const IntPDUPeerPtrPair& p, mPDUPeers)
+    {
+        p.second->Shutdown();
     }
 }
 

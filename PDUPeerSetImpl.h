@@ -56,9 +56,25 @@ namespace Forte
             i = mPDUPeers.find(peerID);
             if (i == mPDUPeers.end())
             {
-                hlog_and_throw(HLOG_DEBUG2, EPDUPeerInvalid());
+                //hlog_and_throw(HLOG_ERR, EPDUPeerInvalid());
+                hlogstream(HLOG_ERR, "Tried to add fd " << fd
+                           << " to peer " << peerID
+                           << " but peer does not exist"
+                           << " running in a cluster whose nodes were not "
+                           << " properly added!");
+
+                // this can happen if a node is added and we are not
+                // informed about it. i believe there is an issue
+                // between scmenu and scaled's scribe start state
+                // machine code which should be fixed rather than
+                // doing this. scaled should restart scribed if this
+                // happens, and it should come up ok.
+                abort();
             }
-            mPDUPeers[peerID]->AddFD(fd);
+            else
+            {
+                mPDUPeers[peerID]->AddFD(fd);
+            }
         }
 
         void Broadcast(const PDU& pdu) const;
@@ -118,6 +134,8 @@ namespace Forte
          *
          */
         void StartPolling();
+
+        void Shutdown();
 
         PDUPeerPtr GetPeer(uint64_t peerID) {
             return mPDUPeers.at(peerID);

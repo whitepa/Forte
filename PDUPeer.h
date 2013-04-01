@@ -54,13 +54,18 @@ namespace Forte
         virtual void SetEPollFD(int epollFD) = 0;
         virtual void HandleEPollEvent(const struct epoll_event& e) = 0;
         virtual void TeardownEPoll() = 0;
+        virtual void Shutdown() = 0;
 
         virtual const uint64_t GetID() const = 0;
 
         virtual void EnqueuePDU(const boost::shared_ptr<Forte::PDU>& pdu) = 0;
-        // Sends a queued pdu
-        virtual void SendNextPDU() = 0;
 
+        virtual unsigned int GetQueueSize() const = 0;
+
+        /**
+         * Synchronous call to Send PDU. bypasses queue, goes straight
+         * to endpoint
+         */
         virtual void SendPDU(const PDU& pdu) = 0;
 
         /**

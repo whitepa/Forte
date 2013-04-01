@@ -230,7 +230,6 @@ TEST_F(PDUPeerSetOnBoxTest, CanReceiveDataWhenSendQueueIsFull)
     PDUPeerPtr connectorPeer(
         new PDUPeerImpl(
             0,
-            connectorWorkDispatcher,
             connectorEndpoint));
     std::vector<boost::shared_ptr<PDUPeer> > connectorPeers;
     connectorPeers.push_back(connectorPeer);
@@ -261,7 +260,6 @@ TEST_F(PDUPeerSetOnBoxTest, CanReceiveDataWhenSendQueueIsFull)
     PDUPeerPtr acceptorPeer(
         new PDUPeerImpl(
             0,
-            acceptorWorkDispatcher,
             acceptorEndpoint));
     std::vector<boost::shared_ptr<PDUPeer> > acceptorPeers;
     acceptorPeers.push_back(acceptorPeer);

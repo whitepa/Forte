@@ -8,7 +8,6 @@
 #include "PDUPeerImpl.h"
 
 #include "GMockPDUPeerEndpoint.h"
-#include "GMockDispatcher.h"
 
 using namespace std;
 using namespace boost;
@@ -34,6 +33,13 @@ struct PDU_Test
 class PDUPeerImplUnitTest : public ::testing::Test
 {
 public:
+    PDUPeerImplUnitTest()
+        : mEventMutex(),
+          mEventCalledCondition(mEventMutex),
+          mEventCount(0)
+        {
+        }
+
     static void SetUpTestCase() {
         logManager.BeginLogging(__FILE__ ".log", HLOG_ALL);
         logManager.BeginLogging("//stderr",
@@ -53,7 +59,6 @@ public:
     }
 
     void EventCallback(PDUPeerEventPtr event) {
-
         switch (event->mEventType)
         {
         case PDUPeerReceivedPDUEvent:
@@ -68,97 +73,85 @@ public:
         default:
             break;
         }
-    }
-    bool mPDUSendErrorCallbackCalled;
-};
 
-void* AsyncSendNextPDU(void *arg) {
-    PDUPeerImplPtr *peer = (PDUPeerImplPtr*)(arg);
-    int count = 0;
-    sleep(3);
-    while (count++ < 4)
-    {
-        sleep(2);
-        hlog(HLOG_DEBUG2, "Calling SendNextPDU async: %d", count);
-        (*peer)->SendNextPDU();
-        hlog(HLOG_DEBUG2, "Sent SendNextPDU async: %d", count);
+        AutoUnlockMutex lock(mEventMutex);
+        mEventCount++;
+        mEventCalledCondition.Signal();
     }
-    return peer;
-}
+
+    bool mPDUSendErrorCallbackCalled;
+
+    mutable Forte::Mutex mEventMutex;
+    mutable Forte::ThreadCondition mEventCalledCondition;
+    int mEventCount;
+};
 
 TEST_F(PDUPeerImplUnitTest, CanConstructWithMockEndpoint)
 {
     FTRACE;
-    DispatcherPtr dispatcher(new GMockDispatcher());
     PDUPeerEndpointPtr endpoint(new GMockPDUPeerEndpoint());
-    PDUPeerImpl peer(0, dispatcher, endpoint);
+    PDUPeerImpl peer(0, endpoint);
 }
 
 TEST_F(PDUPeerImplUnitTest, CanEnqueuePDUsAysnc)
 {
     FTRACE;
-    GMockDispatcherPtr mockDispatcher(new GMockDispatcher());
-    DispatcherPtr dispatcher = mockDispatcher;
     PDUPeerEndpointPtr endpoint(new GMockPDUPeerEndpoint());
 
     int op = 1;
     char buf[] = "the data";
     PDUPtr pdu(new PDU(op, sizeof(buf), buf));
 
-    // TODO: may want to verify this is the right event
-    EXPECT_CALL(*mockDispatcher, Enqueue(_));
-
-    PDUPeerImplPtr peer(new PDUPeerImpl(0, dispatcher, endpoint));
+    PDUPeerImplPtr peer(new PDUPeerImpl(0, endpoint));
     peer->EnqueuePDU(pdu);
+    ASSERT_EQ(1, peer->GetQueueSize());
 }
 
-TEST_F(PDUPeerImplUnitTest, SendNextPDUSendsAll)
+TEST_F(PDUPeerImplUnitTest, InternalThreadSendsAfterBeginCall)
 {
     FTRACE;
-    GMockDispatcherPtr mockDispatcher(new GMockDispatcher());
-    DispatcherPtr dispatcher = mockDispatcher;
     GMockPDUPeerEndpointPtr mockEndpoint(new GMockPDUPeerEndpoint());
     PDUPeerEndpointPtr endpoint = mockEndpoint;
+    EXPECT_CALL(*mockEndpoint, Begin());
 
     int op = 1;
     char buf[] = "the data";
     PDUPtr pdu(new PDU(op, sizeof(buf), buf));
 
-    // TODO: may want to verify this is the right event
-    EXPECT_CALL(*mockDispatcher, Enqueue(_));
-
-    PDUPeerImplPtr peer(new PDUPeerImpl(0, dispatcher, endpoint));
+    PDUPeerImplPtr peer(new PDUPeerImpl(0, endpoint));
     peer->EnqueuePDU(pdu);
+    ASSERT_EQ(1, peer->GetQueueSize());
 
     // TODO: may want to verify this is the right pdu
     EXPECT_CALL(*mockEndpoint, SendPDU(_));
     EXPECT_CALL(*mockEndpoint, IsConnected())
         .WillRepeatedly(Return(true));
-    // this will be called by a worker thread
-    peer->SendNextPDU();
+
+    peer->SetEventCallback(
+        boost::bind(&PDUPeerImplUnitTest::EventCallback, this, _1));
+    peer->Begin();
+    while (peer->GetQueueSize() > 0)
+    {
+        usleep(10000);
+    }
+    peer->Shutdown();
+    ASSERT_EQ(0, peer->GetQueueSize());
 }
 
-TEST_F(PDUPeerImplUnitTest, SendPDUCallsErrorCallbackAfterTimeout)
+TEST_F(PDUPeerImplUnitTest, SendPDUCallsErrorCallbackOnFailure)
 {
     FTRACE;
-    GMockDispatcherPtr mockDispatcher(new GMockDispatcher());
-    DispatcherPtr dispatcher = mockDispatcher;
     GMockPDUPeerEndpointPtr mockEndpoint(new GMockPDUPeerEndpoint());
     PDUPeerEndpointPtr endpoint = mockEndpoint;
+    EXPECT_CALL(*mockEndpoint, Begin());
 
     int op = 1;
     char buf[] = "the data";
     PDUPtr pdu(new PDU(op, sizeof(buf), buf));
 
-    const long sendTimeout(1);
+    const long sendTimeout(0);
 
-    PDUPeerImplPtr peer(new PDUPeerImpl(0, dispatcher, endpoint, sendTimeout));
-    peer->SetEventCallback(
-        boost::bind(&PDUPeerImplUnitTest::EventCallback, this, _1));
-
-    // PDUPeer will enqueue an event if there are still things to send
-    // in the event queue after it returns, also once up front
-    EXPECT_CALL(*mockDispatcher, Enqueue(_)).Times(2);
+    PDUPeerImplPtr peer(new PDUPeerImpl(0, endpoint, sendTimeout));
 
     peer->EnqueuePDU(pdu);
 
@@ -169,37 +162,35 @@ TEST_F(PDUPeerImplUnitTest, SendPDUCallsErrorCallbackAfterTimeout)
     EXPECT_CALL(*mockEndpoint, IsConnected())
         .WillRepeatedly(Return(true));
 
-    // this will be called by a worker thread
-    peer->SendNextPDU();
-    //Timeout is 1 second
-    EXPECT_FALSE(mPDUSendErrorCallbackCalled);
+    peer->SetEventCallback(
+        boost::bind(&PDUPeerImplUnitTest::EventCallback, this, _1));
+    peer->Begin();
+    {
+        AutoUnlockMutex lock(mEventMutex);
+        while (mEventCount == 0)
+        {
+            mEventCalledCondition.TimedWait(2);
+        }
+    }
+    peer->Shutdown();
 
-    sleep(1);
-    peer->SendNextPDU();
     EXPECT_TRUE(mPDUSendErrorCallbackCalled);
 }
 
-TEST_F(PDUPeerImplUnitTest, TimesOutWhenNodeIsNotConnected)
+TEST_F(PDUPeerImplUnitTest, CallsErrorCallbackWhenEndpointIsNotConnected)
 {
     FTRACE;
-    GMockDispatcherPtr mockDispatcher(new GMockDispatcher());
-    DispatcherPtr dispatcher = mockDispatcher;
     GMockPDUPeerEndpointPtr mockEndpoint(new GMockPDUPeerEndpoint());
     PDUPeerEndpointPtr endpoint = mockEndpoint;
+    EXPECT_CALL(*mockEndpoint, Begin());
 
     int op = 1;
     char buf[] = "the data";
     PDUPtr pdu(new PDU(op, sizeof(buf), buf));
 
-    const long sendTimeout(1);
+    const long sendTimeout(0);
 
-    PDUPeerImplPtr peer(new PDUPeerImpl(0, dispatcher, endpoint, sendTimeout));
-    peer->SetEventCallback(
-        boost::bind(&PDUPeerImplUnitTest::EventCallback, this, _1));
-
-    // PDUPeer will enqueue an event if there are still things to send
-    // in the event queue after it returns, also once up front
-    EXPECT_CALL(*mockDispatcher, Enqueue(_)).Times(2);
+    PDUPeerImplPtr peer(new PDUPeerImpl(0, endpoint, sendTimeout));
 
     peer->EnqueuePDU(pdu);
 
@@ -210,70 +201,32 @@ TEST_F(PDUPeerImplUnitTest, TimesOutWhenNodeIsNotConnected)
     EXPECT_CALL(*mockEndpoint, IsConnected())
         .WillRepeatedly(Return(false));
 
-    // this will be called by a worker thread
-    peer->SendNextPDU();
-    //Timeout is 1 second
-    EXPECT_FALSE(mPDUSendErrorCallbackCalled);
-
-    sleep(1);
-    peer->SendNextPDU();
-    EXPECT_TRUE(mPDUSendErrorCallbackCalled);
-}
-
-TEST_F(PDUPeerImplUnitTest, QueueOverflowBlock)
-{
-    FTRACE;
-    GMockDispatcherPtr mockDispatcher(new GMockDispatcher());
-    DispatcherPtr dispatcher = mockDispatcher;
-    GMockPDUPeerEndpointPtr mockEndpoint(new GMockPDUPeerEndpoint());
-    PDUPeerEndpointPtr endpoint = mockEndpoint;
-
-    // TODO: may want to verify this is the right event
-    EXPECT_CALL(*mockDispatcher, Enqueue(_)).Times(AtLeast(1));
-
-    // TODO: may want to verify this is the right pdu
-    EXPECT_CALL(*mockEndpoint, SendPDU(_))
-        .WillRepeatedly(Return());
-    EXPECT_CALL(*mockEndpoint, IsConnected())
-        .WillRepeatedly(Return(true));
-
-    int op = 1;
-    char buf[] = "the data";
-    PDUPtr pdu(new PDU(op, sizeof(buf), buf));
-    PDUPeerImplPtr peer(new PDUPeerImpl(0, dispatcher, endpoint, 1, 2,
-                                        PDU_PEER_QUEUE_BLOCK));
-
-    // Create thread to async send pdus and free up queue space
-    // This test will block indefinitely if it fails.
-    pthread_t sendThread;
-    int res = pthread_create(&sendThread, NULL, &AsyncSendNextPDU, &peer);
-    EXPECT_EQ(0, res);
-
-    int count = 0;
-    while (count++ < 6)
+    peer->SetEventCallback(
+        boost::bind(&PDUPeerImplUnitTest::EventCallback, this, _1));
+    peer->Begin();
     {
-        hlog(HLOG_DEBUG2, "Block queueing: %d", count);
-        peer->EnqueuePDU(pdu);
-        hlog(HLOG_DEBUG2, "Block queued: %d", count);
+        AutoUnlockMutex lock(mEventMutex);
+        while (mEventCount == 0)
+        {
+            mEventCalledCondition.TimedWait(2);
+        }
     }
-    EXPECT_EQ(0, pthread_join(sendThread, NULL));
+    peer->Shutdown();
+
+    EXPECT_TRUE(mPDUSendErrorCallbackCalled);
 }
 
 TEST_F(PDUPeerImplUnitTest, QueueOverflowCallback)
 {
     FTRACE;
-    GMockDispatcherPtr mockDispatcher(new GMockDispatcher());
-    DispatcherPtr dispatcher = mockDispatcher;
     PDUPeerEndpointPtr endpoint(new GMockPDUPeerEndpoint());
-
-    // TODO: may want to verify this is the right event
-    EXPECT_CALL(*mockDispatcher, Enqueue(_)).Times(AtLeast(1));
 
     int op = 1;
     char buf[] = "the data";
     PDUPtr pdu(new PDU(op, sizeof(buf), buf));
-    PDUPeerImplPtr peer(new PDUPeerImpl(0, dispatcher, endpoint, 1, 2,
+    PDUPeerImplPtr peer(new PDUPeerImpl(0, endpoint, 1, 2,
                                         PDU_PEER_QUEUE_CALLBACK));
+
     peer->SetEventCallback(
         boost::bind(&PDUPeerImplUnitTest::EventCallback, this, _1));
 
@@ -286,21 +239,51 @@ TEST_F(PDUPeerImplUnitTest, QueueOverflowCallback)
     EXPECT_TRUE(mPDUSendErrorCallbackCalled);
 }
 
-TEST_F(PDUPeerImplUnitTest, QueueOverflowThrow)
+TEST_F(PDUPeerImplUnitTest, QueueOverflowBlock)
 {
     FTRACE;
-    GMockDispatcherPtr mockDispatcher(new GMockDispatcher());
-    DispatcherPtr dispatcher = mockDispatcher;
-    PDUPeerEndpointPtr endpoint(new GMockPDUPeerEndpoint());
+    GMockPDUPeerEndpointPtr mockEndpoint(new GMockPDUPeerEndpoint());
+    PDUPeerEndpointPtr endpoint = mockEndpoint;
+    EXPECT_CALL(*mockEndpoint, Begin());
 
-    // TODO: may want to verify this is the right event
-    EXPECT_CALL(*mockDispatcher, Enqueue(_)).Times(AtLeast(1));
-
+    // TODO: may want to verify this is the right pdu
+    EXPECT_CALL(*mockEndpoint, SendPDU(_))
+        .WillRepeatedly(Return());
+    EXPECT_CALL(*mockEndpoint, IsConnected())
+        .WillRepeatedly(Return(true));
 
     int op = 1;
     char buf[] = "the data";
     PDUPtr pdu(new PDU(op, sizeof(buf), buf));
-    PDUPeerImplPtr peer(new PDUPeerImpl(0, dispatcher, endpoint, 1, 2,
+    PDUPeerImplPtr peer(new PDUPeerImpl(0, endpoint, 1, 2,
+                                        PDU_PEER_QUEUE_BLOCK));
+
+    peer->SetEventCallback(
+        boost::bind(&PDUPeerImplUnitTest::EventCallback, this, _1));
+    peer->Begin();
+
+    int count = 0;
+    while (count++ < 6)
+    {
+        hlog(HLOG_DEBUG2, "Block queueing: %d", count);
+        peer->EnqueuePDU(pdu);
+        hlog(HLOG_DEBUG2, "Block queued: %d", count);
+    }
+
+    peer->Shutdown();
+
+    EXPECT_FALSE(mPDUSendErrorCallbackCalled);
+}
+
+TEST_F(PDUPeerImplUnitTest, QueueOverflowThrow)
+{
+    FTRACE;
+    PDUPeerEndpointPtr endpoint(new GMockPDUPeerEndpoint());
+
+    int op = 1;
+    char buf[] = "the data";
+    PDUPtr pdu(new PDU(op, sizeof(buf), buf));
+    PDUPeerImplPtr peer(new PDUPeerImpl(0, endpoint, 1, 2,
                                         PDU_PEER_QUEUE_THROW));
     int count = 0;
     while (count++ < 2)

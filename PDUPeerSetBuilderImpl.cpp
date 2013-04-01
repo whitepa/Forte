@@ -26,6 +26,9 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
 {
     FTRACE2("%llu", (unsigned long long) mID);
 
+    hlogstream(HLOG_INFO, "My pdu peer id is " << mID
+         << " based on " << listenAddress.first << ":" << listenAddress.second);
+
     // begin worker thread setup
     FString workerDispatcherName(
         FStringFC(), "PDUWorkDispatcher-%llu", (unsigned long long) mID);
@@ -59,7 +62,6 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
         PDUPeerPtr p(
             new PDUPeerImpl(
                 SocketAddressToID(a),
-                mWorkDispatcher,
                 mPDUPeerEndpointFactory->Create(
                     listenAddress, a, mID, mWorkDispatcher),
                 pduPeerSendTimeout,
@@ -143,6 +145,7 @@ Forte::PDUPeerSetBuilderImpl::~PDUPeerSetBuilderImpl()
     }
 
     mPDUPeerSet->TeardownEPoll();
+    mPDUPeerSet->Shutdown();
     mPDUPeerSet.reset();
 
     mWorkDispatcher->Shutdown();

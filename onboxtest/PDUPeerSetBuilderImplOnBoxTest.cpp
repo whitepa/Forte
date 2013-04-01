@@ -640,7 +640,12 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanBroadcastAtLeast50PDUsFromEach)
     }
 }
 
-TEST_F(PDUPeerSetBuilderImplOnBoxTest, PDUWillComeAcrossIfConnectorDiesAndRestarts)
+
+/* changing the assumption that PDUPeerSet will retry PDUs for down
+ * peers. It will still reconnect, but the resends seem to be doing
+ * more harm than good
+TEST_F(PDUPeerSetBuilderImplOnBoxTest,
+       PDUWillComeAcrossIfConnectorDiesAndRestarts)
 {
     FTRACE;
     setupTwoPeers();
@@ -680,7 +685,6 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, PDUWillComeAcrossIfConnectorDiesAndRestar
     ASSERT_EQ(1, mTestPeers[1]->mReceivedPDUList.size());
     expectEqual(pdu, mTestPeers[1]->mReceivedPDUList.front());
 }
-
 TEST_F(PDUPeerSetBuilderImplOnBoxTest, PDUWillComeAcrossIfAcceptorDiesAndRestarts)
 {
     FTRACE;
@@ -721,7 +725,6 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, PDUWillComeAcrossIfAcceptorDiesAndRestart
     ASSERT_EQ(1, mTestPeers[0]->mReceivedPDUList.size());
     expectEqual(pdu, mTestPeers[0]->mReceivedPDUList.front());
 }
-
 TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanEnque100PDUsForDownPeer)
 {
     FTRACE;
@@ -781,7 +784,6 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanEnque100PDUsForDownPeer)
         peer->mReceivedPDUList.pop_front();
     }
 }
-
 TEST_F(PDUPeerSetBuilderImplOnBoxTest, PeersRecoverOnRestartsWithinTimeout)
 {
     FTRACE;
@@ -862,6 +864,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, PeersRecoverOnRestartsWithinTimeout)
         }
     }
 }
+*/
 
 TEST_F(PDUPeerSetBuilderImplOnBoxTest,
        CanBroadcastAndReceive1000PDUsFromEachIn10Seconds)
@@ -894,7 +897,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest,
         if (callbacksDone)
             break;
 
-        usleep(10000);
+        sleep(1);
     }
 
     foreach(const TestPeerPtr& peer, mTestPeers)
@@ -909,55 +912,6 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest,
             peer->mReceivedPDUList.pop_front();
         }
     }
-}
-
-// this is more of a developer test to ensure that as long as
-// something is consuming PDUs the PeerSet itself is not holding on to
-// them
-TEST_F(PDUPeerSetBuilderImplOnBoxTest, DISABLED_ProperlyReleasesPDUs)
-{
-    FTRACE;
-    setupTwoPeers();
-
-    const TestPeerPtr& broadcaster(mTestPeers[1]);
-    int i = 0;
-    DeadlineClock deadline;
-    deadline.ExpiresInSeconds(600);
-    while (!deadline.Expired())
-    {
-        i++;
-        PDUPtr pdu = makePDUPtr(i);
-        broadcaster->mPeerSet->BroadcastAsync(pdu);
-
-        //hlog(HLOG_DEBUG, "Sent PDU");
-        foreach(const TestPeerPtr& peer, mTestPeers)
-        {
-            while (true)
-            {
-                {
-                    if (peer->GetReceivedCount() != 0)
-                    {
-                        break;
-                    }
-                }
-
-                usleep(1000);
-            }
-
-            ASSERT_EQ(1, peer->mReceivedPDUList.size());
-            expectEqual(pdu, peer->mReceivedPDUList.front());
-
-            // clear what we recv'd
-            peer->mReceivedPDUList.pop_front();
-        }
-        //hlog(HLOG_DEBUG, "All Peers received 1 matching pdu");
-    }
-
-    foreach(const TestPeerPtr& peer, mTestPeers)
-    {
-        ASSERT_EQ(0, peer->mReceivedPDUList.size());
-    }
-    hlogstream(HLOG_INFO, "sent " << i << " pdus");
 }
 
 //This is purely to ensure PDUPeers can teardown and setup ok

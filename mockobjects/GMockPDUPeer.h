@@ -13,6 +13,7 @@ namespace Forte
         ~GMockPDUPeer() {}
 
         MOCK_METHOD0(Begin, void());
+        MOCK_METHOD0(Shutdown, void());
         MOCK_CONST_METHOD0(GetFD, int());
         MOCK_CONST_METHOD1(OwnsFD, bool(int fd));
         MOCK_METHOD1(AddFD, void(int fd));
@@ -22,6 +23,7 @@ namespace Forte
         MOCK_CONST_METHOD0(GetID, const uint64_t());
         MOCK_METHOD1(SetID, void(int id));
         MOCK_METHOD1(EnqueuePDU, void(const PDUPtr& pdu));
+        MOCK_CONST_METHOD0(GetQueueSize, unsigned int());
         MOCK_METHOD0(SendNextPDU, void());
         MOCK_METHOD1(SendPDU, void(const PDU &pdu));
         MOCK_CONST_METHOD0(IsPDUReady, bool());

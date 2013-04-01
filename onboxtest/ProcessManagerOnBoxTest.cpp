@@ -76,7 +76,7 @@ TEST_F(ProcessManagerTest, ReactsToChildTerminationInUnder100Millisec)
         Forte::Timespec finish = Forte::MonotonicClock().GetTime();
         ASSERT_EQ(0, ph->GetStatusCode());
         ASSERT_EQ(ProcessFuture::ProcessExited, ph->GetProcessTerminationType());
-        ASSERT_TRUE(finish - start < Forte::Timespec::FromMillisec(100));
+        ASSERT_LT(finish - start, Forte::Timespec::FromMillisec(100));
     }
     catch (std::exception& e)
     {
