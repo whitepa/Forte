@@ -979,7 +979,7 @@ void FileSystemImpl::FilePutContents(
     ofstream out(filename, mode);
     if (out.good())
     {
-        hlog(HLOG_DEBUG, "Writing data to %s", filename.c_str());
+        hlog(HLOG_DEBUG3, "Writing data to %s", filename.c_str());
         if (throwOnError)
         {
             out.exceptions( ofstream::failbit | ofstream::badbit );
