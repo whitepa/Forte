@@ -17,6 +17,7 @@ Exception::Exception(const char *description) :
 {
     getStack();
 }
+
 Exception::Exception(const FStringFC &fc, const char *format, ...)
 {
     va_list ap;

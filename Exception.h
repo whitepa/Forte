@@ -96,6 +96,8 @@
     public:                                                             \
         inline NAME() : PARENT(#NAME) {}                                \
         inline NAME(const char *description) : PARENT(description) {}   \
+        inline NAME(const std::string& description)                     \
+            : PARENT(description.c_str()) {}                            \
         inline NAME(const Forte::FStringFC &fc, const char *format, ...) \
         {                                                               \
             va_list ap;                                                 \
@@ -117,6 +119,8 @@
         inline NAME() : PARENT(DESC) {}                                 \
         inline NAME(const char *description) :                          \
             PARENT(Forte::FStringFC(), "%s: %s", DESC, description) {}  \
+        inline NAME(const std::string& description) :                   \
+            PARENT(Forte::FStringFC(), "%s: %s", DESC, description.c_str()) {} \
         inline NAME(const Forte::FStringFC &fc,                         \
                     const char *format, ...)                            \
             :  PARENT(DESC)                                             \
