@@ -254,7 +254,8 @@ void Forte::PDUPeerFileDescriptorEndpoint::SendPDU(const Forte::PDU &pdu)
         {
             len = pdu.GetOptionalDataSize();
             offset = 0;
-            const char* optionalData = (const char*) pdu.GetOptionalData();
+            const char*
+                optionalData = (const char*) pdu.GetOptionalData()->GetData();
 
             hlog(HLOG_DEBUG2,
                  "sending %zu bytes of optional data on fd %d",

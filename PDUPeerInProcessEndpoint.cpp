@@ -53,6 +53,7 @@ bool Forte::PDUPeerInProcessEndpoint::RecvPDU(Forte::PDU &out)
         PDUPtr pdu = mPDUBuffer.front();
         out.SetHeader(pdu->GetHeader());
         out.SetPayload(out.GetPayloadSize(), pdu->GetPayload<void*>());
+        out.SetOptionalData(pdu->GetOptionalData());
 
         mPDUBuffer.pop_front();
         return true;

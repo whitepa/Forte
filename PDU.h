@@ -67,7 +67,7 @@ namespace Forte
         PDUOptionalData(
             const unsigned int size,
             const unsigned int attributes,
-            void* data = NULL
+            const void* data = NULL
             )
             : mSize(size),
               mAttributes(attributes),
@@ -104,7 +104,7 @@ namespace Forte
             }
         }
 
-        void CopyToDataBuffer(void* data) {
+        void CopyToDataBuffer(const void* data) {
             if (data != NULL)
             {
                 memcpy(mData, data, mSize);
@@ -113,6 +113,14 @@ namespace Forte
             {
                 memset(mData, 0, mSize);
             }
+        }
+
+        const void* GetData() {
+            return mData;
+        }
+
+        unsigned int GetSize() {
+            return mSize;
         }
 
         unsigned int mSize;
@@ -177,7 +185,7 @@ namespace Forte
         void SetOptionalData(
             const boost::shared_ptr<PDUOptionalData>& optionalData);
 
-        const void* GetOptionalData() const;
+        const boost::shared_ptr<PDUOptionalData>& GetOptionalData() const;
 
         template <typename PayloadType>
             static bool PayloadIsEqual(Forte::PDU *a, Forte::PDU *b)

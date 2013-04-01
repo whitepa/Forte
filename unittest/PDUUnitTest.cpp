@@ -140,7 +140,7 @@ TEST_F(PDUUnitTest, ConstructWithPayloadSetOptionalData)
     EXPECT_EQ(payload, *(pdu.GetPayload<Opcode2Payload>()));
     EXPECT_EQ(optionalDataSize, pdu.GetOptionalDataSize());
     EXPECT_TRUE(memcmp(data->mData,
-                       pdu.GetOptionalData(),
+                       pdu.GetOptionalData()->GetData(),
                        optionalDataSize) == 0);
 }
 
@@ -161,8 +161,9 @@ TEST_F(PDUUnitTest, CanRequestMemAlignedOptionalData)
     EXPECT_EQ(0, pdu.GetPayloadSize());
     EXPECT_EQ(NULL, pdu.GetPayload<Opcode2Payload>());
     EXPECT_EQ(optionalDataSize, pdu.GetOptionalDataSize());
-    EXPECT_TRUE(memcmp(data->mData, pdu.GetOptionalData(), optionalDataSize) == 0);
-    EXPECT_EQ(0, ((uint64_t) pdu.GetOptionalData()) % 512);
+    EXPECT_TRUE(memcmp(data->mData,
+                       pdu.GetOptionalData()->GetData(), optionalDataSize) == 0);
+    EXPECT_EQ(0, ((uint64_t) pdu.GetOptionalData()->GetData()) % 512);
 }
 
 TEST_F(PDUUnitTest, CompareIdentity)

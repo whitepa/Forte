@@ -49,18 +49,22 @@ void PDU::SetOptionalData(
     const boost::shared_ptr<PDUOptionalData>& optionalData)
 {
     mOptionalData = optionalData;
-    mHeader.optionalDataSize = mOptionalData->mSize;
-    mHeader.optionalDataAttributes = mOptionalData->mAttributes;
+    if (optionalData)
+    {
+        mHeader.optionalDataSize = mOptionalData->mSize;
+        mHeader.optionalDataAttributes = mOptionalData->mAttributes;
+    }
+    else
+    {
+        mHeader.optionalDataSize = 0;
+        mHeader.optionalDataAttributes = 0;
+    }
 }
 
 
-const void* PDU::GetOptionalData() const
+const boost::shared_ptr<PDUOptionalData>& PDU::GetOptionalData() const
 {
-    if (mOptionalData)
-    {
-        return mOptionalData->mData;
-    }
-    return NULL;
+    return mOptionalData;
 }
 
 bool PDU::operator==(const PDU &other) const
@@ -127,11 +131,13 @@ std::ostream& Forte::operator<<(std::ostream& os, const PDU &obj)
     unsigned int optionalDataSize = obj.GetOptionalDataSize();
     if (optionalDataSize)
     {
-        const void *optionalData = obj.GetOptionalData();
-        if (optionalData != NULL)
+        const boost::shared_ptr<PDUOptionalData>&
+            optionalData = obj.GetOptionalData();
+
+        if (optionalData && optionalData->GetData() != NULL)
         {
             FString str;
-            str.assign((const char*)optionalData,
+            str.assign((const char*)optionalData->GetData(),
                        std::min(optionalDataSize, (unsigned int) 255));
 
             os << "OptionalData = "
