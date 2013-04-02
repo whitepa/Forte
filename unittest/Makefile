@@ -40,7 +40,6 @@ LIBS = \
 
 BSRCS = ContextUnitTest.cpp \
 	ExpDecayingAvgUnitTest.cpp \
-	GUIDGeneratorUnitTest.cpp \
 	StateMachineUnitTest1.cpp \
 	StateMachineUnitTest2.cpp \
 	StateMachineUnitTest3.cpp \
@@ -64,6 +63,7 @@ GSRCS = AutoMutexUnitTest.cpp \
 	ExceptionUnitTest.cpp \
 	FileSystemUtilUnitTest.cpp \
 	FStringUnitTest.cpp \
+	GUIDGeneratorUnitTest.cpp \
 	INotifyUnitTest.cpp \
 	IOManagerUnitTest.cpp \
 	LoggingUnitTest.cpp \

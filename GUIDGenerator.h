@@ -11,6 +11,8 @@
 
 namespace Forte
 {
+    EXCEPTION_CLASS(EGUIDGenerator);
+
     class GUIDGenerator : public Object
     {
     public:
@@ -20,6 +22,9 @@ namespace Forte
         virtual FString & GenerateGUID(FString &out);
         virtual void GenerateGUID(uint8_t out[]);
         virtual void GenerateGUID(std::vector<uint8_t> &out);
+        virtual void ToString(std::string& out,
+                              const std::vector<uint8_t>& existing);
+        virtual void ToString(std::string& out, const uint8_t existing[]);
 
     private:
         Mutex mLock;
