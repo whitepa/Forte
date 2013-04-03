@@ -98,10 +98,6 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
             listenAddress.second,
             32, // backlog
             listenAddress.first.c_str()));
-
-    // end incoming connections
-
-    mPDUPeerSet->StartPolling();
 }
 
 Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl()

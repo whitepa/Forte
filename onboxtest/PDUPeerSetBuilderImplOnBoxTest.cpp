@@ -58,6 +58,8 @@ public:
                 4, // max threads
                 createInProcessPDUPeer
                 ));
+
+        mPeerSet->StartPolling();
     }
 
     void DeletePeerSet() {
@@ -408,8 +410,8 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanBroadcastPDUWithOptionalData)
     PDUPtr expected = makePDUWithOptionDataPtr();
     foreach(const TestPeerPtr& peer, mTestPeers)
     {
-        ASSERT_EQ(1, peer->GetReceivedCount());
-        ASSERT_EQ(1, peer->mReceivedPDUList.size());
+        EXPECT_EQ(1, peer->GetReceivedCount());
+        EXPECT_EQ(1, peer->mReceivedPDUList.size());
         expectEqual(expected, peer->mReceivedPDUList.front());
     }
 }
