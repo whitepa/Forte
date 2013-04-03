@@ -246,8 +246,8 @@ namespace Forte
         //TODO: virtual bool SetExpired(struct timespec &ts);
         virtual void ExpiresInSeconds(long long int sec);
         virtual void ExpiresInMillisec(int millisec);
+        virtual void GetRemaining(Forte::Timespec& ts) const;
 
-        //TODO: virtual void GetTimeLeft(struct timespec &ts) const;
     protected:
         Timespec mDeadlineTimespec;
     };
