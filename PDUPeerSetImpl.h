@@ -62,14 +62,6 @@ namespace Forte
                            << " but peer does not exist"
                            << " running in a cluster whose nodes were not "
                            << " properly added!");
-
-                // this can happen if a node is added and we are not
-                // informed about it. i believe there is an issue
-                // between scmenu and scaled's scribe start state
-                // machine code which should be fixed rather than
-                // doing this. scaled should restart scribed if this
-                // happens, and it should come up ok.
-                abort();
             }
             else
             {
