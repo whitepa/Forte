@@ -5,7 +5,7 @@ BUILDROOT:=$(shell echo 'while [ ! -d re ]; do cd ..; done; pwd' | sh)
 include $(BUILDROOT)/re/make/head.mk
 $(make-targetdir)
 
-CCARGS += -ggdb
+CCARGS += -ggdb -msse4.2
 DEFS += -DFORTE_WITH_SQLITE
 
 INCLUDE = \
@@ -26,6 +26,7 @@ LIBS = \
 	$(OS_LIBS)
 
 PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
+	$(TARGETDIR)/CRCOnBoxTest \
 	$(TARGETDIR)/FileSystemImplOnBoxTest \
 	$(TARGETDIR)/INotifyUnitTest \
 	$(TARGETDIR)/InterProcessLockOnBoxTest \

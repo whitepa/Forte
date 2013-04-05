@@ -8,6 +8,7 @@ BUILDROOT:=$(shell echo 'while [ ! -d re ]; do cd ..; done; pwd' | sh)
 include $(BUILDROOT)/re/make/head.mk
 $(make-targetdir)
 
+CCARGS += -msse4.2
 INSTALL_ROOT ?=
 PREFIX ?= $(INSTALL_ROOT)/usr/local
 HEADER_INSTALL_PATH = $(PREFIX)/include
