@@ -62,6 +62,7 @@ namespace Forte {
         }
 
         bool IsComplete(void) const { return mCompleted; }
+        bool HasException(void) const { return mException; }
 
         virtual void SetCallback(AsyncTaskCompletionCallback cb) {
             mCompletionCallback = cb;
@@ -157,6 +158,7 @@ namespace Forte {
         }
 
         bool IsComplete(void) const { return mCompleted; }
+        bool HasException(void) const { return mException; }
 
         virtual void SetCallback(AsyncTaskCompletionCallback cb) {
             mCompletionCallback = cb;
