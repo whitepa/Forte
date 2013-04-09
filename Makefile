@@ -62,7 +62,6 @@ SRCS =	\
 	EventQueue.cpp \
 	EventPredicate.cpp \
 	Exception.cpp \
-	ExpDecayingAvg.cpp \
 	FileSystemImpl.cpp \
 	FileSystemUtil.cpp \
 	FString.cpp \
@@ -181,7 +180,6 @@ HEADERS = \
 	Event.h \
 	EventQueue.h \
 	Exception.h \
-	ExpDecayingAvg.h \
 	FMD5.h \
 	Forte.h \
 	FString.h \

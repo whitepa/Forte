@@ -69,7 +69,6 @@ namespace Forte {};
 #include "Event.h"
 #include "EventQueue.h"
 #include "Exception.h"
-#include "ExpDecayingAvg.h"
 #include "FileSystemImpl.h"
 #include "FileSystemUtil.h"
 #include "Foreach.h"

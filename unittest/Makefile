@@ -39,7 +39,6 @@ LIBS = \
 	$(NULL)
 
 BSRCS = ContextUnitTest.cpp \
-	ExpDecayingAvgUnitTest.cpp \
 	StateMachineUnitTest1.cpp \
 	StateMachineUnitTest2.cpp \
 	StateMachineUnitTest4.cpp \
@@ -64,6 +63,7 @@ GSRCS = AutoMutexUnitTest.cpp \
 	DbLiteConnectionUnitTest.cpp \
 	DbConnectionPoolUnitTest.cpp \
 	ExceptionUnitTest.cpp \
+	ExponentiallyDampedMovingAverageUnitTest.cpp \
 	FileSystemUtilUnitTest.cpp \
 	FStringUnitTest.cpp \
 	FTraceUnitTest.cpp \
