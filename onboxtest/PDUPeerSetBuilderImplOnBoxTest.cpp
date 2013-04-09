@@ -233,6 +233,37 @@ public:
                 mTestPeers[peerIndex2]->mPeerID)->IsConnected();
     }
 
+    void waitForAllConnected(unsigned int timeout = 10) {
+        DeadlineClock deadline;
+        deadline.ExpiresInSeconds(timeout);
+        while (!deadline.Expired())
+        {
+            bool allConnected(true);
+            foreach(const TestPeerPtr& peer, mTestPeers)
+            {
+                foreach(const TestPeerPtr& peer2, mTestPeers)
+                {
+                    if (!peer->mPeerSet->GetPeer(peer2->mPeerID)->IsConnected())
+                    {
+                        allConnected = false;
+                    }
+                }
+            }
+
+            if (allConnected)
+                break;
+
+            usleep(10000);
+        }
+
+        if (deadline.Expired())
+        {
+            throw Exception(FStringFC(),
+                            "All peers not connected in %d seconds",
+                            timeout);
+        }
+    }
+
     std::vector<boost::shared_ptr<TestPeer> > mTestPeers;
 };
 
@@ -600,6 +631,8 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanBroadcastAtLeast50PDUsFromEach)
     FTRACE;
     setupThreePeers();
 
+    waitForAllConnected();
+
     for (int i=0; i<50; i++)
     {
         PDUPtr pdu = makePDUPtr(i);
@@ -610,7 +643,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanBroadcastAtLeast50PDUsFromEach)
     }
 
     DeadlineClock deadline;
-    deadline.ExpiresInSeconds(10);
+    deadline.ExpiresInSeconds(60);
     while (!deadline.Expired())
     {
         bool callbacksDone(true);
@@ -630,12 +663,14 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanBroadcastAtLeast50PDUsFromEach)
 
     foreach(const TestPeerPtr& peer, mTestPeers)
     {
-        ASSERT_EQ(150, peer->GetReceivedCount());
-        ASSERT_EQ(150, peer->mReceivedPDUList.size());
+        //EXPECT_EQ(0, peer->mPeerSet->GetQueueSize());
+        EXPECT_EQ(150, peer->GetReceivedCount());
+        EXPECT_EQ(150, peer->mReceivedPDUList.size());
 
         while (!peer->mReceivedPDUList.empty())
         {
-            PDUPtr expected = makePDUPtr(peer->mReceivedPDUList.front()->GetOpcode());
+            PDUPtr expected =
+                makePDUPtr(peer->mReceivedPDUList.front()->GetOpcode());
             expectEqual(expected, peer->mReceivedPDUList.front());
             peer->mReceivedPDUList.pop_front();
         }

@@ -139,7 +139,8 @@ void* Forte::PDUPeerSendThread::run()
                 hlog(HLOG_ERR, "Unknown exception while polling");
         }
     }
-    hlog(HLOG_DEBUG, "Shutting PDUPeerSendThread thread");
+    hlogstream(HLOG_DEBUG, "Shutting down PDUPeerSendThread thread with "
+               << mPDUPeer->GetQueueSize() << " PDUs in queue");
     return NULL;
 }
 
@@ -172,7 +173,7 @@ void Forte::PDUPeerImpl::sendLoop()
     }
     catch (Exception& e)
     {
-        hlog(HLOG_DEBUG2, "Could not send pdu %s", e.what());
+        hlog(HLOG_DEBUG, "Could not send pdu %s", e.what());
         // TODO? re-enqueue if not expired. (not sure if that is still
         // a good idea)
         //
