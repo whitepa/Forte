@@ -6,26 +6,29 @@
 
 namespace Forte
 {
-    template <typename T1, typename T2>
     class AutoDoUndo : public Object
     {
     public:
-        AutoDoUndo(boost::function<T1()> dofunc,
-                   boost::function<T2()> undofunc,
-                   bool autoDo = true)
+        typedef boost::function<void()> DoFunction;
+        typedef boost::function<void()> UndoFunction;
+
+        AutoDoUndo(DoFunction dofunc,
+                   UndoFunction undofunc)
+            :mUndo(undofunc)
         {
-            if (autoDo)
-            {
-                dofunc();
-            }
-            Undo = undofunc;
-            Do = dofunc;
+            dofunc();
         }
-        virtual ~AutoDoUndo()
+
+        AutoDoUndo(UndoFunction undofunc)
+            :mUndo(undofunc)
+        {
+        }
+
+        ~AutoDoUndo()
         {
             try
             {
-                Undo();
+                mUndo();
             }
             catch (std::exception& e)
             {
@@ -37,8 +40,7 @@ namespace Forte
             }
         }
 
-        boost::function<T1()> Do;
-        boost::function<T2()> Undo;
+        const boost::function<void()> mUndo;
     };
 };
 

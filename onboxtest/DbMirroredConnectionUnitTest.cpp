@@ -154,8 +154,6 @@ protected:
 
 public: // drawback, bind requires these be public
 
-    typedef AutoDoUndo<void, void> AutoMountGPFS;
-
     void unmountDatabase()
     {
         FileSystemImpl fs;
@@ -353,7 +351,7 @@ TEST_F(DbMirroredConnectionTest, SqliteFailedGPFSManualBackupDatabaseTest)
         pool.ReleaseDbConnection(dbConnection);
     }
 
-    AutoMountGPFS unmountGPFS(UnmountDatabaseFunction(), MountDatabaseFunction());
+    AutoDoUndo unmountGPFS(UnmountDatabaseFunction(), MountDatabaseFunction());
 
     DbConnection& dbConnection(pool.GetDbConnection());
 
@@ -379,7 +377,7 @@ TEST_F(DbMirroredConnectionTest, SqliteFailedGPFSAutoBackupDatabaseTest)
         ASSERT_EQ(resBeforeUnmount.GetNumRows(), rows);
     }
 
-    AutoMountGPFS unmountGPFS(UnmountDatabaseFunction(), MountDatabaseFunction());
+    AutoDoUndo unmountGPFS(UnmountDatabaseFunction(), MountDatabaseFunction());
 
     DbAutoConnection dbConnection(pool);
 
@@ -403,7 +401,7 @@ TEST_F(DbMirroredConnectionTest, SqliteFailedGPFSPrimaryDbUnderHotDbConnectionDa
         DbResult resBeforeUnmount (dbConnection->Store("SELECT * FROM test"));
         ASSERT_EQ(resBeforeUnmount.GetNumRows(), rows);
 
-        AutoMountGPFS unmountGPFS(UnmountDatabaseFunction(), MountDatabaseFunction());
+        AutoDoUndo unmountGPFS(UnmountDatabaseFunction(), MountDatabaseFunction());
 
     }
 

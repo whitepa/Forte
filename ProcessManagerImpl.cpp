@@ -286,14 +286,12 @@ int ProcessManagerImpl::CreateProcessAndGetResult(
     guidGen.GenerateGUID(randomSuffix);
     FString outputFilename(FStringFC(), "/tmp/sc_commandoutput_%s.tmp",
                           randomSuffix.c_str());
-    AutoDoUndo<void, void> autoRemoveTempFile1(
-        boost::function<void ()>(),
-        boost::bind(unlink, outputFilename.c_str()), false);
+    AutoDoUndo autoRemoveTempFile1(
+        boost::bind(unlink, outputFilename.c_str()));
     FString errorFilename(FStringFC(), "/tmp/sc_commandoutput_error_%s.tmp",
                           randomSuffix.c_str());
-    AutoDoUndo<void, void> autoRemoveTempFile2(
-        boost::function<void ()>(),
-        boost::bind(unlink, errorFilename.c_str()), false);
+    AutoDoUndo autoRemoveTempFile2(
+        boost::bind(unlink, errorFilename.c_str()));
 
     hlog(HLOG_DEBUG, "command = %s, timeout=%ld, output=%s",
          command.c_str(), timeout.AsSeconds(), outputFilename.c_str());

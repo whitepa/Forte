@@ -8,7 +8,6 @@
 #include "LogManager.h"
 #include "FileSystemImpl.h"
 #include "Util.h"
-#include "AutoDoUndo.h"
 #include "FTrace.h"
 #include "Clock.h"
 #include "DbConnectionPool.h"
@@ -316,7 +315,6 @@ FString DbLiteConnection::Escape(const char *str)
 void DbLiteConnection::BackupDatabase(const FString &targetPath)
 {
     FTRACE2("'%s' -> '%s'", mDBName.c_str(), targetPath.c_str());
-    typedef AutoDoUndo<void, void> BackupOperation;
     backupDatabase(targetPath);
 }
 

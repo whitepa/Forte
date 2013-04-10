@@ -231,10 +231,8 @@ TEST_F(ProcessManagerTest, ErrorOutput)
 
         sleep(1); // causes a race condition where the next Process is
                   // added during the epoll_wait
-        AutoDoUndo<void, void> autoCleanup(
-            boost::function<void ()>(),
-            boost::bind(&cleanupOutputFile, "/tmp/pmuinttesterrorout.tmp"),
-            false);
+        AutoDoUndo autoCleanup(
+            boost::bind(&cleanupOutputFile, "/tmp/pmuinttesterrorout.tmp"));
 
         hlog(HLOG_INFO, "Run Process");
         boost::shared_ptr<ProcessFuture> ph = pm->CreateProcess(
@@ -263,10 +261,8 @@ TEST_F(ProcessManagerTest, ErrorOutputNonZero)
 
         sleep(1); // causes a race condition where the next Process is
                   // added during the epoll_wait
-        AutoDoUndo<void, void> autoCleanup(
-            boost::function<void ()>(),
-            boost::bind(&cleanupOutputFile, "/tmp/pmuinttesterrorout.tmp"),
-            false);
+        AutoDoUndo autoCleanup(
+            boost::bind(&cleanupOutputFile, "/tmp/pmuinttesterrorout.tmp"));
 
         hlog(HLOG_INFO, "Run Process");
         boost::shared_ptr<ProcessFuture> ph = pm->CreateProcess(
