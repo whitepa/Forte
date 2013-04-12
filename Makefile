@@ -117,7 +117,6 @@ SRCS =	\
 	Timer.cpp \
 	UrlString.cpp \
 	Util.cpp \
-	VersionManager.cpp \
 	XMLBlob.cpp \
 	XMLDoc.cpp \
 	XMLInitializer.cpp \
@@ -214,7 +213,6 @@ HEADERS = \
 	Types.h \
 	UrlString.h \
 	Util.h \
-	VersionManager.h \
 	XMLBlob.h \
 	XMLDoc.h \
 	XMLNode.h \

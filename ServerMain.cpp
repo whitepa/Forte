@@ -3,7 +3,6 @@
 #include <boost/make_shared.hpp>
 #include "ServerMain.h"
 #include "FTrace.h"
-#include "VersionManager.h"
 #include "FileSystemImpl.h"
 #include "SystemCallUtil.h"
 
@@ -184,7 +183,6 @@ void ServerMain::initLogging()
             mLogManager.SetSourceFileLogMask(file, mLogManager.ComputeLogMaskFromString(levels[i]));
         }
     }
-    VersionManager::LogVersions();
 }
 
 ServerMain::~ServerMain()

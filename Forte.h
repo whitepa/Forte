@@ -101,7 +101,6 @@ namespace Forte {};
 #include "Types.h"
 #include "Util.h"
 #include "UrlString.h"
-#include "VersionManager.h"
 
 #ifndef FORTE_NO_XML
 #include "XMLBlob.h"
