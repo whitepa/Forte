@@ -224,7 +224,6 @@ void ServerMain::MainLoop()
     FTRACE;
 
     // loop to receive signals
-    int quit = 0;
     int sig;
     siginfo_t siginfo;
     struct timespec timeout;
@@ -232,10 +231,9 @@ void ServerMain::MainLoop()
     timeout.tv_sec=0;
     timeout.tv_nsec=100000000; // 100 ms
 
-    hlog(HLOG_DEBUG, "quit=%i, mShutdown=%s", quit,
-         (mShutdown) ? "true" : "false");
+    hlog(HLOG_DEBUG, "mShutdown=%s", (mShutdown) ? "true" : "false");
 
-    while (!quit && !mShutdown)
+    while (!mShutdown)
     {
 //        sigwait(&mSigmask, &sig);
         if (sigtimedwait(&mSigmask, &siginfo, &timeout) >= 0)
@@ -247,8 +245,7 @@ void ServerMain::MainLoop()
             case SIGTERM:
             case SIGQUIT:
                 hlog(HLOG_INFO,"Quitting due to signal %d.", sig);
-                quit = 1;
-                break;
+                return;
             case SIGHUP:
                 // log rotation has occurred XXX need to lock logging system
                 hlog(HLOG_DEBUG, "reopening log files");
