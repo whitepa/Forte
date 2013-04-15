@@ -25,50 +25,50 @@ int main(int argc, char *argv[])
 
     if (config.Get("validvalue1") != "1")
     {
-	all_pass = false;
-	hlog(HLOG_WARN, "missing validvalue1");
+        all_pass = false;
+        hlog(HLOG_WARN, "missing validvalue1");
     }
 
     if (config.GetInteger("validvalue1") != 1)
     {
-	all_pass = false;
-	hlog(HLOG_WARN, "missing validvalue1 as integer");
+        all_pass = false;
+        hlog(HLOG_WARN, "missing validvalue1 as integer");
     }
 
     if (config.Get("validvalue2") != "2")
     {
-	all_pass = false;
-	hlog(HLOG_WARN, "missing validvalue2");
+        all_pass = false;
+        hlog(HLOG_WARN, "missing validvalue2");
     }
 
     if (config.Get("validvalue3") != "3")
     {
-	all_pass = false;
-	hlog(HLOG_WARN, "missing validvalue2");
+        all_pass = false;
+        hlog(HLOG_WARN, "missing validvalue2");
     }
 
     if (config.Get("validvalue4") != "this is a valid value")
     {
-	all_pass = false;
-	hlog(HLOG_WARN, "missing validvalue4");
+        all_pass = false;
+        hlog(HLOG_WARN, "missing validvalue4");
     }
 
     if (config.Get("validvalue5") != "\"this value should be quoted\"")
     {
-	all_pass = false;
-	hlog(HLOG_WARN, "missing validvalue4");
+        all_pass = false;
+        hlog(HLOG_WARN, "missing validvalue4");
     }
 
     if (config.Get("invalidvalue1") != "")
     {
-	all_pass = false;
-	hlog(HLOG_WARN, "have value for invalidvalue1");
+        all_pass = false;
+        hlog(HLOG_WARN, "have value for invalidvalue1");
     }
 
     if (config.Get("invalidvalue2") != "")
     {
-	all_pass = false;
-	hlog(HLOG_WARN, "have value for invalidvalue2");
+        all_pass = false;
+        hlog(HLOG_WARN, "have value for invalidvalue2");
     }
 
     // done

@@ -494,10 +494,10 @@ int FString::Tokenize(const char *delim, std::vector<std::string> &components, s
     return components.size();
 }
 
-#define CLEAN_CHAR_VECTOR(vec)		\
-    foreach (const char *str, vec)	\
-        if (str)			\
-            free((void*)str);		\
+#define CLEAN_CHAR_VECTOR(vec)          \
+    foreach (const char *str, vec)      \
+        if (str)                        \
+            free((void*)str);           \
     vec.clear();
 
 int FString::Tokenize(const char *delim, std::vector<char*> &components, size_t max_parts) const

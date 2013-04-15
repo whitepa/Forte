@@ -23,12 +23,12 @@ int main(int argc, char *argv[])
 
     if (nodeRegular.GetProp(regularString) != regularString)
     {
-	printf("FAIL: did not get value back we set\n");
-	printf("expected %s, got %s\n",
-	       regularString.c_str(),
-	       nodeRegular.GetProp(regularString).c_str()
-	    );
-	all_pass = false;
+        printf("FAIL: did not get value back we set\n");
+        printf("expected %s, got %s\n",
+               regularString.c_str(),
+               nodeRegular.GetProp(regularString).c_str()
+            );
+        all_pass = false;
     }
 
     printf("xmlNode: %s\n", doc.ToString().c_str());
@@ -53,16 +53,16 @@ int main(int argc, char *argv[])
     controlCharString = "regular";
     foreach(int &i, controlChars)
     {
-	controlCharString += (char) i;
+        controlCharString += (char) i;
     }
 
     controlCharString += "String";
 
     printf("length of 'regularString': %u\n",
-	   (unsigned int) FString("regularString").length());
+           (unsigned int) FString("regularString").length());
 
     printf("length of string with control chars: %u\n",
-	   (unsigned int) controlCharString.length());
+           (unsigned int) controlCharString.length());
 
 
     printf("controlCharString: %s\n", controlCharString.c_str());
@@ -75,12 +75,12 @@ int main(int argc, char *argv[])
 
     if (node.GetProp(regularString) != regularString)
     {
-	printf("FAIL: did not get stripped value back\n");
-	printf("expected %s, got %s\n",
-	       regularString.c_str(),
-	       node.GetProp(regularString).c_str()
-	    );
-	all_pass = false;
+        printf("FAIL: did not get stripped value back\n");
+        printf("expected %s, got %s\n",
+               regularString.c_str(),
+               node.GetProp(regularString).c_str()
+            );
+        all_pass = false;
     }
 
     return (all_pass ? 0 : 1);
