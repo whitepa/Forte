@@ -60,7 +60,7 @@ namespace Forte
         /**
          * Private init called from constructor to init the object. called by both construct
          **/
-        void init(const FString& configPath, int logMask);
+        void init(int logMask);
     };
 };
 #endif

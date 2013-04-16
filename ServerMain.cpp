@@ -52,7 +52,7 @@ ServerMain::ServerMain(int argc, char * const argv[],
         }
     }
 
-    init(defaultConfig, logMask);
+    init(logMask);
 }
 
 ServerMain::ServerMain(const FString& defaultConfig,
@@ -65,11 +65,10 @@ ServerMain::ServerMain(const FString& defaultConfig,
       mDaemon(daemonize),
       mLogManager()
 {
-    init(defaultConfig, logMask);
+    init(logMask);
 }
 
-void ServerMain::init(const FString& defaultConfig,
-                      int logMask)
+void ServerMain::init(int logMask)
 {
     // setup the config
     CNEW("forte.ServiceConfig", ServiceConfig);
