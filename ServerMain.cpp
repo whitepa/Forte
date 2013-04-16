@@ -14,7 +14,6 @@ using namespace boost;
 ServerMain::ServerMain(int argc, char * const argv[],
                        const char *getoptstr, const char *defaultConfig,
                        bool daemonize) :
-    mShutdown(false),
     mConfigFile(defaultConfig),
     mDaemonName(argv[0]),
     mDaemon(daemonize),
@@ -59,7 +58,7 @@ ServerMain::ServerMain(const FString& defaultConfig,
                        int logMask,
                        const FString& daemonName,
                        bool daemonize)
-    : mShutdown(false),
+:
       mConfigFile(defaultConfig),
       mDaemonName(daemonName),
       mDaemon(daemonize),
@@ -211,13 +210,6 @@ void ServerMain::PrepareSigmask()
     }
 }
 
-void ServerMain::Shutdown()
-{
-    FTRACE;
-
-    mShutdown = true;
-}
-
 void ServerMain::MainLoop()
 {
     FTRACE;
@@ -230,9 +222,7 @@ void ServerMain::MainLoop()
     timeout.tv_sec=0;
     timeout.tv_nsec=100000000; // 100 ms
 
-    hlog(HLOG_DEBUG, "mShutdown=%s", (mShutdown) ? "true" : "false");
-
-    while (!mShutdown)
+    for(;;)
     {
 //        sigwait(&mSigmask, &sig);
         if (sigtimedwait(&mSigmask, &siginfo, &timeout) >= 0)

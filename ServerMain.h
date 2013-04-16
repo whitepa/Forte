@@ -36,12 +36,6 @@ namespace Forte
         virtual void MainLoop();
         virtual void PrepareSigmask();
 
-        /**
-         * Tell this server to shutdown
-         */
-        void Shutdown();
-        bool mShutdown;
-
         FString mHostname;
         FString mConfigFile;
         FString mDaemonName;
