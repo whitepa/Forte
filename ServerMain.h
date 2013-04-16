@@ -4,7 +4,6 @@
 #include "ContextImpl.h"
 #include "LogManager.h"
 #include "ServiceConfig.h"
-#include "AutoMutex.h"
 #include "Exception.h"
 #include "PidFile.h"
 
@@ -51,7 +50,6 @@ namespace Forte
         bool mDaemon;
         LogManager mLogManager;
         ContextImpl mContext;
-        Mutex mCallbackMutex;
         sigset_t mSigmask;
 
     protected:
