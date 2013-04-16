@@ -216,18 +216,11 @@ void ServerMain::MainLoop()
 
     // loop to receive signals
     int sig;
-    siginfo_t siginfo;
-    struct timespec timeout;
-
-    timeout.tv_sec=0;
-    timeout.tv_nsec=100000000; // 100 ms
 
     for(;;)
     {
-//        sigwait(&mSigmask, &sig);
-        if (sigtimedwait(&mSigmask, &siginfo, &timeout) >= 0)
+        if (sigwait(&mSigmask, &sig) >= 0)
         {
-            sig = siginfo.si_signo;
             switch(sig)
             {
             case SIGINT:
@@ -245,14 +238,10 @@ void ServerMain::MainLoop()
                 hlog(HLOG_ERR,"Unhandled signal %d received.", sig);
             }
         }
-        else if (errno == EINTR)
+        else
         {
-            continue;
-        }
-        else if (errno != EAGAIN) // EAGAIN when timeout occurs
-        {
-            // should only be EINVAL (invalid timeout)
-            hlog(HLOG_ERR, "Error while calling sigtimedwait (%s)",
+            // should only be EINVAL (invalid signal in set)
+            hlog(HLOG_ERR, "Error while calling sigwait (%s)",
                  SystemCallUtil::GetErrorDescription(errno).c_str());
         }
     }
