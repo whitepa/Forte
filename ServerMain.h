@@ -35,7 +35,6 @@ namespace Forte
         virtual ~ServerMain();
 
         virtual void MainLoop();
-        virtual void Usage();
         virtual void PrepareSigmask();
 
         /**

@@ -196,11 +196,6 @@ ServerMain::~ServerMain()
     mContext.Remove("forte.FileSystem");
 }
 
-void ServerMain::Usage()
-{
-    cout << "Incorrect usage." << endl;
-}
-
 void ServerMain::PrepareSigmask()
 {
     FTRACE;
