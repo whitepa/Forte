@@ -18,7 +18,7 @@ public:
 
 private:
     const int mFlags;
-    const char *mVFSName;
+    const Forte::FString mVFSName;
 
 }; // class DbLiteConnectionFactory
 

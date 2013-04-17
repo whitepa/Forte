@@ -205,12 +205,12 @@ TEST_F(BasicDatabasePoolTest, SqliteDeleteAcquiredDatabaseConnectionsTest)
 
 TEST_F(BasicDatabasePoolTest, SqliteMirroredConstructDatabaseConnectionPool)
 {
-    ASSERT_NO_THROW(DbConnectionPool pool("sqlite_mirrored", getDatabaseName().c_str()));
+    ASSERT_NO_THROW(DbConnectionPool pool("sqlite", getDatabaseName().c_str()));
 }
 
 TEST_F(BasicDatabasePoolTest, SqliteMirroredGetDatabaseConnectionTest)
 {
-    DbConnectionPool pool("sqlite_mirrored", getDatabaseName().c_str());
+    DbConnectionPool pool("sqlite", getDatabaseName().c_str());
     DbConnection& dbConnection(pool.GetDbConnection());
     dbConnection.Connect();
     pool.ReleaseDbConnection(dbConnection);
@@ -219,7 +219,7 @@ TEST_F(BasicDatabasePoolTest, SqliteMirroredGetDatabaseConnectionTest)
 
 TEST_F(BasicDatabasePoolTest, SqliteMirroredUseDatabaseConnectionTest)
 {
-    DbConnectionPool pool("sqlite_mirrored", getDatabaseName().c_str());
+    DbConnectionPool pool("sqlite", getDatabaseName().c_str());
     DbConnection& dbConnection(pool.GetDbConnection());
 
     size_t rows(0);
@@ -233,7 +233,7 @@ TEST_F(BasicDatabasePoolTest, SqliteMirroredUseDatabaseConnectionTest)
 
 TEST_F(BasicDatabasePoolTest, SqliteMirroredOverloadStoreDatabaseConnectionTest)
 {
-    DbConnectionPool pool("sqlite_mirrored", getDatabaseName().c_str());
+    DbConnectionPool pool("sqlite", getDatabaseName().c_str());
     DbConnection& dbConnection(pool.GetDbConnection());
 
     size_t rows(0);
@@ -247,7 +247,7 @@ TEST_F(BasicDatabasePoolTest, SqliteMirroredOverloadStoreDatabaseConnectionTest)
 
 TEST_F(BasicDatabasePoolTest, SqliteMirroredReleaseDatabaseConnectionTest)
 {
-    DbConnectionPool pool("sqlite_mirrored", getDatabaseName().c_str());
+    DbConnectionPool pool("sqlite", getDatabaseName().c_str());
     DbConnection& dbConnection(pool.GetDbConnection());
     ASSERT_NO_THROW(pool.ReleaseDbConnection(dbConnection));
     pool.DeleteConnections();
@@ -255,7 +255,7 @@ TEST_F(BasicDatabasePoolTest, SqliteMirroredReleaseDatabaseConnectionTest)
 
 TEST_F(BasicDatabasePoolTest, SqliteMirroredDoubleReleaseDatabaseConnectionTest)
 {
-    DbConnectionPool pool("sqlite_mirrored", getDatabaseName().c_str(),"","","","","",1);
+    DbConnectionPool pool("sqlite", getDatabaseName().c_str(),"","","","","",1);
     DbConnection& dbConnection(pool.GetDbConnection());
     ASSERT_NO_THROW(pool.ReleaseDbConnection(dbConnection));
     ASSERT_THROW(pool.ReleaseDbConnection(dbConnection), Forte::EDbConnectionPool);
@@ -264,7 +264,7 @@ TEST_F(BasicDatabasePoolTest, SqliteMirroredDoubleReleaseDatabaseConnectionTest)
 
 TEST_F(BasicDatabasePoolTest, SqliteMirroredDeleteUnacquiredDatabaseConnectionsTest)
 {
-    DbConnectionPool pool("sqlite_mirrored", getDatabaseName().c_str());
+    DbConnectionPool pool("sqlite", getDatabaseName().c_str());
     DbConnection& dbConnection(pool.GetDbConnection());
     ASSERT_NO_THROW(pool.ReleaseDbConnection(dbConnection));
     ASSERT_NO_THROW(pool.DeleteConnections());
@@ -272,7 +272,7 @@ TEST_F(BasicDatabasePoolTest, SqliteMirroredDeleteUnacquiredDatabaseConnectionsT
 
 TEST_F(BasicDatabasePoolTest, SqliteMirroredDeleteAcquiredDatabaseConnectionsTest)
 {
-    DbConnectionPool pool("sqlite_mirrored", getDatabaseName().c_str());
+    DbConnectionPool pool("sqlite", getDatabaseName().c_str());
     DbConnection& dbConnection(pool.GetDbConnection());
     dbConnection.Connect();
     ASSERT_THROW(pool.DeleteConnections(), Forte::EDbConnectionPoolOpenConnections);

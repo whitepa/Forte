@@ -23,6 +23,28 @@
 using namespace Forte;
 using namespace boost;
 
+/**
+ * Construct DbConnectionPool using the config. Given a config root it must
+ * contain 'path' and 'type' subkeys. The path is equivalent to the dbName.
+ * The 'type' specifies the connection type.  To specify a sqlite vfs the should
+ * sqlite_<vfs>.
+ *
+ * Optionally mirror.path and mirror.type can be used to specify the type of the
+ * readonly mirrored database.
+ *
+ * @param configObj
+ * @param root path to start from in the db config
+ */
+DbConnectionPool::DbConnectionPool(ServiceConfig &configObj, const Forte::FString &root) :
+            mDbType(), mDbName(), mDbAltName(), mDbUser(), mDbPassword(),
+            mDbHost(), mDbSock(), mPoolSize(0)
+{
+    mDbType = configObj.Get<FString>(root + ".type");
+    mDbName = configObj.Get<FString>(root + ".path");
+    mDbAltName = configObj.Get<FString>(root + ".mirror.path", "");
+    init();
+}
+
 DbConnectionPool::DbConnectionPool(const char *dbType,
                                    const char *dbName,
                                    const char *dbAltName,
@@ -33,6 +55,11 @@ DbConnectionPool::DbConnectionPool(const char *dbType,
                                    int poolSize) :
     mDbType(dbType), mDbName(dbName), mDbAltName(dbAltName), mDbUser(dbUser), mDbPassword(dbPassword),
     mDbHost(dbHost), mDbSock(dbSocket), mPoolSize(poolSize)
+{
+    init();
+}
+
+void DbConnectionPool::init()
 {
     if (mDbType.empty())
         throw EDbConnectionPool("'db_type' must be specified in the database configuration");
@@ -55,25 +82,38 @@ DbConnectionPool::DbConnectionPool(const char *dbType,
 #ifdef FORTE_WITH_SQLITE
     else if (!mDbType.CompareNoCase("sqlite"))
     {
-        mDbConnectionFactory = shared_ptr<DbConnectionFactory>(new DbLiteConnectionFactory());
+        if (mDbAltName.empty())
+        {
+            mDbConnectionFactory = shared_ptr<DbConnectionFactory>(new DbLiteConnectionFactory());
+        }
+        else
+        {
+            shared_ptr<DbConnectionFactory> primaryDbFactory(new DbLiteConnectionFactory());
+            shared_ptr<DbConnectionFactory> secondaryDbFactory(new DbLiteConnectionFactory(SQLITE_OPEN_READONLY));
+            mDbConnectionFactory.reset(new DbMirroredConnectionFactory(primaryDbFactory, secondaryDbFactory, mDbAltName));
+        }
     }
-    else if (!mDbType.CompareNoCase("sqlite_scribe"))
+    else if (!mDbType.ComparePrefix("sqlite_", 7))
     {
-        mDbConnectionFactory = shared_ptr<DbConnectionFactory>(
-            new DbLiteConnectionFactory("scribeVFS"));
-    }
-    else if (!mDbType.CompareNoCase("sqlite_mirrored"))
-    {
-        shared_ptr<DbConnectionFactory> primaryDbFactory(new DbLiteConnectionFactory());
-        shared_ptr<DbConnectionFactory> secondaryDbFactory(new DbLiteConnectionFactory(SQLITE_OPEN_READONLY));
-        mDbConnectionFactory.reset(new DbMirroredConnectionFactory(primaryDbFactory, secondaryDbFactory, dbAltName));
+        const FString vfs(mDbType.substr(7));
+        if (mDbAltName.empty())
+        {
+            mDbConnectionFactory = shared_ptr<DbConnectionFactory>(
+                    new DbLiteConnectionFactory(vfs));
+        }
+        else
+        {
+            shared_ptr<DbConnectionFactory> primaryDbFactory(new DbLiteConnectionFactory(vfs));
+            shared_ptr<DbConnectionFactory> secondaryDbFactory(new DbLiteConnectionFactory(SQLITE_OPEN_READONLY));
+            mDbConnectionFactory.reset(new DbMirroredConnectionFactory(primaryDbFactory, secondaryDbFactory, mDbAltName));
+        }
     }
 #endif
     else
     {
         FString err;
         err.Format("Unrecognized database type: %s", mDbType.c_str());
-        throw EDbConnectionPool(err);
+        hlog_and_throw(HLOG_ERROR, EDbConnectionPool(err));
     }
 }
 

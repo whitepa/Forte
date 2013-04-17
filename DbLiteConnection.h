@@ -69,7 +69,7 @@ namespace Forte
         int mFlags;
 
     private:
-        const char *mVFSName;
+        const Forte::FString mVFSName;
     };
 };
 #endif

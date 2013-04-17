@@ -18,7 +18,7 @@ namespace Forte
     class DbConnectionPool : public Object {
 
     public:
-        DbConnectionPool(ServiceConfig &configObj);
+        DbConnectionPool(ServiceConfig &configObj, const FString &root);
         DbConnectionPool(const char *dbType,
                          const char *dbName,
                          const char *dbAltName = "",
@@ -40,6 +40,7 @@ namespace Forte
         virtual void OutputUsedConnectionStatus();
 
     protected:
+        void init();
         DbConnectionPool() {};
         static Mutex sSingletonMutex;
 

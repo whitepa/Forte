@@ -90,7 +90,8 @@ bool DbLiteConnection::Connect()
 
     if (mDB != NULL && !Close()) return false;
 
-    err = sqlite3_open_v2(mDBName, &mDB, mFlags, mVFSName);
+    err = sqlite3_open_v2(mDBName, &mDB, mFlags,
+            mVFSName.empty() ? NULL : mVFSName.c_str());
 
     if (err == SQLITE_OK)
     {
