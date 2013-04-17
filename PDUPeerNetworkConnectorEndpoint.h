@@ -19,22 +19,11 @@ namespace Forte
     public:
         PDUPeerNetworkConnectorEndpoint(
             uint64_t ownerPeerSetID,
-            DispatcherPtr dispatcher,
             const SocketAddress& connectToAddress);
 
         virtual ~PDUPeerNetworkConnectorEndpoint() {}
 
-        virtual void Begin() {
-            CheckConnections();
-        }
-
-        void CheckConnections();
-
-        /**
-         * SendPDU synchronously sends the given PDU via the
-         * network. throws on error.
-         */
-        virtual void SendPDU(const Forte::PDU &pdu);
+        void CheckConnection();
 
         boost::shared_ptr<PDUPeerNetworkConnectorEndpoint> GetPtr() {
             return boost::static_pointer_cast<PDUPeerNetworkConnectorEndpoint>(
@@ -42,34 +31,15 @@ namespace Forte
         }
 
     protected:
-        virtual void fileDescriptorClosed();
-        void connectOrEnqueueRetry();
         void connect();
         void setTCPKeepAlive();
 
     protected:
         mutable Mutex mConnectionMutex;
         uint64_t mPeerSetID; // sent to other peers to let them know who we are
-        DispatcherPtr mDispatcher; // to queue events for periodic
-                                   // connection checking
         SocketAddress mConnectToAddress;
     };
     typedef boost::shared_ptr<PDUPeerNetworkConnectorEndpoint> PDUPeerNetworkConnectorEndpointPtr;
-
-    class CheckConnectionEvent : public PDUEvent
-    {
-    public:
-        CheckConnectionEvent(PDUPeerNetworkConnectorEndpointPtr endpoint) :
-            mEndpoint(endpoint) {}
-        virtual ~CheckConnectionEvent() {}
-
-        virtual void DoWork() {
-            //FTRACE;
-            mEndpoint->CheckConnections();
-        }
-    protected:
-        PDUPeerNetworkConnectorEndpointPtr mEndpoint;
-    };
 
 };
 #endif

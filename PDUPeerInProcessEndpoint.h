@@ -17,11 +17,17 @@ namespace Forte
         PDUPeerInProcessEndpoint();
         virtual ~PDUPeerInProcessEndpoint();
 
-        virtual void Begin() {
-            PDUPeerEventPtr event(new PDUPeerEvent());
-            event->mEventType = PDUPeerConnectedEvent;
-            if (mEventCallback)
-                mEventCallback(event);
+        virtual void CheckConnection() {
+            if (!mConnectMessageSent)
+            {
+                PDUPeerEventPtr event(new PDUPeerEvent());
+                event->mEventType = PDUPeerConnectedEvent;
+                if (mEventCallback)
+                {
+                    mEventCallback(event);
+                    mConnectMessageSent = true;
+                }
+            }
         }
 
         virtual void SendPDU(const Forte::PDU &pdu);
@@ -37,8 +43,8 @@ namespace Forte
             return false;
         }
         virtual bool IsConnected(void) const {
-            // we're always connected
-            return true;
+            // we are connected once the callback is setup
+            return mEventCallback && mConnectMessageSent;
         }
 
         void SetFD(int fd) {
@@ -52,6 +58,7 @@ namespace Forte
     protected:
         mutable Mutex mMutex;
         std::list<PDUPtr> mPDUBuffer;
+        bool mConnectMessageSent;
     };
 
     typedef boost::shared_ptr<PDUPeerInProcessEndpoint> PDUPeerInProcessEndpointPtr;

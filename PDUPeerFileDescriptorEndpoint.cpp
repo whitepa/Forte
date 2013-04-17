@@ -170,9 +170,6 @@ void Forte::PDUPeerFileDescriptorEndpoint::handleFileDescriptorClose()
     event->mEventType = PDUPeerDisconnectedEvent;
     if (mEventCallback)
         mEventCallback(event);
-
-    // sub classes should override for specialization of FD loss
-    fileDescriptorClosed();
 }
 
 void Forte::PDUPeerFileDescriptorEndpoint::TeardownEPoll()

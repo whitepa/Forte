@@ -20,9 +20,7 @@ boost::shared_ptr<PDUPeerEndpoint> PDUPeerEndpointFactoryImpl::Create(int fd)
 boost::shared_ptr<PDUPeerEndpoint> PDUPeerEndpointFactoryImpl::Create(
     const SocketAddress& localListenSocketAddress,
     const SocketAddress& connectToSocketAddress,
-    uint64_t outgoingPeerSetID,
-    ThreadPoolDispatcherPtr dispatcher
-    )
+    uint64_t outgoingPeerSetID)
 {
     FTRACE2("%s:%d",
             localListenSocketAddress.first.c_str(),
@@ -58,7 +56,7 @@ boost::shared_ptr<PDUPeerEndpoint> PDUPeerEndpointFactoryImpl::Create(
 
         PDUPeerNetworkConnectorEndpointPtr p(
             new PDUPeerNetworkConnectorEndpoint(
-                outgoingPeerSetID, dispatcher, connectToSocketAddress));
+                outgoingPeerSetID, connectToSocketAddress));
 
         return p;
     }

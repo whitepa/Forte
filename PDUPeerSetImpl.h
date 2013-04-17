@@ -9,7 +9,6 @@
 #include "PDUPollThread.h"
 #include "RWLock.h"
 #include "FTrace.h"
-#include "PDUPeerSetWorkHandler.h"
 #include "PDUPollThread.h"
 #include <boost/function.hpp>
 #include <boost/shared_array.hpp>
@@ -25,10 +24,7 @@ namespace Forte
     class PDUPeerSetImpl : public PDUPeerSet
     {
     public:
-        PDUPeerSetImpl(
-            DispatcherPtr dispatcher,
-            PDUPeerSetWorkHandlerPtr workHandler,
-            const std::vector<PDUPeerPtr>& peers);
+        PDUPeerSetImpl(const std::vector<PDUPeerPtr>& peers);
 
         virtual ~PDUPeerSetImpl();
 
@@ -134,8 +130,6 @@ namespace Forte
         }
 
     protected:
-        DispatcherPtr mWorkDispatcher;
-        PDUPeerSetWorkHandlerPtr mWorkHandler;
         PDUPollThreadPtr mPollThread;
 
         mutable Forte::Mutex mPDUPeerLock;

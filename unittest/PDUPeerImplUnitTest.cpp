@@ -112,7 +112,6 @@ TEST_F(PDUPeerImplUnitTest, InternalThreadSendsAfterBeginCall)
     FTRACE;
     GMockPDUPeerEndpointPtr mockEndpoint(new GMockPDUPeerEndpoint());
     PDUPeerEndpointPtr endpoint = mockEndpoint;
-    EXPECT_CALL(*mockEndpoint, Begin());
 
     int op = 1;
     char buf[] = "the data";
@@ -122,7 +121,6 @@ TEST_F(PDUPeerImplUnitTest, InternalThreadSendsAfterBeginCall)
     peer->EnqueuePDU(pdu);
     ASSERT_EQ(1, peer->GetQueueSize());
 
-    // TODO: may want to verify this is the right pdu
     EXPECT_CALL(*mockEndpoint, SendPDU(_));
     EXPECT_CALL(*mockEndpoint, IsConnected())
         .WillRepeatedly(Return(true));
@@ -143,7 +141,6 @@ TEST_F(PDUPeerImplUnitTest, SendPDUCallsErrorCallbackOnFailure)
     FTRACE;
     GMockPDUPeerEndpointPtr mockEndpoint(new GMockPDUPeerEndpoint());
     PDUPeerEndpointPtr endpoint = mockEndpoint;
-    EXPECT_CALL(*mockEndpoint, Begin());
 
     int op = 1;
     char buf[] = "the data";
@@ -182,7 +179,6 @@ TEST_F(PDUPeerImplUnitTest, CallsErrorCallbackWhenEndpointIsNotConnected)
     FTRACE;
     GMockPDUPeerEndpointPtr mockEndpoint(new GMockPDUPeerEndpoint());
     PDUPeerEndpointPtr endpoint = mockEndpoint;
-    EXPECT_CALL(*mockEndpoint, Begin());
 
     int op = 1;
     char buf[] = "the data";
@@ -244,7 +240,6 @@ TEST_F(PDUPeerImplUnitTest, QueueOverflowBlock)
     FTRACE;
     GMockPDUPeerEndpointPtr mockEndpoint(new GMockPDUPeerEndpoint());
     PDUPeerEndpointPtr endpoint = mockEndpoint;
-    EXPECT_CALL(*mockEndpoint, Begin());
 
     // TODO: may want to verify this is the right pdu
     EXPECT_CALL(*mockEndpoint, SendPDU(_))

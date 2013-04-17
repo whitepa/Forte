@@ -4,6 +4,7 @@
 #include <boost/make_shared.hpp>
 
 Forte::PDUPeerInProcessEndpoint::PDUPeerInProcessEndpoint()
+    : mConnectMessageSent(false)
 {
 }
 

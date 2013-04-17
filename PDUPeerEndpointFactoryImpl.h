@@ -43,8 +43,7 @@ namespace Forte
         boost::shared_ptr<PDUPeerEndpoint> Create(
             const Forte::SocketAddress& localListenSocketAddress,
             const Forte::SocketAddress& connectToSocketAddress,
-            uint64_t outgoingPeerSetID,
-            ThreadPoolDispatcherPtr mDispatcher);
+            uint64_t outgoingPeerSetID);
     };
 };
 #endif

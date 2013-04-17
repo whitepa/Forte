@@ -83,8 +83,6 @@ namespace Forte
         PDUPeerEndpoint() {}
         virtual ~PDUPeerEndpoint() {}
 
-        virtual void Begin() = 0;
-
         // as we move towards multiple FDs per peer, this will be
         // AddFD. GetFD will become GetFDs. PDUPeerEndpoint becomes
         // owner of this FD and will be responsible for closing it.
@@ -132,6 +130,15 @@ namespace Forte
          * @return true if a endpoint is connected
          */
         virtual bool IsConnected(void) const = 0;
+
+        /**
+         * Checks connections and connects if appropriate. Currently
+         * this only applies to 1 of 4 subclasses so something seems
+         * wrong about the method and/or class structure.
+         *
+         * @return verify we are connected, fixup if needed
+         */
+        virtual void CheckConnection() {}
 
         /**
          * Determine whether a full PDU has been received from the

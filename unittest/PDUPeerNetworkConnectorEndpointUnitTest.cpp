@@ -30,14 +30,12 @@ public:
 
     void SetUp() {
         mOwnerID = 123456789;
-        mDispatcher.reset(new GMockDispatcher());
     }
 
     void TearDown() {
     }
 
     uint64_t mOwnerID;
-    GMockDispatcherPtr mDispatcher;
 };
 
 TEST_F(PDUPeerNetworkConnectorEndpointUnitTest, ConstructDelete)
@@ -45,38 +43,21 @@ TEST_F(PDUPeerNetworkConnectorEndpointUnitTest, ConstructDelete)
     FTRACE;
     SocketAddress mListeningSocketAddress = make_pair("127.0.0.1", 12888);
     PDUPeerNetworkConnectorEndpoint theClass(mOwnerID,
-                                             mDispatcher,
                                              mListeningSocketAddress);
+
+    EXPECT_EQ(-1, theClass.GetFD());
 }
 
 TEST_F(PDUPeerNetworkConnectorEndpointUnitTest,
-       CheckConnectionsWillThrowAndReenqueueEventIfItCannotConnect)
+       SendPDUThrowsECouldNotConnectOnFailure)
 {
     FTRACE;
     SocketAddress mListeningSocketAddress = make_pair("127.0.0.1", 12888);
     PDUPeerNetworkConnectorEndpointPtr theClass(
         new PDUPeerNetworkConnectorEndpoint(mOwnerID,
-                                            mDispatcher,
-                                            mListeningSocketAddress));
-
-    EXPECT_CALL(*mDispatcher, Enqueue(_));
-    theClass->CheckConnections();
-}
-
-TEST_F(PDUPeerNetworkConnectorEndpointUnitTest,
-       SendPDUEnqueuesCheckConnectionEventAndSetFDToInvalidOnFail)
-{
-    FTRACE;
-    SocketAddress mListeningSocketAddress = make_pair("127.0.0.1", 12888);
-    PDUPeerNetworkConnectorEndpointPtr theClass(
-        new PDUPeerNetworkConnectorEndpoint(mOwnerID,
-                                            mDispatcher,
                                             mListeningSocketAddress));
     PDU pdu;
-    EXPECT_CALL(*mDispatcher, Enqueue(_));
 
-    EXPECT_THROW(theClass->SendPDU(pdu), ECouldNotConnect);
-
-    EXPECT_EQ(-1, theClass->GetFD());
+    EXPECT_THROW(theClass->SendPDU(pdu), EPDUPeerEndpoint);
 }
 

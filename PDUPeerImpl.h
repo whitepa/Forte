@@ -62,14 +62,13 @@ namespace Forte
          * connected by various types of endpoints, like a file
          * descriptor, a connecting or listening socket or shared memory
          *
-         * @param pduResendTimeout if a pdu fails, the amount of time
-         * it should still retry. 0 means that if it does not send on
-         * the first time it will not retry
+         * @param pduSendTimeout if a node is not connected, how long
+         * to wait before giving up
          */
         PDUPeerImpl(
             uint64_t connectingPeerID,
             PDUPeerEndpointPtr endpoint,
-            long pduResendTimeout = 0,
+            long pduSendTimeout = 2,
             unsigned short queueSize = 1024,
             PDUPeerQueueType queueType = PDU_PEER_QUEUE_THROW);
 
@@ -141,12 +140,13 @@ namespace Forte
         void sendLoop();
         void lockedEnqueuePDU(const PDUHolderPtr& pdu);
         bool isPDUExpired(PDUHolderPtr pduHolder);
-        void emptyList();
+        void failAllPDUs();
+        void failExpiredPDUs();
 
     protected:
         uint64_t mConnectingPeerID;
         PDUPeerEndpointPtr mEndpoint;
-        long mPDUResendTimeout;
+        long mPDUSendTimeout;
 
         // mListMutex will protect the list of PDUs to be sent
         mutable Forte::Mutex mPDUQueueMutex;

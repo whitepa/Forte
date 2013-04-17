@@ -43,10 +43,6 @@ namespace Forte
 
         virtual ~PDUPeerFileDescriptorEndpoint() {}
 
-        virtual void Begin() {
-            //No customization on FD PDUPeer Endpoint
-        }
-
         void SetFD(int FD);
         int GetFD(void) const {
             AutoUnlockMutex fdlock(mFDLock);
@@ -96,9 +92,6 @@ namespace Forte
         }
 
     protected:
-        // a notification mechanism for subclasses that have the
-        // ability to reconnect
-        virtual void fileDescriptorClosed() {}
         bool lockedIsPDUReady(void) const;
         void callbackIfPDUReady();
         void bufferEnsureHasSpace();

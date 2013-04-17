@@ -29,25 +29,6 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
     hlogstream(HLOG_INFO, "My pdu peer id is " << mID
          << " based on " << listenAddress.first << ":" << listenAddress.second);
 
-    // begin worker thread setup
-    FString workerDispatcherName(
-        FStringFC(), "PDUWorkDispatcher-%llu",
-        static_cast<unsigned long long>(mID));
-    mWorkHandler.reset(new PDUPeerSetWorkHandler());
-    mWorkDispatcher.reset(
-        new ThreadPoolDispatcher(
-            mWorkHandler,
-            //TODO: pass in whatever is needed here
-            minThreads, // min threads
-            maxThreads, // max threads
-            minThreads, // min spare threads TODO: tuning/reality check/pass in
-            maxThreads, // max spare threads
-            32, // deepQueue -- appears to be unused
-            32, // maxdepth
-            workerDispatcherName)
-        );
-    // end worker thread setup
-
     sort(mPeerSocketAddresses.begin(), mPeerSocketAddresses.end());
     std::vector<PDUPeerPtr> pduPeers;
 
@@ -63,8 +44,7 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
         PDUPeerPtr p(
             new PDUPeerImpl(
                 SocketAddressToID(a),
-                mPDUPeerEndpointFactory->Create(
-                    listenAddress, a, mID, mWorkDispatcher),
+                mPDUPeerEndpointFactory->Create(listenAddress, a, mID),
                 pduPeerSendTimeout,
                 queueSize,
                 queueType
@@ -74,8 +54,7 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
     }
 
     // begin setup PeerSet
-    mPDUPeerSet.reset(
-        new PDUPeerSetImpl(mWorkDispatcher, mWorkHandler, pduPeers));
+    mPDUPeerSet.reset(new PDUPeerSetImpl(pduPeers));
     mPDUPeerSet->SetupEPoll();
     mPDUPeerSet->SetEventCallback(eventCallback);
     // end setup PeerSet
@@ -104,28 +83,9 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
 Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl()
     :mID(0)
 {
-    // begin worker thread setup
-    mWorkHandler.reset(new PDUPeerSetWorkHandler());
-    mWorkDispatcher.reset(
-        new ThreadPoolDispatcher(
-            mWorkHandler,
-            1, //minThreads,
-            6, //maxThreads,
-            1, //minSpareThreads,
-            6, //maxSpareThreads,
-            32, //deepQueue,
-            32, //maxDepth,
-            "PDUPeerSetWorkDispatcher" // name
-            )
-        );
-    // end worker thread setup
-
     std::vector<PDUPeerPtr> emptyPeerVector;
 
-    mPDUPeerSet.reset(
-        new PDUPeerSetImpl(mWorkDispatcher,
-                           mWorkHandler,
-                           emptyPeerVector));
+    mPDUPeerSet.reset(new PDUPeerSetImpl(emptyPeerVector));
 
     mPDUPeerSet->SetupEPoll();
 }
@@ -144,9 +104,6 @@ Forte::PDUPeerSetBuilderImpl::~PDUPeerSetBuilderImpl()
     mPDUPeerSet->TeardownEPoll();
     mPDUPeerSet->Shutdown();
     mPDUPeerSet.reset();
-
-    mWorkDispatcher->Shutdown();
-    mWorkDispatcher.reset();
 
     if (mConnectionDispatcher)
     {

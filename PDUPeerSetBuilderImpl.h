@@ -7,7 +7,6 @@
 #include "PDUPeerSet.h"
 #include "PDUPeerSetBuilder.h"
 #include "PDUPeerSetConnectionHandler.h"
-#include "PDUPeerSetWorkHandler.h"
 #include "OnDemandDispatcher.h"
 #include "ThreadPoolDispatcher.h"
 #include "ReceiverThread.h"
@@ -91,9 +90,6 @@ namespace Forte
         uint64_t mID;
         SocketAddressVector mPeerSocketAddresses;
         PDUPeerSetPtr mPDUPeerSet;
-
-        boost::shared_ptr<PDUPeerSetWorkHandler> mWorkHandler;
-        boost::shared_ptr<ThreadPoolDispatcher> mWorkDispatcher;
 
         boost::shared_ptr<PDUPeerSetConnectionHandler> mConnectionHandler;
         boost::shared_ptr<OnDemandDispatcher> mConnectionDispatcher;

@@ -11,26 +11,20 @@ using namespace boost;
 
 Forte::PDUPeerNetworkConnectorEndpoint::PDUPeerNetworkConnectorEndpoint(
     uint64_t myPeerSetID,
-    DispatcherPtr dispatcher,
     const SocketAddress& connectToAddress)
     : PDUPeerFileDescriptorEndpoint(-1),
       mPeerSetID(myPeerSetID),
-      mDispatcher(dispatcher),
       mConnectToAddress(connectToAddress)
 {
     FTRACE;
 }
 
-void Forte::PDUPeerNetworkConnectorEndpoint::CheckConnections()
+void Forte::PDUPeerNetworkConnectorEndpoint::CheckConnection()
 {
     FTRACE;
 
     AutoUnlockMutex lock(mConnectionMutex);
-    connectOrEnqueueRetry();
-}
 
-void Forte::PDUPeerNetworkConnectorEndpoint::connectOrEnqueueRetry()
-{
     if (GetFD() == -1)
     {
         try
@@ -39,30 +33,9 @@ void Forte::PDUPeerNetworkConnectorEndpoint::connectOrEnqueueRetry()
         }
         catch (Exception& e)
         {
-            hlogstream(HLOG_DEBUG2, "could not connect, enqueueing event");
-            try
-            {
-                // only retry every second, seems often enough
-                const Timespec onesec = Timespec::FromSeconds(1);
-                Thread::InterruptibleSleep(onesec);
-            }
-            catch (EThreadUnknown& e)
-            {
-                // this will occur if you are using this class in a
-                // single thread program (probably a unit test)
-                sleep(1);
-            }
-
-            mDispatcher->Enqueue(
-                boost::make_shared<CheckConnectionEvent>(GetPtr()));
+            hlogstream(HLOG_DEBUG3, "failed to connect" << e.what());
         }
     }
-}
-
-void Forte::PDUPeerNetworkConnectorEndpoint::fileDescriptorClosed()
-{
-    FTRACE;
-    mDispatcher->Enqueue(boost::make_shared<CheckConnectionEvent>(GetPtr()));
 }
 
 #pragma GCC diagnostic ignored "-Wold-style-cast"
@@ -101,7 +74,8 @@ void Forte::PDUPeerNetworkConnectorEndpoint::connect()
     sa.sin_port = htons(mConnectToAddress.second);
 
     if (::connect(sock,
-                  const_cast<const struct sockaddr *>(reinterpret_cast<struct sockaddr*>(&sa)),
+                  const_cast<const struct sockaddr *>(
+                      reinterpret_cast<struct sockaddr*>(&sa)),
                   sizeof(sa)) == -1)
     {
         hlogstream(HLOG_DEBUG2, "could not connect to "
@@ -190,24 +164,3 @@ void Forte::PDUPeerNetworkConnectorEndpoint::setTCPKeepAlive()
 
 }
 
-void Forte::PDUPeerNetworkConnectorEndpoint::SendPDU(const Forte::PDU &pdu)
-{
-    FTRACE;
-    AutoUnlockMutex lock(mConnectionMutex);
-
-    try
-    {
-        if (GetFD() == -1)
-        {
-            connect();
-        }
-
-        PDUPeerFileDescriptorEndpoint::SendPDU(pdu);
-    }
-    catch (EPDUPeerEndpoint &e)
-    {
-        hlogstream(HLOG_DEBUG2, "Couldn't connect or lost connect: " << e.what());
-        mDispatcher->Enqueue(boost::make_shared<CheckConnectionEvent>(GetPtr()));
-        throw;
-    }
-}

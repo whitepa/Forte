@@ -18,9 +18,6 @@ namespace Forte
         PDUPeerNetworkAcceptorEndpoint(const SocketAddress& listenAddress);
         virtual ~PDUPeerNetworkAcceptorEndpoint() {}
 
-        virtual void Begin() {
-            //TODO: don't start listening until here.
-        }
         virtual void SendPDU(const Forte::PDU &pdu);
 
     protected:

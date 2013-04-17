@@ -415,6 +415,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanBroadcastPDUWithOptionalData)
 {
     FTRACE;
     setupThreePeers();
+    waitForAllConnected();
 
     PDUPtr pdu = makePDUWithOptionDataPtr();
     mTestPeers[0]->mPeerSet->BroadcastAsync(pdu);
@@ -443,7 +444,10 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanBroadcastPDUWithOptionalData)
     {
         EXPECT_EQ(1, peer->GetReceivedCount());
         EXPECT_EQ(1, peer->mReceivedPDUList.size());
-        expectEqual(expected, peer->mReceivedPDUList.front());
+        if (peer->mReceivedPDUList.size() == 1)
+        {
+            expectEqual(expected, peer->mReceivedPDUList.front());
+        }
     }
 }
 
@@ -451,6 +455,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanBroadcast2PDUsWithOptionalData)
 {
     FTRACE;
     setupThreePeers();
+    waitForAllConnected();
 
     PDUPtr pdu = makePDUWithOptionDataPtr();
     mTestPeers[0]->mPeerSet->BroadcastAsync(pdu);
@@ -491,6 +496,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, AllPeersReceiveABroadcastPDUFromFirst)
 {
     FTRACE;
     setupThreePeers();
+    waitForAllConnected();
 
     PDUPtr pdu = makePDUPtr();
     mTestPeers[0]->mPeerSet->BroadcastAsync(pdu);
@@ -527,6 +533,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, AllPeersReceiveABroadcastPDUFromMiddle)
 {
     FTRACE;
     setupThreePeers();
+    waitForAllConnected();
 
     PDUPtr pdu = makePDUPtr();
     mTestPeers[1]->mPeerSet->BroadcastAsync(pdu);
@@ -563,6 +570,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, AllPeersReceiveABroadcastPDUFromLast)
 {
     FTRACE;
     setupThreePeers();
+    waitForAllConnected();
 
     PDUPtr pdu = makePDUPtr();
     mTestPeers[2]->mPeerSet->BroadcastAsync(pdu);
@@ -599,6 +607,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, StopsReceivingEventsIfCallbackIsDisabled)
 {
     FTRACE;
     setupThreePeers();
+    waitForAllConnected();
     mTestPeers[1]->mPeerSet->SetEventCallback(NULL);
 
     PDUPtr pdu = makePDUPtr();
@@ -630,7 +639,6 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanBroadcastAtLeast50PDUsFromEach)
 {
     FTRACE;
     setupThreePeers();
-
     waitForAllConnected();
 
     for (int i=0; i<50; i++)
@@ -959,7 +967,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest,
     FTRACE;
     setupPeers(8);
 
-    const TestPeerPtr& broadcaster(mTestPeers[1]);
+    const TestPeerPtr& broadcaster(mTestPeers[0]);
     const TestPeerPtr& flaker(mTestPeers[1]);
     int i = 0;
     DeadlineClock deadline;

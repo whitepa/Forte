@@ -4,19 +4,21 @@
 #include "LogManager.h"
 #include "Types.h"
 #include "PDUPeerTypes.h"
+#include "Thread.h"
 #include <boost/make_shared.hpp>
 
 using namespace boost;
+using namespace Forte;
 
 Forte::PDUPeerImpl::PDUPeerImpl(
     uint64_t connectingPeerID,
     PDUPeerEndpointPtr endpoint,
-    long pduResendTimeout,
+    long pduSendTimeout,
     unsigned short queueSize,
     PDUPeerQueueType queueType)
     : mConnectingPeerID(connectingPeerID),
       mEndpoint(endpoint),
-      mPDUResendTimeout(pduResendTimeout),
+      mPDUSendTimeout(pduSendTimeout),
       mPDUQueueMutex(),
       mPDUQueueNotEmptyCondition(mPDUQueueMutex),
       mQueueMaxSize(queueSize),
@@ -43,8 +45,6 @@ void Forte::PDUPeerImpl::Begin()
                 boost::static_pointer_cast<Forte::PDUPeerImpl>(
                     shared_from_this())));
     }
-
-    mEndpoint->Begin();
 }
 
 void Forte::PDUPeerImpl::Shutdown()
@@ -149,17 +149,28 @@ void Forte::PDUPeerImpl::sendLoop()
     PDUHolderPtr pduHolder;
 
     {
+        // this loop is messy but does what we need it to. this thread
+        // will sleep while it is connected and there are no PDUs to
+        // send. it will periodically ensure the connection is up.
+        // when there PDUs to send it will do that.
         AutoUnlockMutex lock(mPDUQueueMutex);
-        bool shuttingDown;
-        while ((shuttingDown = Thread::MyThread()->IsShuttingDown()) == false
-               && mPDUQueue.empty())
+        while (mPDUQueue.empty() || !mEndpoint->IsConnected())
         {
-            mPDUQueueNotEmptyCondition.Wait();
-        }
+            if (Thread::MyThread()->IsShuttingDown())
+            {
+                return;
+            }
 
-        if (shuttingDown)
-        {
-            return;
+            {
+                AutoLockMutex unlock(mPDUQueueMutex);
+                mEndpoint->CheckConnection();
+                if (!mEndpoint->IsConnected())
+                {
+                    failExpiredPDUs();
+                }
+            }
+
+            mPDUQueueNotEmptyCondition.TimedWait(1);
         }
 
         pduHolder = mPDUQueue.front();
@@ -173,7 +184,14 @@ void Forte::PDUPeerImpl::sendLoop()
     }
     catch (Exception& e)
     {
-        hlog(HLOG_DEBUG, "Could not send pdu %s", e.what());
+        if (hlog_ratelimit(60))
+        {
+            hlog(HLOG_DEBUG, "Could not send pdu %s", e.what());
+        }
+        else
+        {
+            hlog(HLOG_DEBUG4, "Could not send pdu %s", e.what());
+        }
         // TODO? re-enqueue if not expired. (not sure if that is still
         // a good idea)
         //
@@ -193,41 +211,51 @@ bool Forte::PDUPeerImpl::isPDUExpired(PDUHolderPtr pduHolder)
 {
     //FTRACE;
 
-    Timespec timeout(mPDUResendTimeout, 0);
+    Timespec timeout(mPDUSendTimeout, 0);
     Timespec now;
     now = mClock.GetTime();
     if (pduHolder->enqueuedTime + timeout < now)
     {
-        hlogstream(HLOG_DEBUG, "list is expired, dropping");
         return true;
     }
 
     return false;
 }
 
-void Forte::PDUPeerImpl::emptyList()
+void Forte::PDUPeerImpl::failExpiredPDUs()
 {
     FTRACE;
 
-    AutoUnlockMutex lock(mPDUQueueMutex);
-    hlogstream(HLOG_DEBUG,
-               "Error sending PDUs to peer " << mConnectingPeerID);
+    std::vector<PDUPeerEventPtr> events;
 
-    PDUHolderPtr pduHolder;
-
-    while (!mPDUQueue.empty())
     {
-        if (mEventCallback)
+        AutoUnlockMutex lock(mPDUQueueMutex);
+        PDUHolderPtr pduHolder;
+        // newest items will be at the back. loop until we find one that
+        // is not expired or the list is emtpy
+        while (!mPDUQueue.empty() && isPDUExpired(mPDUQueue.front()))
         {
             pduHolder = mPDUQueue.front();
-            PDUPeerEventPtr event(new PDUPeerEvent());
-            event->mPeer = GetPtr();
-            event->mEventType = PDUPeerSendErrorEvent;
-            event->mPDU = pduHolder->pdu;
-            mEventCallback(event);
+            if (isPDUExpired(pduHolder))
+            {
+                if (mEventCallback)
+                {
+                    PDUPeerEventPtr event(new PDUPeerEvent());
+                    event->mPeer = GetPtr();
+                    event->mEventType = PDUPeerSendErrorEvent;
+                    event->mPDU = pduHolder->pdu;
+                    events.push_back(event);
+                }
+                mPDUQueue.pop_front();
+                mQueueSemaphore.Post();
+            }
         }
-        mPDUQueue.pop_front();
-        mQueueSemaphore.Post();
+    }
+
+    // can't call this with mutex
+    foreach(const PDUPeerEventPtr& event, events)
+    {
+        mEventCallback(event);
     }
 }
 

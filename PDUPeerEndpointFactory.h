@@ -5,7 +5,6 @@
 #include "Exception.h"
 #include "Object.h"
 #include "LogManager.h"
-#include "ThreadPoolDispatcher.h"
 #include "Types.h"
 
 EXCEPTION_CLASS(EPDUPeerEndpointFactory);
@@ -41,8 +40,7 @@ namespace Forte
         virtual boost::shared_ptr<PDUPeerEndpoint> Create(
             const SocketAddress& localListenSocketAddress,
             const SocketAddress& connectToSocketAddress,
-            uint64_t outgoingPeerSetID,
-            ThreadPoolDispatcherPtr dispatcher) = 0;
+            uint64_t outgoingPeerSetID) = 0;
 
     };
 };

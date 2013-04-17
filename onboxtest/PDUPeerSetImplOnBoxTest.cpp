@@ -17,7 +17,6 @@
 #include "PDUPeerSetConnectionHandler.h"
 #include "PDUPeerNetworkConnectorEndpoint.h"
 #include "PDUPeerNetworkAcceptorEndpoint.h"
-#include "PDUPeerSetWorkHandler.h"
 
 #include "ReceiverThread.h"
 #include "OnDemandDispatcher.h"
@@ -104,25 +103,8 @@ public:
 TEST_F(PDUPeerSetOnBoxTest, ConstructDestruct)
 {
     Forte::ThreadPoolDispatcherPtr workDispatcher;
-    Forte::PDUPeerSetWorkHandlerPtr workHandler;
     std::vector<boost::shared_ptr<PDUPeer> > peers;
-
-    // begin worker thread setup
-    workHandler.reset(new Forte::PDUPeerSetWorkHandler());
-    workDispatcher.reset(
-        new ThreadPoolDispatcher(
-            workHandler,
-            1, // min threads
-            1, // max threads
-            1, // min spare threads TODO: tuning/reality check/pass in
-            1, // max spare threads
-            32, // deepQueue -- appears to be unused
-            32, // maxdepth
-            "PDUWorkDispatcher-0" // name
-            ));
-    // end worker thread setup
-
-    PDUPeerSetImpl peerSet(workDispatcher, workHandler, peers);
+    PDUPeerSetImpl peerSet(peers);
 }
 
 class SenderThread : public Forte::Thread
@@ -210,64 +192,24 @@ TEST_F(PDUPeerSetOnBoxTest, CanReceiveDataWhenSendQueueIsFull)
     socketAddresses.push_back(std::make_pair("127.0.0.1", 15002));
 
     // connector setup
-    ThreadPoolDispatcherPtr connectorWorkDispatcher;
-    PDUPeerSetWorkHandlerPtr connectorWorkHandler;
-    connectorWorkHandler.reset(new Forte::PDUPeerSetWorkHandler());
-    connectorWorkDispatcher.reset(
-        new ThreadPoolDispatcher(
-            connectorWorkHandler,
-            2, // min threads
-            2, // max threads
-            2, // min spare threads TODO: tuning/reality check/pass in
-            2, // max spare threads
-            32, // deepQueue -- appears to be unused
-            32, // maxdepth
-            "PDUWorkDispatcher-connector" // name
-            ));
     PDUPeerNetworkConnectorEndpointPtr connectorEndpoint(
-        new PDUPeerNetworkConnectorEndpoint(
-            0, connectorWorkDispatcher, socketAddresses[1]));
-    PDUPeerPtr connectorPeer(
-        new PDUPeerImpl(
-            0,
-            connectorEndpoint));
+        new PDUPeerNetworkConnectorEndpoint(0, socketAddresses[1]));
+    PDUPeerPtr connectorPeer(new PDUPeerImpl(0, connectorEndpoint));
     std::vector<boost::shared_ptr<PDUPeer> > connectorPeers;
     connectorPeers.push_back(connectorPeer);
     boost::shared_ptr<PDUPeerSetImpl> connectorPeerSet(
         new PDUPeerSetImpl(
-            connectorWorkDispatcher,
-            connectorWorkHandler,
             connectorPeers));
     // end connector setup
 
     // acceptor setup
-    ThreadPoolDispatcherPtr acceptorWorkDispatcher;
-    PDUPeerSetWorkHandlerPtr acceptorWorkHandler;
-    acceptorWorkHandler.reset(new Forte::PDUPeerSetWorkHandler());
-    acceptorWorkDispatcher.reset(
-        new ThreadPoolDispatcher(
-            acceptorWorkHandler,
-            2, // min threads
-            2, // max threads
-            2, // min spare threads TODO: tuning/reality check/pass in
-            2, // max spare threads
-            32, // deepQueue -- appears to be unused
-            32, // maxdepth
-            "PDUWorkDispatcher-acceptor" // name
-            ));
     PDUPeerNetworkAcceptorEndpointPtr acceptorEndpoint(
         new PDUPeerNetworkAcceptorEndpoint(socketAddresses[0]));
-    PDUPeerPtr acceptorPeer(
-        new PDUPeerImpl(
-            0,
-            acceptorEndpoint));
+    PDUPeerPtr acceptorPeer(new PDUPeerImpl(0, acceptorEndpoint));
     std::vector<boost::shared_ptr<PDUPeer> > acceptorPeers;
     acceptorPeers.push_back(acceptorPeer);
     boost::shared_ptr<PDUPeerSetImpl> acceptorPeerSet(
-        new PDUPeerSetImpl(
-            acceptorWorkDispatcher,
-            acceptorWorkHandler,
-            acceptorPeers));
+        new PDUPeerSetImpl(acceptorPeers));
 
     acceptorPeerSet->SetupEPoll();
     acceptorPeerSet->SetEventCallback(
@@ -295,9 +237,7 @@ TEST_F(PDUPeerSetOnBoxTest, CanReceiveDataWhenSendQueueIsFull)
     // end incoming connections
 
     acceptorPeerSet->StartPolling();
-
-    // will cause connector to connect
-    connectorEndpoint->CheckConnections();
+    connectorPeerSet->StartPolling();
 
     {
         AutoUnlockMutex lock(mConnectMutex);

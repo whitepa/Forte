@@ -13,13 +13,8 @@
 using namespace boost;
 using namespace Forte;
 
-Forte::PDUPeerSetImpl::PDUPeerSetImpl(
-    DispatcherPtr dispatcher,
-    PDUPeerSetWorkHandlerPtr workHandler,
-    const std::vector<PDUPeerPtr>& peers)
-    : mWorkDispatcher(dispatcher),
-      mWorkHandler(workHandler),
-      mEPollFD(-1)
+Forte::PDUPeerSetImpl::PDUPeerSetImpl(const std::vector<PDUPeerPtr>& peers)
+    : mEPollFD(-1)
 {
     FTRACE2("created with %zu peers", peers.size());
 
@@ -54,10 +49,6 @@ Forte::PDUPeerSetImpl::~PDUPeerSetImpl()
         }
 
         TeardownEPoll();
-
-        mWorkDispatcher->Shutdown();
-        mWorkDispatcher.reset();
-
 
         AutoUnlockMutex lock(mPDUPeerLock);
         foreach (const IntPDUPeerPtrPair& p, mPDUPeers)

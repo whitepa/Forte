@@ -87,7 +87,6 @@ SRCS =	\
 	PDUPeerNetworkConnectorEndpoint.cpp \
 	PDUPeerSetBuilderImpl.cpp \
 	PDUPeerSetConnectionHandler.cpp \
-	PDUPeerSetWorkHandler.cpp \
 	PDUPeerSetImpl.cpp \
 	PidFile.cpp \
 	PosixTimer.cpp \
