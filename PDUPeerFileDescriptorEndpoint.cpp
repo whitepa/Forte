@@ -46,17 +46,24 @@ void Forte::PDUPeerFileDescriptorEndpoint::HandleEPollEvent(
 
         if (len < 0)
         {
-            //TODO: handle these errors more specifically
-            // for now, HLOG_ERR
-            // EBADF
-            // ECONNREFUSED
-            // EFAULT
-            // EINVAL
-            // ENOMEM
-            // ENOTCONN
-            // ENOTSOCK
-            hlog(HLOG_ERR, "recv failed: %s",
-                 SystemCallUtil::GetErrorDescription(errno).c_str());
+            if (errno == ECONNRESET)
+            {
+                handleFileDescriptorClose();
+            }
+            else
+            {
+                //TODO: handle these errors more specifically
+                // for now, HLOG_ERR
+                // EBADF
+                // ECONNREFUSED
+                // EFAULT
+                // EINVAL
+                // ENOMEM
+                // ENOTCONN
+                // ENOTSOCK
+                hlog(HLOG_ERR, "recv failed: %s",
+                     SystemCallUtil::GetErrorDescription(errno).c_str());
+            }
         }
         else if (len == 0)
         {
