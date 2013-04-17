@@ -53,6 +53,7 @@ public:
     unsigned int GetQueryRetryDelay() const;
 
     void BackupDatabase(const FString &targetPath);
+    void BackupDatabase(DbConnection &targetDatabase);
 
     bool Execute(const DbSqlStatement& statement);
     DbResult Use(const DbSqlStatement& statement);
@@ -62,6 +63,7 @@ public:
     virtual const FString& GetCurrentQuery() const;
 
 private:
+    DbMirroredConnection() {};
     bool setActiveSecondary();
     bool isActiveSecondary() const;
     bool isActivePrimary() const;

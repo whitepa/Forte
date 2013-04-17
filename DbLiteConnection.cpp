@@ -84,7 +84,7 @@ bool DbLiteConnection::Init(struct sqlite3 *db)
 
 bool DbLiteConnection::Connect()
 {
-    hlog(HLOG_DEBUG, "connecting to %s", mDBName.c_str());
+    FTRACE2("connecting to %s", mDBName.c_str());
 
     int err;
 
@@ -314,17 +314,6 @@ FString DbLiteConnection::Escape(const char *str)
 
 void DbLiteConnection::BackupDatabase(const FString &targetPath)
 {
-    FTRACE2("'%s' -> '%s'", mDBName.c_str(), targetPath.c_str());
-    backupDatabase(targetPath);
-}
-
-FString DbLiteConnection::getTmpBackupPath(const FString& targetPath) const
-{
-    return targetPath;
-}
-
-void DbLiteConnection::backupDatabase(const FString &targetPath)
-{
     hlog(HLOG_TRACE, "backing up db to %s", targetPath.c_str());
 
     if(mDBName == targetPath)
@@ -333,11 +322,29 @@ void DbLiteConnection::backupDatabase(const FString &targetPath)
         throw EDbLiteBackupFailedInvalidPath();
     }
 
-    // @TODO this function is a prototype
-    // See: http://www.sqlite.org/backup.html
     DbLiteConnection dbTarget(SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
     const FString tmpTargetPath(getTmpBackupPath(targetPath));
     dbTarget.Init(tmpTargetPath);
+
+    backupDatabase(dbTarget);
+}
+
+void DbLiteConnection::BackupDatabase(DbConnection &dbTarget)
+{
+    FTRACE;
+    backupDatabase(dynamic_cast<DbLiteConnection&>(dbTarget));
+}
+
+
+FString DbLiteConnection::getTmpBackupPath(const FString& targetPath) const
+{
+    return targetPath;
+}
+
+void DbLiteConnection::backupDatabase(DbLiteConnection &dbTarget)
+{
+    FTRACE2("Backing up (%s) %s -> (%s) %s", mDBType.c_str(), mDBName.c_str(),
+            dbTarget.mDBType.c_str(), dbTarget.mDBName.c_str());
 
     /* Open the sqlite3_backup object used to accomplish the transfer */
     sqlite3_backup *pBackup;
@@ -361,7 +368,7 @@ void DbLiteConnection::backupDatabase(const FString &targetPath)
     if(sqlite3_backup_finish(pBackup) != SQLITE_OK)
     {
         hlog(HLOG_ERROR, "failed to finish backup to %s",
-             tmpTargetPath.c_str());
+             dbTarget.mDBName.c_str());
     }
 }
 

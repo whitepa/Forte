@@ -233,6 +233,11 @@ void DbConnection::BackupDatabase(const FString &targetPath)
     throw EDbConnectionNotImplemented();
 }
 
+void DbConnection::BackupDatabase(DbConnection &targetDatabase)
+{
+    throw EDbConnectionNotImplemented();
+}
+
 bool DbConnection::Execute(const DbSqlStatement& statement)
 {
     return Execute(statement.GetStatement());

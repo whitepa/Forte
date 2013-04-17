@@ -78,6 +78,7 @@ namespace Forte
         virtual unsigned int GetQueryRetryDelay() const;
 
         virtual void BackupDatabase(const FString &targetPath);
+        virtual void BackupDatabase(DbConnection &targetDatabase);
 
         virtual bool Execute(const DbSqlStatement& statement);
         virtual DbResult Use(const DbSqlStatement& statement);

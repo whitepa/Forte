@@ -528,6 +528,15 @@ void DbMirroredConnection::BackupDatabase(const FString &targetPath)
     }
 }
 
+void DbMirroredConnection::BackupDatabase(DbConnection &targetDatabase)
+{
+    AutoUnlockMutex guard(mMutex);
+
+    if(isActivePrimary())
+    {
+        mDbConnection->BackupDatabase(targetDatabase);
+    }
+}
 bool DbMirroredConnection::Execute(const DbSqlStatement& statement)
 {
     AutoUnlockMutex guard(mMutex);

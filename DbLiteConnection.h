@@ -56,10 +56,11 @@ namespace Forte
 
         // SQLite specific backup functionality
         virtual void BackupDatabase(const FString &targetPath);
+        virtual void BackupDatabase(DbConnection &targetDatabase);
 
     private:
         FString getTmpBackupPath(const FString& targetPath) const;
-        virtual void backupDatabase(const FString &targetPath);
+        void backupDatabase(DbLiteConnection &dbTarget);
         void setError();
         DbResult Query(const FString& sql);
         struct sqlite3 *mDB;
