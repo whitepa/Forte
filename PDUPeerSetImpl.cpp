@@ -317,3 +317,22 @@ unsigned int Forte::PDUPeerSetImpl::GetConnectedCount()
 
     return connectedCount;
 }
+
+Forte::PDUPeerSetStats Forte::PDUPeerSetImpl::GetStats()
+{
+    Forte::PDUPeerSetStats stats;
+    PDUPeerPtr peer;
+
+    AutoUnlockMutex lock(mPDUPeerLock);
+    foreach (const IntPDUPeerPtrPair& p, mPDUPeers)
+    {
+        peer = p.second;
+        stats.pduPeerStats.insert(std::make_pair(p.first, peer->GetStats()));
+
+        if (peer->IsConnected())
+        {
+            stats.connectedCount++;
+        }
+    }
+    return stats;
+}

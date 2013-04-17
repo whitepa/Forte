@@ -6,6 +6,7 @@
 #include "Event.h"
 #include "PDUPeer.h"
 #include "PDUPeerTypes.h"
+#include "PDUPeerStats.h"
 #include "Clock.h"
 #include "Semaphore.h"
 
@@ -126,6 +127,13 @@ namespace Forte
             mEndpoint->TeardownEPoll();
         }
 
+        virtual PDUPeerStats GetStats() {
+            PDUPeerStats stats = mEndpoint->GetStats();
+            AutoUnlockMutex lock(mPDUQueueMutex);
+            stats.totalQueued = mPDUQueue.size();
+            return stats;
+        }
+
         virtual void Shutdown();
 
         virtual ~PDUPeerImpl() {
@@ -162,6 +170,8 @@ namespace Forte
         boost::shared_ptr<PDUPeerSendThread> mSendThread;
 
         bool mShutdownCalled;
+
+        PDUPeerStats mStats;
     };
 
 };

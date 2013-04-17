@@ -5,6 +5,7 @@
 #include "AutoMutex.h"
 #include "AutoFD.h"
 #include "PDUPeer.h"
+#include "PDUPeerStats.h"
 #include <boost/shared_array.hpp>
 #include "Semaphore.h"
 
@@ -91,6 +92,10 @@ namespace Forte
             return (mFD != -1 && mFD == fd);
         }
 
+        virtual PDUPeerStats GetStats() {
+            return mStats;
+        }
+
     protected:
         bool lockedIsPDUReady(void) const;
         void callbackIfPDUReady();
@@ -107,6 +112,8 @@ namespace Forte
         size_t mBufMaxSize;
         size_t mBufStepSize;
         boost::shared_array<char> mPDUBuffer;
+
+        PDUPeerStats mStats;
 
     private:
         void handleFileDescriptorClose();

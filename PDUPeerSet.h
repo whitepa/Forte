@@ -78,6 +78,14 @@ namespace Forte
         virtual unsigned int GetConnectedCount(void) = 0;
 
         /**
+         * aggregates a collection of stats on our PDUPeers and their
+         * endpoint objects
+         *
+         * @return stats related to PDUPeer functionality
+         */
+        virtual PDUPeerSetStats GetStats() = 0;
+
+        /**
          * Thinking of deprecating this. Current use cases for
          * PDUPeerSet use PDUPeers differently than the new
          * design. Will need to figure out if the old way can fit in
@@ -201,6 +209,6 @@ namespace Forte
          */
         virtual PDUPeerPtr GetPeer(uint64_t peerID) = 0;
     };
-    typedef std::pair<int, PDUPeerPtr> IntPDUPeerPtrPair;
+    typedef std::pair<uint64_t, PDUPeerPtr> IntPDUPeerPtrPair;
 };
 #endif

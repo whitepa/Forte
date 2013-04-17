@@ -7,6 +7,7 @@
 #include "Object.h"
 #include "PDU.h"
 #include "PDUPeerTypes.h"
+#include "PDUPeerStats.h"
 #include <boost/function.hpp>
 #include <sys/epoll.h>
 
@@ -183,6 +184,8 @@ namespace Forte
         void SetEventCallback(PDUPeerEventCallback f) {
             mEventCallback = f;
         }
+
+        virtual PDUPeerStats GetStats() = 0;
 
     protected:
         int mID;

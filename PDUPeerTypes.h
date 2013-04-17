@@ -58,7 +58,6 @@ namespace Forte
     };
     typedef boost::shared_ptr<PDUPeerEvent> PDUPeerEventPtr;
     typedef boost::function<void(PDUPeerEventPtr event)> PDUPeerEventCallback;
-
 };
 
 #endif /* __Forte_PDUPeerTypes_h_ */

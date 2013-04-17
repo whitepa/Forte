@@ -12,6 +12,7 @@
 #include "ReceiverThread.h"
 #include "PDUPeerEndpointFactory.h"
 #include "PDUPeerTypes.h"
+#include "PDUPeerStats.h"
 
 EXCEPTION_CLASS(EPDUPeerSetBuilder);
 
@@ -84,6 +85,10 @@ namespace Forte
 
         unsigned int GetConnectedCount() {
             return mPDUPeerSet->GetConnectedCount();
+        }
+
+        virtual PDUPeerSetStats GetStats() {
+            return mPDUPeerSet->GetStats();
         }
     protected:
         SocketAddress mListenAddress;

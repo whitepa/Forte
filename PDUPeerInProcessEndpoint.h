@@ -55,10 +55,16 @@ namespace Forte
                     "AddFD called on PDUPeerInProcessEndpoint"));
         }
 
+        virtual PDUPeerStats GetStats() {
+            return mStats;
+        }
+
     protected:
         mutable Mutex mMutex;
         std::list<PDUPtr> mPDUBuffer;
         bool mConnectMessageSent;
+
+        PDUPeerStats mStats;
     };
 
     typedef boost::shared_ptr<PDUPeerInProcessEndpoint> PDUPeerInProcessEndpointPtr;

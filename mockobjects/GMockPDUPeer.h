@@ -29,7 +29,7 @@ namespace Forte
         MOCK_CONST_METHOD0(IsPDUReady, bool());
         MOCK_METHOD1(RecvPDU, bool(PDU &out));
         MOCK_CONST_METHOD0(IsConnected, bool());
-
+        MOCK_METHOD0(GetStats, PDUPeerStats());
     };
 
     typedef boost::shared_ptr<GMockPDUPeer> GMockPDUPeerPtr;

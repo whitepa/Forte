@@ -22,6 +22,7 @@ namespace Forte
         MOCK_METHOD2(Poll, void (int msTimeout, bool interruptible));
         MOCK_METHOD1(PeerDelete, void (const PDUPeerPtr& peer));
         MOCK_METHOD1(PeerCreate, PDUPeerPtr (int fd));
+        MOCK_METHOD0(GetStats, PDUPeerSetStats());
 
         MOCK_METHOD0(Shutdown, void ());
     };

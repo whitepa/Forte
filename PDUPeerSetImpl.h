@@ -9,6 +9,7 @@
 #include "PDUPollThread.h"
 #include "RWLock.h"
 #include "FTrace.h"
+#include "PDUPeerStats.h"
 #include "PDUPollThread.h"
 #include <boost/function.hpp>
 #include <boost/shared_array.hpp>
@@ -128,6 +129,8 @@ namespace Forte
         PDUPeerPtr GetPeer(uint64_t peerID) {
             return mPDUPeers.at(peerID);
         }
+
+        PDUPeerSetStats GetStats();
 
     protected:
         PDUPollThreadPtr mPollThread;

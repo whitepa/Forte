@@ -82,6 +82,8 @@ void Forte::PDUPeerImpl::EnqueuePDU(const Forte::PDUPtr& pdu)
     // Potential race condition between semaphore & mutex locks
     AutoUnlockMutex lock(mPDUQueueMutex);
 
+    mStats.totalQueued++;
+
     if (mQueueType != PDU_PEER_QUEUE_BLOCK && mPDUQueue.size()+1 > mQueueMaxSize)
     {
         switch (mQueueType)

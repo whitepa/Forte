@@ -252,6 +252,7 @@ void Forte::PDUPeerFileDescriptorEndpoint::SendPDU(const Forte::PDU &pdu)
                         SystemCallUtil::GetErrorDescription(errno).c_str()));
             offset += sent;
             len -= sent;
+            mStats.bytesSent += sent;
         }
 
         if (pdu.GetOptionalDataSize() > 0)
@@ -270,16 +271,22 @@ void Forte::PDUPeerFileDescriptorEndpoint::SendPDU(const Forte::PDU &pdu)
             {
                 int sent = send(mFD, optionalData+offset, len, flags);
                 if (sent < 0)
+                {
+                    mStats.sendErrors++;
                     hlog_and_throw(
                         HLOG_DEBUG,
                         EPeerSendFailed(
                             FStringFC(),
                             "%s",
                             SystemCallUtil::GetErrorDescription(errno).c_str()));
+                }
                 offset += sent;
                 len -= sent;
+                mStats.bytesSent += sent;
             }
         }
+
+        mStats.totalSent++;
     }
     catch (Exception& e)
     {
@@ -391,5 +398,6 @@ bool Forte::PDUPeerFileDescriptorEndpoint::RecvPDU(Forte::PDU &out)
     mCursor -= totalBufferConsumed;
 
     mBufferFullCondition.Signal();
+    mStats.totalReceived++;
     return true;
 }
