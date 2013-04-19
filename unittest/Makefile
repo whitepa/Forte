@@ -95,6 +95,7 @@ GSRCS = AutoMutexUnitTest.cpp \
 	ThreadPoolDispatcherUnitTest.cpp \
 	XMLUnitTest.cpp \
 	EnableStatsUnitTest.cpp \
+	CumulativeMovingAverageUnitTest.cpp \
 
 # flaky
 #	DbMirroredConnectionUnitTest.cpp \
@@ -213,6 +214,8 @@ PROG_DEPS_OBJS_PidFileUnitTest =  ../$(TARGETDIR)/PidFile.o
 PROG_DEPS_OBJS_XMLUnitTest =
 
 PROG_DEPS_OBJS_EnableStatsUnitTest =  
+
+PROG_DEPS_OBJS_CumulativeMovingAverageUnitTest =
 
 ###  RULES  ###
 

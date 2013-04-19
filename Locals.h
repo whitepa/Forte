@@ -8,6 +8,7 @@
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/transform.hpp>
 #include <boost/mpl/reverse_fold.hpp>
+#include <boost/mpl/size.hpp>
 #include "Exception.h"
 
 namespace Forte

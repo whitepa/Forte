@@ -10,6 +10,7 @@
 #include <boost/function.hpp>
 #include <boost/shared_array.hpp>
 #include "PDUPeerTypes.h"
+#include "EnableStats.h"
 
 EXCEPTION_CLASS(EPDUPeerSet);
 
@@ -49,7 +50,9 @@ namespace Forte
      * 'PDU ready' and 'error' callbacks may be used as part of the
      * polling mechanism.
      */
-    class PDUPeerSet : public Object
+    class PDUPeerSet :
+        public Object,
+        public virtual BaseEnableStats
     {
     public:
         PDUPeerSet() {}
@@ -76,14 +79,6 @@ namespace Forte
          * @return count of connected peers
          */
         virtual unsigned int GetConnectedCount(void) = 0;
-
-        /**
-         * aggregates a collection of stats on our PDUPeers and their
-         * endpoint objects
-         *
-         * @return stats related to PDUPeer functionality
-         */
-        virtual PDUPeerSetStats GetStats() = 0;
 
         /**
          * Thinking of deprecating this. Current use cases for

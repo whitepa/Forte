@@ -12,7 +12,7 @@
 #include "ReceiverThread.h"
 #include "PDUPeerEndpointFactory.h"
 #include "PDUPeerTypes.h"
-#include "PDUPeerStats.h"
+#include "Locals.h"
 
 EXCEPTION_CLASS(EPDUPeerSetBuilder);
 
@@ -22,7 +22,10 @@ EXCEPTION_SUBCLASS2(EPDUPeerSetBuilder,
 
 namespace Forte
 {
-    class PDUPeerSetBuilderImpl : public PDUPeerSetBuilder
+    class PDUPeerSetBuilderImpl :
+        public PDUPeerSetBuilder,
+        public EnableStats<PDUPeerSetBuilderImpl,
+            Locals<PDUPeerSetBuilderImpl> >
     {
     public:
         PDUPeerSetBuilderImpl(
@@ -87,9 +90,6 @@ namespace Forte
             return mPDUPeerSet->GetConnectedCount();
         }
 
-        virtual PDUPeerSetStats GetStats() {
-            return mPDUPeerSet->GetStats();
-        }
     protected:
         SocketAddress mListenAddress;
         uint64_t mID;

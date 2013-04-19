@@ -5,16 +5,20 @@
 #include "AutoMutex.h"
 #include "AutoFD.h"
 #include "PDUPeer.h"
-#include "PDUPeerStats.h"
 #include <boost/shared_array.hpp>
 #include "Semaphore.h"
+#include "Locals.h"
 
 namespace Forte
 {
     static const int RECV_BUFFER_SIZE = 65536;
     static const int DEFAULT_MAX_BUFFER_SIZE = 1048576;
 
-    class PDUPeerFileDescriptorEndpoint : public PDUPeerEndpoint
+    class PDUPeerFileDescriptorEndpoint :
+        public PDUPeerEndpoint,
+        public EnableStats<
+            PDUPeerFileDescriptorEndpoint,
+            Locals<PDUPeerFileDescriptorEndpoint, int64_t> >
     {
     public:
         PDUPeerFileDescriptorEndpoint(
@@ -40,6 +44,10 @@ namespace Forte
                     mBufStepSize = mBufSize;
 
                 memset(mPDUBuffer.get(), 0, mBufSize);
+
+                mBytesSent = 0;
+                registerStatVariable<0>("bytesSent",
+                                        &PDUPeerFileDescriptorEndpoint::mBytesSent);
             }
 
         virtual ~PDUPeerFileDescriptorEndpoint() {}
@@ -92,10 +100,6 @@ namespace Forte
             return (mFD != -1 && mFD == fd);
         }
 
-        virtual PDUPeerStats GetStats() {
-            return mStats;
-        }
-
     protected:
         bool lockedIsPDUReady(void) const;
         void callbackIfPDUReady();
@@ -113,7 +117,8 @@ namespace Forte
         size_t mBufStepSize;
         boost::shared_array<char> mPDUBuffer;
 
-        PDUPeerStats mStats;
+        // stat variables
+        int64_t mBytesSent;
 
     private:
         void handleFileDescriptorClose();

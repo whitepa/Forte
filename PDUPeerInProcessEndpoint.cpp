@@ -4,8 +4,10 @@
 #include <boost/make_shared.hpp>
 
 Forte::PDUPeerInProcessEndpoint::PDUPeerInProcessEndpoint()
-    : mConnectMessageSent(false)
+    : mConnectMessageSent(false),
+      mBytesSent (0)
 {
+    registerStatVariable<0>("bytesSent", &PDUPeerInProcessEndpoint::mBytesSent);
 }
 
 Forte::PDUPeerInProcessEndpoint::~PDUPeerInProcessEndpoint()
@@ -20,14 +22,12 @@ void Forte::PDUPeerInProcessEndpoint::SendPDU(const Forte::PDU &pdu)
     // should result in an error
     if (!mEventCallback)
     {
-        mStats.sendErrors++;
         throw EPDUPeerEndpoint("Nothing in process is expecting PDUs");
     }
 
     {
         AutoUnlockMutex lock(mMutex);
         mPDUBuffer.push_back(PDUPtr(new PDU(pdu)));
-        mStats.totalSent++;
     }
 
     PDUPeerEventPtr event(new PDUPeerEvent());
@@ -59,7 +59,6 @@ bool Forte::PDUPeerInProcessEndpoint::RecvPDU(Forte::PDU &out)
         out.SetOptionalData(pdu->GetOptionalData());
 
         mPDUBuffer.pop_front();
-        mStats.totalReceived++;
         return true;
     }
 

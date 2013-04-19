@@ -3,11 +3,13 @@
 #define __Forte_PDUPeerSetBuilder_h_
 
 #include "PDUPeerTypes.h"
-#include "PDUPeerStats.h"
+#include "EnableStats.h"
 
 namespace Forte
 {
-    class PDUPeerSetBuilder : public Forte::Object
+    class PDUPeerSetBuilder :
+        public Forte::Object,
+        public virtual BaseEnableStats
     {
     public:
         PDUPeerSetBuilder() {}
@@ -22,7 +24,6 @@ namespace Forte
         virtual PDUPeerPtr PeerCreate(int fd) = 0;
         virtual void PeerDelete(Forte::PDUPeerPtr peer) = 0;
         virtual unsigned int GetConnectedCount() = 0;
-        virtual PDUPeerSetStats GetStats() = 0;
     };
 
     //TODO: rename this PDUPeerSet after PDUPeerSet gets a better name

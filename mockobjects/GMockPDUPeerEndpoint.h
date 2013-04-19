@@ -18,7 +18,6 @@ namespace Forte
         MOCK_METHOD1(RecvPDU, bool(Forte::PDU &out));
         MOCK_METHOD1(SetFD, void(int fd));
         MOCK_CONST_METHOD1(OwnsFD, bool(int fd));
-        MOCK_METHOD0(GetStats, PDUPeerStats());
 
     };
 

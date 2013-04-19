@@ -9,20 +9,42 @@
 #include "PDUPollThread.h"
 #include "RWLock.h"
 #include "FTrace.h"
-#include "PDUPeerStats.h"
 #include "PDUPollThread.h"
 #include <boost/function.hpp>
 #include <boost/shared_array.hpp>
+#include "Locals.h"
 
 namespace Forte
 {
+    class PDUPeerSetImpl;
+
+    // Stats class which will get connected count
+    class ConnectedCount {
+    public:
+
+        ConnectedCount()
+            : mPeerSet (NULL) {}
+
+        ConnectedCount(PDUPeerSetImpl *peerSet)
+            : mPeerSet (peerSet) {}
+        ~ConnectedCount() {}
+
+        operator int64_t();
+
+    private:
+        PDUPeerSetImpl *mPeerSet;
+    };
+
     /**
      * PDUPeerSet manages a set of PDUPeer objects, and provides a
      * mechanism for polling the entire set for input simultaneously.
      * 'PDU ready' and 'error' events may be used as part of the
      * polling mechanism.
      */
-    class PDUPeerSetImpl : public PDUPeerSet
+    class PDUPeerSetImpl :
+        public PDUPeerSet,
+        public EnableStats<PDUPeerSetImpl,
+            Locals<PDUPeerSetImpl, ConnectedCount> >
     {
     public:
         PDUPeerSetImpl(const std::vector<PDUPeerPtr>& peers);
@@ -130,8 +152,6 @@ namespace Forte
             return mPDUPeers.at(peerID);
         }
 
-        PDUPeerSetStats GetStats();
-
     protected:
         PDUPollThreadPtr mPollThread;
 
@@ -142,6 +162,9 @@ namespace Forte
         int mEPollFD;
 
         PDUPeerEventCallback mEventCallback;
+
+        // stat variable to get connectedCount
+        ConnectedCount mConnectedCount;
    };
 };
 #endif

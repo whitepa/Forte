@@ -6,9 +6,10 @@
 #include "Event.h"
 #include "PDUPeer.h"
 #include "PDUPeerTypes.h"
-#include "PDUPeerStats.h"
 #include "Clock.h"
 #include "Semaphore.h"
+#include "Locals.h"
+#include "CumulativeMovingAverage.h"
 
 EXCEPTION_SUBCLASS(EPDUPeer, EPDUPeerSendError);
 EXCEPTION_SUBCLASS2(EPDUPeer, EPDUPeerNoEventCallback,
@@ -53,7 +54,16 @@ namespace Forte
         boost::shared_ptr<PDUPeerImpl> mPDUPeer;
     };
 
-    class PDUPeerImpl : public PDUPeer
+    class PDUPeerImpl :
+        public PDUPeer,
+        public EnableStats<
+            PDUPeerImpl,
+            Locals<PDUPeerImpl,
+            int64_t, int64_t, int64_t,
+            int64_t, int64_t, int64_t,
+            CumulativeMovingAverage>
+            >
+
     {
         friend class PDUPeerSendThread;
     public:
@@ -127,13 +137,6 @@ namespace Forte
             mEndpoint->TeardownEPoll();
         }
 
-        virtual PDUPeerStats GetStats() {
-            PDUPeerStats stats = mEndpoint->GetStats();
-            AutoUnlockMutex lock(mPDUQueueMutex);
-            stats.totalQueued = mPDUQueue.size();
-            return stats;
-        }
-
         virtual void Shutdown();
 
         virtual ~PDUPeerImpl() {
@@ -171,7 +174,14 @@ namespace Forte
 
         bool mShutdownCalled;
 
-        PDUPeerStats mStats;
+        // stats variables
+        int64_t mTotalSent;
+        int64_t mTotalReceived;
+        int64_t mTotalQueued;
+        int64_t mSendErrors;
+        int64_t mQueueSize;
+        int64_t mStartTime;
+        CumulativeMovingAverage mAvgQueueSize;
     };
 
 };

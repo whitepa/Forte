@@ -20,9 +20,9 @@
 #include "Object.h"
 #include "Dispatcher.h"
 #include "PDUPeerEndpoint.h"
-#include "PDUPeerStats.h"
 #include "PDU.h"
 #include "FTrace.h"
+#include "EnableStats.h"
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 
@@ -32,7 +32,8 @@ namespace Forte
 {
     class Mutex;
 
-    class PDUPeer : public Object
+    class PDUPeer : public Object,
+        public virtual BaseEnableStats
     {
     public:
         PDUPeer() {}
@@ -117,8 +118,6 @@ namespace Forte
             return boost::static_pointer_cast<PDUPeer>(
                 Object::shared_from_this());
         }
-
-        virtual PDUPeerStats GetStats() = 0;
 
     protected:
         PDUPeerEventCallback mEventCallback;

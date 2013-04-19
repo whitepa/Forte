@@ -20,7 +20,6 @@ namespace Forte
         MOCK_METHOD1(PeerCreate, PDUPeerPtr (int fd));
         MOCK_METHOD1(PeerDelete, void (PDUPeerPtr peer));
         MOCK_METHOD0(GetConnectedCount, unsigned int ());
-        MOCK_METHOD0(GetStats, PDUPeerSetStats());
     };
 
     typedef boost::shared_ptr<GMockPDUPeerSetBuilder> GMockPDUPeerSetBuilderPtr;

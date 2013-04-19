@@ -8,10 +8,14 @@
 #include "PDUPeerEndpoint.h"
 #include "AutoMutex.h"
 #include "FTrace.h"
+#include "Locals.h"
 
 namespace Forte
 {
-    class PDUPeerInProcessEndpoint : public PDUPeerEndpoint
+    class PDUPeerInProcessEndpoint
+        : public PDUPeerEndpoint,
+        public EnableStats<PDUPeerInProcessEndpoint,
+        Locals<PDUPeerInProcessEndpoint, int64_t> >
     {
     public:
         PDUPeerInProcessEndpoint();
@@ -55,16 +59,13 @@ namespace Forte
                     "AddFD called on PDUPeerInProcessEndpoint"));
         }
 
-        virtual PDUPeerStats GetStats() {
-            return mStats;
-        }
-
     protected:
         mutable Mutex mMutex;
         std::list<PDUPtr> mPDUBuffer;
         bool mConnectMessageSent;
 
-        PDUPeerStats mStats;
+        // stat variables
+        int64_t mBytesSent;
     };
 
     typedef boost::shared_ptr<PDUPeerInProcessEndpoint> PDUPeerInProcessEndpointPtr;

@@ -7,7 +7,7 @@
 #include "Object.h"
 #include "PDU.h"
 #include "PDUPeerTypes.h"
-#include "PDUPeerStats.h"
+#include "EnableStats.h"
 #include <boost/function.hpp>
 #include <sys/epoll.h>
 
@@ -78,7 +78,8 @@ namespace Forte
     class Mutex;
     class Event;
 
-    class PDUPeerEndpoint : public Object
+    class PDUPeerEndpoint : public Object,
+        public virtual BaseEnableStats
     {
     public:
         PDUPeerEndpoint() {}
@@ -184,8 +185,6 @@ namespace Forte
         void SetEventCallback(PDUPeerEventCallback f) {
             mEventCallback = f;
         }
-
-        virtual PDUPeerStats GetStats() = 0;
 
     protected:
         int mID;

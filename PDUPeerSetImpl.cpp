@@ -13,6 +13,13 @@
 using namespace boost;
 using namespace Forte;
 
+Forte::ConnectedCount::operator int64_t() {
+    if (mPeerSet != NULL)
+        return mPeerSet->GetConnectedCount();
+
+    return 0;
+}
+
 Forte::PDUPeerSetImpl::PDUPeerSetImpl(const std::vector<PDUPeerPtr>& peers)
     : mEPollFD(-1)
 {
@@ -21,7 +28,13 @@ Forte::PDUPeerSetImpl::PDUPeerSetImpl(const std::vector<PDUPeerPtr>& peers)
     foreach(const PDUPeerPtr& p, peers)
     {
         mPDUPeers[p->GetID()] = p;
+
+        FString peerID(FStringFC(), "Peer-%lu", p->GetID());
+        includeStatsFromChild(p, peerID);
     }
+
+    mConnectedCount = ConnectedCount(this);
+    registerStatVariable<0>("connectedCount", &PDUPeerSetImpl::mConnectedCount);
 }
 
 void Forte::PDUPeerSetImpl::StartPolling()
@@ -102,6 +115,10 @@ shared_ptr<PDUPeer> Forte::PDUPeerSetImpl::PeerCreate(int fd)
     {
         AutoUnlockMutex lock(mPDUPeerLock);
         mPDUPeers[peer->GetID()] = peer;
+
+        FString peerID(FStringFC(), "Peer-%lu", peer->GetID());
+        includeStatsFromChild(
+            peer, peerID);
     }
     peer->Begin();
 
@@ -316,23 +333,4 @@ unsigned int Forte::PDUPeerSetImpl::GetConnectedCount()
     }
 
     return connectedCount;
-}
-
-Forte::PDUPeerSetStats Forte::PDUPeerSetImpl::GetStats()
-{
-    Forte::PDUPeerSetStats stats;
-    PDUPeerPtr peer;
-
-    AutoUnlockMutex lock(mPDUPeerLock);
-    foreach (const IntPDUPeerPtrPair& p, mPDUPeers)
-    {
-        peer = p.second;
-        stats.pduPeerStats.insert(std::make_pair(p.first, peer->GetStats()));
-
-        if (peer->IsConnected())
-        {
-            stats.connectedCount++;
-        }
-    }
-    return stats;
 }

@@ -57,6 +57,12 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
     mPDUPeerSet.reset(new PDUPeerSetImpl(pduPeers));
     mPDUPeerSet->SetupEPoll();
     mPDUPeerSet->SetEventCallback(eventCallback);
+
+    // add the pdupeerset as child to this for stats
+    includeStatsFromChild(
+        mPDUPeerSet,
+        "PeerSet");
+
     // end setup PeerSet
 
     // begin incoming connection setup
@@ -88,6 +94,11 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl()
     mPDUPeerSet.reset(new PDUPeerSetImpl(emptyPeerVector));
 
     mPDUPeerSet->SetupEPoll();
+
+    // add pdupeerset as child to this
+    includeStatsFromChild(
+        mPDUPeerSet,
+        "PeerSet");
 }
 
 Forte::PDUPeerSetBuilderImpl::~PDUPeerSetBuilderImpl()

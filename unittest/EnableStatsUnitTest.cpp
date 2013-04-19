@@ -2,7 +2,6 @@
 #include "EnableStats.h"
 #include "LogManager.h"
 #include "Locals.h"
-#include <boost/mpl/size.hpp>
 
 using namespace Forte;
 using namespace boost;
@@ -33,7 +32,9 @@ protected:
     }
 };
 
-class StatTest : public EnableStats<StatTest, Locals<StatTest, int64_t> >
+class StatTest :
+    public Forte::Object,
+    public EnableStats<StatTest, Locals<StatTest, int64_t> >
 {
 public:
     StatTest()
@@ -82,6 +83,7 @@ TEST_F(EnableStatsUnitTest, SimpleStats)
 }
 
 class StatHierarchyTest :
+    public Forte::Object,
     public EnableStats<
         StatHierarchyTest,
         Locals<StatHierarchyTest, int64_t, double, int64_t, double> >
@@ -107,7 +109,10 @@ public:
             "StatTest" +
             FString(mStatTestVec.size() + 1);
 
-        obj->AddChildTo(this, statObjectIdentifier);
+        includeStatsFromChild(
+            obj,
+            statObjectIdentifier);
+
         mStatTestVec.push_back(obj);
         numberOfTestObjects++;
         counter1 += 2;
@@ -130,39 +135,41 @@ protected:
 
 TEST_F(EnableStatsUnitTest, Hierarchy)
 {
-    StatHierarchyTest test;
+    boost::shared_ptr<StatHierarchyTest> test (new StatHierarchyTest());
 
-    test.AddSubStatObject();
+    test->AddSubStatObject();
 
     std::map<FString, int64_t> allStats =
-        test.GetAllStats();
+        test->GetAllStats();
     ASSERT_EQ(5, allStats.size());
-    ASSERT_EQ(0, test.GetStat("StatTest1.counter"));
+    ASSERT_EQ(0, test->GetStat("StatTest1.counter"));
     PrintStats(allStats);
 
-    test.AddSubStatObject();
+    test->AddSubStatObject();
 
-    allStats = test.GetAllStats();
+    allStats = test->GetAllStats();
     ASSERT_EQ(6, allStats.size());
-    ASSERT_EQ(0, test.GetStat("StatTest1.counter"));
-    ASSERT_EQ(0, test.GetStat("StatTest2.counter"));
+    ASSERT_EQ(0, test->GetStat("StatTest1.counter"));
+    ASSERT_EQ(0, test->GetStat("StatTest2.counter"));
     PrintStats(allStats);
 
-    test.RemoveSubStatObject();
+    test->RemoveSubStatObject();
 
-    allStats = test.GetAllStats();
+    allStats = test->GetAllStats();
     ASSERT_EQ(5, allStats.size());
     PrintStats(allStats);
 
-    test.RemoveSubStatObject();
+    test->RemoveSubStatObject();
 
-    allStats = test.GetAllStats();
+    allStats = test->GetAllStats();
     ASSERT_EQ(4, allStats.size());
     PrintStats(allStats);
 
 }
 
-class AbstractClass : public virtual BaseEnableStats {
+class AbstractClass :
+    public Forte::Object,
+    public virtual BaseEnableStats {
 public:
     AbstractClass() {};
     virtual ~AbstractClass() {};
@@ -198,6 +205,7 @@ TEST_F(EnableStatsUnitTest, InheritenceTest)
 }
 
 class StatHierarchyOfAbstractTest :
+    public Forte::Object,
     public EnableStats<StatHierarchyOfAbstractTest,
                        Locals<StatHierarchyOfAbstractTest, int64_t> >
 {
@@ -210,8 +218,8 @@ public:
 
     void AddObject(void) {
         boost::shared_ptr<AbstractClass> obj( new ConcreteClass() );
-        obj->AddChildTo(
-            this,
+        includeStatsFromChild(
+            obj,
             FString(FStringFC(), "Child%ld", numberOfObjects));
 
         numberOfObjects++;
@@ -233,37 +241,37 @@ protected:
 
 TEST_F(EnableStatsUnitTest, HierarchyOfAbstractTypesTest)
 {
-    StatHierarchyOfAbstractTest test;
+    boost::shared_ptr<StatHierarchyOfAbstractTest> test (new StatHierarchyOfAbstractTest());
 
-    std::map<FString, int64_t> allStats = test.GetAllStats();
+    std::map<FString, int64_t> allStats = test->GetAllStats();
     ASSERT_EQ(1, allStats.size());
     ASSERT_EQ(0, allStats["numberOfObjects"]);
     PrintStats(allStats);
 
-    test.AddObject();
-    allStats = test.GetAllStats();
+    test->AddObject();
+    allStats = test->GetAllStats();
     ASSERT_EQ(2, allStats.size());
     ASSERT_EQ(1, allStats["numberOfObjects"]);
     ASSERT_EQ(1, allStats["Child0.counter"]);
     PrintStats(allStats);
 
-    test.AddObject();
-    allStats = test.GetAllStats();
+    test->AddObject();
+    allStats = test->GetAllStats();
     ASSERT_EQ(3, allStats.size());
     ASSERT_EQ(2, allStats["numberOfObjects"]);
     ASSERT_EQ(1, allStats["Child0.counter"]);
     ASSERT_EQ(2, allStats["Child1.counter"]);
     PrintStats(allStats);
 
-    test.RemoveObject();
-    allStats = test.GetAllStats();
+    test->RemoveObject();
+    allStats = test->GetAllStats();
     ASSERT_EQ(2, allStats.size());
     ASSERT_EQ(1, allStats["numberOfObjects"]);
     ASSERT_EQ(1, allStats["Child0.counter"]);
     PrintStats(allStats);
 
-    test.RemoveObject();
-    allStats = test.GetAllStats();
+    test->RemoveObject();
+    allStats = test->GetAllStats();
     ASSERT_EQ(1, allStats.size());
     ASSERT_EQ(0, allStats["numberOfObjects"]);
     PrintStats(allStats);

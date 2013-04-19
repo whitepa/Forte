@@ -24,13 +24,28 @@ Forte::PDUPeerImpl::PDUPeerImpl(
       mQueueMaxSize(queueSize),
       mQueueType(queueType),
       mQueueSemaphore(mQueueMaxSize),
-      mShutdownCalled(false)
+      mShutdownCalled(false),
+      // init all the stat variables
+      mTotalSent (0),
+      mTotalReceived (0),
+      mTotalQueued (0),
+      mSendErrors (0),
+      mQueueSize (0),
+      mStartTime (0)
 {
     FTRACE;
     mEndpoint->SetEventCallback(
         boost::bind(&PDUPeer::PDUPeerEndpointEventCallback,
                     this,
                     _1));
+
+    registerStatVariable<0>("totalSent", &PDUPeerImpl::mTotalSent);
+    registerStatVariable<1>("totalReceived", &PDUPeerImpl::mTotalReceived);
+    registerStatVariable<2>("totalQueued", &PDUPeerImpl::mTotalQueued);
+    registerStatVariable<3>("sendErrors", &PDUPeerImpl::mSendErrors);
+    registerStatVariable<4>("queueSize", &PDUPeerImpl::mQueueSize);
+    registerStatVariable<5>("startTime", &PDUPeerImpl::mStartTime);
+    registerStatVariable<6>("averageQueueSize", &PDUPeerImpl::mAvgQueueSize);
 }
 
 
@@ -38,12 +53,19 @@ void Forte::PDUPeerImpl::Begin()
 {
     FTRACE;
 
+    // register the end point stats with this pdupeer as
+    // the parent
+    includeStatsFromChild(
+        mEndpoint, "Endpoint");
+
     if (!mSendThread)
     {
         mSendThread.reset(
             new PDUPeerSendThread(
                 boost::static_pointer_cast<Forte::PDUPeerImpl>(
                     shared_from_this())));
+
+        mStartTime = mClock.GetTime().AsSeconds();
     }
 }
 
@@ -82,7 +104,9 @@ void Forte::PDUPeerImpl::EnqueuePDU(const Forte::PDUPtr& pdu)
     // Potential race condition between semaphore & mutex locks
     AutoUnlockMutex lock(mPDUQueueMutex);
 
-    mStats.totalQueued++;
+    mTotalQueued++;
+    mQueueSize = mPDUQueue.size();
+    mAvgQueueSize = mPDUQueue.size();
 
     if (mQueueType != PDU_PEER_QUEUE_BLOCK && mPDUQueue.size()+1 > mQueueMaxSize)
     {
@@ -171,7 +195,8 @@ void Forte::PDUPeerImpl::sendLoop()
                     failExpiredPDUs();
                 }
             }
-
+            mQueueSize = mPDUQueue.size();
+            mAvgQueueSize = mPDUQueue.size();
             mPDUQueueNotEmptyCondition.TimedWait(1);
         }
 
@@ -183,6 +208,7 @@ void Forte::PDUPeerImpl::sendLoop()
     try
     {
         mEndpoint->SendPDU(*(pduHolder->pdu));
+        mTotalSent++;
     }
     catch (Exception& e)
     {
@@ -206,6 +232,7 @@ void Forte::PDUPeerImpl::sendLoop()
             event->mPDU = pduHolder->pdu;
             mEventCallback(event);
         }
+        mSendErrors++;
     }
 }
 
@@ -250,6 +277,7 @@ void Forte::PDUPeerImpl::failExpiredPDUs()
                 }
                 mPDUQueue.pop_front();
                 mQueueSemaphore.Post();
+                mSendErrors++;
             }
         }
     }
@@ -277,5 +305,13 @@ bool Forte::PDUPeerImpl::RecvPDU(Forte::PDU &out)
 {
     FTRACE;
 
-    return mEndpoint->RecvPDU(out);
+    if (mEndpoint->RecvPDU(out))
+    {
+        mTotalReceived++;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
