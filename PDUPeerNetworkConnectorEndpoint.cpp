@@ -65,8 +65,6 @@ void Forte::PDUPeerNetworkConnectorEndpoint::fileDescriptorClosed()
     mDispatcher->Enqueue(boost::make_shared<CheckConnectionEvent>(GetPtr()));
 }
 
-#pragma GCC diagnostic ignored "-Wold-style-cast"
-
 void Forte::PDUPeerNetworkConnectorEndpoint::connect()
 {
     FTRACE2("%s:%d",
@@ -135,8 +133,6 @@ void Forte::PDUPeerNetworkConnectorEndpoint::connect()
          mConnectToAddress.second);
 
 }
-
-#pragma GCC diagnostic warning "-Wold-style-cast"
 
 void Forte::PDUPeerNetworkConnectorEndpoint::setTCPKeepAlive()
 {
