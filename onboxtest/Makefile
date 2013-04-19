@@ -34,7 +34,8 @@ PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
 	$(TARGETDIR)/PDUPeerSetImplOnBoxTest \
 	$(TARGETDIR)/ProcessManagerOnBoxTest \
 	$(TARGETDIR)/RunLoopUnitTest \
-	$(TARGETDIR)/ServerMainOnboxTest
+	$(TARGETDIR)/ServerMainOnboxTest \
+	$(TARGETDIR)/StateMachineOnBoxTest3
 
 #TODO: rewrite this sans gpfs
 #	$(TARGETDIR)/DbMirroredConnectionUnitTest \

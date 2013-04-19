@@ -42,12 +42,14 @@ BSRCS = ContextUnitTest.cpp \
 	ExpDecayingAvgUnitTest.cpp \
 	StateMachineUnitTest1.cpp \
 	StateMachineUnitTest2.cpp \
-	StateMachineUnitTest3.cpp \
 	StateMachineUnitTest4.cpp \
 	StateMachineUnitTest5.cpp \
 	StateMachineUnitTest6.cpp \
 	StateMachineUnitTest7.cpp \
 	StateMachineUnitTest8.cpp
+
+# onbox now due to time dependency
+# StateMachineUnitTest3.cpp \
 
 GSRCS = AutoMutexUnitTest.cpp \
 	CheckedValueStoreUnitTest.cpp \
