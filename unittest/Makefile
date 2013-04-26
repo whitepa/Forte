@@ -94,6 +94,7 @@ GSRCS = AutoMutexUnitTest.cpp \
 	StateMachineTestHarnessUnitTest.cpp \
 	ThreadPoolDispatcherUnitTest.cpp \
 	XMLUnitTest.cpp \
+	EnableStatsUnitTest.cpp \
 
 # flaky
 #	DbMirroredConnectionUnitTest.cpp \
@@ -210,6 +211,8 @@ PROG_DEPS_OBJS_CollectorUnitTest = ../$(TARGETDIR)/CheckedValueStore.o \
 PROG_DEPS_OBJS_PidFileUnitTest =  ../$(TARGETDIR)/PidFile.o
 
 PROG_DEPS_OBJS_XMLUnitTest =
+
+PROG_DEPS_OBJS_EnableStatsUnitTest =  
 
 ###  RULES  ###
 
