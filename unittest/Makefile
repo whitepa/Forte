@@ -65,6 +65,7 @@ GSRCS = AutoMutexUnitTest.cpp \
 	ExceptionUnitTest.cpp \
 	FileSystemUtilUnitTest.cpp \
 	FStringUnitTest.cpp \
+	FTraceUnitTest.cpp \
 	GUIDGeneratorUnitTest.cpp \
 	INotifyUnitTest.cpp \
 	IOManagerUnitTest.cpp \

@@ -86,7 +86,7 @@ namespace Forte
             va_start(args, fmt);
             mArgumentBuffer = static_cast<char *>(malloc(MAX_BUFFER_SIZE));
             vsnprintf(mArgumentBuffer, MAX_BUFFER_SIZE, fmt, args);
-
+            mArgumentBuffer[MAX_BUFFER_SIZE-1] = 0;
             _hlog(mFN.c_str(), mFile, mLine,
                   HLOG_TRACE, "ENTER (%s)", mArgumentBuffer);
             va_end(args);
@@ -97,6 +97,7 @@ namespace Forte
         {
             mArgumentBuffer = static_cast<char *>(malloc(MAX_BUFFER_SIZE));
             strncpy(mArgumentBuffer, message.c_str(), MAX_BUFFER_SIZE);
+            mArgumentBuffer[MAX_BUFFER_SIZE-1] = 0;
             _hlog(mFN.c_str(), mFile, mLine, HLOG_TRACE, "ENTER (%s)", mArgumentBuffer);
         }
 
