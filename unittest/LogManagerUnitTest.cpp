@@ -184,7 +184,8 @@ TEST(LogManagerUnitTest, TestMultiThreadedConcurrency)
 {
     static const time_t MAX_THREAD_WAIT_SECS(3);
     static const time_t LOG_WRITE_DELAY_SECS(1);
-    static const unsigned long MAX_THREADS(600);
+    static const unsigned long MAX_THREADS(490); // valgrind's default
+                                                 // thread limit is 500
     unsigned long ctr(0);
 
     logManager.EndLogging();
