@@ -31,7 +31,7 @@ protected:
 
     string getWatchedFileDir() const
     {
-        return "/fsscale0";
+        return "/tmp";
     }
 
     string getWatchedFilePath() const
