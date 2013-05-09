@@ -116,9 +116,10 @@ shared_ptr<PDUPeer> Forte::PDUPeerSetImpl::PeerCreate(int fd)
         AutoUnlockMutex lock(mPDUPeerLock);
         mPDUPeers[peer->GetID()] = peer;
 
+        /*TODO: re-enable. see STOR-4939
         FString peerID(FStringFC(), "Peer-%lu", peer->GetID());
-        includeStatsFromChild(
-            peer, peerID);
+        includeStatsFromChild(peer, peerID);
+        */
     }
     peer->Begin();
 
