@@ -239,7 +239,7 @@ namespace Forte
                 }
                 catch (EObjectCouldNotBeLocked &e)
                 {
-                    hlog(HLOG_DEBUG, "Parent seems to be deleted!");
+                    hlog(HLOG_DEBUG2, "Parent seems to be deleted!");
                 }
                 mParentUnregisterFn = boost::function<void()>();
             }
