@@ -302,6 +302,85 @@ namespace Forte
 
     };
 
+    class TimerClock : public Clock
+    {
+    public:
+        TimerClock()
+            : mRunning(false),
+              mHasBeenStarted(false)
+            {}
+
+        virtual ~TimerClock();
+
+        void Start() {
+            mHasBeenStarted = true;
+            mRunning = true;
+            mStartTime = mClock.GetTime();
+            mEndTime = mClock.GetTime();
+        }
+
+        void Stop() {
+            if (!mRunning)
+            {
+                throw EClock(
+                    "Stop was called on TimerClock but timer is not running");
+            }
+            mRunning = false;
+            mEndTime = mClock.GetTime();
+        }
+
+        void GetTime(struct timespec& ts) const {
+            assertElapsedTimeValid();
+            ts = mEndTime - mStartTime;
+        }
+
+        Timespec GetTime(void) const {
+            struct timespec ts;
+            GetTime(ts);
+            return ts;
+        }
+
+        Timespec GetStartTime() const {
+            assertElapsedTimeValid();
+            return mStartTime;
+        }
+
+        Timespec GetEndTime() const {
+            assertElapsedTimeValid();
+            return mEndTime;
+        }
+
+        Timespec ConvertToRealtime(const struct timespec &ts) const {
+            throw EUnimplemented();
+        }
+
+        Timespec ConvertToRealtimePreserveZero(const struct timespec &ts) const {
+            throw EUnimplemented();
+        }
+
+    protected:
+        void assertElapsedTimeValid() const {
+            if (!mHasBeenStarted)
+            {
+                throw EClock(
+                    "Trying to get elapsed time from timer that was not started");
+            }
+
+            if (mRunning)
+            {
+                throw EClock(
+                    "Trying to get elapsed time from timer that is running");
+            }
+        }
+
+    protected:
+        bool mRunning;
+        bool mHasBeenStarted;
+        Forte::RealtimeClock mClock;
+        Forte::Timespec mStartTime;
+        Forte::Timespec mEndTime;
+    };
+
     std::ostream& operator<<(std::ostream& os, const Timespec& obj);
 };
 

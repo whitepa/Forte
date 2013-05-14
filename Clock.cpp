@@ -96,6 +96,13 @@ void DeadlineClock::ExpiresInMillisec(int millisec)
     mDeadlineTimespec = GetTime() + Timespec::FromMillisec(millisec);
 }
 
+TimerClock::~TimerClock()
+{
+    if (mRunning)
+    {
+        hlog(HLOG_WARN, "TimerClock was started but never stopped");
+    }
+}
 
 namespace Forte
 {
