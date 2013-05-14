@@ -23,7 +23,7 @@ endef
 define VARIANT_COMPILE_RULE
 $(TARGETDIR)/$(1)/%.o: %.cpp $(MAKEFILE_DEPS)
 	@$(MKDIR) $$(@D)
-	$(QUIET)$(call CHECKSUM_TEST_EVAL,$$@,$(PREPROCESS.CCC.EVAL) $(foreach v,$(subst _, ,$(1)),-DFORTE_WITH_$(v)) $(DB_INCLUDE),echo "Compiling $(1) $$<";$(COMPILE.CCC.EVAL)  $(foreach v,$(subst _, ,$(1)),-DFORTE_WITH_$(v)) $(DB_INCLUDE))
+	$(if $(filter 2,$$(V)),,@)$(call CHECKSUM_TEST_EVAL,$$@,$(PREPROCESS.CCC.EVAL) $(foreach v,$(subst _, ,$(1)),-DFORTE_WITH_$(v)) $(DB_INCLUDE),echo "Compiling $(1) $$<";$(COMPILE.CCC.EVAL)  $(foreach v,$(subst _, ,$(1)),-DFORTE_WITH_$(v)) $(DB_INCLUDE))
 endef
 
 define VARIANT_LINK_RULE
