@@ -1,3 +1,4 @@
+#include <syscall.h>
 #include "Thread.h"
 #include "FTrace.h"
 #include "LogManager.h"
@@ -35,17 +36,21 @@ void * Thread::startThread(void *obj)
 
     void *retval = NULL;
     Thread *thr = reinterpret_cast<Thread *>(obj);
+    thr->mThreadID = syscall(SYS_gettid); //gettid.
+
     // wait until the thread has been fully initialized
     {
         AutoUnlockMutex lock(thr->mNotifyLock);
         while(!thr->mInitialized && !thr->mThreadShutdown)
             thr->mNotifyCond.Wait();
     }
+
     // inform the log manager of this thread
     LogThreadInfo logThread(*thr);
+
     if (thr->mThreadName.empty())
         thr->mThreadName.Format("unknown-%u",
-                                static_cast<unsigned>(thr->mThread));
+                                static_cast<unsigned>(thr->mThreadID));
     if (!thr->IsShuttingDown())
         hlog(HLOG_DEBUG2, "thread initialized");
 

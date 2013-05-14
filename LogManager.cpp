@@ -140,7 +140,19 @@ FString Logfile::formatMsg(const LogMsg &msg)
     levelstr = GetLevelStr(msg.mLevel);
     localtime_r(&(msg.mTime.tv_sec), &lt);
 
-    FString thread(FStringFC(), "[%d%s%s]", msg.mPID, (msg.mThread ?  "-" : ""), (msg.mThread ? msg.mThread->mThreadName.c_str() : ""));
+    FString thread;
+    if (msg.mThread)
+    {
+        thread.Format("[%d-%u-%s]",
+                      msg.mPID,
+                      msg.mThread->GetThreadID(),
+                      msg.mThread->mThreadName.c_str());
+    }
+    else
+    {
+        thread.Format("[%d]", msg.mPID);
+    }
+
     int padT = 25-thread.size();
     if (padT<0) padT=0;
     thread.append(padT,' ');
@@ -192,9 +204,19 @@ FString Logfile::customFormatMsg(const LogMsg &msg, const int formatMask)
 
     if (formatMask & HLOG_FORMAT_THREAD)
     {
-        FString thread(FStringFC(), "[%d%s%s]",
-                       msg.mPID, (msg.mThread ?  "-" : ""),
-                       (msg.mThread ? msg.mThread->mThreadName.c_str() : ""));
+        FString thread;
+        if (msg.mThread)
+        {
+            thread.Format("[%d-%u-%s]",
+                          msg.mPID,
+                          msg.mThread->GetThreadID(),
+                          msg.mThread->mThreadName.c_str());
+        }
+        else
+        {
+            thread.Format("[%d]", msg.mPID);
+        }
+
         int padT = 25-thread.size();
         if (padT<0) padT=0;
         thread.append(padT,' ');

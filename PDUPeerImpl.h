@@ -43,6 +43,7 @@ namespace Forte
         PDUPeerSendThread(
             const boost::shared_ptr<PDUPeerImpl>& pduPeer)
             : mPDUPeer(pduPeer) {
+            setThreadName("PDUPeerSend");
             initialized();
         }
 

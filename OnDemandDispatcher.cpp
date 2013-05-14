@@ -21,7 +21,7 @@ void * Forte::OnDemandDispatcherManager::run(void)
     FTRACE;
 
     OnDemandDispatcher &disp(dynamic_cast<OnDemandDispatcher&>(mDispatcher));
-    mThreadName.Format("dsp-od-%u", GetThreadID());
+    mThreadName = "dsp-od";
 
     AutoUnlockMutex lock(disp.mNotifyLock);
 
@@ -126,7 +126,7 @@ void * Forte::OnDemandDispatcherWorker::run()
 {
     FTRACE;
     OnDemandDispatcher &disp(dynamic_cast<OnDemandDispatcher&>(mDispatcher));
-    mThreadName.Format("%s-od-%u", disp.mDispatcherName.c_str(), GetThreadID());
+    mThreadName.Format("%s-od", disp.mDispatcherName.c_str());
     disp.mRequestHandler->Init();
     disp.mRequestHandler->Handler(getRawEventPointer());
     clearEvent();

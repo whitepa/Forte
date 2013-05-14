@@ -14,6 +14,7 @@ namespace Forte
         PDUPollThread(PDUPeerSet& peerSet)
             : mPDUPeerSet(peerSet)
             {
+                setThreadName("pduPoller");
                 initialized();
             }
 

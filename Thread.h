@@ -27,6 +27,7 @@ namespace Forte
     {
     public:
         inline Thread(void) :
+            mThreadID(0),
             mInitialized(false),
             mDeletingCalled(false),
             mThreadShutdown(false),
@@ -36,7 +37,6 @@ namespace Forte
             mShutdownCompleteCondition(mShutdownCompleteLock)
             {
                 pthread_create(&mThread, NULL, Thread::startThread, this);
-                mThreadID = static_cast<unsigned int>(mThread);
             }
         virtual ~Thread();
 

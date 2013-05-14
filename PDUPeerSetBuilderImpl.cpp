@@ -74,7 +74,7 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
             8, // max threads
             32, // deepQueue - appears to be unused here also
             32, // maxDepth
-            "PDUConnectionHandler")
+            "PDUCnect")
         );
 
     mReceiverThread.reset(
