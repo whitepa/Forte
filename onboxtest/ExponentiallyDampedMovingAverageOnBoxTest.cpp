@@ -1,3 +1,6 @@
+// #SCQAD TEST: ONBOX: ExponentiallyDampedMovingAverageOnBoxTest
+// #SCQAD TESTTAG: smoketest, forte
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include "FTrace.h"
@@ -18,7 +21,7 @@ using ::testing::SetArgReferee;
 
 LogManager logManager;
 
-class ExponentiallyDampedMovingAverageUnitTest : public ::testing::Test {
+class ExponentiallyDampedMovingAverageOnBoxTest : public ::testing::Test {
 public:
     virtual void SetUp() {
         mValue = 0;
@@ -56,7 +59,7 @@ public:
     int64_t mRate;
 };
 
-TEST_F(ExponentiallyDampedMovingAverageUnitTest, Value)
+TEST_F(ExponentiallyDampedMovingAverageOnBoxTest, Value)
 {
     logManager.SetGlobalLogMask(HLOG_ALL);
     shared_ptr<Forte::RunLoop> rl(new RunLoop("stats"));
@@ -64,7 +67,7 @@ TEST_F(ExponentiallyDampedMovingAverageUnitTest, Value)
                                           Forte::Timespec::FromMillisec(200),
                                           Forte::Timespec::FromMillisec(50),
                                           boost::bind(
-                                              &ExponentiallyDampedMovingAverageUnitTest::GetValue,
+                                              &ExponentiallyDampedMovingAverageOnBoxTest::GetValue,
                                               this),
                                           rl);
     SetValue(0);
@@ -85,7 +88,7 @@ TEST_F(ExponentiallyDampedMovingAverageUnitTest, Value)
     rl->WaitForShutdown();
 }
 
-TEST_F(ExponentiallyDampedMovingAverageUnitTest, Rate)
+TEST_F(ExponentiallyDampedMovingAverageOnBoxTest, Rate)
 {
     logManager.SetGlobalLogMask(HLOG_ALL);
     shared_ptr<Forte::RunLoop> rl(new RunLoop("stats"));
@@ -93,7 +96,7 @@ TEST_F(ExponentiallyDampedMovingAverageUnitTest, Rate)
                                           Forte::Timespec::FromMillisec(200),
                                           Forte::Timespec::FromMillisec(100),
                                           boost::bind(
-                                              &ExponentiallyDampedMovingAverageUnitTest::GetRate,
+                                              &ExponentiallyDampedMovingAverageOnBoxTest::GetRate,
                                               this),
                                           rl);
     Forte::MonotonicClock mc;

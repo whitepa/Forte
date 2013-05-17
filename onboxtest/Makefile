@@ -27,6 +27,7 @@ LIBS = \
 
 PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
 	$(TARGETDIR)/CRCOnBoxTest \
+	$(TARGETDIR)/ExponentiallyDampedMovingAverageOnBoxTest \
 	$(TARGETDIR)/FileSystemImplOnBoxTest \
 	$(TARGETDIR)/INotifyUnitTest \
 	$(TARGETDIR)/InterProcessLockOnBoxTest \
