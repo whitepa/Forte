@@ -173,12 +173,6 @@ bool FileSystemImpl::FileExists(const FString& filename) const
 {
     hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%s)", __FUNCTION__, filename.c_str());
     struct stat st;
-    // NOTE: I think this will fix a sporadic bug seen on GPFS filesystems
-    //       where we are deleting an iSCSI LUN file (i.e. moving it to the
-    //       trash), then creating a new LUN file with the same name.  The
-    //       second creation fails because it thinks the file exists.
-    // TODO: investigate why/if we need two stat() calls here.
-    stat(filename, &st);
     return (stat(filename, &st) == 0);
 }
 
