@@ -49,8 +49,7 @@ void * Thread::startThread(void *obj)
     LogThreadInfo logThread(*thr);
 
     if (thr->mThreadName.empty())
-        thr->mThreadName.Format("unknown-%u",
-                                static_cast<unsigned>(thr->mThreadID));
+        thr->mThreadName.Format("unknown-%u", thr->mThreadID);
     if (!thr->IsShuttingDown())
         hlog(HLOG_DEBUG2, "thread initialized");
 
