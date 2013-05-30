@@ -104,6 +104,16 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl()
 Forte::PDUPeerSetBuilderImpl::~PDUPeerSetBuilderImpl()
 {
     FTRACE2("%llu", static_cast<unsigned long long>(mID));
+    Shutdown();
+}
+
+void Forte::PDUPeerSetBuilderImpl::Shutdown()
+{
+    if (mConnectionDispatcher)
+    {
+        mConnectionDispatcher->Shutdown();
+        mConnectionDispatcher.reset();
+    }
 
     if (mReceiverThread)
     {
@@ -112,14 +122,11 @@ Forte::PDUPeerSetBuilderImpl::~PDUPeerSetBuilderImpl()
         mReceiverThread.reset();
     }
 
-    mPDUPeerSet->TeardownEPoll();
-    mPDUPeerSet->Shutdown();
-    mPDUPeerSet.reset();
-
-    if (mConnectionDispatcher)
+    if (mPDUPeerSet)
     {
-        mConnectionDispatcher->Shutdown();
-        mConnectionDispatcher.reset();
+        mPDUPeerSet->TeardownEPoll();
+        mPDUPeerSet->Shutdown();
+        mPDUPeerSet.reset();
     }
 }
 

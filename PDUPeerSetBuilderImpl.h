@@ -46,6 +46,8 @@ namespace Forte
         PDUPeerSetBuilderImpl();
         ~PDUPeerSetBuilderImpl();
 
+        void Shutdown();
+
         void Broadcast(const PDU& pdu) const {
             FTRACE;
             mPDUPeerSet->Broadcast(pdu);

@@ -11,6 +11,7 @@ namespace Forte
         GMockPDUPeerSetBuilder() {}
         virtual ~GMockPDUPeerSetBuilder() {}
 
+        MOCK_METHOD0(Shutdown, void ());
         MOCK_CONST_METHOD1(Broadcast, void (const PDU &pdu));
         MOCK_METHOD1(BroadcastAsync, void(PDUPtr pdu));
         MOCK_CONST_METHOD0(GetSize, int());

@@ -21,6 +21,7 @@ namespace Forte
         virtual PDUPeerPtr GetPeer(uint64_t peerID) = 0;
         virtual void SetEventCallback(PDUPeerEventCallback f) = 0;
         virtual void StartPolling() = 0;
+        virtual void Shutdown() = 0;
         virtual PDUPeerPtr PeerCreate(int fd) = 0;
         virtual void PeerDelete(Forte::PDUPeerPtr peer) = 0;
         virtual unsigned int GetConnectedCount() = 0;
