@@ -174,13 +174,17 @@ void Forte::PDUPeerImpl::sendLoop()
 {
     PDUHolderPtr pduHolder;
 
+    //to get around a lock ordering issue, it is easier to just check
+    //IsConnected outside of mPDUQueueMutex
+    bool endpointIsConnected = mEndpoint->IsConnected();
+
     {
         // this loop is messy but does what we need it to. this thread
         // will sleep while it is connected and there are no PDUs to
         // send. it will periodically ensure the connection is up.
         // when there PDUs to send it will do that.
         AutoUnlockMutex lock(mPDUQueueMutex);
-        while (mPDUQueue.empty() || !mEndpoint->IsConnected())
+        while (mPDUQueue.empty() || !endpointIsConnected)
         {
             if (Thread::MyThread()->IsShuttingDown())
             {
@@ -190,7 +194,8 @@ void Forte::PDUPeerImpl::sendLoop()
             {
                 AutoLockMutex unlock(mPDUQueueMutex);
                 mEndpoint->CheckConnection();
-                if (!mEndpoint->IsConnected())
+                endpointIsConnected = mEndpoint->IsConnected();
+                if (!endpointIsConnected)
                 {
                     failExpiredPDUs();
                 }
