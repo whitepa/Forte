@@ -1273,7 +1273,7 @@ FString FileSystemImpl::MakeTemporaryFile(const FString& nameTemplate) const
 
     while(::close(file) == -1 && errno == EINTR);
 
-    return FString(cName, sizeof(cName));
+    return FString(cName, sizeof(cName)-1);
 }
 
 void FileSystemImpl::Truncate(const FString& path, off_t size) const
