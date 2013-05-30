@@ -90,7 +90,7 @@ namespace Forte
         }
         virtual void * run(void) {
             FTRACE;
-            setThreadName(FString(FStringFC(), "IOManager-%u", GetThreadID()));
+            setThreadName("IOManager");
             struct timespec timeout = Timespec::FromMillisec(200);
             struct io_event events[32];
             while (!IsShuttingDown()) {
