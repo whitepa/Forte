@@ -1,6 +1,9 @@
 #ifndef __Forte_MonotonicCounter_h_
 #define __Forte_MonotonicCounter_h_
 
+#include "Object.h"
+#include "AutoMutex.h"
+
 namespace Forte
 {
     //TODO: templatize
