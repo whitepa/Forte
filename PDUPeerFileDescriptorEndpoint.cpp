@@ -156,14 +156,18 @@ void Forte::PDUPeerFileDescriptorEndpoint::callbackIfPDUReady()
 
 void Forte::PDUPeerFileDescriptorEndpoint::handleFileDescriptorClose()
 {
-    // default FileDescriptorEndpoint implemenation has no recourse
-    // except to give up and issue the call back
     FTRACE;
     {
+        // stop sending and receiving
         AutoUnlockMutex fdlock(mFDLock);
+        AutoUnlockMutex sendlock(mSendMutex);
+        AutoUnlockMutex recvlock(mReceiveMutex);
         removeFDFromEPoll();
-        close(mFD);
-        mFD = -1;
+        if (mFD != -1)
+        {
+            close(mFD);
+            mFD = -1;
+        }
     }
 
     PDUPeerEventPtr event(new PDUPeerEvent());
