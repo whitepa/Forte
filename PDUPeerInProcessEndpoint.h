@@ -47,6 +47,7 @@ namespace Forte
             return false;
         }
         virtual bool IsConnected(void) const {
+            AutoUnlockMutex lock(mMutex);
             // we are connected once the callback is setup
             return mEventCallback && mConnectMessageSent;
         }
