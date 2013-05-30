@@ -61,7 +61,7 @@ namespace Forte
         boost::shared_ptr<ProcessManager> GetPtr(void) {
             try
             {
-                return boost::shared_dynamic_cast<ProcessManager>(shared_from_this());
+                return boost::dynamic_pointer_cast<ProcessManager>(shared_from_this());
             }
             catch (boost::bad_weak_ptr &e)
             {

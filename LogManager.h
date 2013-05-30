@@ -476,7 +476,7 @@ namespace Forte
 
     protected:
         friend class Mutex;
-        typedef std::vector<boost::weak_ptr<LogfileVector::value_type::value_type> > LogfileWeakVector;
+        typedef std::vector<boost::weak_ptr<LogfileVector::value_type::element_type> > LogfileWeakVector;
 
         LogfileVector mLogfiles;
         ThreadKey mThreadInfoKey;
