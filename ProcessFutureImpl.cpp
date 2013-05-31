@@ -156,7 +156,7 @@ void Forte::ProcessFutureImpl::SetErrorFilename(const FString &errorfile)
 
 boost::shared_ptr<ProcessManagerImpl> Forte::ProcessFutureImpl::getProcessManager(void)
 {
-    shared_ptr<ProcessManagerImpl> mgr(mProcessManagerPtr.lock());
+    boost::shared_ptr<ProcessManagerImpl> mgr(mProcessManagerPtr.lock());
     if (!mgr)
     {
         throw EProcessFutureHandleInvalid();

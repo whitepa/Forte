@@ -315,7 +315,9 @@ std::pair<bool, unsigned int> Logfile::GetFileMask(const Forte::FString& file) c
 
     if(i != mFileMasks.end())
     {
-        return make_pair<bool, unsigned int>(true, i->second);
+        return make_pair<bool, unsigned int>(
+            true,
+            static_cast<unsigned int>(i->second));
     }
 
     return make_pair<bool, unsigned int>(false, 0);

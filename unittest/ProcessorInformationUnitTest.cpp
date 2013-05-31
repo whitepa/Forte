@@ -32,7 +32,7 @@ TEST_F(ProcessorInformationUnitTest, SingleSocketQuadCoreHT)
     // setup
     FileSystemImpl fs;
     FString cpuinfoContents = fs.FileGetContents("./cpuinfo/sample1.cpuinfo");
-    shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
+    boost::shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
     fsptr->FilePutContents("/proc/cpuinfo", cpuinfoContents);
 
     // construct
@@ -53,7 +53,7 @@ TEST_F(ProcessorInformationUnitTest, SingleSocketSingleCoreNoHT)
     // setup
     FileSystemImpl fs;
     FString cpuinfoContents = fs.FileGetContents("./cpuinfo/sample1_1socket1coreNoHT.cpuinfo");
-    shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
+    boost::shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
     fsptr->FilePutContents("/proc/cpuinfo", cpuinfoContents);
 
     // construct
@@ -73,7 +73,7 @@ TEST_F(ProcessorInformationUnitTest, SingleSocketSingleCoreHT)
     // setup
     FileSystemImpl fs;
     FString cpuinfoContents = fs.FileGetContents("./cpuinfo/sample2_1socket1coreHT.cpuinfo");
-    shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
+    boost::shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
     fsptr->FilePutContents("/proc/cpuinfo", cpuinfoContents);
 
     // construct
@@ -93,7 +93,7 @@ TEST_F(ProcessorInformationUnitTest, SingleSocketQuadCore)
     // setup
     FileSystemImpl fs;
     FString cpuinfoContents = fs.FileGetContents("./cpuinfo/sample3_1socket4core.cpuinfo");
-    shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
+    boost::shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
     fsptr->FilePutContents("/proc/cpuinfo", cpuinfoContents);
 
     // construct
@@ -113,7 +113,7 @@ TEST_F(ProcessorInformationUnitTest, SingleSocketDualCore)
     // setup
     FileSystemImpl fs;
     FString cpuinfoContents = fs.FileGetContents("./cpuinfo/sample3a_1socket2core.cpuinfo");
-    shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
+    boost::shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
     fsptr->FilePutContents("/proc/cpuinfo", cpuinfoContents);
 
     // construct
@@ -133,7 +133,7 @@ TEST_F(ProcessorInformationUnitTest, DualSocketSingleCoreHT)
     // setup
     FileSystemImpl fs;
     FString cpuinfoContents = fs.FileGetContents("./cpuinfo/sample4_2socket1coreHT.cpuinfo");
-    shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
+    boost::shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
     fsptr->FilePutContents("/proc/cpuinfo", cpuinfoContents);
 
     // construct
@@ -153,7 +153,7 @@ TEST_F(ProcessorInformationUnitTest, DualSocketDualCoreNoHT)
     // setup
     FileSystemImpl fs;
     FString cpuinfoContents = fs.FileGetContents("./cpuinfo/sample5_2socket2coreNoHT.cpuinfo");
-    shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
+    boost::shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
     fsptr->FilePutContents("/proc/cpuinfo", cpuinfoContents);
 
     // construct

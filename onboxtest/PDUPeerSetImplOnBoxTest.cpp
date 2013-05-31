@@ -305,7 +305,7 @@ protected:
     void* run() {
         Forte::PDU pdu;
         size_t len;
-        shared_array<char> buf = makeTestPDU(pdu, len);
+        boost::shared_array<char> buf = makeTestPDU(pdu, len);
 
         for (int i = 0; i < 100; ++i)
         {

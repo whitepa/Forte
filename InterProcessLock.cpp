@@ -117,7 +117,7 @@ void InterProcessLock::init()
 void InterProcessLock::checkAndClearFromMutexMap(const Forte::FString& name)
 {
     AutoUnlockMutex lock(sMutex);
-    std::map<FString, shared_ptr<Mutex> >::const_iterator i =
+    std::map<FString, boost::shared_ptr<Mutex> >::const_iterator i =
         sMutexMap.find(name);
     if (i == sMutexMap.end())
     {
@@ -126,7 +126,7 @@ void InterProcessLock::checkAndClearFromMutexMap(const Forte::FString& name)
     }
     else
     {
-        const shared_ptr<Mutex> &mp(i->second);
+        const boost::shared_ptr<Mutex> &mp(i->second);
         if (mp.unique())
         {
             hlog(HLOG_DEBUG4, "lock %s no longer in use; freeing mutex",

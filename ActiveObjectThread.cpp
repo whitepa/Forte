@@ -41,10 +41,10 @@ void ActiveObjectThread::SetName(const FString &name)
 
 void ActiveObjectThread::DropQueue(void)
 {
-    shared_ptr<Event> event;
+    boost::shared_ptr<Event> event;
     while((event = mQueue.Get()))
     {
-        shared_ptr<Forte::AsyncInvocation> invocation =
+        boost::shared_ptr<Forte::AsyncInvocation> invocation =
             dynamic_pointer_cast<AsyncInvocation>(event);
         event.reset();
         if (invocation)
@@ -69,7 +69,7 @@ void ActiveObjectThread::WaitUntilQueueEmpty(void)
 void * ActiveObjectThread::run(void)
 {
     FTRACE;
-    shared_ptr<Event> event;
+    boost::shared_ptr<Event> event;
     // Always attempt to drain the queue, even if shutting down.  If
     // the caller desires immediate shutdown, ActiveObject::Shutdown()
     // with the appropriate parameters will have been called, and the

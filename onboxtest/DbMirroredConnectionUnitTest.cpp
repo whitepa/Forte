@@ -318,7 +318,7 @@ TEST_F(DbMirroredConnectionTest, SqliteAutoFailoverAutoBackupDatabaseTest)
     FTRACE;
 
     size_t rows(0);
-    shared_ptr<DbConnectionPool> pool (make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
+    boost::shared_ptr<DbConnectionPool> pool (make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
 
     {
         DbBackupManagerThread dbBackupMgr(pool);
@@ -366,7 +366,7 @@ TEST_F(DbMirroredConnectionTest, SqliteFailedGPFSAutoBackupDatabaseTest)
     FTRACE;
 
     size_t rows(0);
-    shared_ptr<DbConnectionPool> pool (make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
+    boost::shared_ptr<DbConnectionPool> pool (make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
 
     {
         DbBackupManagerThread dbBackupMgr(pool);
@@ -390,7 +390,7 @@ TEST_F(DbMirroredConnectionTest, SqliteFailedGPFSPrimaryDbUnderHotDbConnectionDa
     FTRACE;
 
     size_t rows(0);
-    shared_ptr<DbConnectionPool> pool (make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
+    boost::shared_ptr<DbConnectionPool> pool (make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName(), getBackupDatabaseName()));
     DbResult resAfterUnmount;
 
     DbAutoConnection dbConnection(pool);

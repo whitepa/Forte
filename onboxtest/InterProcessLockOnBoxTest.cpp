@@ -269,7 +269,7 @@ protected:
     virtual void * run(void) {
         while (!Thread::IsShuttingDown())
         {
-            shared_ptr<Event> e;
+            boost::shared_ptr<Event> e;
             while (e = mQueue.Get())
             {
                 if (e->mName == "lock")

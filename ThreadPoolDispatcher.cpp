@@ -35,7 +35,7 @@ void* Forte::ThreadPoolDispatcherManager::run(void)
             hlog(HLOG_DEBUG2, "%s: Creating %i (of %i) thread pool worker ...",
                  disp.mDispatcherName.c_str(), i, disp.mMinThreads);
             AutoUnlockMutex lock(disp.mThreadsLock);
-            disp.mThreads.push_back(shared_ptr<ThreadPoolDispatcherWorker>(
+            disp.mThreads.push_back(boost::shared_ptr<ThreadPoolDispatcherWorker>(
                                         new ThreadPoolDispatcherWorker(disp)));
         }
         catch (...)
@@ -84,7 +84,7 @@ void* Forte::ThreadPoolDispatcherManager::run(void)
 
                         AutoUnlockMutex lock(disp.mThreadsLock);
                         disp.mThreads.push_back(
-                            shared_ptr<ThreadPoolDispatcherWorker>(
+                            boost::shared_ptr<ThreadPoolDispatcherWorker>(
                                 new ThreadPoolDispatcherWorker(disp)));
                     }
                     catch (...)
@@ -107,7 +107,7 @@ void* Forte::ThreadPoolDispatcherManager::run(void)
                  spareThreads, disp.mMinSpareThreads, disp.mMaxSpareThreads);
 
             AutoUnlockMutex lock(disp.mThreadsLock);
-            std::vector<shared_ptr<DispatcherWorkerThread> >::iterator i =
+            std::vector<boost::shared_ptr<DispatcherWorkerThread> >::iterator i =
                 disp.mThreads.begin();
             //TODO? should thread pool dispatcher try to kill idle
             //threads first?
@@ -135,7 +135,7 @@ void* Forte::ThreadPoolDispatcherManager::run(void)
     // tell all workers to shutdown
     {
         AutoUnlockMutex lock(disp.mThreadsLock);
-        foreach (shared_ptr<DispatcherWorkerThread> &thr, disp.mThreads)
+        foreach (boost::shared_ptr<DispatcherWorkerThread> &thr, disp.mThreads)
         {
             if (thr)
             {
@@ -163,7 +163,7 @@ void* Forte::ThreadPoolDispatcherManager::run(void)
         // have a reference to the dispatcher. we have to ensure our
         // workers exit before we do so their Dispatcher& does not
         // become invalid
-        foreach (shared_ptr<DispatcherWorkerThread> &thr, disp.mThreads)
+        foreach (boost::shared_ptr<DispatcherWorkerThread> &thr, disp.mThreads)
         {
             if (thr)
             {
@@ -233,7 +233,7 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
         while (disp.mPaused == false &&
                !Thread::IsShuttingDown())
         {
-            shared_ptr<Event> event(disp.mEventQueue.Get());
+            boost::shared_ptr<Event> event(disp.mEventQueue.Get());
             if (!event) break;
             setEvent(event);
             // set start time
@@ -343,7 +343,7 @@ void Forte::ThreadPoolDispatcher::Resume(void)
     mNotify.Broadcast();
 }
 
-void Forte::ThreadPoolDispatcher::Enqueue(shared_ptr<Event> e)
+void Forte::ThreadPoolDispatcher::Enqueue(boost::shared_ptr<Event> e)
 {
     //FTRACE;
 
@@ -360,14 +360,14 @@ bool Forte::ThreadPoolDispatcher::Accepting(void)
 
 int Forte::ThreadPoolDispatcher::GetRunningEvents(
     int maxEvents,
-    std::list<shared_ptr<Event> > &runningEvents)
+    std::list<boost::shared_ptr<Event> > &runningEvents)
 {
     // loop through the dispatcher threads
     AutoUnlockMutex lock(mNotifyLock);
     AutoUnlockMutex thrLock(mThreadsLock);
 
     int count = 0;
-    foreach (shared_ptr<DispatcherWorkerThread> dt, mThreads)
+    foreach (boost::shared_ptr<DispatcherWorkerThread> dt, mThreads)
     {
         if (dt->HasEvent())
         {

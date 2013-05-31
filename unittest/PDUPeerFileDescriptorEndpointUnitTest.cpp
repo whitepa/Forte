@@ -49,7 +49,7 @@ struct TestPayload
     char d[128];
 } __attribute__((__packed__));
 
-shared_ptr<PDU> makeTestPDU()
+boost::shared_ptr<PDU> makeTestPDU()
 {
     PDUPtr pdu;
 
@@ -69,7 +69,7 @@ shared_ptr<PDU> makeTestPDU()
     return pdu;
 }
 
-size_t testPDUSize(const shared_ptr<PDU>& pdu)
+size_t testPDUSize(const boost::shared_ptr<PDU>& pdu)
 {
     return sizeof(pdu->GetHeader())
         + pdu->GetPayloadSize()
@@ -92,7 +92,7 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest, ReceivesDataViaFD)
     Forte::AutoFD fd2(fds[1]);
 
     Forte::PDUPtr pdu = makeTestPDU();
-    shared_array<char> buf = PDU::CreateSendBuffer(*pdu);
+    boost::shared_array<char> buf = PDU::CreateSendBuffer(*pdu);
     size_t len = testPDUSize(pdu);
 
     Forte::PDUPeerFileDescriptorEndpoint peer(fd1);
@@ -121,7 +121,7 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest, KeepsIncomingPDUsInAQueue)
     Forte::PDUPeerFileDescriptorEndpoint peer(fd1);
 
     Forte::PDUPtr pdu = makeTestPDU();
-    shared_array<char> buf = PDU::CreateSendBuffer(*pdu);
+    boost::shared_array<char> buf = PDU::CreateSendBuffer(*pdu);
     size_t len = testPDUSize(pdu);
 
     for (int i = 0; i < 3; ++i)
@@ -163,7 +163,7 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest, HandlesPDUsInternally)
         endpoint2.SetEPollFD(epollFD);
 
         Forte::PDUPtr pdu = makeTestPDU();
-        shared_array<char> buf = PDU::CreateSendBuffer(*pdu);
+        boost::shared_array<char> buf = PDU::CreateSendBuffer(*pdu);
 
         endpoint1.SendPDU(*pdu);
 
@@ -215,7 +215,7 @@ protected:
     void* run() {
 
         Forte::PDUPtr pdu = makeTestPDU();
-        shared_array<char> buf = PDU::CreateSendBuffer(*pdu);
+        boost::shared_array<char> buf = PDU::CreateSendBuffer(*pdu);
         size_t len = testPDUSize(pdu);
 
         for (int i = 0; i < 100; ++i)
@@ -289,7 +289,7 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest, ThrowESendFailedOnBrokenPipe)
         endpoint2.SetEPollFD(epollFD);
 
         Forte::PDUPtr pdu = makeTestPDU();
-        shared_array<char> buf = PDU::CreateSendBuffer(*pdu);
+        boost::shared_array<char> buf = PDU::CreateSendBuffer(*pdu);
 
         endpoint1.SendPDU(*pdu);
 

@@ -621,7 +621,7 @@ TEST_F(ProcessManagerTest, ProcessManagerCanRunHost)
     using namespace boost;
     try
     {
-        shared_ptr<ProcessManagerImpl> processManagerPtr =
+        boost::shared_ptr<ProcessManagerImpl> processManagerPtr =
             make_shared<ProcessManagerImpl>();
 
         ProcessManagerImpl& processManager = *processManagerPtr;

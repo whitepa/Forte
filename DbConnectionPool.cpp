@@ -84,12 +84,12 @@ void DbConnectionPool::init()
     {
         if (mDbAltName.empty())
         {
-            mDbConnectionFactory = shared_ptr<DbConnectionFactory>(new DbLiteConnectionFactory());
+            mDbConnectionFactory = boost::shared_ptr<DbConnectionFactory>(new DbLiteConnectionFactory());
         }
         else
         {
-            shared_ptr<DbConnectionFactory> primaryDbFactory(new DbLiteConnectionFactory());
-            shared_ptr<DbConnectionFactory> secondaryDbFactory(new DbLiteConnectionFactory(SQLITE_OPEN_READONLY));
+            boost::shared_ptr<DbConnectionFactory> primaryDbFactory(new DbLiteConnectionFactory());
+            boost::shared_ptr<DbConnectionFactory> secondaryDbFactory(new DbLiteConnectionFactory(SQLITE_OPEN_READONLY));
             mDbConnectionFactory.reset(new DbMirroredConnectionFactory(primaryDbFactory, secondaryDbFactory, mDbAltName));
         }
     }
@@ -98,13 +98,13 @@ void DbConnectionPool::init()
         const FString vfs(mDbType.substr(7));
         if (mDbAltName.empty())
         {
-            mDbConnectionFactory = shared_ptr<DbConnectionFactory>(
+            mDbConnectionFactory = boost::shared_ptr<DbConnectionFactory>(
                     new DbLiteConnectionFactory(vfs));
         }
         else
         {
-            shared_ptr<DbConnectionFactory> primaryDbFactory(new DbLiteConnectionFactory(vfs));
-            shared_ptr<DbConnectionFactory> secondaryDbFactory(new DbLiteConnectionFactory(SQLITE_OPEN_READONLY));
+            boost::shared_ptr<DbConnectionFactory> primaryDbFactory(new DbLiteConnectionFactory(vfs));
+            boost::shared_ptr<DbConnectionFactory> secondaryDbFactory(new DbLiteConnectionFactory(SQLITE_OPEN_READONLY));
             mDbConnectionFactory.reset(new DbMirroredConnectionFactory(primaryDbFactory, secondaryDbFactory, mDbAltName));
         }
     }

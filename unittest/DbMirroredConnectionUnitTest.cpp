@@ -195,7 +195,7 @@ TEST_F(DbMirroredConnectionUnitTest, SqliteTestConstraintsError)
  */
 TEST_F(DbMirroredConnectionUnitTest, SqliteDbBackupManagerThreadWhenNoInitialDatabaseTest)
 {
-    shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName().c_str(), getBackupDatabaseName().c_str()));
+    boost::shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName().c_str(), getBackupDatabaseName().c_str()));
 
     RemoveDatabases();
 
@@ -236,10 +236,10 @@ TEST_F(DbMirroredConnectionUnitTest, SqliteDbBackupManagerThreadWhenFuturePrimar
     unsigned int rows(0);
 
     // pool to backup database
-    shared_ptr<DbConnectionPool> backupPool(make_shared<DbConnectionPool>("sqlite", getBackupDatabaseName().c_str()));
+    boost::shared_ptr<DbConnectionPool> backupPool(make_shared<DbConnectionPool>("sqlite", getBackupDatabaseName().c_str()));
 
     {
-        shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName().c_str(), getBackupDatabaseName().c_str()));
+        boost::shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName().c_str(), getBackupDatabaseName().c_str()));
 
         // make an empty primary
         RemoveDatabases();
@@ -294,7 +294,7 @@ TEST_F(DbMirroredConnectionUnitTest, SqliteManualFailoverAndManualBackupDatabase
     size_t rows(0);
 
     {
-        shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite", getDatabaseName().c_str()));
+        boost::shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite", getDatabaseName().c_str()));
         DbAutoConnection dbConnection(pool);
 
         ASSERT_NO_THROW(dbConnection->BackupDatabase(getBackupDatabaseName().c_str()));
@@ -302,7 +302,7 @@ TEST_F(DbMirroredConnectionUnitTest, SqliteManualFailoverAndManualBackupDatabase
 
     RemovePrimaryDatabase();
 
-    shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite", getBackupDatabaseName().c_str()));
+    boost::shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite", getBackupDatabaseName().c_str()));
     DbAutoConnection dbConnection(pool);
 
     DbResult res = dbConnection->Store(SelectDbSqlStatement(SELECT_TEST_TABLE));
@@ -314,7 +314,7 @@ TEST_F(DbMirroredConnectionUnitTest, SqliteNoPathToBackupTargetDatabaseTest)
     DbResult res;
     FString tmpDeepDir(FStringFC(), "/tmp/%d/%d/backup.db", getpid(), getpid());
     FString cleanupPath(FStringFC(), "/tmp/%d", getpid());
-    shared_ptr<DbConnectionPool> pool(
+    boost::shared_ptr<DbConnectionPool> pool(
         make_shared<DbConnectionPool>(
             "sqlite_mirrored", getDatabaseName().c_str(),
             tmpDeepDir));
@@ -331,7 +331,7 @@ TEST_F(DbMirroredConnectionUnitTest, SqliteNoPrimaryOnAutoBackupDatabaseTest)
 {
     DbResult res;
 
-    shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName().c_str(), getBackupDatabaseName().c_str()));
+    boost::shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName().c_str(), getBackupDatabaseName().c_str()));
 
     {
         RemovePrimaryDatabase();
@@ -345,8 +345,8 @@ TEST_F(DbMirroredConnectionUnitTest, SqliteManualFailoverAutoBackupDatabaseTest)
     DbResult res;
 
     {
-        shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName().c_str(), getBackupDatabaseName().c_str()));
-        shared_ptr<DbConnectionPool> backupPool(make_shared<DbConnectionPool>("sqlite", getBackupDatabaseName().c_str()));
+        boost::shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName().c_str(), getBackupDatabaseName().c_str()));
+        boost::shared_ptr<DbConnectionPool> backupPool(make_shared<DbConnectionPool>("sqlite", getBackupDatabaseName().c_str()));
 
         {
             DbBackupManagerThread backupMgr(pool);
@@ -379,7 +379,7 @@ TEST_F(DbMirroredConnectionUnitTest, SqliteManualFailoverAutoBackupDatabaseTest)
         RemovePrimaryDatabase();
 
         {
-            shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite", getBackupDatabaseName().c_str()));
+            boost::shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite", getBackupDatabaseName().c_str()));
             DbAutoConnection dbConnection(pool);
             res = dbConnection->Store(SelectDbSqlStatement(SELECT_TEST_TABLE));
         }
@@ -417,8 +417,8 @@ TEST_F(DbMirroredConnectionUnitTest, AutoBackupAutoFailoverDbMirroredConnectionT
     size_t rows(0);
     DbResult res;
 
-    shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName().c_str(), getBackupDatabaseName().c_str()));
-    shared_ptr<DbConnectionPool> backupPool(make_shared<DbConnectionPool>("sqlite", getBackupDatabaseName().c_str()));
+    boost::shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName().c_str(), getBackupDatabaseName().c_str()));
+    boost::shared_ptr<DbConnectionPool> backupPool(make_shared<DbConnectionPool>("sqlite", getBackupDatabaseName().c_str()));
 
     {
         {
@@ -463,7 +463,7 @@ TEST_F(DbMirroredConnectionUnitTest, AutoBackupAutoFailoverStabilityOfBackupMana
     size_t rows(0);
     DbResult res;
 
-    shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName().c_str(), getBackupDatabaseName().c_str()));
+    boost::shared_ptr<DbConnectionPool> pool(make_shared<DbConnectionPool>("sqlite_mirrored", getDatabaseName().c_str(), getBackupDatabaseName().c_str()));
     DbBackupManagerThread backupMgr(pool);
 
     {

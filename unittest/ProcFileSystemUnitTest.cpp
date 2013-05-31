@@ -32,7 +32,7 @@ TEST_F(ProcFileSystemUnitTest, UptimeMockContents)
     FTRACE;
 
     // setup
-    shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
+    boost::shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
     fsptr->FilePutContents("/proc/uptime", "30782.38 29768.69\n");
 
     // construct
@@ -51,7 +51,7 @@ TEST_F(ProcFileSystemUnitTest, UptimeVerifyRealOutput)
     FTRACE;
 
     // setup
-    shared_ptr<FileSystem> fsptr(new FileSystemImpl());
+    boost::shared_ptr<FileSystem> fsptr(new FileSystemImpl());
 
     // construct
     ProcFileSystem procFileSystem(fsptr);
@@ -70,7 +70,7 @@ TEST_F(ProcFileSystemUnitTest, MemoryInfoReadMock)
 {
     FTRACE;
 
-    shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
+    boost::shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
     fsptr->FilePutContents("/proc/meminfo",
                            "MemTotal:      1015276 kB\n"
                            "MemFree:         16868 kB\n"
@@ -144,7 +144,7 @@ TEST_F(ProcFileSystemUnitTest, MemoryInfoReadReal)
 {
     FTRACE;
 
-    shared_ptr<FileSystem> fsptr(new FileSystemImpl());
+    boost::shared_ptr<FileSystem> fsptr(new FileSystemImpl());
     ProcFileSystem procFileSystem(fsptr);
 
     Forte::StrDoubleMap memoryInfo;
@@ -161,7 +161,7 @@ TEST_F(ProcFileSystemUnitTest, PidOfReturnsMatchingsPidsForProcess)
 {
     FTRACE;
 
-    shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
+    boost::shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
 
     fsptr->AddScanDirResult("/proc", "1");
     fsptr->AddScanDirResult("/proc", "2");
@@ -219,7 +219,7 @@ TEST_F(ProcFileSystemUnitTest, PidOfInitReturns1)
 TEST_F(ProcFileSystemUnitTest, GetProcessorInformationSuccess)
 {
     // setup
-    shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
+    boost::shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
     fsptr->FilePutContents("/proc/cpuinfo",
                            "processor   : 0\n"
                            "vendor_id   : GenuineIntel\n"
@@ -332,7 +332,7 @@ TEST_F(ProcFileSystemUnitTest, GetProcessorInformationSuccess)
 TEST_F(ProcFileSystemUnitTest, ProcessIsRunningSuccess)
 {
     FTRACE;
-    shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
+    boost::shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
     fsptr->FilePutContents("/var/run/mydaemon.pid", "1999");
     fsptr->FilePutContents("/proc/1999/status",
                            "Name:       mydaemon\n"
@@ -347,7 +347,7 @@ TEST_F(ProcFileSystemUnitTest, ProcessIsRunningSuccess)
 TEST_F(ProcFileSystemUnitTest, ProcessIsRunningFailure)
 {
     FTRACE;
-    shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
+    boost::shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
     fsptr->FilePutContents("/var/run/mydaemon.pid", "1");
     fsptr->FilePutContents("/proc/1/status",
                            "Name:       init\n"

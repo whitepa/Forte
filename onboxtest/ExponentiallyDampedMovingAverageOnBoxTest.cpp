@@ -62,7 +62,7 @@ public:
 TEST_F(ExponentiallyDampedMovingAverageOnBoxTest, Value)
 {
     logManager.SetGlobalLogMask(HLOG_ALL);
-    shared_ptr<Forte::RunLoop> rl(new RunLoop("stats"));
+    boost::shared_ptr<Forte::RunLoop> rl(new RunLoop("stats"));
     ExponentiallyDampedMovingAverage edma(11,
                                           Forte::Timespec::FromMillisec(200),
                                           Forte::Timespec::FromMillisec(50),
@@ -91,7 +91,7 @@ TEST_F(ExponentiallyDampedMovingAverageOnBoxTest, Value)
 TEST_F(ExponentiallyDampedMovingAverageOnBoxTest, Rate)
 {
     logManager.SetGlobalLogMask(HLOG_ALL);
-    shared_ptr<Forte::RunLoop> rl(new RunLoop("stats"));
+    boost::shared_ptr<Forte::RunLoop> rl(new RunLoop("stats"));
     ExponentiallyDampedMovingAverage rate(11,
                                           Forte::Timespec::FromMillisec(200),
                                           Forte::Timespec::FromMillisec(100),

@@ -14,7 +14,7 @@ boost::shared_ptr<PDUPeerEndpoint> PDUPeerEndpointFactoryImpl::Create(int fd)
 {
     FTRACE2("%d", fd);
     hlog(HLOG_DEBUG2, "Creating new FileDescriptorPDUPeer");
-    return shared_ptr<PDUPeerEndpoint>(new PDUPeerFileDescriptorEndpoint(fd));
+    return boost::shared_ptr<PDUPeerEndpoint>(new PDUPeerFileDescriptorEndpoint(fd));
 }
 
 boost::shared_ptr<PDUPeerEndpoint> PDUPeerEndpointFactoryImpl::Create(
@@ -35,7 +35,7 @@ boost::shared_ptr<PDUPeerEndpoint> PDUPeerEndpointFactoryImpl::Create(
             << connectToSocketAddress.first
             << ":" << connectToSocketAddress.second);
 
-        return shared_ptr<PDUPeerEndpoint>(
+        return boost::shared_ptr<PDUPeerEndpoint>(
             new PDUPeerNetworkAcceptorEndpoint(localListenSocketAddress));
     }
     else if (localListenSocketAddress == connectToSocketAddress)
@@ -43,7 +43,7 @@ boost::shared_ptr<PDUPeerEndpoint> PDUPeerEndpointFactoryImpl::Create(
         hlog(HLOG_DEBUG2, "Creating InProcessPDUPeer for %s:%d",
              localListenSocketAddress.first.c_str(),
              localListenSocketAddress.second);
-        return shared_ptr<PDUPeerEndpoint>(new PDUPeerInProcessEndpoint());
+        return boost::shared_ptr<PDUPeerEndpoint>(new PDUPeerInProcessEndpoint());
     }
     else
     {

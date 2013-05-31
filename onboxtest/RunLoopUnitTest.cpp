@@ -44,9 +44,9 @@ public:
 
 TEST_F(RunLoopTest, Basic)
 {
-    shared_ptr<TimerTarget> target = make_shared<TimerTarget>();
-    shared_ptr<RunLoop> rl = make_shared<RunLoop>("test");
-    shared_ptr<Timer> t = make_shared<Timer>("TimerTarget::TimerFired",
+    boost::shared_ptr<TimerTarget> target = make_shared<TimerTarget>();
+    boost::shared_ptr<RunLoop> rl = make_shared<RunLoop>("test");
+    boost::shared_ptr<Timer> t = make_shared<Timer>("TimerTarget::TimerFired",
         rl, boost::bind(&TimerTarget::TimerFired, target),
         Forte::Timespec::FromSeconds(1), false);
     rl->AddTimer(t);
@@ -62,12 +62,12 @@ TEST_F(RunLoopTest, Basic)
 // microsecond precisions.
 TEST_F(RunLoopTest, Multi)
 {
-    shared_ptr<TimerTarget> target = make_shared<TimerTarget>();
-    shared_ptr<RunLoop> rl = make_shared<RunLoop>("test");
-    std::list<shared_ptr<Timer> > timers;
+    boost::shared_ptr<TimerTarget> target = make_shared<TimerTarget>();
+    boost::shared_ptr<RunLoop> rl = make_shared<RunLoop>("test");
+    std::list<boost::shared_ptr<Timer> > timers;
     for (int i = 1; i < 11; ++i)
     {
-        shared_ptr<Timer> t = make_shared<Timer>("TimerTarget::TimerFired",
+        boost::shared_ptr<Timer> t = make_shared<Timer>("TimerTarget::TimerFired",
             rl, boost::bind(&TimerTarget::TimerFired, target),
             Forte::Timespec::FromMillisec(1000*i), false);
         rl->AddTimer(t);
@@ -92,13 +92,13 @@ TEST_F(RunLoopTest, Multi)
 
 TEST_F(RunLoopTest, ScheduledInPast)
 {
-    shared_ptr<TimerTarget> target = make_shared<TimerTarget>();
-    shared_ptr<RunLoop> rl = make_shared<RunLoop>("test");
-    std::list<shared_ptr<Timer> > timers;
+    boost::shared_ptr<TimerTarget> target = make_shared<TimerTarget>();
+    boost::shared_ptr<RunLoop> rl = make_shared<RunLoop>("test");
+    std::list<boost::shared_ptr<Timer> > timers;
 
     for (int i = 0; i < 5; ++i)
     {
-        shared_ptr<Timer> t = make_shared<Timer>("TimerTarget::TimerFired",
+        boost::shared_ptr<Timer> t = make_shared<Timer>("TimerTarget::TimerFired",
             rl,
             boost::bind(&TimerTarget::TimerFired, target),
             Forte::Timespec::FromMillisec(-100*i), false);

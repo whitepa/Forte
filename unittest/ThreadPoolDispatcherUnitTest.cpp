@@ -265,7 +265,7 @@ TEST_F(ThreadPoolDispatcherUnitTest, WorkersCanWorkUntilSignalled)
 
     sleep(5);
     const int maxEvents(10);
-    std::list<shared_ptr<Event> > events;
+    std::list<boost::shared_ptr<Event> > events;
 
     ASSERT_EQ(0, dispatcher->GetQueuedEvents(maxEvents, events));
     ASSERT_EQ(5, dispatcher->GetRunningEvents(maxEvents, events));
@@ -311,7 +311,7 @@ TEST_F(ThreadPoolDispatcherUnitTest, WorkersCanReenqueueSelves)
 
     sleep(5);
     //const int maxEvents(10);
-    //std::list<shared_ptr<Event> > events;
+    //std::list<boost::shared_ptr<Event> > events;
 
     dispatcher->Shutdown();
 }
@@ -394,7 +394,7 @@ TEST_F(ThreadPoolDispatcherUnitTest, MultipleDispatchersCanExistInSameProcess)
 
     sleep(5);
     //const int maxEvents(10);
-    //std::list<shared_ptr<Event> > events;
+    //std::list<boost::shared_ptr<Event> > events;
 
     dispatcher->Shutdown();
     dispatcher2->Shutdown();

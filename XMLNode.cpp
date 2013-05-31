@@ -96,13 +96,13 @@ void XMLNode::Nuke()
 
 void XMLNode::XPathStr(FString &resultString, const Forte::FString &xpath)
 {
-    shared_ptr<xmlXPathContext> ctxt(xmlXPathNewContext(mNode->doc),
+    boost::shared_ptr<xmlXPathContext> ctxt(xmlXPathNewContext(mNode->doc),
             bind(xmlXPathFreeContext, _1));
     if (!ctxt)
         throw ForteXMLDocException("XPath query invalid");
     ctxt->node = mNode;
 
-    shared_ptr<xmlXPathObject> result(
+    boost::shared_ptr<xmlXPathObject> result(
         xmlXPathEval(reinterpret_cast<const xmlChar*>(xpath.c_str()),
                      ctxt.get()), bind(xmlXPathFreeObject, _1));
 
@@ -154,13 +154,13 @@ void XMLNode::XPathStr(FString &resultString, const Forte::FString &xpath)
 
 void XMLNode::Find(std::vector<XMLNode> &nodes, const Forte::FString &xpath)
 {
-    shared_ptr<xmlXPathContext> ctxt(xmlXPathNewContext(mNode->doc),
+    boost::shared_ptr<xmlXPathContext> ctxt(xmlXPathNewContext(mNode->doc),
             bind(xmlXPathFreeContext, _1));
     if (!ctxt)
         throw ForteXMLDocException("XPath query invalid");
     ctxt->node = mNode;
 
-    shared_ptr<xmlXPathObject> result(
+    boost::shared_ptr<xmlXPathObject> result(
         xmlXPathEval(reinterpret_cast<const xmlChar*>(xpath.c_str()),
                      ctxt.get()), bind(xmlXPathFreeObject, _1));
 

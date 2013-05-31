@@ -189,7 +189,7 @@ TEST(LogManagerUnitTest, TestMultiThreadedConcurrency)
     unsigned long ctr(0);
 
     logManager.EndLogging();
-    logManager.BeginLogging(shared_ptr<Logfile>(
+    logManager.BeginLogging(boost::shared_ptr<Logfile>(
                 new CountedWriteLogfile(ctr, MAX_THREADS, MAX_THREAD_WAIT_SECS, LOG_WRITE_DELAY_SECS)));
 
     vector<boost::shared_ptr<LogClient> > clients;

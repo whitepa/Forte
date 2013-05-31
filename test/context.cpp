@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE ( context_test1 )
     BOOST_CHECK_THROW(c.Get<LogManager>("forte.config"), EContextTypeMismatch);
 
     {
-        shared_ptr<ServiceConfig> cfg = (c.Get<ServiceConfig>("forte.config"));
+        boost::shared_ptr<ServiceConfig> cfg = (c.Get<ServiceConfig>("forte.config"));
         cfg->Set("key", "value");
     }
 
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE ( context_test1 )
     BOOST_CHECK(TestClass::mCount == 1);
     {
         Forte::ObjectPtr oPtr(c.Get("testobject"));
-        shared_ptr<TestClass> tcPtr(dynamic_pointer_cast<TestClass>(oPtr));
+        boost::shared_ptr<TestClass> tcPtr(dynamic_pointer_cast<TestClass>(oPtr));
         BOOST_CHECK( tcPtr->getCount() == 1 );
         BOOST_CHECK( tcPtr->isDerived() == false );
         c.Remove("testobject");
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE ( context_test1 )
     BOOST_CHECK( TestClass::mCount == 1 );
     {
         Forte::ObjectPtr oPtr(c.Get("testobject"));
-        shared_ptr<TestClass> tcPtr(dynamic_pointer_cast<TestClass>(oPtr));
+        boost::shared_ptr<TestClass> tcPtr(dynamic_pointer_cast<TestClass>(oPtr));
         BOOST_CHECK( tcPtr->getCount() == 1 );
         BOOST_CHECK( tcPtr->isDerived() == true );
         c.Remove("testobject");
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE ( context_test1 )
     bll::bind( &Context::Get<TestClass>, bll::_1, "testobject");  // functor to retrieve object from context
 
 //  This works:
-    boost::function<shared_ptr<TestClass>(const Context&)> f =
+    boost::function<boost::shared_ptr<TestClass>(const Context&)> f =
         bll::bind(&Context::Get<TestClass>, bll::_1, "testobject");
     f(c);
     boost::function<int(TestClass&)> g =
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE ( context_test1 )
         (bll::_1 == true);
     BOOST_CHECK( h(true) == true );
 
-//    boost::function<shared_ptr(Context&)> i =
+//    boost::function<boost::shared_ptr(Context&)> i =
     bll::bind(bll::unlambda(f),bll::_1);
 //    BOOST_CHECK( h(true) == true );
 

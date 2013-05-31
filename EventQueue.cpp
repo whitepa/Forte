@@ -70,7 +70,7 @@ void EventQueue::Add(boost::shared_ptr<Event> e)
             if (mMode == QUEUE_MODE_DROP_OLDEST || mMode == QUEUE_MODE_DROP_OLDEST_LOG)
             {
                 // delete the oldest entry
-                std::list<shared_ptr<Event> >::iterator i;
+                std::list<boost::shared_ptr<Event> >::iterator i;
                 i = mQueue.begin();
                 if (i != mQueue.end())
                 {
@@ -98,11 +98,11 @@ void EventQueue::Add(boost::shared_ptr<Event> e)
     }
 }
 
-shared_ptr<Event> EventQueue::Get(void)
+boost::shared_ptr<Event> EventQueue::Get(void)
 {
     AutoUnlockMutex lock(mMutex);
-    shared_ptr<Event> e;
-    std::list<shared_ptr<Event> >::iterator i;
+    boost::shared_ptr<Event> e;
+    std::list<boost::shared_ptr<Event> >::iterator i;
     i = mQueue.begin();
     if (i == mQueue.end())
         return e;
@@ -115,11 +115,11 @@ shared_ptr<Event> EventQueue::Get(void)
     return e;
 }
 
-shared_ptr<Event> EventQueue::Peek(void)
+boost::shared_ptr<Event> EventQueue::Peek(void)
 {
     AutoUnlockMutex lock(mMutex);
-    shared_ptr<Event> e;
-    std::list<shared_ptr<Event> >::iterator i;
+    boost::shared_ptr<Event> e;
+    std::list<boost::shared_ptr<Event> >::iterator i;
     i = mQueue.begin();
     if (i == mQueue.end())
         return e;
@@ -127,16 +127,16 @@ shared_ptr<Event> EventQueue::Peek(void)
     return e;
 }
 
-int EventQueue::GetEvents(int maxEvents, std::list<shared_ptr<Event> > &result)
+int EventQueue::GetEvents(int maxEvents, std::list<boost::shared_ptr<Event> > &result)
 {
     result.clear();
     AutoUnlockMutex lock(mMutex);
-    std::list<shared_ptr<Event> >::iterator i;
+    std::list<boost::shared_ptr<Event> >::iterator i;
     int count = 0;
     for (i = mQueue.begin(); i != mQueue.end() && maxEvents-- > 0;
          ++i)
     {
-        shared_ptr<Event> e = *i;
+        boost::shared_ptr<Event> e = *i;
         if (e)
         {
             result.push_back(e);

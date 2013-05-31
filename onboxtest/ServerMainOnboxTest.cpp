@@ -65,7 +65,7 @@ TEST_F(ServerMainOnboxTest, TestPIDFile)
     FString processName = cmdline.Left(pos);
 
     hlog(HLOG_DEBUG, "Process name is '%s'", processName.c_str());
-    shared_ptr<TestServer> server1;
+    boost::shared_ptr<TestServer> server1;
     ASSERT_NO_THROW(server1 = make_shared<TestServer>(processName));
     ASSERT_EQ(getpid(), fs.FileGetContents(PIDLOCATION).Trim().AsInt32());
 }
@@ -85,7 +85,7 @@ TEST_F(ServerMainOnboxTest, TestPIDFileThrows)
     cout << "Processname is " << processName << endl;
     fs.FilePutContents(PIDLOCATION, FString(FStringFC(), "%d", pid), false, true);
 
-    shared_ptr<TestServer> server1;
+    boost::shared_ptr<TestServer> server1;
     ASSERT_THROW(server1 = make_shared<TestServer>(processName), EAlreadyRunning);
 }
 
@@ -105,6 +105,6 @@ TEST_F(ServerMainOnboxTest, TestPIDFileDoesntThrowIfProcessDifferent)
     size_t pos = cmdline.find_first_of('\0');
     FString processName = cmdline.Left(pos);
 
-    shared_ptr<TestServer> server1;
+    boost::shared_ptr<TestServer> server1;
     ASSERT_NO_THROW(server1 = make_shared<TestServer>(processName));
 }

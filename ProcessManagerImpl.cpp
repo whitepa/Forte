@@ -213,7 +213,7 @@ void Forte::ProcessManagerImpl::startMonitor(
             // parent
             childfd.Close();
             // add a PDUPeer to the PeerSet owned by the ProcessManager
-            //shared_ptr<ProcessManager> pm(mProcessManagerPtr.lock());
+            //boost::shared_ptr<ProcessManager> pm(mProcessManagerPtr.lock());
             ph->mManagementChannel = addPeer(parentfd);
             parentfd.Release();
 

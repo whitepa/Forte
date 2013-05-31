@@ -42,7 +42,7 @@ void contextGetObject(const Forte::Context &context)
 
 void contextGetFileSystem(const Forte::Context &context)
 {
-    shared_ptr<FileSystem> fsptr;
+    boost::shared_ptr<FileSystem> fsptr;
 
     fsptr = context.Get<FileSystem>("filesystemtest");
     fsptr->GetCWD();
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(ContextSetGetObject)
 
 BOOST_AUTO_TEST_CASE(ContextSetGetFileSystem)
 {
-    shared_ptr<FileSystem> fsptr(new FileSystemImpl());
+    boost::shared_ptr<FileSystem> fsptr(new FileSystemImpl());
     c.Set("filesystemtest", fsptr);
     contextGetFileSystem(c);
 }
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(ContextSetObjectGetFileSystem)
 BOOST_AUTO_TEST_CASE(UptimeMockContents)
 {
     // setup
-    shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
+    boost::shared_ptr<MockFileSystem> fsptr(new MockFileSystem());
     fsptr->FilePutContents("/proc/uptime", "30782.38 29768.69\n");
 
     c.Set("forte.FileSystem", fsptr);
@@ -107,13 +107,13 @@ BOOST_AUTO_TEST_CASE(PointerCastPreservesReference)
 {
     hlog(HLOG_INFO, "PointerCastPreservesReference");
     {
-        shared_ptr<TestClass> ptr;
+        boost::shared_ptr<TestClass> ptr;
         BOOST_CHECK(TestClass::sCount == 0);
         {
             // this test case needs its own context, as it must be destroyed
             ContextImpl c;
             {
-                shared_ptr<TestClassDerived> ptr2(new TestClassDerived());
+                boost::shared_ptr<TestClassDerived> ptr2(new TestClassDerived());
                 c.Set("testclass", ptr2);
                 BOOST_CHECK(TestClass::sCount == 1);
             }
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(PointerCastPreservesReference)
             ptr = c.Get<TestClass>("testclass");
             BOOST_CHECK(TestClass::sCount == 1);
             {
-                shared_ptr<TestClass> ptr3(c.Get<TestClass>("testclass"));
+                boost::shared_ptr<TestClass> ptr3(c.Get<TestClass>("testclass"));
                 BOOST_CHECK(TestClass::sCount == 1);
                 BOOST_CHECK(ptr3.use_count() == 3);
                 BOOST_CHECK(ptr.use_count() == 3);
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(MiscTests)
     BOOST_CHECK_THROW(c.Get<LogManager>("forte.config"), EContextTypeMismatch);
 
     {
-        shared_ptr<ServiceConfig> cfg = (c.Get<ServiceConfig>("forte.config"));
+        boost::shared_ptr<ServiceConfig> cfg = (c.Get<ServiceConfig>("forte.config"));
         cfg->Set("key", "value");
     }
 
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(MiscTests)
     BOOST_CHECK(TestClass::sCount == 1);
     {
         Forte::ObjectPtr oPtr(c.Get("testobject"));
-        shared_ptr<TestClass> tcPtr(dynamic_pointer_cast<TestClass>(oPtr));
+        boost::shared_ptr<TestClass> tcPtr(dynamic_pointer_cast<TestClass>(oPtr));
         BOOST_CHECK( tcPtr->getCount() == 1 );
         BOOST_CHECK( tcPtr->isDerived() == false );
         c.Remove("testobject");
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(MiscTests)
     BOOST_CHECK( TestClass::sCount == 1 );
     {
         Forte::ObjectPtr oPtr(c.Get("testobject"));
-        shared_ptr<TestClass> tcPtr(dynamic_pointer_cast<TestClass>(oPtr));
+        boost::shared_ptr<TestClass> tcPtr(dynamic_pointer_cast<TestClass>(oPtr));
         BOOST_CHECK( tcPtr->getCount() == 1 );
         BOOST_CHECK( tcPtr->isDerived() == true );
         c.Remove("testobject");

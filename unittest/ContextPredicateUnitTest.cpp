@@ -35,13 +35,13 @@ public:
     static ContextPredicateFunctionResult PredicateFunctionSet(
             const Forte::Context &c)
     {
-        return make_tuple(true, MonotonicClock().GetTime());
+        return boost::make_tuple(true, MonotonicClock().GetTime());
     }
 
     static ContextPredicateFunctionResult PredicateFunctionClear(
             const Forte::Context &c)
     {
-        return make_tuple(false, MonotonicClock().GetTime());
+        return boost::make_tuple(false, MonotonicClock().GetTime());
     }
 };
 

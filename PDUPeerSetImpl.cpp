@@ -79,7 +79,7 @@ Forte::PDUPeerSetImpl::~PDUPeerSetImpl()
     }
 }
 
-void Forte::PDUPeerSetImpl::PeerDelete(const shared_ptr<PDUPeer>& peer)
+void Forte::PDUPeerSetImpl::PeerDelete(const boost::shared_ptr<PDUPeer>& peer)
 {
     FTRACE;
 
@@ -96,7 +96,7 @@ void Forte::PDUPeerSetImpl::PeerDelete(const shared_ptr<PDUPeer>& peer)
     }
 }
 
-shared_ptr<PDUPeer> Forte::PDUPeerSetImpl::PeerCreate(int fd)
+boost::shared_ptr<PDUPeer> Forte::PDUPeerSetImpl::PeerCreate(int fd)
 {
     FTRACE2("%d", fd);
 
@@ -104,7 +104,7 @@ shared_ptr<PDUPeer> Forte::PDUPeerSetImpl::PeerCreate(int fd)
     PDUPeerEndpointFactoryImpl f;
     // it should be ok to use the fd as the id. any network id of a
     // pdu peer will be a very large number well above 1024
-    shared_ptr<PDUPeer> peer(new PDUPeerImpl(fd, f.Create(fd)));
+    boost::shared_ptr<PDUPeer> peer(new PDUPeerImpl(fd, f.Create(fd)));
     peer->SetEventCallback(mEventCallback);
 
     {

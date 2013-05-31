@@ -32,11 +32,11 @@ void * Forte::OnDemandDispatcherManager::run(void)
         // environment.
         {
             AutoUnlockMutex thrLock(disp.mThreadsLock);
-            std::vector<shared_ptr<DispatcherWorkerThread> >::iterator i;
+            std::vector<boost::shared_ptr<DispatcherWorkerThread> >::iterator i;
             i = disp.mThreads.begin();
             while(i != disp.mThreads.end())
             {
-                shared_ptr<DispatcherWorkerThread> element = *i;
+                boost::shared_ptr<DispatcherWorkerThread> element = *i;
                 // OnDemandDispatcher workers are done with the work
                 // handler if HasEvent() returns false.
                 if (!element->HasEvent())
@@ -56,7 +56,7 @@ void * Forte::OnDemandDispatcherManager::run(void)
             }
         }
 
-        shared_ptr<Event> event;
+        boost::shared_ptr<Event> event;
         while (!disp.mPaused && (event = disp.mEventQueue.Get()))
         {
             AutoLockMutex unlock(disp.mNotifyLock);
@@ -64,7 +64,7 @@ void * Forte::OnDemandDispatcherManager::run(void)
 
             AutoUnlockMutex thrLock(disp.mThreadsLock);
             disp.mThreads.push_back(
-                shared_ptr<DispatcherWorkerThread>(
+                boost::shared_ptr<DispatcherWorkerThread>(
                     new OnDemandDispatcherWorker(disp, event)));
 
             hlog(HLOG_DEBUG2, "Number of threads in queue : %d",
@@ -83,13 +83,13 @@ void * Forte::OnDemandDispatcherManager::run(void)
     // signal any workers to shutdown
     {
         AutoUnlockMutex thrlock(disp.mThreadsLock);
-        foreach (shared_ptr<DispatcherWorkerThread> &thr, disp.mThreads)
+        foreach (boost::shared_ptr<DispatcherWorkerThread> &thr, disp.mThreads)
         {
             if (thr)
                 thr->Shutdown();
         }
 
-        foreach (shared_ptr<DispatcherWorkerThread> &thr, disp.mThreads)
+        foreach (boost::shared_ptr<DispatcherWorkerThread> &thr, disp.mThreads)
         {
             if (thr)
                 thr->WaitForShutdown();
@@ -105,7 +105,7 @@ void * Forte::OnDemandDispatcherManager::run(void)
 
 Forte::OnDemandDispatcherWorker::OnDemandDispatcherWorker(
     OnDemandDispatcher &disp,
-    const shared_ptr<Event>& event)
+    const boost::shared_ptr<Event>& event)
     : DispatcherWorkerThread(disp, event)
 {
     FTRACE;
@@ -197,7 +197,7 @@ void Forte::OnDemandDispatcher::Resume(void)
     mNotify.Signal();
 }
 
-void Forte::OnDemandDispatcher::Enqueue(shared_ptr<Event> e)
+void Forte::OnDemandDispatcher::Enqueue(boost::shared_ptr<Event> e)
 {
     mEventQueue.Add(e);
 }
@@ -209,7 +209,7 @@ bool Forte::OnDemandDispatcher::Accepting(void)
 
 int Forte::OnDemandDispatcher::GetRunningEvents(
     int maxEvents,
-    std::list<shared_ptr<Event> > &runningEvents)
+    std::list<boost::shared_ptr<Event> > &runningEvents)
 {
     // lock the notify lock to prevent threads from freeing events while
     // we are copying them
@@ -217,7 +217,7 @@ int Forte::OnDemandDispatcher::GetRunningEvents(
     AutoUnlockMutex thrLock(mThreadsLock);
     int count = 0;
     // loop through the dispatcher threads
-    foreach (shared_ptr<DispatcherWorkerThread> &thr, mThreads)
+    foreach (boost::shared_ptr<DispatcherWorkerThread> &thr, mThreads)
     {
         // copy each event
         if (thr && thr->mEventPtr)
@@ -229,12 +229,12 @@ int Forte::OnDemandDispatcher::GetRunningEvents(
     return count;
 }
 
-bool Forte::OnDemandDispatcher::StopRunningEvent(shared_ptr<Event> &runningEvent)
+bool Forte::OnDemandDispatcher::StopRunningEvent(boost::shared_ptr<Event> &runningEvent)
 {
     AutoUnlockMutex lock(mNotifyLock);
     AutoUnlockMutex thrLock(mThreadsLock);
 
-    foreach (shared_ptr<DispatcherWorkerThread> &thr, mThreads)
+    foreach (boost::shared_ptr<DispatcherWorkerThread> &thr, mThreads)
     {
         // copy each event
         if (thr && (thr->mEventPtr == runningEvent))

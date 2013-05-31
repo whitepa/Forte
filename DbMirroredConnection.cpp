@@ -11,8 +11,8 @@
 using namespace Forte;
 using namespace boost;
 
-DbMirroredConnection::DbMirroredConnection(shared_ptr<DbConnectionFactory> primaryDbConnectionFactory,
-                                           shared_ptr<DbConnectionFactory> secondaryDbConnectionFactory,
+DbMirroredConnection::DbMirroredConnection(boost::shared_ptr<DbConnectionFactory> primaryDbConnectionFactory,
+                                           boost::shared_ptr<DbConnectionFactory> secondaryDbConnectionFactory,
                                            const FString& altDbName)
     : mPrimaryDbConnectionFactory(primaryDbConnectionFactory),
       mSecondaryDbConnectionFactory(secondaryDbConnectionFactory),
