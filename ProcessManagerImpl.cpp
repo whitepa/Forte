@@ -65,6 +65,8 @@ Forte::ProcessManagerImpl::~ProcessManagerImpl()
     // the Process objects.
 
     // \TODO abandon processes
+
+    mPeerSet->Shutdown();
 }
 
 boost::shared_ptr<ProcessFuture>
