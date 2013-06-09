@@ -5,7 +5,6 @@
 #include "LogManager.h"
 #include "Types.h"
 #include <boost/tuple/tuple.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/bind.hpp>
 #include <stdarg.h>
 #include <sys/time.h>
@@ -465,20 +464,24 @@ void LogManager::beginLogging(const char *path, int mask, unsigned int format)
     LogfilePtr logfile;
     if (!strcmp(path, "//stderr"))
     {
-        logfile = boost::make_shared<Logfile>(path, &cerr, mask, false, format);
+        logfile = boost::shared_ptr<Logfile>(
+            new Logfile(path, &cerr, mask, false, format));
     }
     else if (!strcmp(path, "//stdout"))
     {
-        logfile = boost::make_shared<Logfile>(path, &cout, mask, false, format);
+        logfile = boost::shared_ptr<Logfile>(
+            new Logfile(path, &cout, mask, false, format));
     }
     else if (!strncmp(path, "//syslog/", 9))
     {
-        logfile = boost::make_shared<SysLogfile>(path + 9, mask);
+        logfile = boost::shared_ptr<SysLogfile>(
+            new SysLogfile(path + 9, mask));
     }
     else
     {
         ofstream *out = new ofstream(path, ios::app | ios::out);
-        logfile = boost::make_shared<Logfile>(path, out, mask, true, format);
+        logfile = boost::shared_ptr<Logfile>(
+            new Logfile(path, out, mask, true, format));
     }
 
     mLogfiles.push_back(logfile);
