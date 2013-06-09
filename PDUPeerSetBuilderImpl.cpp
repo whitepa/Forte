@@ -160,3 +160,29 @@ uint64_t Forte::PDUPeerSetBuilderImpl::SocketAddressToID(const SocketAddress& sa
     }
     return result;
 }
+
+std::string Forte::PDUPeerSetBuilderImpl::IDToSocketAddress(
+    const uint64_t& peerID)
+{
+    FTRACE;
+
+    uint64_t port = peerID & 0xFFFFFFFF;
+    int32_t addr = peerID >> 32;
+    addr = htonl(addr);
+
+    char strAddr[INET_ADDRSTRLEN];
+    struct in_addr in_addr;
+    in_addr.s_addr = addr;
+
+    if (inet_ntop(AF_INET, &in_addr, strAddr, INET_ADDRSTRLEN) != NULL)
+    {
+        std::stringstream s;
+        s << strAddr << ":" << port;
+        return s.str();
+    }
+    else
+    {
+        throw EPDUPeerSetBuilderCouldNotCreateID(
+            SystemCallUtil::GetErrorDescription(errno));
+    }
+}

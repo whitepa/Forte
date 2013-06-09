@@ -67,6 +67,7 @@ namespace Forte
         }
 
         static uint64_t SocketAddressToID(const SocketAddress& sa);
+        static std::string IDToSocketAddress(const uint64_t& peerID);
 
         PDUPeerPtr GetPeer(uint64_t peerID) {
             return mPDUPeerSet->GetPeer(peerID);

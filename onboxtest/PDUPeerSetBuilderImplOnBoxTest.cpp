@@ -282,6 +282,15 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, IDIsIPAndPortAs64BitInt)
               PDUPeerSetBuilderImpl::SocketAddressToID(listenAddress));
 }
 
+TEST_F(PDUPeerSetBuilderImplOnBoxTest, IDCanBeConvertedByToIPPort)
+{
+    FTRACE;
+    SocketAddress listenAddress(make_pair("127.0.0.1", 13001));
+
+    ASSERT_EQ("127.0.0.1:13001",
+              PDUPeerSetBuilderImpl::IDToSocketAddress(9151314447111828169));
+}
+
 TEST_F(PDUPeerSetBuilderImplOnBoxTest, ConstructorSetsUpBasics)
 {
     FTRACE;
