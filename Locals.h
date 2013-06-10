@@ -25,14 +25,14 @@ namespace Forte
     template <
         typename Derived,
         BOOST_PP_ENUM_PARAMS_WITH_A_DEFAULT(
-            10, typename T, boost::mpl::na)
+            20, typename T, boost::mpl::na)
         >
         struct Locals {
 
             /**
              * The mpl vector of all the local member variable types
              */
-            typedef boost::mpl::vector<BOOST_PP_ENUM_PARAMS(10, T)> LocalTypes;
+            typedef boost::mpl::vector<BOOST_PP_ENUM_PARAMS(20, T)> LocalTypes;
 
             template <typename X>
             struct ToTupleElementType {
