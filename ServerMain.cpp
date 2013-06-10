@@ -78,9 +78,12 @@ void ServerMain::init(int logMask)
 
     // daemonize
     if (mDaemon && daemon(1,0)) {
+        const int savedErrno = errno;
+
         fprintf(stderr, "can't start as daemon: %s\n",
                 SystemCallUtil::GetErrorDescription(errno).c_str());
-        exit(1);
+
+        SystemCallUtil::ThrowErrNoException(savedErrno);
     }
 
     // read config file
@@ -110,9 +113,12 @@ void ServerMain::initHostname()
         char hn[128];
         if (gethostname(hn, sizeof(hn)) < 0)
         {
+            const int savedErrno = errno;
+
             fprintf(stderr, "Unable to get hostname: %s\n",
                     SystemCallUtil::GetErrorDescription(errno).c_str());
-            exit(1);
+
+            SystemCallUtil::ThrowErrNoException(savedErrno);
         }
         mHostname.assign(hn);
         mHostname = mHostname.Left(mHostname.find_first_of("."));
