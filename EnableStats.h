@@ -78,6 +78,8 @@ namespace Forte
             removeChildFromParent();
         }
 
+        typedef boost::function<std::map<FString, int64_t> (void) > StatFunction;
+
         /**
          * GetAllStats() used to get a map of all the stats in Derived
          * @retrun map of all the stats
@@ -88,6 +90,12 @@ namespace Forte
             std::map<FString, int64_t> localValues =
                 mStatVariables.template GetAllLocals<int64_t>(this);
             result.insert(localValues.begin(), localValues.end());
+
+            foreach (const StatFunction fn, mStatFunctions)
+            {
+                localValues = fn();
+                result.insert(localValues.begin(), localValues.end());
+            }
 
             typedef std::pair<FString, ChildStatCall> ChildStatCallPair;
             foreach (const ChildStatCallPair &pair, mChildStats)
@@ -201,6 +209,9 @@ namespace Forte
             mStatVariables.template AssignLocal<index>(name, var);
         }
 
+        void registerStatFunction(StatFunction fn) {
+            mStatFunctions.push_back(fn);
+        }
 
     private:
         typedef boost::function<std::map<FString, int64_t> (void) > ChildStatCall;
@@ -247,6 +258,9 @@ namespace Forte
 
     private:
         LocalsType mStatVariables;
+
+        std::vector<StatFunction> mStatFunctions;
+
         std::map<FString, ChildStatCall> mChildStats;
 
         boost::function<void ()> mParentUnregisterFn;
