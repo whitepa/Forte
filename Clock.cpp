@@ -86,6 +86,11 @@ void DeadlineClock::GetRemaining(Forte::Timespec& ts) const
     ts = GetTime() - mDeadlineTimespec;
 }
 
+void DeadlineClock::ExpiresAt(const Forte::Timespec &ts)
+{
+    mDeadlineTimespec = ts;
+}
+
 void DeadlineClock::ExpiresInSeconds(long long int sec)
 {
     mDeadlineTimespec = GetTime() + Timespec::FromSeconds(sec);

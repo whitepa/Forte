@@ -244,6 +244,7 @@ namespace Forte
 
         virtual bool Expired() const;
         //TODO: virtual bool SetExpired(struct timespec &ts);
+        virtual void ExpiresAt(const Forte::Timespec &ts);
         virtual void ExpiresInSeconds(long long int sec);
         virtual void ExpiresInMillisec(int millisec);
         virtual void GetRemaining(Forte::Timespec& ts) const;
