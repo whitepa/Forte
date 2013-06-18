@@ -75,7 +75,13 @@ TEST(LogManagerUnitTest, TestOutput)
 class LogClient : public Forte::Thread
 {
 public:
-    LogClient(unsigned long& stats):mStats(stats), mRun(false), mFinish(false), mCondition(mMutexStart), mConditionFinish(mMutexFinish)
+    LogClient(unsigned long& stats, Forte::Mutex& mutexStats)
+        : mStats(stats)
+        , mMutexStats(mutexStats)
+        , mRun(false)
+        , mFinish(false)
+        , mCondition(mMutexStart)
+        , mConditionFinish(mMutexFinish)
     {
         initialized();
     }
@@ -123,11 +129,11 @@ public:
     }
 
     unsigned long& mStats;
+    Forte::Mutex& mMutexStats;
     bool mRun;
     bool mFinish;
     Forte::Mutex mMutexStart;
     Forte::Mutex mMutexFinish;
-    Forte::Mutex mMutexStats;
     Forte::ThreadCondition mCondition;
     Forte::ThreadCondition mConditionFinish;
 };
@@ -194,11 +200,13 @@ TEST(LogManagerUnitTest, TestMultiThreadedConcurrency)
 
     vector<boost::shared_ptr<LogClient> > clients;
 
+    Forte::Mutex mutexStats;
     unsigned long stats(0);
 
     for(unsigned long i=0; i<MAX_THREADS; i++)
     {
-        boost::shared_ptr<LogClient> client(new LogClient(stats));
+        boost::shared_ptr<LogClient> client(new LogClient(stats,
+                                                          mutexStats));
         clients.push_back(client);
         client->WaitForInitialize();
     }
@@ -221,4 +229,5 @@ TEST(LogManagerUnitTest, TestMultiThreadedConcurrency)
     logManager.EndLogging();
 
     EXPECT_EQ(MAX_THREADS, ctr);
+    EXPECT_EQ(MAX_THREADS, stats);
 }
