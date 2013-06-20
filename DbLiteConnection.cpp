@@ -90,14 +90,17 @@ bool DbLiteConnection::Connect()
 
     if (mDB != NULL && !Close()) return false;
 
-    err = sqlite3_open_v2(mDBName, &mDB, mFlags,
-            mVFSName.empty() ? NULL : mVFSName.c_str());
+    err = sqlite3_open_v2(
+        mDBName.c_str(), &mDB, mFlags,
+        mVFSName.empty() ? NULL : mVFSName.c_str());
 
     if (err == SQLITE_OK)
     {
         hlog(HLOG_DEBUG2, "[%s][%p] sqlite connection open",
              mDBName.c_str(), mDB);
         sqlite3_busy_timeout(mDB, 1000); // 1 second
+
+        Execute("PRAGMA synchronous = 1;");
         return true;
     }
 
@@ -357,19 +360,19 @@ void DbLiteConnection::backupDatabase(DbLiteConnection &dbTarget)
 
     int rc;
     do {
-        rc = sqlite3_backup_step(pBackup, 5);
+        rc = sqlite3_backup_step(pBackup, -1);
     } while( rc==SQLITE_OK || rc==SQLITE_BUSY || rc==SQLITE_LOCKED );
-
-    if(rc != SQLITE_DONE)
-    {
-        hlog_and_throw(HLOG_WARN, EDbLiteBackupFailedSqlite3BackupStep());
-    }
 
     /* Release resources allocated by backup_init(). */
     if(sqlite3_backup_finish(pBackup) != SQLITE_OK)
     {
         hlog(HLOG_ERROR, "failed to finish backup to %s",
              dbTarget.mDBName.c_str());
+    }
+
+    if(rc != SQLITE_DONE)
+    {
+        hlog_and_throw(HLOG_WARN, EDbLiteBackupFailedSqlite3BackupStep());
     }
 }
 
