@@ -132,6 +132,18 @@ TEST_F(FileSystemImplOnBoxTest, DirName)
     ASSERT_STREQ(".", f.Dirname(file2));
 }
 
+TEST_F(FileSystemImplOnBoxTest, DirnameCanBeUsedToRecurseUpwards)
+{
+    FileSystemImpl f;
+    FString file1 = "/level1/level2/level3/level4.tmp";
+    FString parent = f.Dirname(file1);
+    ASSERT_STREQ("/level1/level2/level3", parent);
+    parent = f.Dirname(parent);
+    ASSERT_STREQ("/level1/level2", parent);
+    parent = f.Dirname(parent);
+    ASSERT_STREQ("/level1", parent);
+}
+
 TEST_F(FileSystemImplOnBoxTest, Basename)
 {
     hlog(HLOG_INFO, "Basename");

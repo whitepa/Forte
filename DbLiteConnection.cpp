@@ -160,7 +160,7 @@ DbResult DbLiteConnection::Query(const FString& sql)
     while (remain.length() && tries_remaining > 0)
     {
         // prepare statement
-        hlog(HLOG_DEBUG, "[%s] Preparing statement [%s]", mDBName.c_str(),
+        hlog(HLOG_DEBUG2, "[%s] Preparing statement [%s]", mDBName.c_str(),
              sql.c_str());
         mErrno = sqlite3_prepare_v2(mDB, remain, remain.length(), &stmt, &tail);
         if (stmt == NULL)
@@ -200,7 +200,7 @@ DbResult DbLiteConnection::Query(const FString& sql)
             // run query
             mTries++;
             gettimeofday(&tv_start, NULL);
-            hlog(HLOG_DEBUG, "[%s] Loading query [%s]", mDBName.c_str(),
+            hlog(HLOG_DEBUG2, "[%s] Loading query [%s]", mDBName.c_str(),
                  sql.c_str());
             mErrno = res.Load(stmt);
             gettimeofday(&tv_end, NULL);
