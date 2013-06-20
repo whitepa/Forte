@@ -25,7 +25,7 @@ namespace Forte
     class PDUPeerSetBuilderImpl :
         public PDUPeerSetBuilder,
         public EnableStats<PDUPeerSetBuilderImpl,
-            Locals<PDUPeerSetBuilderImpl> >
+                           Locals<PDUPeerSetBuilderImpl> >
     {
     public:
         PDUPeerSetBuilderImpl(
@@ -46,6 +46,7 @@ namespace Forte
         PDUPeerSetBuilderImpl();
         ~PDUPeerSetBuilderImpl();
 
+        void Start();
         void Shutdown();
 
         void Broadcast(const PDU& pdu) const {
@@ -77,10 +78,6 @@ namespace Forte
             mPDUPeerSet->SetEventCallback(f);
         }
 
-        void StartPolling() {
-            mPDUPeerSet->StartPolling();
-        }
-
         boost::shared_ptr<PDUPeer> PeerCreate(int fd) {
             return mPDUPeerSet->PeerCreate(fd);
         }
@@ -97,11 +94,11 @@ namespace Forte
         SocketAddress mListenAddress;
         uint64_t mID;
         SocketAddressVector mPeerSocketAddresses;
-        PDUPeerSetPtr mPDUPeerSet;
 
+        boost::shared_ptr<ReceiverThread> mReceiverThread;
         boost::shared_ptr<PDUPeerSetConnectionHandler> mConnectionHandler;
         boost::shared_ptr<OnDemandDispatcher> mConnectionDispatcher;
-        boost::shared_ptr<ReceiverThread> mReceiverThread;
+        boost::shared_ptr<PDUPeerSet> mPDUPeerSet;
         //TODO: pass in
         boost::shared_ptr<PDUPeerEndpointFactory> mPDUPeerEndpointFactory;
     };

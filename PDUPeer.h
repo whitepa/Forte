@@ -23,8 +23,8 @@
 #include "PDU.h"
 #include "FTrace.h"
 #include "EnableStats.h"
-#include <boost/function.hpp>
 #include <boost/bind.hpp>
+#include "ThreadedObject.h"
 
 EXCEPTION_CLASS(EPDUPeer);
 
@@ -32,17 +32,22 @@ namespace Forte
 {
     class Mutex;
 
-    class PDUPeer : public Object,
-        public virtual BaseEnableStats
+    class PDUPeer : public ThreadedObject,
+                    public virtual BaseEnableStats
     {
     public:
         PDUPeer() {}
         virtual ~PDUPeer() {}
 
-        // having a Begin method allows the whole PDUPeerSet to be up
-        // and ready before starting to connect, handle connections,
-        // epoll events, etc
-        virtual void Begin() = 0;
+        // Start is called after the object is fully constructed and
+        // allows for smoother interaction between this object and
+        // it's thread
+        virtual void Start() = 0;
+
+        // Shutdown must be called in pair with Start. It will stop
+        // threads and tear down objects that might call into it
+        // before the destructor fires
+        virtual void Shutdown() = 0;
 
         // In cases where there is a single FD we will provide it to
         // consumers. This is largely to support existing PDUPeer
@@ -56,7 +61,6 @@ namespace Forte
         virtual void SetEPollFD(int epollFD) = 0;
         virtual void HandleEPollEvent(const struct epoll_event& e) = 0;
         virtual void TeardownEPoll() = 0;
-        virtual void Shutdown() = 0;
 
         virtual const uint64_t GetID() const = 0;
 

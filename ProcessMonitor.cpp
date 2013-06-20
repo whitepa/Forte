@@ -50,14 +50,14 @@ Forte::ProcessMonitor::ProcessMonitor(int argc, char *argv[]) :
     FString fdStr(argv[1]);
     if (!fdStr.IsUnsignedNumeric())
         throw EProcessMonitorArguments();
-    int fd = fdStr.AsUnsignedInteger();
-    mPeerSet->PeerCreate(fd);
+    mFD = fdStr.AsUnsignedInteger();
     argv[1] = NULL;
 }
 
 Forte::ProcessMonitor::~ProcessMonitor()
 {
     FTRACE;
+    mPeerSet->Shutdown();
 }
 
 void Forte::ProcessMonitor::Run()
@@ -75,7 +75,8 @@ void Forte::ProcessMonitor::Run()
 
     mPeerSet->SetEventCallback(
         boost::bind(&ProcessMonitor::pduCallback, this, _1));
-    mPeerSet->StartPolling();
+    mPeerSet->Start();
+    mPeerSet->PeerCreate(mFD);
 
     // The process monitor should exit when:
     //  the process terminates AND all peer connections close

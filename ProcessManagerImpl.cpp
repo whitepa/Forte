@@ -54,7 +54,7 @@ Forte::ProcessManagerImpl::ProcessManagerImpl() :
 
     mPeerSet->SetEventCallback(
         boost::bind(&ProcessManagerImpl::pduPeerEventCallback, this, _1));
-    mPeerSet->StartPolling();
+    mPeerSet->Start();
 }
 
 Forte::ProcessManagerImpl::~ProcessManagerImpl()

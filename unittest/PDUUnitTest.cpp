@@ -46,6 +46,13 @@ enum TestOpcode {
 };
 
 struct Opcode2Payload {
+    Opcode2Payload()
+        : int64Data(0),
+          int32Data(0)
+        {
+            memset(smallCString, 0, 255);
+        }
+
     uint64_t int64Data;
     uint32_t int32Data;
     char smallCString[255];
@@ -209,6 +216,7 @@ TEST_F(PDUUnitTest, PackedStructPayloadComparesDoesNotUseStructEqOperator)
     size_t payloadSize = sizeof(payload);
     payload.int64Data = 10000;
     payload.int32Data = 100;
+    memset(payload.smallCString, 1, 255);
     strcpy(payload.smallCString, "test data 1");
 
     PDU pdu1(Opcode2, payloadSize, &payload);

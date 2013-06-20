@@ -43,6 +43,11 @@ public:
 
 struct TestPayload
 {
+    TestPayload()
+        : a(0), b(0), c(0)
+        {
+            memset(d, 0, 128);
+        }
     int a;
     int b;
     int c;

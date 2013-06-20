@@ -29,10 +29,10 @@ using ::testing::_;
 
 Forte::LogManager logManager;
 
-class PDUPeerSetOnBoxTest : public ::testing::Test
+class PDUPeerSetImplOnBoxTest : public ::testing::Test
 {
 public:
-    PDUPeerSetOnBoxTest()
+    PDUPeerSetImplOnBoxTest()
         : mConnectCondition(mConnectMutex),
           mReceivedCondition(mReceivedMutex)
         {}
@@ -46,6 +46,7 @@ public:
     }
 
     static void TearDownTestCase() {
+        logManager.EndLogging();
     }
 
     void SetUp() {
@@ -54,6 +55,35 @@ public:
     }
 
     void TearDown() {
+    }
+
+    void setupPDUPeerSetPairAndPeers() {
+        std::vector<boost::shared_ptr<PDUPeer> > emptyPeerVector;
+
+        int fds[2];
+        socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
+
+        mPeerSet1.reset(new PDUPeerSetImpl(emptyPeerVector));
+        mPeerSet2.reset(new PDUPeerSetImpl(emptyPeerVector));
+
+        mPeerSet1->Start();
+        mPeerSet2->Start();
+
+        mPeer1 = mPeerSet1->PeerCreate(fds[0]);
+        mPeer2 = mPeerSet2->PeerCreate(fds[1]);
+
+        ASSERT_EQ(1, mPeerSet1->GetConnectedCount());
+        ASSERT_EQ(1, mPeerSet2->GetConnectedCount());
+    }
+
+    void teardownPDUPeerSetPair() {
+        //release pointers to peers if needed. will be nice if
+        //consumers to not need to worry about this
+        //mPeer1.reset();
+        //mPeer2.reset();
+
+        mPeerSet1->Shutdown();
+        mPeerSet2->Shutdown();
     }
 
     void EventCallback(PDUPeerEventPtr event) {
@@ -98,15 +128,101 @@ public:
     Forte::Mutex mReceivedMutex;
     Forte::ThreadCondition mReceivedCondition;
     int mReceivedPDUCount;
+
+    boost::shared_ptr<Forte::PDUPeer> mPeer1;
+    boost::shared_ptr<Forte::PDUPeer> mPeer2;
+
+    boost::shared_ptr<Forte::PDUPeerSetImpl> mPeerSet1;
+    boost::shared_ptr<Forte::PDUPeerSetImpl> mPeerSet2;
 };
 
-TEST_F(PDUPeerSetOnBoxTest, ConstructDestruct)
+TEST_F(PDUPeerSetImplOnBoxTest, ConstructDestruct)
 {
     Forte::ThreadPoolDispatcherPtr workDispatcher;
     std::vector<boost::shared_ptr<PDUPeer> > peers;
     PDUPeerSetImpl peerSet(peers);
 }
 
+TEST_F(PDUPeerSetImplOnBoxTest, StartShutdown)
+{
+    Forte::ThreadPoolDispatcherPtr workDispatcher;
+    std::vector<boost::shared_ptr<PDUPeer> > peers;
+    PDUPeerSetImpl peerSet(peers);
+    peerSet.Start();
+    peerSet.Shutdown();
+}
+
+TEST_F(PDUPeerSetImplOnBoxTest, MultiStartShutdown)
+{
+    Forte::ThreadPoolDispatcherPtr workDispatcher;
+    std::vector<boost::shared_ptr<PDUPeer> > peers;
+    PDUPeerSetImpl peerSet(peers);
+    peerSet.Start();
+    peerSet.Shutdown();
+
+    peerSet.Start();
+    peerSet.Shutdown();
+}
+
+TEST_F(PDUPeerSetImplOnBoxTest, PeerSetMustBeRunningToCreatePeers)
+{
+    std::vector<boost::shared_ptr<PDUPeer> > emptyPeerVector;
+
+    int fds[2];
+    socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
+
+    Forte::PDUPeerSetImpl peerSet1(emptyPeerVector);
+    Forte::PDUPeerSetImpl peerSet2(emptyPeerVector);
+
+    ASSERT_THROW(peerSet1.PeerCreate(fds[0]), EObjectNotRunning);
+    ASSERT_THROW(peerSet2.PeerCreate(fds[1]), EObjectNotRunning);
+}
+
+TEST_F(PDUPeerSetImplOnBoxTest, CanCreatePeersFromFDAfterStart)
+{
+    std::vector<boost::shared_ptr<PDUPeer> > emptyPeerVector;
+
+    int fds[2];
+    socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
+
+    Forte::PDUPeerSetImpl peerSet1(emptyPeerVector);
+    Forte::PDUPeerSetImpl peerSet2(emptyPeerVector);
+
+    peerSet1.Start();
+    peerSet2.Start();
+
+    boost::shared_ptr<Forte::PDUPeer> peer1 = peerSet1.PeerCreate(fds[0]);
+    boost::shared_ptr<Forte::PDUPeer> peer2 = peerSet2.PeerCreate(fds[1]);
+
+    ASSERT_EQ(1, peerSet1.GetConnectedCount());
+    ASSERT_EQ(1, peerSet2.GetConnectedCount());
+
+    peerSet1.Shutdown();
+    peerSet2.Shutdown();
+}
+
+TEST_F(PDUPeerSetImplOnBoxTest, DefaultSetupWorks)
+{
+    setupPDUPeerSetPairAndPeers();
+    teardownPDUPeerSetPair();
+}
+
+TEST_F(PDUPeerSetImplOnBoxTest, CanSendAndRecvPDUs)
+{
+    setupPDUPeerSetPairAndPeers();
+
+    PDU pdu(1);
+    PDU pdu2;
+    mPeer1->SendPDU(pdu);
+
+    while (!mPeer2->RecvPDU(pdu2)) {}
+    EXPECT_EQ(pdu, pdu2);
+
+    teardownPDUPeerSetPair();
+}
+
+
+/*
 class SenderThread : public Forte::Thread
 {
 public:
@@ -173,15 +289,15 @@ protected:
     bool mComplete;
 };
 
-TEST_F(PDUPeerSetOnBoxTest, CanReceiveDataWhenSendQueueIsFull)
+TEST_F(PDUPeerSetImplOnBoxTest, CanReceiveDataWhenSendQueueIsFull)
 {
     // create two PDUPeerSets with 1 peer each
     //
-    // StartPolling on the first one
+    // StartPolling on the connector
     //
-    // also on the first, enqueue large PDUs until the tcp send queue
-    // is full. they will not be getting recv'd by the second since
-    // StartPolling has not been called.
+    // also on the connector, enqueue large PDUs until the tcp send
+    // queue is full. they will not be getting recv'd by the second
+    // since StartPolling has not been called.
     //
     // send some PDUs to the first
     //
@@ -211,9 +327,8 @@ TEST_F(PDUPeerSetOnBoxTest, CanReceiveDataWhenSendQueueIsFull)
     boost::shared_ptr<PDUPeerSetImpl> acceptorPeerSet(
         new PDUPeerSetImpl(acceptorPeers));
 
-    acceptorPeerSet->SetupEPoll();
     acceptorPeerSet->SetEventCallback(
-        boost::bind(&PDUPeerSetOnBoxTest::EventCallback, this, _1));
+        boost::bind(&PDUPeerSetImplOnBoxTest::EventCallback, this, _1));
 
     // begin acceptor incoming connection setup
     boost::shared_ptr<PDUPeerSetConnectionHandler> connectionHandler(
@@ -236,8 +351,8 @@ TEST_F(PDUPeerSetOnBoxTest, CanReceiveDataWhenSendQueueIsFull)
         "127.0.0.1");
     // end incoming connections
 
-    acceptorPeerSet->StartPolling();
-    connectorPeerSet->StartPolling();
+    acceptorPeerSet->Start();
+    connectorPeerSet->Start();
 
     {
         AutoUnlockMutex lock(mConnectMutex);
@@ -276,13 +391,14 @@ TEST_F(PDUPeerSetOnBoxTest, CanReceiveDataWhenSendQueueIsFull)
 
     hlog(HLOG_INFO, "now clear out q and let acceptor finish");
     connectorPeerSet->SetEventCallback(
-        boost::bind(&PDUPeerSetOnBoxTest::EventCallback, this, _1));
-    connectorPeerSet->SetupEPoll();
-    connectorPeerSet->StartPolling();
+        boost::bind(&PDUPeerSetImplOnBoxTest::EventCallback, this, _1));
+    connectorPeerSet->Start();
+
+    connectorPeerSet->Shutdown();
+    acceptorPeerSet->Shutdown();
 }
 
-
-/*class AsyncDataLoaderThread : public Forte::Thread
+class AsyncDataLoaderThread : public Forte::Thread
 {
 public:
     AsyncDataLoaderThread(Forte::PDUPeerSet& peer)
@@ -323,57 +439,4 @@ protected:
     Forte::Mutex mReceiveCountMutex;
     int mReceiveCount;
 };
-*/
-
-/*TEST_F(PDUPeerSetOnBoxTest, ThrowESendFailedOnBrokenPipe)
-{
-    FTRACE;
-
-    try
-    {
-        int fds[2];
-        socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
-        Forte::AutoFD fd1(fds[0]);
-        Forte::AutoFD fd2(fds[1]);
-
-        AutoFD epollFD;
-        epollFD = epoll_create(4);
-        Forte::PDUPeerSet endpoint1(fd1);
-        Forte::PDUPeerSet endpoint2(fd2);
-
-        endpoint1.SetEPollFD(epollFD);
-        endpoint2.SetEPollFD(epollFD);
-
-        PDU pdu, rpdu;
-        size_t len;
-        makeTestPDU(pdu, len);
-
-        endpoint1.SendPDU(pdu);
-
-        // poll for events
-        int fdReadyCount = 0;
-        struct epoll_event events[32];
-        memset(events, 0, 32*sizeof(struct epoll_event));
-        fdReadyCount = epoll_wait(epollFD, events, 32, 1000);
-        EXPECT_EQ(1, fdReadyCount);
-        ASSERT_EQ((int) fd2, events[0].data.fd);
-        ASSERT_EQ(endpoint2.GetFD(), events[0].data.fd);
-
-        endpoint2.HandleEPollEvent(events[0]);
-
-        EXPECT_EQ(true, endpoint2.IsPDUReady());
-        EXPECT_EQ(true, endpoint2.RecvPDU(rpdu));
-        EXPECT_EQ(true, pdu == rpdu);
-
-        close(fds[1]);
-
-        ASSERT_THROW(endpoint1.SendPDU(pdu), EPeerSendFailed);
-
-    }
-    catch (Forte::Exception &e)
-    {
-        hlog(HLOG_ERR, "caught exception: %s\n", e.what());
-        FAIL();
-    }
-}
 */

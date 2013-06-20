@@ -59,13 +59,14 @@ public:
                 createInProcessPDUPeer
                 ));
 
-        mPeerSet->StartPolling();
+        mPeerSet->Start();
     }
 
     void DeletePeerSet() {
         if (mPeerSet)
         {
             mPeerSet->SetEventCallback(NULL);
+            mPeerSet->Shutdown();
             mPeerSet.reset();
         }
     }
@@ -311,6 +312,22 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, ConstructorSetsUpBasics)
 
     ASSERT_EQ(9151314447111828169,
               PDUPeerSetBuilderImpl::SocketAddressToID(listenAddress));
+}
+
+TEST_F(PDUPeerSetBuilderImplOnBoxTest, StartAndShutdownMustBeCalledAsAPair)
+{
+    FTRACE;
+    SocketAddress listenAddress(make_pair("127.0.0.1", 13001));
+
+    SocketAddressVector addresses;
+    addresses.push_back(listenAddress);
+    addresses.push_back(make_pair("127.0.0.1", 13002));
+    addresses.push_back(make_pair("127.0.0.1", 13003));
+
+    PDUPeerSetBuilderImpl peerSet(listenAddress, addresses);
+
+    peerSet.Start();
+    peerSet.Shutdown();
 }
 
 TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanDispatchWithoutThrowing)
@@ -920,6 +937,56 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, PeersRecoverOnRestartsWithinTimeout)
 }
 */
 
+//This is purely to ensure PDUPeers can teardown and setup ok
+//underload, no checking of PDUs sent/recv'd will be done
+TEST_F(PDUPeerSetBuilderImplOnBoxTest,
+       PDUPeersCanDieAndRecoverUnderLoad)
+{
+    FTRACE;
+    setupPeers(8);
+
+    const TestPeerPtr& broadcaster(mTestPeers[0]);
+    const TestPeerPtr& flaker(mTestPeers[1]);
+    int i = 0;
+    DeadlineClock deadline;
+    deadline.ExpiresInSeconds(600);
+    while (!deadline.Expired())
+    {
+        i++;
+        PDUPtr pdu = makePDUPtr(i);
+
+        if (hlog_ratelimit(10))
+        {
+            for (int j=1; j<8; j++)
+                hlogstream(HLOG_INFO,
+                           "queue size of " << j << ": "
+                           << broadcaster->mPeerSet
+                           ->GetPeer(mTestPeers[j]->mPeerID)->GetQueueSize());
+        }
+
+
+        broadcaster->mPeerSet->BroadcastAsync(pdu);
+
+        if (i % 100 == 0)
+        {
+            flaker->DeletePeerSet();
+            flaker->InstantiatePeerSet();
+        }
+
+        // 1237 here just indicates i want to clear out the recv'd
+        // list periodically, but i don't want it to be on the same
+        // loops as as when flaker flakes
+        if (i % 1237 == 0)
+        {
+            foreach(const TestPeerPtr& peer, mTestPeers)
+            {
+                peer->mReceivedPDUList.clear();
+            }
+        }
+    }
+    hlogstream(HLOG_INFO, "sent " << i << " pdus");
+}
+
 TEST_F(PDUPeerSetBuilderImplOnBoxTest,
        CanBroadcastAndReceive1000PDUsFromEachIn10Seconds)
 {
@@ -966,43 +1033,4 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest,
             peer->mReceivedPDUList.pop_front();
         }
     }
-}
-
-//This is purely to ensure PDUPeers can teardown and setup ok
-//underload, no checking of PDUs sent/recv'd will be done
-TEST_F(PDUPeerSetBuilderImplOnBoxTest,
-       PDUPeersCanDieAndRecoverUnderLoad)
-{
-    FTRACE;
-    setupPeers(8);
-
-    const TestPeerPtr& broadcaster(mTestPeers[0]);
-    const TestPeerPtr& flaker(mTestPeers[1]);
-    int i = 0;
-    DeadlineClock deadline;
-    deadline.ExpiresInSeconds(600);
-    while (!deadline.Expired())
-    {
-        i++;
-        PDUPtr pdu = makePDUPtr(i);
-        broadcaster->mPeerSet->BroadcastAsync(pdu);
-
-        if (i % 100 == 0)
-        {
-            flaker->DeletePeerSet();
-            flaker->InstantiatePeerSet();
-        }
-
-        // 1237 here just indicates i want to clear out the recv'd
-        // list periodically, but i don't want it to be on the same
-        // loops as as when flaker flakes
-        if (i % 1237 == 0)
-        {
-            foreach(const TestPeerPtr& peer, mTestPeers)
-            {
-                peer->mReceivedPDUList.clear();
-            }
-        }
-    }
-    hlogstream(HLOG_INFO, "sent " << i << " pdus");
 }

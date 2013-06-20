@@ -24,7 +24,6 @@ Forte::PDUPeerImpl::PDUPeerImpl(
       mQueueMaxSize(queueSize),
       mQueueType(queueType),
       mQueueSemaphore(mQueueMaxSize),
-      mShutdownCalled(false),
       // init all the stat variables
       mTotalSent (0),
       mTotalReceived (0),
@@ -48,43 +47,40 @@ Forte::PDUPeerImpl::PDUPeerImpl(
     registerStatVariable<6>("averageQueueSize", &PDUPeerImpl::mAvgQueueSize);
 }
 
-
-void Forte::PDUPeerImpl::Begin()
+Forte::PDUPeerImpl::~PDUPeerImpl()
 {
     FTRACE;
+}
 
-    // register the end point stats with this pdupeer as
-    // the parent
-    includeStatsFromChild(
-        mEndpoint, "Endpoint");
+void Forte::PDUPeerImpl::Start()
+{
+    FTRACE;
+    recordStartCall();
 
-    if (!mSendThread)
-    {
-        mSendThread.reset(
-            new PDUPeerSendThread(
-                boost::static_pointer_cast<Forte::PDUPeerImpl>(
-                    shared_from_this())));
+    // register the end point stats with this pdupeer as the parent
+    includeStatsFromChild(mEndpoint, "Endpoint");
 
-        mStartTime = mClock.GetTime().AsSeconds();
-    }
+    mSendThread.reset(
+        new FunctionThread(
+            FunctionThread::AutoInit(),
+            boost::bind(&PDUPeerImpl::sendThreadRun, this),
+            "pdusender"));
+
+    mStartTime = mClock.GetTime().AsSeconds();
 }
 
 void Forte::PDUPeerImpl::Shutdown()
 {
     FTRACE;
+    recordShutdownCall();
 
-    if (mSendThread)
     {
-        {
-            AutoUnlockMutex lock(mPDUQueueMutex);
-            mSendThread->Shutdown();
-            mPDUQueueNotEmptyCondition.Signal();
-        }
-
-        mSendThread->WaitForShutdown();
-        mSendThread.reset();
+        AutoUnlockMutex lock(mPDUQueueMutex);
+        mSendThread->Shutdown();
+        mPDUQueueNotEmptyCondition.Signal();
     }
-    mShutdownCalled = true;
+
+    mSendThread->WaitForShutdown();
 }
 
 void Forte::PDUPeerImpl::SendPDU(const Forte::PDU &pdu)
@@ -144,16 +140,16 @@ void Forte::PDUPeerImpl::EnqueuePDU(const Forte::PDUPtr& pdu)
     mPDUQueueNotEmptyCondition.Signal();
 }
 
-// called by PDUPeerSendThread
-void* Forte::PDUPeerSendThread::run()
+void Forte::PDUPeerImpl::sendThreadRun()
 {
     FTRACE;
     hlog(HLOG_DEBUG, "Starting PDUPeerSendThread thread");
-    while (!Thread::MyThread()->IsShuttingDown())
+    Forte::Thread* myThread = Thread::MyThread();
+    while (!myThread->IsShuttingDown())
     {
         try
         {
-            mPDUPeer->sendLoop();
+            sendLoop();
         }
         catch (std::exception &e)
         {
@@ -166,8 +162,7 @@ void* Forte::PDUPeerSendThread::run()
         }
     }
     hlogstream(HLOG_DEBUG, "Shutting down PDUPeerSendThread thread with "
-               << mPDUPeer->GetQueueSize() << " PDUs in queue");
-    return NULL;
+               << GetQueueSize() << " PDUs in queue");
 }
 
 void Forte::PDUPeerImpl::sendLoop()
@@ -309,6 +304,11 @@ bool Forte::PDUPeerImpl::IsPDUReady(void) const
 bool Forte::PDUPeerImpl::RecvPDU(Forte::PDU &out)
 {
     FTRACE;
+
+    if (!isRunning())
+    {
+        throw EObjectNotRunning();
+    }
 
     if (mEndpoint->RecvPDU(out))
     {

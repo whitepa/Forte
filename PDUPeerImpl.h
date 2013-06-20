@@ -10,6 +10,7 @@
 #include "Semaphore.h"
 #include "Locals.h"
 #include "CumulativeMovingAverage.h"
+#include "FunctionThread.h"
 
 EXCEPTION_SUBCLASS(EPDUPeer, EPDUPeerSendError);
 EXCEPTION_SUBCLASS2(EPDUPeer, EPDUPeerNoEventCallback,
@@ -28,32 +29,6 @@ namespace Forte
         PDUPtr pdu;
     };
     typedef boost::shared_ptr<PDUHolder> PDUHolderPtr;
-
-    class PDUPeerImpl;
-
-    // having one thread pool per PDUPeer is not as effecient as other
-    // methods, but it will move the ball forward. the current
-    // implementation allows several threads to get blocked on a
-    // single fd, and also needlessly enqueues several events. the
-    // thread will just sleep while there is nothing to do and get
-    // signaled when there is something enqueued.
-    class PDUPeerSendThread : public Forte::Thread
-    {
-    public:
-        PDUPeerSendThread(
-            const boost::shared_ptr<PDUPeerImpl>& pduPeer)
-            : mPDUPeer(pduPeer) {
-            setThreadName("PDUPeerSnd");
-            initialized();
-        }
-
-        ~PDUPeerSendThread() {
-            deleting();
-        }
-    protected:
-        void* run();
-        boost::shared_ptr<PDUPeerImpl> mPDUPeer;
-    };
 
     class PDUPeerImpl :
         public PDUPeer,
@@ -84,7 +59,10 @@ namespace Forte
             unsigned short queueSize = 1024,
             PDUPeerQueueType queueType = PDU_PEER_QUEUE_THROW);
 
-        virtual void Begin();
+        virtual ~PDUPeerImpl();
+
+        virtual void Start();
+        virtual void Shutdown();
 
         const uint64_t GetID() const { return mConnectingPeerID; }
 
@@ -110,7 +88,6 @@ namespace Forte
         }
 
         virtual void SendPDU(const PDU& pdu);
-
         bool IsConnected() const;
         bool IsPDUReady() const;
 
@@ -133,22 +110,12 @@ namespace Forte
             FTRACE;
             mEndpoint->HandleEPollEvent(e);
         }
-
         virtual void TeardownEPoll() {
             mEndpoint->TeardownEPoll();
         }
 
-        virtual void Shutdown();
-
-        virtual ~PDUPeerImpl() {
-            if (!mShutdownCalled)
-            {
-                hlog(HLOG_ERR, "Shutdown not called before ~PDUPeerImp");
-            }
-            Shutdown();
-        }
-
     protected:
+        void sendThreadRun();
         void sendLoop();
         void lockedEnqueuePDU(const PDUHolderPtr& pdu);
         bool isPDUExpired(PDUHolderPtr pduHolder);
@@ -171,9 +138,7 @@ namespace Forte
         PDUPeerQueueType mQueueType;
         Semaphore mQueueSemaphore;
 
-        boost::shared_ptr<PDUPeerSendThread> mSendThread;
-
-        bool mShutdownCalled;
+        boost::shared_ptr<FunctionThread> mSendThread;
 
         // stats variables
         int64_t mTotalSent;

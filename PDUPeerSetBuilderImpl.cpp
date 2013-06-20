@@ -55,14 +55,8 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
 
     // begin setup PeerSet
     mPDUPeerSet.reset(new PDUPeerSetImpl(pduPeers));
-    mPDUPeerSet->SetupEPoll();
     mPDUPeerSet->SetEventCallback(eventCallback);
-
-    // add the pdupeerset as child to this for stats
-    includeStatsFromChild(
-        mPDUPeerSet,
-        "PeerSet");
-
+    includeStatsFromChild(mPDUPeerSet, "PeerSet");
     // end setup PeerSet
 
     // begin incoming connection setup
@@ -77,6 +71,7 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
             "PDUCnect")
         );
 
+    //if needed, can make receiver thread wait for a Start call
     mReceiverThread.reset(
         new ReceiverThread(
             mConnectionDispatcher,
@@ -87,46 +82,44 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
 }
 
 Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl()
-    :mID(0)
+    : mID(0)
 {
     std::vector<PDUPeerPtr> emptyPeerVector;
 
     mPDUPeerSet.reset(new PDUPeerSetImpl(emptyPeerVector));
-
-    mPDUPeerSet->SetupEPoll();
-
-    // add pdupeerset as child to this
-    includeStatsFromChild(
-        mPDUPeerSet,
-        "PeerSet");
+    includeStatsFromChild(mPDUPeerSet, "PeerSet");
 }
 
 Forte::PDUPeerSetBuilderImpl::~PDUPeerSetBuilderImpl()
 {
     FTRACE2("%llu", static_cast<unsigned long long>(mID));
-    Shutdown();
+}
+
+void Forte::PDUPeerSetBuilderImpl::Start()
+{
+    recordStartCall();
+    mPDUPeerSet->Start();
 }
 
 void Forte::PDUPeerSetBuilderImpl::Shutdown()
 {
+    recordShutdownCall();
+
     if (mConnectionDispatcher)
     {
         mConnectionDispatcher->Shutdown();
-        mConnectionDispatcher.reset();
     }
 
     if (mReceiverThread)
     {
         mReceiverThread->Shutdown();
-        mReceiverThread->WaitForShutdown();
-        mReceiverThread.reset();
     }
 
-    if (mPDUPeerSet)
+    mPDUPeerSet->Shutdown();
+
+    if (mReceiverThread)
     {
-        mPDUPeerSet->TeardownEPoll();
-        mPDUPeerSet->Shutdown();
-        mPDUPeerSet.reset();
+        mReceiverThread->WaitForShutdown();
     }
 }
 

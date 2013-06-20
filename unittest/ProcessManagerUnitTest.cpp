@@ -68,6 +68,11 @@ public:
     }
 };
 
+TEST_F(ProcessManagerTest, ConstructDelete)
+{
+    ProcessManagerImpl p;
+}
+
 TEST_F(ProcessManagerTest, MemLeak)
 {
     try

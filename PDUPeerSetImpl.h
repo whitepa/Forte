@@ -6,13 +6,10 @@
 #include "AutoMutex.h"
 #include "PDUPeerSet.h"
 #include "PDUPeer.h"
-#include "PDUPollThread.h"
 #include "RWLock.h"
 #include "FTrace.h"
-#include "PDUPollThread.h"
-#include <boost/function.hpp>
-#include <boost/shared_array.hpp>
 #include "Locals.h"
+#include "FunctionThread.h"
 
 namespace Forte
 {
@@ -48,15 +45,24 @@ namespace Forte
     {
     public:
         PDUPeerSetImpl(const std::vector<PDUPeerPtr>& peers);
-
         virtual ~PDUPeerSetImpl();
+
+        /**
+         * Setup epoll, start relevant threads
+         */
+        void Start();
+
+        /**
+         * stop relevant threads, teardown epoll
+         */
+        void Shutdown();
 
         unsigned int GetSize() {
             AutoUnlockMutex peerSetLock(mPDUPeerLock);
             return mPDUPeers.size();
         }
 
-        virtual unsigned int GetConnectedCount(void);
+        virtual unsigned int GetConnectedCount();
 
         /**
          * PeerCreate will create a new PDUPeer object for the already
@@ -94,24 +100,36 @@ namespace Forte
         void SetEventCallback(PDUPeerEventCallback f);
 
         /**
+         * PeerDelete will delete the given peer from the PDUPeerSetImpl,
+         * and remove the peer from any poll operation in progress.
+         *
+         * @param peer
+         */
+        void PeerDelete(const PDUPeerPtr &peer);
+
+        PDUPeerPtr GetPeer(uint64_t peerID) {
+            return mPDUPeers.at(peerID);
+        }
+
+    protected:
+        void startPolling();
+
+        /**
          * Creates an epoll file descriptor, and automatically adds
          * all PDUPeer file descriptors to it for polling.  Once
          * created, all subsequent calls to PeerConnected() and
          * fdDisconnected() will add / remove those FDs from the
          * epoll file descriptor, until TeardownEPoll() is called.
-         *
-         * @return int epoll file descriptor
          */
-        int SetupEPoll();
+        void setupEPoll();
 
         /**
          * Closes the epoll file descriptor (removing all existing
-         * peer descriptors from polling).  If another caller is
+         * peer descriptors from polling). If another caller is
          * currently blocked on Poll(), they will receive an
          * exception.
-         *
          */
-        void TeardownEPoll();
+        void teardownEPoll();
 
         /**
          * Poll will poll all current Peers for input, and process any
@@ -128,32 +146,13 @@ namespace Forte
          * interrupted by a signal.
          *
          */
-        void Poll(int msTimeout = -1, bool interruptible = false);
+        void poll(int msTimeout = -1, bool interruptible = false);
 
-        /**
-         * PeerDelete will delete the given peer from the PDUPeerSetImpl,
-         * and remove the peer from any poll operation in progress.
-         *
-         * @param peer
-         */
-        void PeerDelete(const PDUPeerPtr &peer);
-
-        /**
-         * The PDUPeerSetBuilder handles this automatically. If you
-         * are setting up a PDUPeerSet yourself, you need to call this
-         * if you want events.
-         *
-         */
-        void StartPolling();
-
-        void Shutdown();
-
-        PDUPeerPtr GetPeer(uint64_t peerID) {
-            return mPDUPeers.at(peerID);
-        }
+        // epoll thread run
+        void runEPoll();
 
     protected:
-        PDUPollThreadPtr mPollThread;
+        boost::scoped_ptr<FunctionThread> mPollThread;
 
         mutable Forte::Mutex mPDUPeerLock;
         std::map<uint64_t, PDUPeerPtr> mPDUPeers;

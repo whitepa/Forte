@@ -144,6 +144,11 @@ namespace Forte
         int mPollFD;
 
         /**
+         * passed in fd
+         */
+        int mFD;
+
+        /**
          * Process ID of child.
          */
         pid_t mPID;

@@ -127,7 +127,7 @@ TEST_F(PDUPeerImplUnitTest, InternalThreadSendsAfterBeginCall)
 
     peer->SetEventCallback(
         boost::bind(&PDUPeerImplUnitTest::EventCallback, this, _1));
-    peer->Begin();
+    peer->Start();
     while (peer->GetQueueSize() > 0)
     {
         usleep(10000);
@@ -161,7 +161,7 @@ TEST_F(PDUPeerImplUnitTest, SendPDUCallsErrorCallbackOnFailure)
 
     peer->SetEventCallback(
         boost::bind(&PDUPeerImplUnitTest::EventCallback, this, _1));
-    peer->Begin();
+    peer->Start();
     {
         AutoUnlockMutex lock(mEventMutex);
         while (mEventCount == 0)
@@ -199,7 +199,7 @@ TEST_F(PDUPeerImplUnitTest, CallsErrorCallbackWhenEndpointIsNotConnected)
 
     peer->SetEventCallback(
         boost::bind(&PDUPeerImplUnitTest::EventCallback, this, _1));
-    peer->Begin();
+    peer->Start();
     {
         AutoUnlockMutex lock(mEventMutex);
         while (mEventCount == 0)
@@ -255,7 +255,7 @@ TEST_F(PDUPeerImplUnitTest, QueueOverflowBlock)
 
     peer->SetEventCallback(
         boost::bind(&PDUPeerImplUnitTest::EventCallback, this, _1));
-    peer->Begin();
+    peer->Start();
 
     int count = 0;
     while (count++ < 6)

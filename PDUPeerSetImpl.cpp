@@ -13,13 +13,6 @@
 using namespace boost;
 using namespace Forte;
 
-Forte::ConnectedCount::operator int64_t() {
-    if (mPeerSet != NULL)
-        return mPeerSet->GetConnectedCount();
-
-    return 0;
-}
-
 Forte::PDUPeerSetImpl::PDUPeerSetImpl(const std::vector<PDUPeerPtr>& peers)
     : mEPollFD(-1)
 {
@@ -37,62 +30,98 @@ Forte::PDUPeerSetImpl::PDUPeerSetImpl(const std::vector<PDUPeerPtr>& peers)
     registerStatVariable<0>("connectedCount", &PDUPeerSetImpl::mConnectedCount);
 }
 
-void Forte::PDUPeerSetImpl::StartPolling()
-{
-    mPollThread.reset(new PDUPollThread(*this));
+Forte::ConnectedCount::operator int64_t() {
+    if (mPeerSet != NULL)
+        return mPeerSet->GetConnectedCount();
 
-    foreach (const IntPDUPeerPtrPair& p, mPDUPeers)
-    {
-        PDUPeerPtr peer(p.second);
-        peer->Begin();
-    }
+    return 0;
 }
 
 Forte::PDUPeerSetImpl::~PDUPeerSetImpl()
 {
     FTRACE;
+}
 
-    try
+void Forte::PDUPeerSetImpl::Start()
+{
+    recordStartCall();
+
+    setupEPoll();
+
+    mPollThread.reset(
+        new FunctionThread(
+            FunctionThread::AutoInit(),
+            boost::bind(&PDUPeerSetImpl::runEPoll, this),
+            "pdu-epoll"
+            ));
+
+
+    foreach (const IntPDUPeerPtrPair& p, mPDUPeers)
     {
-        if (mPollThread)
-        {
-            mPollThread->Shutdown();
-            mPollThread->WaitForShutdown();
-            mPollThread.reset();
-        }
-
-        TeardownEPoll();
-
-        AutoUnlockMutex lock(mPDUPeerLock);
-        foreach (const IntPDUPeerPtrPair& p, mPDUPeers)
-        {
-            p.second->TeardownEPoll();
-            p.second->Shutdown();
-        }
-
-        mPDUPeers.clear();
-    }
-    catch (Exception& e)
-    {
-        hlog(HLOG_WARN, "Could not clean up epoll fd or "
-             "it was already closed");
+        PDUPeerPtr peer(p.second);
+        peer->Start();
     }
 }
 
-void Forte::PDUPeerSetImpl::PeerDelete(const boost::shared_ptr<PDUPeer>& peer)
+void Forte::PDUPeerSetImpl::setupEPoll()
 {
     FTRACE;
 
-    if (peer)
+    AutoFD fd;
     {
-        peer->TeardownEPoll();
-        peer->Shutdown();
+        AutoWriteUnlock pollLock(mEPollLock);
+        {
+            if (mEPollFD != -1)
+                return; // already set up
+            fd = epoll_create(4);
+            if (fd == -1)
+                hlog_and_throw(HLOG_WARN,
+                               EPDUPeerSetPollCreate(
+                                   SystemCallUtil::GetErrorDescription(errno)));
+
+            mEPollFD = fd.Release();
+        }
     }
 
-    if (peer)
+    AutoUnlockMutex lock(mPDUPeerLock);
+    foreach (const IntPDUPeerPtrPair& p, mPDUPeers)
     {
-        AutoUnlockMutex lock(mPDUPeerLock);
-        mPDUPeers.erase(peer->GetID());
+        PDUPeerPtr peer(p.second);
+        peer->SetEPollFD(mEPollFD);
+    }
+
+    hlog(HLOG_DEBUG2, "created epoll descriptor on fd %d", mEPollFD);
+}
+
+void Forte::PDUPeerSetImpl::Shutdown()
+{
+    FTRACE;
+    recordShutdownCall();
+
+    mPollThread->Shutdown();
+    mPollThread->WaitForShutdown();
+
+    foreach (const IntPDUPeerPtrPair& p, mPDUPeers)
+    {
+        p.second->TeardownEPoll();
+    }
+
+    teardownEPoll();
+
+    foreach (const IntPDUPeerPtrPair& p, mPDUPeers)
+    {
+        p.second->Shutdown();
+    }
+}
+
+void Forte::PDUPeerSetImpl::teardownEPoll()
+{
+    FTRACE;
+
+    if (mEPollFD != -1)
+    {
+        close(mEPollFD);
+        mEPollFD = -1;
     }
 }
 
@@ -100,8 +129,14 @@ boost::shared_ptr<PDUPeer> Forte::PDUPeerSetImpl::PeerCreate(int fd)
 {
     FTRACE2("%d", fd);
 
+    if (!isRunning())
+    {
+        throw EObjectNotRunning();
+    }
+
     //TODO: pass in a factory
     PDUPeerEndpointFactoryImpl f;
+
     // it should be ok to use the fd as the id. any network id of a
     // pdu peer will be a very large number well above 1024
     boost::shared_ptr<PDUPeer> peer(new PDUPeerImpl(fd, f.Create(fd)));
@@ -121,9 +156,26 @@ boost::shared_ptr<PDUPeer> Forte::PDUPeerSetImpl::PeerCreate(int fd)
         includeStatsFromChild(peer, peerID);
         */
     }
-    peer->Begin();
+    peer->Start();
 
     return peer;
+}
+
+void Forte::PDUPeerSetImpl::PeerDelete(const boost::shared_ptr<PDUPeer>& peer)
+{
+    FTRACE;
+
+    if (peer)
+    {
+        peer->TeardownEPoll();
+        peer->Shutdown();
+    }
+
+    if (peer)
+    {
+        AutoUnlockMutex lock(mPDUPeerLock);
+        mPDUPeers.erase(peer->GetID());
+    }
 }
 
 void Forte::PDUPeerSetImpl::Broadcast(const PDU& pdu) const
@@ -162,75 +214,6 @@ void Forte::PDUPeerSetImpl::BroadcastAsync(const PDUPtr& pdu)
     }
 }
 
-int Forte::PDUPeerSetImpl::SetupEPoll()
-{
-    FTRACE;
-
-    AutoFD fd;
-    {
-        AutoWriteUnlock pollLock(mEPollLock);
-        {
-            if (mEPollFD != -1)
-                return mEPollFD; // already set up
-            fd = epoll_create(4);
-            if (fd == -1)
-                hlog_and_throw(HLOG_WARN,
-                               EPDUPeerSetPollCreate(
-                                   SystemCallUtil::GetErrorDescription(errno)));
-
-            mEPollFD = fd.Release();
-        }
-    }
-
-    AutoUnlockMutex lock(mPDUPeerLock);
-    foreach (const IntPDUPeerPtrPair& p, mPDUPeers)
-    {
-        PDUPeerPtr peer(p.second);
-        peer->SetEPollFD(mEPollFD);
-    }
-
-    hlog(HLOG_DEBUG2, "created epoll descriptor on fd %d", mEPollFD);
-    return mEPollFD;
-}
-
-void Forte::PDUPeerSetImpl::TeardownEPoll()
-{
-    FTRACE;
-
-    {
-        AutoReadUnlock lock(mEPollLock);
-        if (mEPollFD != -1)
-        {
-            AutoUnlockMutex peerlock(mPDUPeerLock);
-            foreach (const IntPDUPeerPtrPair& p, mPDUPeers)
-            {
-                p.second->TeardownEPoll();
-            }
-        }
-    }
-
-    {
-        AutoWriteUnlock lock(mEPollLock);
-
-        if (mEPollFD != -1)
-        {
-            close(mEPollFD);
-            mEPollFD = -1;
-        }
-    }
-}
-
-void Forte::PDUPeerSetImpl::Shutdown()
-{
-    FTRACE;
-
-    AutoUnlockMutex peerlock(mPDUPeerLock);
-    foreach (const IntPDUPeerPtrPair& p, mPDUPeers)
-    {
-        p.second->Shutdown();
-    }
-}
-
 void Forte::PDUPeerSetImpl::SetEventCallback(PDUPeerEventCallback f)
 {
     FTRACE;
@@ -250,7 +233,44 @@ void Forte::PDUPeerSetImpl::SetEventCallback(PDUPeerEventCallback f)
     }
 }
 
-void Forte::PDUPeerSetImpl::Poll(int msTimeout, bool interruptible)
+void Forte::PDUPeerSetImpl::runEPoll()
+{
+    FTRACE;
+    hlog(HLOG_DEBUG, "Starting poller thread");
+    Thread* thisThread = Thread::MyThread();
+    while (!thisThread->IsShuttingDown())
+    {
+        try
+        {
+            poll(100);
+        }
+        /*with this change, i believe this should no longer happen
+        catch (EPDUPeerSetNotPolling& e)
+        {
+            if (hlog_ratelimit(20))
+                hlog(HLOG_DEBUG, "PeerSetNot Polling");
+            thisThread->InterruptibleSleep(Timespec::FromSeconds(1));
+            }*/
+        catch (EThreadPoolDispatcherShuttingDown& e)
+        {
+        }
+        catch (std::exception &e)
+        {
+            hlog(HLOG_ERR,
+                 "unexpected exception while polling PDUPeerSet: %s",
+                 e.what());
+            thisThread->InterruptibleSleep(Timespec::FromSeconds(1));
+        }
+        catch (...)
+        {
+            if (hlog_ratelimit(60))
+                hlog(HLOG_ERR, "Unknown exception while polling");
+            thisThread->InterruptibleSleep(Timespec::FromSeconds(1));
+        }
+    }
+}
+
+void Forte::PDUPeerSetImpl::poll(int msTimeout, bool interruptible)
 {
     int fdReadyCount = 0;
     struct epoll_event events[32];
@@ -265,6 +285,10 @@ void Forte::PDUPeerSetImpl::Poll(int msTimeout, bool interruptible)
         do
         {
             fdReadyCount = epoll_wait(mEPollFD, events, 32, msTimeout);
+            if (Thread::MyThread()->IsShuttingDown())
+            {
+                return;
+            }
         }
         while (fdReadyCount < 0 && !interruptible && errno == EINTR);
     }

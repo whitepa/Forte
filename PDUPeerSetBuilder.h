@@ -4,26 +4,29 @@
 
 #include "PDUPeerTypes.h"
 #include "EnableStats.h"
+#include "ThreadedObject.h"
 
 namespace Forte
 {
     class PDUPeerSetBuilder :
-        public Forte::Object,
+        public Forte::ThreadedObject,
         public virtual BaseEnableStats
     {
     public:
         PDUPeerSetBuilder() {}
         virtual ~PDUPeerSetBuilder() {}
+        virtual void Start() = 0;
+        virtual void Shutdown() = 0;
+        virtual void SetEventCallback(PDUPeerEventCallback f) = 0;
 
         virtual void Broadcast(const PDU& pdu) const = 0;
         virtual void BroadcastAsync(PDUPtr pdu) = 0;
-        virtual int GetSize() const = 0;
-        virtual PDUPeerPtr GetPeer(uint64_t peerID) = 0;
-        virtual void SetEventCallback(PDUPeerEventCallback f) = 0;
-        virtual void StartPolling() = 0;
-        virtual void Shutdown() = 0;
+
         virtual PDUPeerPtr PeerCreate(int fd) = 0;
+        virtual PDUPeerPtr GetPeer(uint64_t peerID) = 0;
         virtual void PeerDelete(Forte::PDUPeerPtr peer) = 0;
+
+        virtual int GetSize() const = 0;
         virtual unsigned int GetConnectedCount() = 0;
     };
 

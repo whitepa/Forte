@@ -11,6 +11,7 @@
 #include <boost/shared_array.hpp>
 #include "PDUPeerTypes.h"
 #include "EnableStats.h"
+#include "ThreadedObject.h"
 
 EXCEPTION_CLASS(EPDUPeerSet);
 
@@ -51,7 +52,7 @@ namespace Forte
      * polling mechanism.
      */
     class PDUPeerSet :
-        public Object,
+        public ThreadedObject,
         public virtual BaseEnableStats
     {
     public:
@@ -63,6 +64,19 @@ namespace Forte
             return boost::static_pointer_cast<PDUPeerSet>(
                 Object::shared_from_this());
         }
+
+
+        /**
+         * Start() call after object is constructed. Sets up epoll and
+         * starts polling via internal thread
+         */
+        virtual void Start() = 0;
+
+        /**
+         * Shutdown() call before object destuction. Shutdown threads
+         * and tears down epoll
+         */
+        virtual void Shutdown() = 0;
 
         /**
          * GetSize() returns the current number of PDUPeer objects
@@ -138,62 +152,12 @@ namespace Forte
         virtual void SetEventCallback(PDUPeerEventCallback f) = 0;
 
         /**
-         * Creates an epoll file descriptor, and automatically adds
-         * all PDUPeer file descriptors to it for polling.  Once
-         * created, all subsequent calls to PeerConnected() and
-         * fdDisconnected() will add / remove those FDs from the
-         * epoll file descriptor, until TeardownEPoll() is called.
-         *
-         * @return int epoll file descriptor
-         */
-        virtual int SetupEPoll(void) = 0;
-
-        /**
-         * Closes the epoll file descriptor (removing all existing
-         * peer descriptors from polling).  If another caller is
-         * currently blocked on Poll(), they will receive an
-         * exception.
-         *
-         */
-        virtual void TeardownEPoll(void) = 0;
-
-        /**
-         * Poll will poll all current Peers for input, and process any
-         * received input via the ProcessPDUCallback.  The callback
-         * will be called for each ready PDU until no more fully
-         * buffered PDUs exist for each peer in succession.  If the
-         * epoll_wait() call is interrupted, Poll() will return
-         * immediately.
-         *
-         * @param msTimeout timeout in milliseconds before returning.
-         * A value of -1 (the default) will wait indefinitely, while a
-         * value of 0 will not wait at all.
-         * @param interruptible will return if the epoll syscall is
-         * interrupted by a signal.
-         *
-         */
-        virtual void Poll(int msTimeout = -1, bool interruptible = false) = 0;
-
-        /**
          * PeerDelete will delete the given peer from the PDUPeerSet,
          * and remove the peer from any poll operation in progress.
          *
          * @param peer
          */
         virtual void PeerDelete(const PDUPeerPtr& peer) = 0;
-
-        /**
-         * The PDUPeerSetBuilder handles this automatically. If you
-         * are setting up a PDUPeerSet yourself, you need to call this
-         * if you want events.
-         *
-         */
-        virtual void StartPolling() = 0;
-
-        /**
-         * Shutdown all threads, do any other pre-destructor clean up
-         */
-        virtual void Shutdown() = 0;
 
         /**
          * Will return the peer as indexed by the peerID. In the case
