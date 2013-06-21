@@ -208,7 +208,7 @@ void Forte::ProcessManagerImpl::startMonitor(
             execv(mProcmonPath, vargs);
             fprintf(stderr, "procmon child, exec() failed: %d %s\n", errno,
                     SystemCallUtil::GetErrorDescription(errno).c_str());
-            exit(-1);
+            _exit(-1);
         }
         else
         {
