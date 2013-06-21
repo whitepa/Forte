@@ -19,35 +19,62 @@
 // #SCQAD TESTTAG: smoketest, forte, forte.procmon
 
 using namespace Forte;
+using ::testing::UnitTest;
 
 LogManager logManager;
 
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 
-class ProcessManagerTest : public ::testing::Test
+struct TestParams
+{
+    TestParams(int p, int s)
+        : numProcesses(p),
+          numSeconds(s)
+        {}
+
+    int numProcesses;
+    int numSeconds;
+};
+
+class ProcessManagerTest : public ::testing::TestWithParam<TestParams>
 {
 public:
     static void SetUpTestCase() {
-        signal(SIGPIPE, SIG_IGN);
-        logManager.SetLogMask("//stdout", HLOG_ALL);
-        logManager.BeginLogging("//stdout");
-    };
+        logManager.BeginLogging(__FILE__ ".log", HLOG_ALL);
+        logManager.BeginLogging("//stderr",
+                                logManager.GetSingleLevelFromString("UPTO_DEBUG"),
+                                HLOG_FORMAT_SIMPLE | HLOG_FORMAT_THREAD);
+    }
+
     static void TearDownTestCase() {
+        logManager.EndLogging();
+    }
 
-    };
+    void SetUp() {
+        hlogstream(
+            HLOG_INFO, "Starting test "
+            << UnitTest::GetInstance()->current_test_info()->test_case_name());
+    }
 
+    void TearDown() {
+        hlogstream(
+            HLOG_INFO, "ending test "
+            << UnitTest::GetInstance()->current_test_info()->test_case_name());
+    }
 };
 
 #pragma GCC diagnostic warning "-Wold-style-cast"
 
-TEST_F(ProcessManagerTest, Runs100ProcessesInUnder10Seconds)
+TEST_P(ProcessManagerTest, RunsXProcessesInUnderYSeconds)
 {
+    TestParams p(GetParam());
+
     try
     {
         boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
         std::list<boost::shared_ptr<ProcessFuture> > phList;
         Forte::Timespec start = Forte::MonotonicClock().GetTime();
-        for (int i = 0; i < 100; ++i)
+        for (int i = 0; i < p.numProcesses; ++i)
         {
             phList.push_back(
                 boost::shared_ptr<ProcessFuture>(
@@ -57,10 +84,11 @@ TEST_F(ProcessManagerTest, Runs100ProcessesInUnder10Seconds)
         {
             ASSERT_NO_THROW(ph->GetResult());
             ASSERT_EQ(0, ph->GetStatusCode());
-            ASSERT_EQ(ProcessFuture::ProcessExited, ph->GetProcessTerminationType());
+            ASSERT_EQ(ProcessFuture::ProcessExited,
+                      ph->GetProcessTerminationType());
         }
         Forte::Timespec finish = Forte::MonotonicClock().GetTime();
-        ASSERT_LT((finish - start), Forte::Timespec::FromSeconds(10));
+        ASSERT_LT((finish - start), Forte::Timespec::FromSeconds(p.numSeconds));
     }
     catch (std::exception& e)
     {
@@ -68,6 +96,17 @@ TEST_F(ProcessManagerTest, Runs100ProcessesInUnder10Seconds)
         FAIL();
     }
 }
+
+INSTANTIATE_TEST_CASE_P(TimedRunProcesses,
+                        ProcessManagerTest,
+                        ::testing::Values(
+                            TestParams(1,10),
+                            TestParams(2,10),
+                            TestParams(3,10),
+                            TestParams(10,10),
+                            TestParams(50,10),
+                            TestParams(100,10)));
+
 TEST_F(ProcessManagerTest, ReactsToChildTerminationInUnder100Millisec)
 {
     try
