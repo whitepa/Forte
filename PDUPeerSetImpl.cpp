@@ -195,7 +195,9 @@ void Forte::PDUPeerSetImpl::Broadcast(const PDU& pdu) const
         catch (Exception& e)
         {
             //TODO: determine if the error callback should be called here
-            hlogstream(HLOG_WARN, "Could not send pdu to peer" << peer->GetID());
+            hlogstream(HLOG_WARN,
+                       "Could not send pdu to peer " << peer->GetID()
+                       << ": " << e.what());
         }
     }
 }
