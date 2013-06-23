@@ -39,9 +39,7 @@ namespace Forte
             int64_t, int64_t, int64_t,
             CumulativeMovingAverage>
             >
-
     {
-        friend class PDUPeerSendThread;
     public:
         /**
          * PDUPeerImpl - a PDUPeer is an object that represents a
