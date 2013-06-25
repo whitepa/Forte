@@ -1,6 +1,10 @@
 #ifndef __Forte_FunctionThread_h__
 #define __Forte_FunctionThread_h__
 
+#include "Thread.h"
+#include <boost/function.hpp>
+#include <string>
+
 namespace Forte
 {
     class FunctionThread : public Forte::Thread
