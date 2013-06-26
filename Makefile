@@ -59,6 +59,7 @@ SRCS =	\
 	Curl.cpp \
 	DaemonUtil.cpp \
 	Dispatcher.cpp \
+	EPollMonitor.cpp \
 	EventQueue.cpp \
 	EventPredicate.cpp \
 	Exception.cpp \

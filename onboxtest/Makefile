@@ -28,6 +28,7 @@ LIBS = \
 PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
 	$(TARGETDIR)/CRCOnBoxTest \
 	$(TARGETDIR)/ExponentiallyDampedMovingAverageOnBoxTest \
+	$(TARGETDIR)/EPollMonitorOnBoxTest \
 	$(TARGETDIR)/FileSystemImplOnBoxTest \
 	$(TARGETDIR)/INotifyUnitTest \
 	$(TARGETDIR)/InterProcessLockOnBoxTest \
@@ -42,6 +43,10 @@ PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
 #	$(TARGETDIR)/DbMirroredConnectionUnitTest \
 # flaky or broken
 #	$(TARGETDIR)/SCSIUtilUnitTest \
+
+PROG_DEPS_OBJS_EPollMonitorOnBoxTest = \
+	../$(TARGETDIR)/EPollMonitor.o \
+
 
 PROG_DEPS_OBJS_PDUPeerSetImplOnBoxTest = \
 	../$(TARGETDIR)/PDU.o \
