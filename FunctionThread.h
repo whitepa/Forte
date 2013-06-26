@@ -30,13 +30,13 @@ namespace Forte
             initialized();
         }
 
-    protected:
-        virtual void* run() {
+    private:
+        void* run() {
             mFunction();
             return NULL;
         }
 
-    protected:
+    private:
         boost::function<void()> mFunction;
     };
 }
