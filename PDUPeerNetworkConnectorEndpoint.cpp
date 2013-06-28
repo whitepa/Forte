@@ -26,6 +26,9 @@ void Forte::PDUPeerNetworkConnectorEndpoint::connect()
     if (GetFD() == -1)
     {
         AutoFD sock(createInetStreamSocket());
+
+        Forte::setTCPNoDelay(sock);
+
         connectToAddress(sock, mConnectToAddress);
 
         // send identifier

@@ -247,3 +247,18 @@ void Forte::setTCPSendBufferSize(int fd, int tcpBufferSize)
                            errno));
     }
 }
+
+void Forte::setTCPNoDelay(int fd)
+{
+    int tcpNoDelay = 1;
+    if (setsockopt(fd,
+                   IPPROTO_TCP,
+                   TCP_NODELAY,
+                   &tcpNoDelay,
+                   sizeof (int)) == -1)
+    {
+        hlog_and_throw(HLOG_WARN, ESocketUtil(
+                           FStringFC(), "could not set TCP_NODELAY: %d",
+                           errno));
+    }
+}
