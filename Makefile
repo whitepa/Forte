@@ -88,6 +88,7 @@ SRCS =	\
 	PDUPeerSetBuilderImpl.cpp \
 	PDUPeerSetConnectionHandler.cpp \
 	PDUPeerSetImpl.cpp \
+	PDUQueue.cpp \
 	PidFile.cpp \
 	PosixTimer.cpp \
 	ProcFileSystem.cpp \
