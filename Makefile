@@ -106,6 +106,7 @@ SRCS =	\
 	SecureString.cpp \
 	ServerMain.cpp \
 	ServiceConfig.cpp \
+	SocketUtil.cpp \
 	SSHRunner.cpp \
 	State.cpp \
 	StateHistoryLogger.cpp \
