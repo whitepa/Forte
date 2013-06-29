@@ -45,21 +45,6 @@ EXCEPTION_SUBCLASS2(
 
 EXCEPTION_SUBCLASS2(
     EPDUPeerEndpoint,
-    ECouldNotConvertIP,
-    "Could not convert IP address");
-
-EXCEPTION_SUBCLASS2(
-    EPDUPeerEndpoint,
-    ECouldNotCreateSocket,
-    "Could not create socket");
-
-EXCEPTION_SUBCLASS2(
-    EPDUPeerEndpoint,
-    ECouldNotConnect,
-    "Could not connect to peer");
-
-EXCEPTION_SUBCLASS2(
-    EPDUPeerEndpoint,
     ECouldNotSendID,
     "Could not send id to peer");
 

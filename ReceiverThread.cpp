@@ -2,6 +2,7 @@
 #include "LogManager.h"
 #include "ReceiverThread.h"
 #include "SystemCallUtil.h"
+#include "SocketUtil.h"
 #include <fcntl.h>
 #include <sys/epoll.h>
 #include <sys/types.h>
@@ -23,31 +24,9 @@ void * Forte::ReceiverThread::run(void)
     mThreadName.Format("%s-recv", mName.c_str());
 
     // create socket
-    AutoFD m;
-    if ((m = socket(PF_INET, SOCK_STREAM, 0)) < 0)
-        throw EReceiverThread(
-            FStringFC(), "Failed to create socket: %s",
-            SystemCallUtil::GetErrorDescription(errno).c_str());
-
-    // set SO_REUSEADDR
-    int one = 1;
-    setsockopt(m, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
-
-    // bind socket and listen
-    hlog(HLOG_INFO, "Binding to port %u on %s", mPort,
-         (mBindIP.empty() ? "all addresses" : mBindIP.c_str()));
-
-    struct sockaddr_in bind_addr;
-    memset(&bind_addr, 0, sizeof(struct sockaddr_in));
-    bind_addr.sin_family = AF_INET;
-    bind_addr.sin_port = htons(mPort);
-    if (!inet_aton(mBindIP, &(bind_addr.sin_addr)))
-        throw EReceiverThread(
-            FStringFC(), "invalid bind IP: %s", mBindIP.c_str());
-
-    if (::bind(m, reinterpret_cast<struct sockaddr*>(&bind_addr), sizeof(struct sockaddr_in)) == -1)
-        throw EReceiverThread(FStringFC(), "failed to bind: %s",
-                              SystemCallUtil::GetErrorDescription(errno).c_str());
+    AutoFD m(createInetStreamSocket());
+    setReuseAddr(m);
+    bindToAddress(m, SocketAddress(mBindIP, mPort));
 
     if (listen(m, mBacklog) == -1)
         throw EReceiverThread(

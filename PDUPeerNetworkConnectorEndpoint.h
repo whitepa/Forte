@@ -7,7 +7,7 @@
 #include "Dispatcher.h"
 #include "PDUPeerFileDescriptorEndpoint.h"
 #include "PDUPeerTypes.h"
-#include "Types.h"
+#include "SocketUtil.h"
 
 namespace Forte
 {
@@ -32,7 +32,6 @@ namespace Forte
 
     protected:
         void connect();
-        void setTCPKeepAlive();
 
     protected:
         mutable Mutex mConnectionMutex;
