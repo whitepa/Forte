@@ -47,10 +47,6 @@ void PDUQueue::EnqueuePDU(const PDUPtr& pdu)
     // Potential race condition between semaphore & mutex locks
     AutoUnlockMutex lock(mPDUQueueMutex);
 
-    mTotalQueued++;
-    mQueueSize = mPDUQueue.size();
-    mAvgQueueSize = mPDUQueue.size();
-
     if (mQueueType != PDU_PEER_QUEUE_BLOCK && mPDUQueue.size()+1 > mQueueMaxSize)
     {
         switch (mQueueType)
@@ -66,6 +62,10 @@ void PDUQueue::EnqueuePDU(const PDUPtr& pdu)
         }
     }
 
+    mTotalQueued++;
+    mQueueSize = mPDUQueue.size();
+    mAvgQueueSize = mPDUQueue.size();
+
     PDUHolderPtr pduHolder(new PDUHolder);
     pduHolder->enqueuedTime = mClock.GetTime();
     pduHolder->pdu = pdu;
@@ -77,7 +77,7 @@ void PDUQueue::EnqueuePDU(const PDUPtr& pdu)
 void PDUQueue::GetNextPDU(boost::shared_ptr<PDU>& pdu)
 {
     AutoUnlockMutex lock(mPDUQueueMutex);
-    if (mPDUQueue.size() > 0)
+    if (!mPDUQueue.empty())
     {
         pdu = mPDUQueue.front()->pdu;
         mPDUQueue.pop_front();
@@ -91,12 +91,12 @@ void PDUQueue::WaitForNextPDU(PDUPtr& pdu)
 {
     AutoUnlockMutex lock(mPDUQueueMutex);
     while (!Thread::MyThread()->IsShuttingDown()
-           && mPDUQueue.size() == 0)
+           && mPDUQueue.empty())
     {
         mPDUQueueNotEmptyCondition.Wait();
     }
 
-    if (mPDUQueue.size() > 0)
+    if (!mPDUQueue.empty())
     {
         pdu = mPDUQueue.front()->pdu;
         mPDUQueue.pop_front();

@@ -41,7 +41,7 @@ void Forte::PDUPeerNetworkConnectorEndpoint::connect()
         SetFD(sock);
         setTCPKeepAlive(sock);
 
-        hlog(HLOG_INFO, "established connection to %s:%d",
+        hlog(HLOG_DEBUG, "established connection to %s:%d",
              mConnectToAddress.first.c_str(),
              mConnectToAddress.second);
     }
