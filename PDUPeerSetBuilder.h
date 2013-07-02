@@ -19,7 +19,7 @@ namespace Forte
         virtual void Shutdown() = 0;
         virtual void SetEventCallback(PDUPeerEventCallback f) = 0;
 
-        virtual void Broadcast(const PDU& pdu) const = 0;
+        //virtual void Broadcast(const PDU& pdu) const = 0;
         virtual void BroadcastAsync(PDUPtr pdu) = 0;
 
         virtual PDUPeerPtr PeerCreate(int fd) = 0;

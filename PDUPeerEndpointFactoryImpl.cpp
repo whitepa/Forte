@@ -3,21 +3,28 @@
 #include "FTrace.h"
 #include "PDUPeerEndpointFactoryImpl.h"
 #include "PDUPeerFileDescriptorEndpoint.h"
-#include "PDUPeerNetworkAcceptorEndpoint.h"
 #include "PDUPeerNetworkConnectorEndpoint.h"
 #include "PDUPeerInProcessEndpoint.h"
 
 using boost::shared_ptr;
 using namespace Forte;
 
-boost::shared_ptr<PDUPeerEndpoint> PDUPeerEndpointFactoryImpl::Create(int fd)
+boost::shared_ptr<PDUPeerEndpoint> PDUPeerEndpointFactoryImpl::Create(
+    const boost::shared_ptr<PDUQueue>& pduSendQueue,
+    int fd)
 {
     FTRACE2("%d", fd);
     hlog(HLOG_DEBUG2, "Creating new FileDescriptorPDUPeer");
-    return boost::shared_ptr<PDUPeerEndpoint>(new PDUPeerFileDescriptorEndpoint(fd));
+    boost::shared_ptr<PDUPeerFileDescriptorEndpoint> p(
+        new PDUPeerFileDescriptorEndpoint(
+            pduSendQueue,
+            mEPollMonitor.lock()));
+    p->SetFD(fd);
+    return p;
 }
 
 boost::shared_ptr<PDUPeerEndpoint> PDUPeerEndpointFactoryImpl::Create(
+    const boost::shared_ptr<PDUQueue>& pduSendQueue,
     const SocketAddress& localListenSocketAddress,
     const SocketAddress& connectToSocketAddress,
     uint64_t outgoingPeerSetID)
@@ -36,14 +43,17 @@ boost::shared_ptr<PDUPeerEndpoint> PDUPeerEndpointFactoryImpl::Create(
             << ":" << connectToSocketAddress.second);
 
         return boost::shared_ptr<PDUPeerEndpoint>(
-            new PDUPeerNetworkAcceptorEndpoint(localListenSocketAddress));
+            new PDUPeerFileDescriptorEndpoint(
+                pduSendQueue,
+                mEPollMonitor.lock()));
     }
     else if (localListenSocketAddress == connectToSocketAddress)
     {
         hlog(HLOG_DEBUG2, "Creating InProcessPDUPeer for %s:%d",
              localListenSocketAddress.first.c_str(),
              localListenSocketAddress.second);
-        return boost::shared_ptr<PDUPeerEndpoint>(new PDUPeerInProcessEndpoint());
+        return boost::shared_ptr<PDUPeerEndpoint>(
+            new PDUPeerInProcessEndpoint(pduSendQueue));
     }
     else
     {
@@ -56,7 +66,10 @@ boost::shared_ptr<PDUPeerEndpoint> PDUPeerEndpointFactoryImpl::Create(
 
         PDUPeerNetworkConnectorEndpointPtr p(
             new PDUPeerNetworkConnectorEndpoint(
-                outgoingPeerSetID, connectToSocketAddress));
+                pduSendQueue,
+                outgoingPeerSetID,
+                connectToSocketAddress,
+                mEPollMonitor.lock()));
 
         return p;
     }

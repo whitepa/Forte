@@ -128,7 +128,7 @@ namespace Forte
          *
          * @param pdu
          */
-        virtual void Broadcast(const PDU &pdu) const = 0;
+        //virtual void Broadcast(const PDU &pdu) const = 0;
 
 
         /**

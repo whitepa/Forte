@@ -13,6 +13,7 @@
 #include "PDUPeerEndpointFactory.h"
 #include "PDUPeerTypes.h"
 #include "Locals.h"
+#include "EPollMonitor.h"
 
 EXCEPTION_CLASS(EPDUPeerSetBuilder);
 
@@ -49,14 +50,18 @@ namespace Forte
         void Start();
         void Shutdown();
 
-        void Broadcast(const PDU& pdu) const {
-            FTRACE;
-            mPDUPeerSet->Broadcast(pdu);
-        }
+        // void Broadcast(const PDU& pdu) const {
+        //     FTRACE;
+        //     mPDUPeerSet->Broadcast(pdu);
+        // }
 
         void BroadcastAsync(PDUPtr pdu) {
             FTRACE;
             mPDUPeerSet->BroadcastAsync(pdu);
+        }
+
+        int GetOutstandingPDUCount() const {
+            return mPDUPeerSet->GetSize();
         }
 
         int GetSize() const {
@@ -98,8 +103,8 @@ namespace Forte
         boost::shared_ptr<ReceiverThread> mReceiverThread;
         boost::shared_ptr<PDUPeerSetConnectionHandler> mConnectionHandler;
         boost::shared_ptr<OnDemandDispatcher> mConnectionDispatcher;
+        boost::shared_ptr<EPollMonitor> mEPollMonitor;
         boost::shared_ptr<PDUPeerSet> mPDUPeerSet;
-        //TODO: pass in
         boost::shared_ptr<PDUPeerEndpointFactory> mPDUPeerEndpointFactory;
     };
 }

@@ -3,46 +3,85 @@
 #include "FTrace.h"
 #include <boost/make_shared.hpp>
 
-Forte::PDUPeerInProcessEndpoint::PDUPeerInProcessEndpoint()
-    : mConnectMessageSent(false),
-      mBytesSent (0)
-{
-    registerStatVariable<0>("bytesSent", &PDUPeerInProcessEndpoint::mBytesSent);
-}
+using namespace Forte;
 
-Forte::PDUPeerInProcessEndpoint::~PDUPeerInProcessEndpoint()
+PDUPeerInProcessEndpoint::PDUPeerInProcessEndpoint(
+    const boost::shared_ptr<PDUQueue>& sendQueue)
+    : mSendQueue(sendQueue),
+      mConnectMessageSent(false)
 {
 }
 
-void Forte::PDUPeerInProcessEndpoint::SendPDU(const Forte::PDU &pdu)
+PDUPeerInProcessEndpoint::~PDUPeerInProcessEndpoint()
+{
+}
+
+void PDUPeerInProcessEndpoint::Start()
+{
+    recordStartCall();
+
+    if (!callbackIsValid())
+    {
+        hlog_and_throw(HLOG_ERR,
+                       EPDUPeerEndpoint("Nothing in process is expecting PDUs"));
+    }
+
+    mSendThread.reset(
+        new FunctionThread(
+            FunctionThread::AutoInit(),
+            boost::bind(&PDUPeerInProcessEndpoint::sendThreadRun, this),
+            "pdusend-fd"));
+
+}
+
+void PDUPeerInProcessEndpoint::Shutdown()
+{
+    recordShutdownCall();
+
+    mSendThread->Shutdown();
+    mSendQueue->TriggerWaiters();
+    mSendThread->WaitForShutdown();
+
+    mSendThread.reset();
+    mSendQueue.reset();
+}
+
+void PDUPeerInProcessEndpoint::sendThreadRun()
 {
     FTRACE;
+    hlog(HLOG_DEBUG2, "Starting PDUPeerSendThread thread");
 
-    // this is a situation where no one is listening, so sending a PDU
-    // should result in an error
-    if (!mEventCallback)
+    connect();
+
+    Thread* myThread = Thread::MyThread();
+    boost::shared_ptr<PDU> pdu;
+    while (!myThread->IsShuttingDown())
     {
-        throw EPDUPeerEndpoint("Nothing in process is expecting PDUs");
-    }
+        pdu.reset();
+        mSendQueue->WaitForNextPDU(pdu);
 
-    {
-        AutoUnlockMutex lock(mMutex);
-        mPDUBuffer.push_back(PDUPtr(new PDU(pdu)));
-    }
+        if (pdu)
+        {
+            {
+                AutoUnlockMutex lock(mMutex);
+                mPDUBuffer.push_back(pdu);
+            }
 
-    PDUPeerEventPtr event(new PDUPeerEvent());
-    event->mEventType = PDUPeerReceivedPDUEvent;
-    mEventCallback(event);
+            PDUPeerEventPtr event(new PDUPeerEvent());
+            event->mEventType = PDUPeerReceivedPDUEvent;
+            deliverEvent(event);
+        }
+    }
 }
 
-bool Forte::PDUPeerInProcessEndpoint::IsPDUReady() const
+bool PDUPeerInProcessEndpoint::IsPDUReady() const
 {
     FTRACE;
     AutoUnlockMutex lock(mMutex);
     return (mPDUBuffer.size() > 0);
 }
 
-bool Forte::PDUPeerInProcessEndpoint::RecvPDU(Forte::PDU &out)
+bool PDUPeerInProcessEndpoint::RecvPDU(PDU &out)
 {
     FTRACE;
     AutoUnlockMutex lock(mMutex);
@@ -63,4 +102,17 @@ bool Forte::PDUPeerInProcessEndpoint::RecvPDU(Forte::PDU &out)
     }
 
     return false;
+}
+
+void PDUPeerInProcessEndpoint::connect()
+{
+    if (!mConnectMessageSent)
+    {
+        PDUPeerEventPtr event(new PDUPeerEvent());
+        event->mEventType = PDUPeerConnectedEvent;
+        deliverEvent(event);
+
+        AutoUnlockMutex lock(mMutex);
+        mConnectMessageSent = true;
+    }
 }

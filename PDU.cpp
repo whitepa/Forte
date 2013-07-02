@@ -3,11 +3,13 @@
 using namespace std;
 using namespace Forte;
 
-boost::shared_array<char> PDU::CreateSendBuffer(const PDU &pdu) {
+boost::shared_array<char> PDU::CreateSendBuffer(const PDU &pdu)
+{
     boost::shared_array<char> res;
     unsigned int len =
         sizeof(Forte::PDUHeader)
-        + pdu.mHeader.payloadSize;
+        + pdu.mHeader.payloadSize
+        + pdu.mHeader.optionalDataSize;
 
     char *buf = new char[len];
     memset(buf, 0, len);
@@ -19,6 +21,12 @@ boost::shared_array<char> PDU::CreateSendBuffer(const PDU &pdu) {
            pdu.mPayload.get(),
            pdu.mHeader.payloadSize);
 
+    if (pdu.mHeader.optionalDataSize > 0)
+    {
+        memcpy(buf+sizeof(Forte::PDUHeader)+pdu.mHeader.payloadSize,
+               pdu.mOptionalData->mData,
+               pdu.mHeader.optionalDataSize);
+    }
     res.reset(buf);
     return res;
 }

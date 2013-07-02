@@ -6,39 +6,19 @@
 #include "Event.h"
 #include "PDUPeer.h"
 #include "PDUPeerTypes.h"
+#include "PDUQueue.h"
 #include "Clock.h"
 #include "Semaphore.h"
 #include "Locals.h"
-#include "CumulativeMovingAverage.h"
 #include "FunctionThread.h"
 
 EXCEPTION_SUBCLASS(EPDUPeer, EPDUPeerSendError);
-EXCEPTION_SUBCLASS2(EPDUPeer, EPDUPeerNoEventCallback,
-                    "Expected PDU Peer event callback function is not set");
-EXCEPTION_PARAM_SUBCLASS(EPDUPeer, EPDUPeerQueueFull,
-                         "PDU Peer send queue is full (%s)", (unsigned short));
-EXCEPTION_PARAM_SUBCLASS(EPDUPeer, EPDUPeerUnknownQueueType,
-                         "Unknown queue type: %s", (unsigned short));
 
 namespace Forte
 {
-    // metadata we need about the pdu that we don't want to send over
-    // the wire
-    struct PDUHolder {
-        Timespec enqueuedTime;
-        PDUPtr pdu;
-    };
-    typedef boost::shared_ptr<PDUHolder> PDUHolderPtr;
-
     class PDUPeerImpl :
         public PDUPeer,
-        public EnableStats<
-            PDUPeerImpl,
-            Locals<PDUPeerImpl,
-            int64_t, int64_t, int64_t,
-            int64_t, int64_t, int64_t,
-            CumulativeMovingAverage>
-            >
+        public EnableStats<PDUPeerImpl, Locals<PDUPeerImpl> >
     {
     public:
         /**
@@ -53,9 +33,7 @@ namespace Forte
         PDUPeerImpl(
             uint64_t connectingPeerID,
             PDUPeerEndpointPtr endpoint,
-            long pduSendTimeout = 2,
-            unsigned short queueSize = 1024,
-            PDUPeerQueueType queueType = PDU_PEER_QUEUE_THROW);
+            const boost::shared_ptr<PDUQueue>& pduQueue);
 
         virtual ~PDUPeerImpl();
 
@@ -80,12 +58,12 @@ namespace Forte
          * @return true if a PDU is ready, false otherwise
          */
         void EnqueuePDU(const PDUPtr &pdu);
-        virtual unsigned int GetQueueSize() const {
-            AutoUnlockMutex lock(mPDUQueueMutex);
-            return mPDUQueue.size();
+
+        unsigned int GetQueueSize() const {
+            return mPDUQueue->GetQueueSize();
         }
 
-        virtual void SendPDU(const PDU& pdu);
+        //virtual void SendPDU(const PDU& pdu);
         bool IsConnected() const;
         bool IsPDUReady() const;
 
@@ -100,52 +78,17 @@ namespace Forte
         //TODO: boost::shared_ptr<Forte::PDU> RecvPDU() throws (ENoPDUReady, etc);
         bool RecvPDU(Forte::PDU &out);
 
-        // we will add ourselves to the epoll fd that is passed in
-        virtual void SetEPollFD(int epollFD) {
-            mEndpoint->SetEPollFD(epollFD);
-        }
         virtual void HandleEPollEvent(const struct epoll_event& e) {
             FTRACE;
             mEndpoint->HandleEPollEvent(e);
         }
-        virtual void TeardownEPoll() {
-            mEndpoint->TeardownEPoll();
-        }
 
-    protected:
-        void sendThreadRun();
-        void sendLoop();
-        void lockedEnqueuePDU(const PDUHolderPtr& pdu);
-        bool isPDUExpired(PDUHolderPtr pduHolder);
-        void failAllPDUs();
-        void failExpiredPDUs();
+        virtual void PDUPeerEndpointEventCallback(PDUPeerEventPtr event);
 
     protected:
         uint64_t mConnectingPeerID;
         PDUPeerEndpointPtr mEndpoint;
-        long mPDUSendTimeout;
-
-        // mListMutex will protect the list of PDUs to be sent
-        mutable Forte::Mutex mPDUQueueMutex;
-        mutable Forte::ThreadCondition mPDUQueueNotEmptyCondition;
-        std::deque<PDUHolderPtr> mPDUQueue;
-        MonotonicClock mClock;
-
-        // limit size of queue
-        unsigned short mQueueMaxSize;
-        PDUPeerQueueType mQueueType;
-        Semaphore mQueueSemaphore;
-
-        boost::shared_ptr<FunctionThread> mSendThread;
-
-        // stats variables
-        int64_t mTotalSent;
-        int64_t mTotalReceived;
-        int64_t mTotalQueued;
-        int64_t mSendErrors;
-        int64_t mQueueSize;
-        int64_t mStartTime;
-        CumulativeMovingAverage mAvgQueueSize;
+        boost::shared_ptr<Forte::PDUQueue> mPDUQueue;
     };
 
 };

@@ -41,23 +41,15 @@ public:
 TEST_F(PDUPeerNetworkConnectorEndpointUnitTest, ConstructDelete)
 {
     FTRACE;
+    boost::shared_ptr<PDUQueue> pduQueue(new PDUQueue);
+    boost::shared_ptr<EPollMonitor> monitor(new EPollMonitor);
+
     SocketAddress mListeningSocketAddress = make_pair("127.0.0.1", 12888);
-    PDUPeerNetworkConnectorEndpoint theClass(mOwnerID,
-                                             mListeningSocketAddress);
+    PDUPeerNetworkConnectorEndpoint theClass(
+        pduQueue,
+        mOwnerID,
+        mListeningSocketAddress,
+        monitor);
 
     EXPECT_EQ(-1, theClass.GetFD());
 }
-
-TEST_F(PDUPeerNetworkConnectorEndpointUnitTest,
-       SendPDUThrowsECouldNotConnectOnFailure)
-{
-    FTRACE;
-    SocketAddress mListeningSocketAddress = make_pair("127.0.0.1", 12888);
-    PDUPeerNetworkConnectorEndpointPtr theClass(
-        new PDUPeerNetworkConnectorEndpoint(mOwnerID,
-                                            mListeningSocketAddress));
-    PDU pdu;
-
-    EXPECT_THROW(theClass->SendPDU(pdu), EPDUPeerEndpoint);
-}
-

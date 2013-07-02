@@ -2,14 +2,17 @@
 #ifndef __Forte_PDUPeerEndpoint_h_
 #define __Forte_PDUPeerEndpoint_h_
 
+#include <sys/epoll.h>
+#include <sys/types.h>
+
 #include "Exception.h"
 #include "LogManager.h"
-#include "Object.h"
+#include "ThreadedObject.h"
 #include "PDU.h"
 #include "PDUPeerTypes.h"
 #include "EnableStats.h"
+#include "Locals.h"
 #include <boost/function.hpp>
-#include <sys/epoll.h>
 
 EXCEPTION_CLASS(EPDUPeerEndpoint);
 
@@ -53,21 +56,45 @@ EXCEPTION_SUBCLASS2(
     ENotConnected,
     "Peer has not connected to us");
 
-EXCEPTION_SUBCLASS2(
-    EPDUPeerEndpoint,
-    EPDUPeerSetEPollFD,
-    "Unable to setup epoll events on given fd");
-
 namespace Forte
 {
     class Mutex;
     class Event;
 
-    class PDUPeerEndpoint : public Object,
-        public virtual BaseEnableStats
+    class PDUPeerEndpoint :
+        public ThreadedObject,
+        public EnableStats<PDUPeerEndpoint,
+                           Locals<PDUPeerEndpoint,
+                                  int64_t, int64_t, int64_t,
+                                  int64_t, int64_t, int64_t
+                                  > >
     {
     public:
-        PDUPeerEndpoint() {}
+        PDUPeerEndpoint()
+            : mPDUSendCount(0),
+              mPDURecvCount(0),
+              mPDUSendErrors(0),
+              mByteSendCount(0),
+              mByteRecvCount(0),
+              mDisconnectCount(0) {
+            registerStatVariable<0>("PDUSendCount",
+                                    &PDUPeerEndpoint::mPDUSendCount);
+
+            registerStatVariable<1>("PDURecvCount",
+                                    &PDUPeerEndpoint::mPDURecvCount);
+
+            registerStatVariable<2>("PDUSendErrors",
+                                    &PDUPeerEndpoint::mPDUSendErrors);
+
+            registerStatVariable<3>("ByteSendCount",
+                                    &PDUPeerEndpoint::mByteSendCount);
+
+            registerStatVariable<4>("ByteRecvCount",
+                                    &PDUPeerEndpoint::mByteRecvCount);
+
+            registerStatVariable<5>("DisconnectCount",
+                                    &PDUPeerEndpoint::mDisconnectCount);
+        }
         virtual ~PDUPeerEndpoint() {}
 
         // as we move towards multiple FDs per peer, this will be
@@ -107,25 +134,11 @@ namespace Forte
         }
 
         /**
-         * SendPDU will send the PDU or throw.
-         */
-        virtual void SendPDU(const Forte::PDU &pdu) = 0;
-
-        /**
          * Determine if think we are actively connected to our peer
          *
          * @return true if a endpoint is connected
          */
         virtual bool IsConnected(void) const = 0;
-
-        /**
-         * Checks connections and connects if appropriate. Currently
-         * this only applies to 1 of 4 subclasses so something seems
-         * wrong about the method and/or class structure.
-         *
-         * @return verify we are connected, fixup if needed
-         */
-        virtual void CheckConnection() {}
 
         /**
          * Determine whether a full PDU has been received from the
@@ -146,33 +159,55 @@ namespace Forte
          */
         virtual bool RecvPDU(Forte::PDU &out) = 0;
 
-        //TODO: this doesn't seem entirely right since only some of
-        //the endpoints are polled with epoll. may need some redesign
-        virtual void SetEPollFD(int epollFD) {
-            hlog_and_throw(
-                HLOG_ERR,
-                EUnimplemented(
-                    "SetEPollFD called on PDUPeerEndpoint"));
-        }
-        virtual void HandleEPollEvent(const struct epoll_event& e)  {
-            hlog_and_throw(
-                HLOG_ERR,
-                EUnimplemented(
-                    "HandleEPollEvent called on PDUPeerEndpoint"));
-        }
-        virtual void TeardownEPoll() {
-            hlog_and_throw(
-                HLOG_ERR,
-                EUnimplemented(
-                    "TeardownEPoll called on PDUPeerEndpoint"));
-        }
+        /**
+         * If an endpoint has registered with epoll, the event will
+         * come through here.
+         *
+         */
+        virtual void HandleEPollEvent(const struct epoll_event& e) = 0;
 
         void SetEventCallback(PDUPeerEventCallback f) {
+            //AutoUnlockMutex lock(mEventCallbackMutex);
+
+            //TODO: PDUPeerCallbacks call PeerDelete(), which call
+            // Shutdown(), which calls SetEventCallback(NULL). this
+            // causes a deadlock here. i'm thinking having a lock here
+            // would be good, need to think through it more though.
+
             mEventCallback = f;
         }
 
     protected:
+        void deliverEvent(const boost::shared_ptr<PDUPeerEvent>& event) {
+            //AutoUnlockMutex lock(mEventCallbackMutex);
+            if (mEventCallback)
+            {
+                mEventCallback(event);
+            }
+        }
+
+        bool callbackIsValid() const {
+            AutoUnlockMutex lock(mEventCallbackMutex);
+            return (mEventCallback != NULL);
+        }
+
+        /**
+         * connect if appropriate for this endpoint
+         */
+        virtual void connect() {}
+
+    protected:
         int mID;
+
+        int64_t mPDUSendCount;
+        int64_t mPDURecvCount;
+        int64_t mPDUSendErrors;
+        int64_t mByteSendCount;
+        int64_t mByteRecvCount;
+        int64_t mDisconnectCount;
+
+    private:
+        mutable Forte::Mutex mEventCallbackMutex;
         PDUPeerEventCallback mEventCallback;
     };
 }

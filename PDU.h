@@ -73,7 +73,7 @@ namespace Forte
               mAttributes(attributes),
               mData(NULL)
             {
-                if (size > 0)
+                if (mSize > 0)
                 {
                     if (attributes & PDU_OPTIONAL_DATA_ATTRIBUTE_MEMALIGN_512)
                     {

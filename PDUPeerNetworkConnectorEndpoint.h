@@ -18,12 +18,12 @@ namespace Forte
     {
     public:
         PDUPeerNetworkConnectorEndpoint(
+            const boost::shared_ptr<PDUQueue>& pduSendQueue,
             uint64_t ownerPeerSetID,
-            const SocketAddress& connectToAddress);
+            const SocketAddress& connectToAddress,
+            const boost::shared_ptr<EPollMonitor>& epollMonitor);
 
         virtual ~PDUPeerNetworkConnectorEndpoint() {}
-
-        void CheckConnection();
 
         boost::shared_ptr<PDUPeerNetworkConnectorEndpoint> GetPtr() {
             return boost::static_pointer_cast<PDUPeerNetworkConnectorEndpoint>(
@@ -32,9 +32,6 @@ namespace Forte
 
     protected:
         void connect();
-
-    protected:
-        mutable Mutex mConnectionMutex;
         uint64_t mPeerSetID; // sent to other peers to let them know who we are
         SocketAddress mConnectToAddress;
     };

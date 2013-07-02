@@ -5,7 +5,7 @@
 #include "Exception.h"
 #include "Types.h"
 #include "PDUPeerEndpointFactory.h"
-#include "ThreadPoolDispatcher.h"
+#include "EPollMonitor.h"
 
 EXCEPTION_CLASS(EPDUPeerEndpointFactoryImpl);
 
@@ -19,7 +19,11 @@ namespace Forte
     class PDUPeerEndpointFactoryImpl : public PDUPeerEndpointFactory
     {
     public:
-        PDUPeerEndpointFactoryImpl() {}
+        PDUPeerEndpointFactoryImpl(
+            const boost::shared_ptr<EPollMonitor>& epollMonitor)
+            : mEPollMonitor(epollMonitor)
+            {
+            }
         virtual ~PDUPeerEndpointFactoryImpl() {}
 
         /**
@@ -27,7 +31,9 @@ namespace Forte
          *
          * @return shared_ptr to new PDUPeerEndpoint
          */
-        boost::shared_ptr<PDUPeerEndpoint> Create(int fd);
+        boost::shared_ptr<PDUPeerEndpoint> Create(
+            const boost::shared_ptr<PDUQueue>& pduSendQueue,
+            int fd);
 
         /**
          * Connect to the given SocketAddress. This is used in the
@@ -41,9 +47,13 @@ namespace Forte
          * @return shared_ptr to new PDUPeerEndpoint
          */
         boost::shared_ptr<PDUPeerEndpoint> Create(
+            const boost::shared_ptr<PDUQueue>& pduSendQueue,
             const Forte::SocketAddress& localListenSocketAddress,
             const Forte::SocketAddress& connectToSocketAddress,
             uint64_t outgoingPeerSetID);
+
+    protected:
+        boost::weak_ptr<EPollMonitor> mEPollMonitor;
     };
 };
 #endif

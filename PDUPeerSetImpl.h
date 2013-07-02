@@ -2,6 +2,8 @@
 #ifndef __PDUPeerSetImpl_h_
 #define __PDUPeerSetImpl_h_
 
+#include <sys/epoll.h>
+#include <sys/types.h>
 #include "AutoFD.h"
 #include "AutoMutex.h"
 #include "PDUPeerSet.h"
@@ -10,6 +12,8 @@
 #include "FTrace.h"
 #include "Locals.h"
 #include "FunctionThread.h"
+#include "EPollMonitor.h"
+#include <boost/shared_ptr.hpp>
 
 namespace Forte
 {
@@ -41,7 +45,7 @@ namespace Forte
     class PDUPeerSetImpl :
         public PDUPeerSet,
         public EnableStats<PDUPeerSetImpl,
-            Locals<PDUPeerSetImpl, ConnectedCount> >
+                           Locals<PDUPeerSetImpl, ConnectedCount> >
     {
     public:
         PDUPeerSetImpl(const std::vector<PDUPeerPtr>& peers);
@@ -94,7 +98,7 @@ namespace Forte
             }
         }
 
-        void Broadcast(const PDU& pdu) const;
+        //void Broadcast(const PDU& pdu) const;
         void BroadcastAsync(const PDUPtr& pdu);
 
         void SetEventCallback(PDUPeerEventCallback f);
@@ -114,51 +118,11 @@ namespace Forte
     protected:
         void startPolling();
 
-        /**
-         * Creates an epoll file descriptor, and automatically adds
-         * all PDUPeer file descriptors to it for polling.  Once
-         * created, all subsequent calls to PeerConnected() and
-         * fdDisconnected() will add / remove those FDs from the
-         * epoll file descriptor, until TeardownEPoll() is called.
-         */
-        void setupEPoll();
-
-        /**
-         * Closes the epoll file descriptor (removing all existing
-         * peer descriptors from polling). If another caller is
-         * currently blocked on Poll(), they will receive an
-         * exception.
-         */
-        void teardownEPoll();
-
-        /**
-         * Poll will poll all current Peers for input, and process any
-         * received input via the ProcessPDUCallback.  The callback
-         * will be called for each ready PDU until no more fully
-         * buffered PDUs exist for each peer in succession.  If the
-         * epoll_wait() call is interrupted, Poll() will return
-         * immediately.
-         *
-         * @param msTimeout timeout in milliseconds before returning.
-         * A value of -1 (the default) will wait indefinitely, while a
-         * value of 0 will not wait at all.
-         * @param interruptible will return if the epoll syscall is
-         * interrupted by a signal.
-         *
-         */
-        void poll(int msTimeout = -1, bool interruptible = false);
-
-        // epoll thread run
-        void runEPoll();
-
     protected:
-        boost::scoped_ptr<FunctionThread> mPollThread;
+        boost::shared_ptr<EPollMonitor> mEPollMonitor;
 
         mutable Forte::Mutex mPDUPeerLock;
         std::map<uint64_t, PDUPeerPtr> mPDUPeers;
-
-        mutable RWLock mEPollLock;
-        int mEPollFD;
 
         PDUPeerEventCallback mEventCallback;
 

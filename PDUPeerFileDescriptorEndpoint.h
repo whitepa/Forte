@@ -2,133 +2,107 @@
 #ifndef __Forte_PDUPeerFileDescriptorEndpoint_h_
 #define __Forte_PDUPeerFileDescriptorEndpoint_h_
 
+#include <sys/epoll.h>
+#include <sys/types.h>
 #include "AutoMutex.h"
 #include "AutoFD.h"
-#include "PDUPeer.h"
+#include "PDUQueue.h"
 #include <boost/shared_array.hpp>
-#include "Semaphore.h"
 #include "Locals.h"
+#include "EPollMonitor.h"
+#include "FunctionThread.h"
 
 namespace Forte
 {
     static const int RECV_BUFFER_SIZE = 65536;
     static const int DEFAULT_MAX_BUFFER_SIZE = 1048576;
+    static const int DEFAULT_SEND_TIMEOUT = 5*1000;
 
-    class PDUPeerFileDescriptorEndpoint :
-        public PDUPeerEndpoint,
-        public EnableStats<
-            PDUPeerFileDescriptorEndpoint,
-            Locals<PDUPeerFileDescriptorEndpoint, int64_t> >
+    class PDUPeerFileDescriptorEndpoint : public PDUPeerEndpoint
     {
     public:
         PDUPeerFileDescriptorEndpoint(
-            int fd,
-            unsigned int bufSize = RECV_BUFFER_SIZE,
-            unsigned int bufMaxSize = DEFAULT_MAX_BUFFER_SIZE,
-            unsigned int bufStepSize = RECV_BUFFER_SIZE) :
-            mBufferFullCondition(mReceiveMutex),
-            mCursor(0),
-            mBufSize(bufSize),
-            mBufMaxSize(bufMaxSize),
-            mBufStepSize(bufStepSize),
-            mPDUBuffer(new char[mBufSize]),
-            mEPollFD(-1),
-            mFDLock(),
-            mFD(fd)
-            {
-                FTRACE2("%d", static_cast<int>(mFD));
-
-                if (mBufMaxSize < mBufSize)
-                    mBufMaxSize = mBufSize;
-                if (mBufStepSize > mBufSize)
-                    mBufStepSize = mBufSize;
-
-                memset(mPDUBuffer.get(), 0, mBufSize);
-
-                mBytesSent = 0;
-                registerStatVariable<0>("bytesSent",
-                                        &PDUPeerFileDescriptorEndpoint::mBytesSent);
-            }
-
+            const boost::shared_ptr<Forte::PDUQueue>& pduSendQueue,
+            const boost::shared_ptr<EPollMonitor>& epollMonitor,
+            unsigned int sendTimeoutSeconds = DEFAULT_SEND_TIMEOUT,
+            unsigned int receiveBufferSize = RECV_BUFFER_SIZE,
+            unsigned int receiveBufferMaxSize = DEFAULT_MAX_BUFFER_SIZE,
+            unsigned int receiveBufferStepSize = RECV_BUFFER_SIZE);
         virtual ~PDUPeerFileDescriptorEndpoint() {}
 
+        virtual void Start();
+        virtual void Shutdown();
+
+        //happens after constructor as a callback will be created and
+        //a connect event will be fired
         void SetFD(int FD);
         int GetFD(void) const {
-            AutoUnlockMutex fdlock(mFDLock);
+            AutoUnlockMutex fdlock(mFDMutex);
             return mFD;
         }
-        virtual void SendPDU(const Forte::PDU &pdu);
 
-        void SetEPollFD(int epollFD);
-
-        /**
-         * Called when you get an epoll event. will call to protected
-         * functions below for specific handling
-         */
-        virtual void HandleEPollEvent(const struct epoll_event& e);
-
-        virtual void TeardownEPoll();
-
-        /**
-         * Determine whether a full PDU has been received from the
-         * peer, and is ready for the application to get with a
-         * RecvPDU call.
-         *
-         * @return true if a PDU is ready, false otherwise
-         */
+        virtual void HandleEPollEvent(const epoll_event& e);
         bool IsPDUReady(void) const;
-
-        /**
-         * Receive a PDU.  Returns true if a PDU was received, false
-         * if no complete PDU is ready.
-         *
-         * @param out
-         *
-         * @return true if a PDU was received, false if not.
-         */
         bool RecvPDU(Forte::PDU &out);
 
-        void Close(void) { mFD.Close(); }
-
         virtual bool IsConnected(void) const {
-            AutoUnlockMutex fdlock(mFDLock);
+            AutoUnlockMutex fdlock(mFDMutex);
             return (mFD != -1);
         }
 
         virtual bool OwnsFD(int fd) const {
-            AutoUnlockMutex fdlock(mFDLock);
+            AutoUnlockMutex fdlock(mFDMutex);
             return (mFD != -1 && mFD == fd);
         }
 
     protected:
+        void waitForConnected();
         bool lockedIsPDUReady(void) const;
         void callbackIfPDUReady();
         void bufferEnsureHasSpace();
 
+        void sendThreadRun();
+        void recvThreadRun();
+        void callbackThreadRun();
+
+        void recvUntilBlockOrComplete();
+        void triggerCallback(const boost::shared_ptr<PDUPeerEvent>& event);
+
     protected:
-        mutable Forte::Mutex mReceiveMutex;
-        mutable Forte::Mutex mSendMutex;
+        boost::shared_ptr<PDUQueue> mPDUSendQueue;
+        boost::shared_ptr<EPollMonitor> mEPollMonitor;
 
-        mutable Forte::ThreadCondition mBufferFullCondition;
+        int mSendTimeoutSeconds;
+        size_t mRecvBufferMaxSize;
+        size_t mRecvBufferStepSize;
 
-        size_t volatile mCursor;
-        size_t mBufSize;
-        size_t mBufMaxSize;
-        size_t mBufStepSize;
-        boost::shared_array<char> mPDUBuffer;
+        mutable Forte::Mutex mRecvBufferMutex;
+        Forte::ThreadCondition mRecvWorkAvailableCondition;
+        bool mRecvWorkAvailable;
+        size_t mRecvBufferSize;
+        boost::shared_array<char> mRecvBuffer;
+        size_t volatile mRecvCursor;
+        boost::shared_ptr<Forte::FunctionThread> mRecvThread;
 
-        // stat variables
-        int64_t mBytesSent;
+        //mutable Forte::Mutex mEPollOutReceivedMutex;
+        //Forte::ThreadCondition mEPollOutReceivedCondition;
+        //bool mEPollOutReceived;
+        boost::shared_ptr<Forte::FunctionThread> mSendThread;
+
+        // since two threads are waiting on connection, they will both
+        // be trying to connect without this lock. should someday be
+        // made more elegant
+        mutable Forte::Mutex mConnectMutex;
 
     private:
-        void handleFileDescriptorClose();
-        void removeFDFromEPoll();
-        void addFDToEPoll();
-
-        int mEPollFD;
-
-        mutable Forte::Mutex mFDLock;
+        void closeFileDescriptor();
+        mutable Forte::Mutex mFDMutex;
         AutoFD mFD;
+
+        boost::shared_ptr<Forte::FunctionThread> mCallbackThread;
+        mutable Forte::Mutex mEventQueueMutex;
+        Forte::ThreadCondition mEventAvailableCondition;
+        std::list<boost::shared_ptr<PDUPeerEvent> > mEventQueue;
     };
 };
 #endif

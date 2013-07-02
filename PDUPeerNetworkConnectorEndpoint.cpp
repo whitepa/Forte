@@ -10,54 +10,39 @@
 using namespace boost;
 
 Forte::PDUPeerNetworkConnectorEndpoint::PDUPeerNetworkConnectorEndpoint(
+    const boost::shared_ptr<PDUQueue>& pduSendQueue,
     uint64_t myPeerSetID,
-    const SocketAddress& connectToAddress)
-    : PDUPeerFileDescriptorEndpoint(-1),
+    const SocketAddress& connectToAddress,
+    const boost::shared_ptr<EPollMonitor>& epollMonitor)
+    : PDUPeerFileDescriptorEndpoint(pduSendQueue, epollMonitor),
       mPeerSetID(myPeerSetID),
       mConnectToAddress(connectToAddress)
 {
     FTRACE;
 }
 
-void Forte::PDUPeerNetworkConnectorEndpoint::CheckConnection()
-{
-    FTRACE;
-
-    AutoUnlockMutex lock(mConnectionMutex);
-
-    if (GetFD() == -1)
-    {
-        try
-        {
-            connect();
-        }
-        catch (Exception& e)
-        {
-            hlogstream(HLOG_DEBUG3, "failed to connect" << e.what());
-        }
-    }
-}
-
 void Forte::PDUPeerNetworkConnectorEndpoint::connect()
 {
-    AutoFD autosock(createInetStreamSocket());
-    //setUserTimeout(autosock, 20000);
-    connectToAddress(autosock, mConnectToAddress);
-
-    // send identifier
-    if (sizeof(mPeerSetID) != ::send(
-            autosock, &mPeerSetID, sizeof(mPeerSetID), MSG_NOSIGNAL))
+    if (GetFD() == -1)
     {
-        //TODO: check for EINTR or other recoverable errors
-        hlog(HLOG_WARN, "could not send id to peer");
-        throw ECouldNotSendID();
+        int sock(createInetStreamSocket());
+        connectToAddress(sock, mConnectToAddress);
+
+        // send identifier
+        if (sizeof(mPeerSetID) !=
+            ::send(sock, &mPeerSetID, sizeof(mPeerSetID), MSG_NOSIGNAL))
+        {
+            //TODO: check for EINTR or other recoverable errors
+            hlog(HLOG_WARN, "could not send id to peer");
+            close(sock);
+            return;
+        }
+
+        SetFD(sock);
+        setTCPKeepAlive(sock);
+
+        hlog(HLOG_INFO, "established connection to %s:%d",
+             mConnectToAddress.first.c_str(),
+             mConnectToAddress.second);
     }
-
-    SetFD(autosock);
-    autosock.Release();
-    setTCPKeepAlive(autosock);
-
-    hlog(HLOG_INFO, "established connection to %s:%d",
-         mConnectToAddress.first.c_str(),
-         mConnectToAddress.second);
 }

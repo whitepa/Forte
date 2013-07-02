@@ -22,7 +22,8 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
     : mListenAddress(listenAddress),
       mID(SocketAddressToID(listenAddress)),
       mPeerSocketAddresses(peers),
-      mPDUPeerEndpointFactory(new PDUPeerEndpointFactoryImpl())
+      mEPollMonitor(new EPollMonitor("peerset-epl")),
+      mPDUPeerEndpointFactory(new PDUPeerEndpointFactoryImpl(mEPollMonitor))
 {
     FTRACE2("%llu", static_cast<unsigned long long>(mID));
 
@@ -40,15 +41,14 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
         {
             continue;
         }
+        boost::shared_ptr<PDUQueue> pduQueue(
+            new Forte::PDUQueue(pduPeerSendTimeout, queueSize, queueType));
 
         PDUPeerPtr p(
             new PDUPeerImpl(
                 SocketAddressToID(a),
-                mPDUPeerEndpointFactory->Create(listenAddress, a, mID),
-                pduPeerSendTimeout,
-                queueSize,
-                queueType
-                ));
+                mPDUPeerEndpointFactory->Create(pduQueue, listenAddress, a, mID),
+                pduQueue));
 
         pduPeers.push_back(p);
     }
@@ -82,7 +82,8 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
 }
 
 Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl()
-    : mID(0)
+    : mID(0),
+      mEPollMonitor(new EPollMonitor("peerset-epl"))
 {
     std::vector<PDUPeerPtr> emptyPeerVector;
 
@@ -99,6 +100,7 @@ void Forte::PDUPeerSetBuilderImpl::Start()
 {
     recordStartCall();
     mPDUPeerSet->Start();
+    mEPollMonitor->Start();
 }
 
 void Forte::PDUPeerSetBuilderImpl::Shutdown()
@@ -121,6 +123,8 @@ void Forte::PDUPeerSetBuilderImpl::Shutdown()
     {
         mReceiverThread->WaitForShutdown();
     }
+
+    mEPollMonitor->Shutdown();
 }
 
 uint64_t Forte::PDUPeerSetBuilderImpl::SocketAddressToID(const SocketAddress& sa)

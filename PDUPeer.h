@@ -58,9 +58,7 @@ namespace Forte
         virtual void AddFD(int fd) = 0;
 
         // we will add ourselves to the epoll fd that is passed in
-        virtual void SetEPollFD(int epollFD) = 0;
         virtual void HandleEPollEvent(const struct epoll_event& e) = 0;
-        virtual void TeardownEPoll() = 0;
 
         virtual const uint64_t GetID() const = 0;
 
@@ -68,11 +66,8 @@ namespace Forte
 
         virtual unsigned int GetQueueSize() const = 0;
 
-        /**
-         * Synchronous call to Send PDU. bypasses queue, goes straight
-         * to endpoint
-         */
-        virtual void SendPDU(const PDU& pdu) = 0;
+        //TOOD:
+        //virtual void SendPDU(const PDU& pdu) = 0;
 
         /**
          * Check with endpoint to see if we are actively connected to

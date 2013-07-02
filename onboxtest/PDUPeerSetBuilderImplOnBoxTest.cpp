@@ -34,8 +34,12 @@ class TestPeer
 public:
     TestPeer(const SocketAddress& myListenAddress,
              const SocketAddressVector& peerAddresses)
-        : mCallbackCount(0),
-          mConnectEventCount(0),
+        : mEventReceivedCondition(mEventMutex),
+          mReceiveEventCount(0),
+          mReceivePDUCount(0),
+          mSendErrorEventCount(0),
+          mConnectedEventCount(0),
+          mDisconnectedEventCount(0),
           mPeerAddresses(peerAddresses),
           mListenAddress(myListenAddress)
         {
@@ -56,7 +60,10 @@ public:
                 boost::bind(&TestPeer::EventCallback, this, _1),
                 2, // min threads
                 4, // max threads
-                createInProcessPDUPeer
+                createInProcessPDUPeer,
+                30,
+                1024,
+                PDU_PEER_QUEUE_BLOCK
                 ));
 
         mPeerSet->Start();
@@ -72,51 +79,77 @@ public:
     }
 
     void EventCallback(PDUPeerEventPtr event) {
-        AutoUnlockMutex lock(mEventCallbackMutex);
-
+        Forte::AutoUnlockMutex lock(mEventMutex);
         switch (event->mEventType)
         {
         case PDUPeerReceivedPDUEvent:
         {
-            //hlog(HLOG_DEBUG, "PDUPeerReceivedPDUEvent");
+            ++mReceiveEventCount;
+
             PDUPtr receivedPDUPtr(new PDU);
             while (event->mPeer->RecvPDU(*receivedPDUPtr))
             {
-                AutoUnlockMutex lock(mPeerDataMutex);
                 mReceivedPDUList.push_back(receivedPDUPtr);
-                mCallbackCount++;
+                ++mReceivePDUCount;
             }
+
+            if (hlog_ratelimit(10))
+            {
+                hlogstream(HLOG_DEBUG,
+                           "Recvd PDU. total so far:" << mReceivePDUCount);
+            }
+
         }
         break;
 
         case PDUPeerSendErrorEvent:
+            hlog(HLOG_INFO, "Recvd Send Error Event");
+            ++mSendErrorEventCount;
             break;
 
         case PDUPeerConnectedEvent:
-            mConnectEventCount++;
-            hlogstream(HLOG_INFO, "connected event for " << mPeerID);
+            hlog(HLOG_DEBUG2, "Recvd Connect Event");
+            ++mConnectedEventCount;
             break;
 
         case PDUPeerDisconnectedEvent:
+            hlog(HLOG_DEBUG2, "Recvd Disconnect Event");
+            ++mDisconnectedEventCount;
+            break;
+
         default:
             break;
         }
+
+        mEventReceivedCondition.Signal();
     }
 
     int GetReceivedCount() {
-        AutoUnlockMutex lock(mPeerDataMutex);
-        return mCallbackCount;
+        AutoUnlockMutex lock(mEventMutex);
+        return mReceivePDUCount;
     }
+
+    int GetConnectedEventCount() {
+        AutoUnlockMutex lock(mEventMutex);
+        return mConnectedEventCount;
+    }
+
+    int GetDisconnectedEventCount() {
+        AutoUnlockMutex lock(mEventMutex);
+        return mDisconnectedEventCount;
+    }
+
+    Forte::Mutex mEventMutex;
+    Forte::ThreadCondition mEventReceivedCondition;
+    int mReceiveEventCount;
+    int mReceivePDUCount;
+    int mSendErrorEventCount;
+    int mConnectedEventCount;
+    int mDisconnectedEventCount;
+    std::list<PDUPtr> mReceivedPDUList;
 
     PDUPeerSetBuilderPtr mPeerSet;
     uint64_t mPeerID;
-
-    Forte::Mutex mPeerDataMutex;
-    std::list<PDUPtr> mReceivedPDUList;
-
-    Forte::Mutex mEventCallbackMutex;
-    int mCallbackCount;
-    int mConnectEventCount;
 
     SocketAddressVector mPeerAddresses;
     SocketAddress mListenAddress;
@@ -314,7 +347,12 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, ConstructorSetsUpBasics)
               PDUPeerSetBuilderImpl::SocketAddressToID(listenAddress));
 }
 
-TEST_F(PDUPeerSetBuilderImplOnBoxTest, StartAndShutdownMustBeCalledAsAPair)
+void throwAwayCallback(PDUPeerEventPtr)
+{
+}
+
+TEST_F(PDUPeerSetBuilderImplOnBoxTest,
+       StartAndShutdownMustBeCalledAsAPair_CallbackMustBeSetBeforeStart)
 {
     FTRACE;
     SocketAddress listenAddress(make_pair("127.0.0.1", 13001));
@@ -324,7 +362,10 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, StartAndShutdownMustBeCalledAsAPair)
     addresses.push_back(make_pair("127.0.0.1", 13002));
     addresses.push_back(make_pair("127.0.0.1", 13003));
 
-    PDUPeerSetBuilderImpl peerSet(listenAddress, addresses);
+    PDUPeerSetBuilderImpl peerSet(
+        listenAddress,
+        addresses,
+        throwAwayCallback);
 
     peerSet.Start();
     peerSet.Shutdown();
@@ -433,8 +474,43 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, AllPeersReceiveConnectEvent)
 
     foreach(const TestPeerPtr& peer, mTestPeers)
     {
-        EXPECT_EQ(3, peer->mConnectEventCount);
+        EXPECT_EQ(3, peer->GetConnectedEventCount());
     }
+}
+
+TEST_F(PDUPeerSetBuilderImplOnBoxTest, PeersReceiveDisconnectEvent)
+{
+    FTRACE;
+
+    setupThreePeers();
+
+    DeadlineClock deadline;
+    deadline.ExpiresInSeconds(10);
+    while (!deadline.Expired())
+    {
+        bool allConnected(true);
+        foreach(const TestPeerPtr& peer, mTestPeers)
+        {
+            foreach(const TestPeerPtr& peer2, mTestPeers)
+            {
+                if (!peer->mPeerSet->GetPeer(peer2->mPeerID)->IsConnected())
+                {
+                    allConnected = false;
+                }
+            }
+        }
+
+        if (allConnected)
+            break;
+
+        usleep(10000);
+    }
+
+    mTestPeers[1]->DeletePeerSet();
+    sleep(2);
+
+    EXPECT_EQ(1, mTestPeers[0]->GetDisconnectedEventCount());
+    EXPECT_EQ(1, mTestPeers[2]->GetDisconnectedEventCount());
 }
 
 TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanBroadcastPDUWithOptionalData)
@@ -937,6 +1013,144 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, PeersRecoverOnRestartsWithinTimeout)
 }
 */
 
+TEST_F(PDUPeerSetBuilderImplOnBoxTest,
+       CanBroadcastAndReceive1000PDUsFromEachIn10Seconds)
+{
+    FTRACE;
+    setupThreePeers();
+
+    for (int i=0; i<1000; i++)
+    {
+        PDUPtr pdu = makePDUPtr(i);
+        foreach(const TestPeerPtr& peer, mTestPeers)
+        {
+            peer->mPeerSet->BroadcastAsync(pdu);
+        }
+    }
+
+    DeadlineClock deadline;
+    deadline.ExpiresInSeconds(10);
+    while (!deadline.Expired())
+    {
+        bool callbacksDone(true);
+        foreach(const TestPeerPtr& peer, mTestPeers)
+        {
+            if (peer->GetReceivedCount() < 3000)
+            {
+                callbacksDone = false;
+            }
+        }
+
+        if (callbacksDone)
+            break;
+
+        sleep(1);
+    }
+
+    foreach(const TestPeerPtr& peer, mTestPeers)
+    {
+        ASSERT_EQ(3000, peer->GetReceivedCount());
+        ASSERT_EQ(3000, peer->mReceivedPDUList.size());
+
+        while (!peer->mReceivedPDUList.empty())
+        {
+            PDUPtr expected = makePDUPtr(peer->mReceivedPDUList.front()->GetOpcode());
+            expectEqual(expected, peer->mReceivedPDUList.front());
+            peer->mReceivedPDUList.pop_front();
+        }
+    }
+}
+
+TEST_F(PDUPeerSetBuilderImplOnBoxTest,
+       CanBroadcastAndReceive10000PDUs)
+{
+    FTRACE;
+    setupThreePeers();
+
+    for (int i=0; i<10000; i++)
+    {
+        PDUPtr pdu = makePDUWithOptionDataPtr(3, 1024);
+        foreach(const TestPeerPtr& peer, mTestPeers)
+        {
+            peer->mPeerSet->BroadcastAsync(pdu);
+        }
+    }
+
+    DeadlineClock deadline;
+    deadline.ExpiresInSeconds(600);
+    while (!deadline.Expired())
+    {
+        bool callbacksDone(true);
+        foreach(const TestPeerPtr& peer, mTestPeers)
+        {
+            if (peer->GetReceivedCount() < 30000)
+            {
+                callbacksDone = false;
+            }
+        }
+
+        if (callbacksDone)
+            break;
+
+        sleep(1);
+    }
+
+    foreach(const TestPeerPtr& peer, mTestPeers)
+    {
+        ASSERT_EQ(30000, peer->GetReceivedCount());
+        ASSERT_EQ(30000, peer->mReceivedPDUList.size());
+
+        while (!peer->mReceivedPDUList.empty())
+        {
+            PDUPtr expected = makePDUWithOptionDataPtr(3, 1024);
+            expectEqual(expected, peer->mReceivedPDUList.front());
+            peer->mReceivedPDUList.pop_front();
+        }
+    }
+}
+
+//NOTE: PDUs with optional data larger than receiveBufferMaxSize in
+//PDUPeerFileDescriptorEndpoint endpoint will lock up
+TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanBroadcastPDUWithHalfMegOptionalData)
+{
+    FTRACE;
+    setupTwoPeers();
+    waitForAllConnected();
+
+    PDUPtr pdu = makePDUWithOptionDataPtr(3, 512*1024);
+    mTestPeers[0]->mPeerSet->BroadcastAsync(pdu);
+
+    DeadlineClock deadline;
+    deadline.ExpiresInSeconds(10);
+    while (!deadline.Expired())
+    {
+        bool callbacksDone(true);
+        foreach(const TestPeerPtr& peer, mTestPeers)
+        {
+            if (peer->GetReceivedCount() == 0)
+            {
+                callbacksDone = false;
+            }
+        }
+
+        if (callbacksDone)
+            break;
+
+        usleep(10000);
+    }
+
+    PDUPtr expected = makePDUWithOptionDataPtr(3, 512*1024);
+    foreach(const TestPeerPtr& peer, mTestPeers)
+    {
+        EXPECT_EQ(1, peer->GetReceivedCount());
+        EXPECT_EQ(1, peer->mReceivedPDUList.size());
+        if (peer->mReceivedPDUList.size() == 1)
+        {
+            expectEqual(expected, peer->mReceivedPDUList.front());
+        }
+    }
+}
+
 //This is purely to ensure PDUPeers can teardown and setup ok
 //underload, no checking of PDUs sent/recv'd will be done
 TEST_F(PDUPeerSetBuilderImplOnBoxTest,
@@ -985,52 +1199,4 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest,
         }
     }
     hlogstream(HLOG_INFO, "sent " << i << " pdus");
-}
-
-TEST_F(PDUPeerSetBuilderImplOnBoxTest,
-       CanBroadcastAndReceive1000PDUsFromEachIn10Seconds)
-{
-    FTRACE;
-    setupThreePeers();
-
-    for (int i=0; i<1000; i++)
-    {
-        PDUPtr pdu = makePDUPtr(i);
-        foreach(const TestPeerPtr& peer, mTestPeers)
-        {
-            peer->mPeerSet->BroadcastAsync(pdu);
-        }
-    }
-
-    DeadlineClock deadline;
-    deadline.ExpiresInSeconds(10);
-    while (!deadline.Expired())
-    {
-        bool callbacksDone(true);
-        foreach(const TestPeerPtr& peer, mTestPeers)
-        {
-            if (peer->GetReceivedCount() < 3000)
-            {
-                callbacksDone = false;
-            }
-        }
-
-        if (callbacksDone)
-            break;
-
-        sleep(1);
-    }
-
-    foreach(const TestPeerPtr& peer, mTestPeers)
-    {
-        ASSERT_EQ(3000, peer->GetReceivedCount());
-        ASSERT_EQ(3000, peer->mReceivedPDUList.size());
-
-        while (!peer->mReceivedPDUList.empty())
-        {
-            PDUPtr expected = makePDUPtr(peer->mReceivedPDUList.front()->GetOpcode());
-            expectEqual(expected, peer->mReceivedPDUList.front());
-            peer->mReceivedPDUList.pop_front();
-        }
-    }
 }

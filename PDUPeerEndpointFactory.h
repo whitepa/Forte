@@ -6,6 +6,7 @@
 #include "Object.h"
 #include "LogManager.h"
 #include "Types.h"
+#include "PDUQueue.h"
 
 EXCEPTION_CLASS(EPDUPeerEndpointFactory);
 EXCEPTION_SUBCLASS(EPDUPeerEndpointFactory,
@@ -27,7 +28,9 @@ namespace Forte
          *
          * @return shared_ptr to new PDUPeerEndpoint
          */
-        virtual boost::shared_ptr<PDUPeerEndpoint> Create(int fd) = 0;
+        virtual boost::shared_ptr<PDUPeerEndpoint> Create(
+            const boost::shared_ptr<PDUQueue>& pduSendQueue,
+            int fd) = 0;
 
         /**
          * Connect to the given SocketAddress when you are also
@@ -38,6 +41,7 @@ namespace Forte
          * @return shared_ptr to new PDUPeerEndpoint
          */
         virtual boost::shared_ptr<PDUPeerEndpoint> Create(
+            const boost::shared_ptr<PDUQueue>& pduSendQueue,
             const SocketAddress& localListenSocketAddress,
             const SocketAddress& connectToSocketAddress,
             uint64_t outgoingPeerSetID) = 0;

@@ -18,9 +18,7 @@ namespace Forte
         MOCK_CONST_METHOD0(GetFD, int());
         MOCK_CONST_METHOD1(OwnsFD, bool(int fd));
         MOCK_METHOD1(AddFD, void(int fd));
-        MOCK_METHOD1(SetEPollFD, void(int epollFD));
         MOCK_METHOD1(HandleEPollEvent, void(const struct epoll_event& e));
-        MOCK_METHOD0(TeardownEPoll, void());
         MOCK_CONST_METHOD0(GetID, const uint64_t());
         MOCK_METHOD1(SetID, void(int id));
         MOCK_METHOD1(EnqueuePDU, void(const PDUPtr& pdu));

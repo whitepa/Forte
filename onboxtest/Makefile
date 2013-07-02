@@ -55,7 +55,6 @@ PROG_DEPS_OBJS_PDUPeerSetImplOnBoxTest = \
 	../$(TARGETDIR)/PDUPeerSetConnectionHandler.o \
 	../$(TARGETDIR)/PDUPeerEndpointFactoryImpl.o \
 	../$(TARGETDIR)/PDUPeerNetworkConnectorEndpoint.o \
-	../$(TARGETDIR)/PDUPeerNetworkAcceptorEndpoint.o \
 	../$(TARGETDIR)/PDUPeerInProcessEndpoint.o \
 	../$(TARGETDIR)/PDUPeerSetImpl.o \
 	../$(TARGETDIR)/PDUPeerImpl.o \
@@ -71,7 +70,6 @@ PROG_DEPS_OBJS_PDUPeerSetBuilderImplOnBoxTest = \
 	../$(TARGETDIR)/PDUPeerSetConnectionHandler.o \
 	../$(TARGETDIR)/PDUPeerEndpointFactoryImpl.o \
 	../$(TARGETDIR)/PDUPeerNetworkConnectorEndpoint.o \
-	../$(TARGETDIR)/PDUPeerNetworkAcceptorEndpoint.o \
 	../$(TARGETDIR)/PDUPeerInProcessEndpoint.o \
 	../$(TARGETDIR)/PDUPeerSetImpl.o \
 	../$(TARGETDIR)/PDUPeerImpl.o \

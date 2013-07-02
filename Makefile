@@ -83,7 +83,6 @@ SRCS =	\
 	PDUPeerFileDescriptorEndpoint.cpp \
 	PDUPeerImpl.cpp \
 	PDUPeerInProcessEndpoint.cpp \
-	PDUPeerNetworkAcceptorEndpoint.cpp \
 	PDUPeerNetworkConnectorEndpoint.cpp \
 	PDUPeerSetBuilderImpl.cpp \
 	PDUPeerSetConnectionHandler.cpp \

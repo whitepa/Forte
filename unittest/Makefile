@@ -75,7 +75,6 @@ GSRCS = AutoMutexUnitTest.cpp \
 	PDUPeerFileDescriptorEndpointUnitTest.cpp \
 	PDUPeerImplUnitTest.cpp \
 	PDUPeerInProcessEndpointUnitTest.cpp \
-	PDUPeerNetworkAcceptorEndpointUnitTest.cpp \
 	PDUPeerNetworkConnectorEndpointUnitTest.cpp \
 	PDUUnitTest.cpp \
 	PidFileUnitTest.cpp \
@@ -151,10 +150,6 @@ PROG_DEPS_OBJS_PDUPeerInProcessEndpointUnitTest = \
 PROG_DEPS_OBJS_PDUPeerFileDescriptorEndpointUnitTest = \
 	../$(TARGETDIR)/PDU.o \
 	../$(TARGETDIR)/PDUPeerFileDescriptorEndpoint.o \
-
-PROG_DEPS_OBJS_PDUPeerNetworkAcceptorEndpointUnitTest = \
-	../$(TARGETDIR)/PDU.o \
-	../$(TARGETDIR)/PDUPeerNetworkAcceptorEndpoint.o \
 
 PROG_DEPS_OBJS_PDUPeerNetworkConnectorEndpointUnitTest = \
 	../$(TARGETDIR)/PDU.o \

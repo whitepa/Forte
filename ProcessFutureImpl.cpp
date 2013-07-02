@@ -179,43 +179,53 @@ void Forte::ProcessFutureImpl::run()
     {
 
         // send the param PDUs, with full command line info, etc
-        PDU paramPDU(ProcessOpParam, sizeof(ProcessParamPDU));
-        ProcessParamPDU *param = paramPDU.GetPayload<ProcessParamPDU>();
+        PDUPtr paramPDU(new PDU(ProcessOpParam, sizeof(ProcessParamPDU)));
+        ProcessParamPDU *param = paramPDU->GetPayload<ProcessParamPDU>();
 
         // \TODO safe copy of these strings, ensure null termination,
         // disallow truncation (throw exception if the source strings are
         // too long)
         strncpy(param->str, mCommand.c_str(), sizeof(param->str));
         param->param = ProcessCmdline;
-        mManagementChannel->SendPDU(paramPDU);
+        mManagementChannel->EnqueuePDU(paramPDU);
 
         // PDU: command to log
+        paramPDU.reset(new PDU(ProcessOpParam, sizeof(ProcessParamPDU)));
+        param = paramPDU->GetPayload<ProcessParamPDU>();
         strncpy(param->str, mCommandToLog.c_str(), sizeof(param->str));
         param->param = ProcessCmdlineToLog;
-        mManagementChannel->SendPDU(paramPDU);
+        mManagementChannel->EnqueuePDU(paramPDU);
 
+        paramPDU.reset(new PDU(ProcessOpParam, sizeof(ProcessParamPDU)));
+        param = paramPDU->GetPayload<ProcessParamPDU>();
         strncpy(param->str, mCurrentWorkingDirectory.c_str(), sizeof(param->str));
         param->param = ProcessCwd;
-        mManagementChannel->SendPDU(paramPDU);
+        mManagementChannel->EnqueuePDU(paramPDU);
 
+        paramPDU.reset(new PDU(ProcessOpParam, sizeof(ProcessParamPDU)));
+        param = paramPDU->GetPayload<ProcessParamPDU>();
         strncpy(param->str, mInputFilename.c_str(), sizeof(param->str));
         param->param = ProcessInfile;
-        mManagementChannel->SendPDU(paramPDU);
+        mManagementChannel->EnqueuePDU(paramPDU);
 
+        paramPDU.reset(new PDU(ProcessOpParam, sizeof(ProcessParamPDU)));
+        param = paramPDU->GetPayload<ProcessParamPDU>();
         strncpy(param->str, mOutputFilename.c_str(), sizeof(param->str));
         param->param = ProcessOutfile;
-        mManagementChannel->SendPDU(paramPDU);
+        mManagementChannel->EnqueuePDU(paramPDU);
 
+        paramPDU.reset(new PDU(ProcessOpParam, sizeof(ProcessParamPDU)));
+        param = paramPDU->GetPayload<ProcessParamPDU>();
         strncpy(param->str, mErrorFilename.c_str(), sizeof(param->str));
         param->param = ProcessErrfile;
-        mManagementChannel->SendPDU(paramPDU);
+        mManagementChannel->EnqueuePDU(paramPDU);
 
         // send the control PDU telling the process to start
-        PDU pdu(ProcessOpControlReq, sizeof(ProcessControlReqPDU));
-        ProcessControlReqPDU *control = pdu.GetPayload<ProcessControlReqPDU>();
+        PDUPtr pdu(new PDU(ProcessOpControlReq, sizeof(ProcessControlReqPDU)));
+        ProcessControlReqPDU *control = pdu->GetPayload<ProcessControlReqPDU>();
 
         control->control = ProcessControlStart;
-        mManagementChannel->SendPDU(pdu);
+        mManagementChannel->EnqueuePDU(pdu);
     }
     catch (Exception &e)
     {
@@ -389,12 +399,12 @@ void Forte::ProcessFutureImpl::Signal(int signum)
     if (!isInRunningState())
         throw EProcessFutureNotRunning();
 
-    PDU pdu(ProcessOpControlReq, sizeof(ProcessControlReqPDU));
-    ProcessControlReqPDU *control = pdu.GetPayload<ProcessControlReqPDU>();
+    PDUPtr pdu(new PDU(ProcessOpControlReq, sizeof(ProcessControlReqPDU)));
+    ProcessControlReqPDU *control = pdu->GetPayload<ProcessControlReqPDU>();
 
     control->control = ProcessControlSignal;
     control->signum = signum;
-    mManagementChannel->SendPDU(pdu);
+    mManagementChannel->EnqueuePDU(pdu);
 }
 
 unsigned int Forte::ProcessFutureImpl::GetStatusCode()

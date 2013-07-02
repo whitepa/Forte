@@ -213,13 +213,13 @@ void Forte::ProcessMonitor::handleControlReq(PDUPeer &peer, const PDU &pdu)
 void Forte::ProcessMonitor::sendControlRes(PDUPeer &peer, int result, const char *desc)
 {
     FTRACE;
-    PDU p(ProcessOpControlRes, sizeof(ProcessControlResPDU));
-    ProcessControlResPDU *response = p.GetPayload<ProcessControlResPDU>();
+    PDUPtr p(new PDU(ProcessOpControlRes, sizeof(ProcessControlResPDU)));
+    ProcessControlResPDU *response = p->GetPayload<ProcessControlResPDU>();
     response->result = result;
     response->processPID = mPID;
     response->monitorPID = getpid();
     strncpy(response->error, desc, sizeof(response->error));
-    peer.SendPDU(p);
+    peer.EnqueuePDU(p);
 }
 
 void Forte::ProcessMonitor::handleSIGCHLD(int sig)
@@ -254,8 +254,8 @@ void Forte::ProcessMonitor::doWait(void)
     }
     else if (tpid == mPID)
     {
-        PDU p(ProcessOpStatus, sizeof(ProcessStatusPDU));
-        ProcessStatusPDU *status = p.GetPayload<ProcessStatusPDU>();
+        PDUPtr p(new PDU(ProcessOpStatus, sizeof(ProcessStatusPDU)));
+        ProcessStatusPDU *status = p->GetPayload<ProcessStatusPDU>();
         gettimeofday(&status->timestamp, NULL);
         if (WIFEXITED(child_status))
         {
@@ -306,7 +306,7 @@ void Forte::ProcessMonitor::doWait(void)
             }
         }
         // Send the status PDU to all peer connections
-        mPeerSet->Broadcast(p);
+        mPeerSet->BroadcastAsync(p);
     }
     else
     {

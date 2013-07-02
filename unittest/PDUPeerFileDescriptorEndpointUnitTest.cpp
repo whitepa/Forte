@@ -23,6 +23,9 @@ LogManager logManager;
 class PDUPeerFileDescriptorEndpointUnitTest : public ::testing::Test
 {
 public:
+    PDUPeerFileDescriptorEndpointUnitTest()
+        : mEventReceivedCondition(mEventMutex) {}
+
     static void SetUpTestCase() {
         logManager.BeginLogging(__FILE__ ".log", HLOG_ALL);
         logManager.BeginLogging("//stderr",
@@ -32,13 +35,119 @@ public:
     }
 
     static void TearDownTestCase() {
+        logManager.EndLogging();
     }
 
     void SetUp() {
+        mReceiveEventCount = 0;
+        mSendErrorEventCount = 0;
+        mConnectedEventCount = 0;
+        mDisconnectedEventCount = 0;
     }
 
     void TearDown() {
+        if (mConnectedEventCount != mDisconnectedEventCount)
+        {
+            hlogstream(
+                HLOG_WARN,
+                "connect event count (" << mConnectedEventCount << ") "
+                "!= disconnect event count (" << mDisconnectedEventCount << ")");
+        }
+        else
+        {
+            hlogstream(
+                HLOG_INFO,
+                "connect/disconnect event count equal ("
+                << mConnectedEventCount << ") ");
+        }
+
     }
+
+    void setupDefaultFDPair() {
+        FTRACE;
+        mMonitor.reset(new EPollMonitor);
+        mPDUQueue1.reset(new PDUQueue);
+        mPDUQueue2.reset(new PDUQueue);
+
+        mMonitor->Start();
+
+        int fds[2];
+        socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
+        mFD1 = fds[0];
+        mFD2 = fds[1];
+
+        mEndpoint1.reset(new PDUPeerFileDescriptorEndpoint(mPDUQueue1, mMonitor));
+        mEndpoint2.reset(new PDUPeerFileDescriptorEndpoint(mPDUQueue2, mMonitor));
+
+        mEndpoint1->SetEventCallback(
+            boost::bind(
+                &PDUPeerFileDescriptorEndpointUnitTest::EventCallback, this, _1));
+
+        mEndpoint2->SetEventCallback(
+            boost::bind(
+                &PDUPeerFileDescriptorEndpointUnitTest::EventCallback, this, _1));
+
+        mEndpoint1->SetFD(mFD1);
+        mEndpoint2->SetFD(mFD2);
+
+        mEndpoint1->Start();
+        mEndpoint2->Start();
+    }
+
+    void teardownDefaultFDPair() {
+        mEndpoint1->SetFD(-1);
+        mEndpoint2->SetFD(-1);
+        mEndpoint2->SetEventCallback(NULL);
+        mEndpoint1->Shutdown();
+        mEndpoint2->Shutdown();
+        mMonitor->Shutdown();
+    }
+
+    void EventCallback(PDUPeerEventPtr event) {
+        Forte::AutoUnlockMutex lock(mEventMutex);
+        switch (event->mEventType)
+        {
+        case PDUPeerReceivedPDUEvent:
+            hlog(HLOG_INFO, "Recvd PDU Event");
+            ++mReceiveEventCount;
+            break;
+
+        case PDUPeerSendErrorEvent:
+            hlog(HLOG_INFO, "Recvd Send Error Event");
+            ++mSendErrorEventCount;
+            break;
+
+        case PDUPeerConnectedEvent:
+            hlog(HLOG_INFO, "Recvd Connect Event");
+            ++mConnectedEventCount;
+            break;
+
+        case PDUPeerDisconnectedEvent:
+            hlog(HLOG_INFO, "Recvd Disconnect Event");
+            ++mDisconnectedEventCount;
+            break;
+
+        default:
+            break;
+        }
+
+        mEventReceivedCondition.Signal();
+    }
+
+    Forte::Mutex mEventMutex;
+    Forte::ThreadCondition mEventReceivedCondition;
+    int mReceiveEventCount;
+    int mSendErrorEventCount;
+    int mConnectedEventCount;
+    int mDisconnectedEventCount;
+
+    boost::shared_ptr<EPollMonitor> mMonitor;
+    Forte::AutoFD mFD1;
+    Forte::AutoFD mFD2;
+    boost::shared_ptr<PDUQueue> mPDUQueue1;
+    boost::shared_ptr<PDUQueue> mPDUQueue2;
+    boost::shared_ptr<PDUPeerFileDescriptorEndpoint> mEndpoint1;
+    boost::shared_ptr<PDUPeerFileDescriptorEndpoint> mEndpoint2;
 };
 
 struct TestPayload
@@ -63,6 +172,11 @@ boost::shared_ptr<PDU> makeTestPDU()
     header.opcode = 1;
     header.payloadSize = sizeof(TestPayload);
 
+    boost::shared_array<char> optionalDataPayload(new char[4096]);
+    memset(optionalDataPayload.get(), 'z', 4096);
+    boost::shared_ptr<PDUOptionalData> o(
+        new PDUOptionalData(4096, 0, optionalDataPayload.get()));
+
     TestPayload payload;
     payload.a = 1;
     payload.b = 2;
@@ -70,6 +184,7 @@ boost::shared_ptr<PDU> makeTestPDU()
     snprintf(payload.d, sizeof(payload.d), "111.222.333.444");
 
     pdu.reset(new PDU(header.opcode, sizeof(payload), &payload));
+    pdu->SetOptionalData(o);
 
     return pdu;
 }
@@ -81,246 +196,152 @@ size_t testPDUSize(const boost::shared_ptr<PDU>& pdu)
         + pdu->GetOptionalDataSize();
 }
 
-TEST_F(PDUPeerFileDescriptorEndpointUnitTest, CanConstructWithNoFD)
+TEST_F(PDUPeerFileDescriptorEndpointUnitTest, ConstructDelete)
 {
     FTRACE;
-    PDUPeerFileDescriptorEndpoint e(-1);
+    boost::shared_ptr<PDUQueue> pduQueue(new PDUQueue);
+    boost::shared_ptr<EPollMonitor> monitor(new EPollMonitor);
+    PDUPeerFileDescriptorEndpoint e(pduQueue, monitor);
 }
 
-TEST_F(PDUPeerFileDescriptorEndpointUnitTest, ReceivesDataViaFD)
+TEST_F(PDUPeerFileDescriptorEndpointUnitTest, SetFDTriggersConnectedCallback)
 {
     FTRACE;
+    boost::shared_ptr<EPollMonitor> monitor(new EPollMonitor);
+    monitor->Start();
 
     int fds[2];
     socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
     Forte::AutoFD fd1(fds[0]);
     Forte::AutoFD fd2(fds[1]);
 
-    Forte::PDUPtr pdu = makeTestPDU();
-    boost::shared_array<char> buf = PDU::CreateSendBuffer(*pdu);
-    size_t len = testPDUSize(pdu);
+    boost::shared_ptr<PDUQueue> pduQueue1(new PDUQueue);
+    boost::shared_ptr<PDUPeerFileDescriptorEndpoint> e1(
+        new PDUPeerFileDescriptorEndpoint(pduQueue1, monitor));
 
-    Forte::PDUPeerFileDescriptorEndpoint peer(fd1);
-    send(fd2, buf.get(), len, 0);
-    struct epoll_event event;
-    event.events = EPOLLIN;
-    peer.HandleEPollEvent(event);
+    e1->SetEventCallback(
+        boost::bind(
+            &PDUPeerFileDescriptorEndpointUnitTest::EventCallback, this, _1));
 
-    Forte::PDU out;
-    bool received = peer.RecvPDU(out);
-    ASSERT_EQ(received, true);
+    e1->Start();
 
-    ASSERT_EQ(*pdu, out);
-}
+    e1->SetFD(fds[0]);
 
-
-TEST_F(PDUPeerFileDescriptorEndpointUnitTest, KeepsIncomingPDUsInAQueue)
-{
-    FTRACE;
-
-    int fds[2];
-    socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
-    Forte::AutoFD fd1(fds[0]);
-    Forte::AutoFD fd2(fds[1]);
-
-    Forte::PDUPeerFileDescriptorEndpoint peer(fd1);
-
-    Forte::PDUPtr pdu = makeTestPDU();
-    boost::shared_array<char> buf = PDU::CreateSendBuffer(*pdu);
-    size_t len = testPDUSize(pdu);
-
-    for (int i = 0; i < 3; ++i)
     {
-        send(fd2, buf.get(), len, 0);
+        Forte::AutoUnlockMutex lock(mEventMutex);
+        while (mConnectedEventCount < 1)
+        {
+            mEventReceivedCondition.Wait();
+        }
     }
 
-    struct epoll_event event;
-    event.events = EPOLLIN;
-    peer.HandleEPollEvent(event);
+    EXPECT_EQ(1, mConnectedEventCount);
+
+
+
+    EXPECT_EQ(1, mConnectedEventCount);
+
+    e1->Shutdown();
+
+    monitor->Shutdown();
+}
+
+TEST_F(PDUPeerFileDescriptorEndpointUnitTest, SendsAndRecvsViaEPollAndPDUQueue)
+{
+    FTRACE;
+    boost::shared_ptr<EPollMonitor> monitor(new EPollMonitor);
+    monitor->Start();
+
+    int fds[2];
+    socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
+    Forte::AutoFD fd1(fds[0]);
+    Forte::AutoFD fd2(fds[1]);
+
+    boost::shared_ptr<PDUQueue> pduQueue1(new PDUQueue);
+    boost::shared_ptr<PDUPeerFileDescriptorEndpoint> e1(
+        new PDUPeerFileDescriptorEndpoint(pduQueue1, monitor));
+    e1->SetFD(fds[0]);
+
+    boost::shared_ptr<PDUQueue> pduQueue2(new PDUQueue);
+    boost::shared_ptr<PDUPeerFileDescriptorEndpoint> e2(
+        new PDUPeerFileDescriptorEndpoint(pduQueue2, monitor));
+    e2->SetFD(fds[1]);
+
+    e1->Start();
+    e2->Start();
+
+    Forte::PDUPtr pdu = makeTestPDU();
+    pduQueue1->EnqueuePDU(pdu);
+
+    Forte::PDU out;
+    while (!e2->IsPDUReady()) { usleep(10000); }
+
+    bool received = e2->RecvPDU(out);
+    EXPECT_EQ(received, true);
+    EXPECT_EQ(*pdu, out);
+
+    e1->Shutdown();
+    e2->Shutdown();
+
+    monitor->Shutdown();
+}
+
+TEST_F(PDUPeerFileDescriptorEndpointUnitTest, QueuesPDUsForSending)
+{
+    FTRACE;
+    setupDefaultFDPair();
+
+    Forte::PDUPtr pdu = makeTestPDU();
+    mPDUQueue1->EnqueuePDU(pdu);
+    mPDUQueue1->EnqueuePDU(pdu);
+    mPDUQueue1->EnqueuePDU(pdu);
 
     Forte::PDU out;
     for (int i = 0; i < 3; ++i)
     {
-        bool received = peer.RecvPDU(out);
+        while (!mEndpoint2->IsPDUReady()) { usleep(10000); }
+        bool received = mEndpoint2->RecvPDU(out);
         ASSERT_TRUE(received);
-
         ASSERT_EQ(*pdu, out);
     }
+
+    teardownDefaultFDPair();
 }
-
-TEST_F(PDUPeerFileDescriptorEndpointUnitTest, HandlesPDUsInternally)
-{
-    FTRACE;
-
-    try
-    {
-        int fds[2];
-        socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
-        Forte::AutoFD fd1(fds[0]);
-        Forte::AutoFD fd2(fds[1]);
-
-        AutoFD epollFD;
-        epollFD = epoll_create(4);
-        Forte::PDUPeerFileDescriptorEndpoint endpoint1(fd1);
-        Forte::PDUPeerFileDescriptorEndpoint endpoint2(fd2);
-
-        endpoint1.SetEPollFD(epollFD);
-        endpoint2.SetEPollFD(epollFD);
-
-        Forte::PDUPtr pdu = makeTestPDU();
-        boost::shared_array<char> buf = PDU::CreateSendBuffer(*pdu);
-
-        endpoint1.SendPDU(*pdu);
-
-        // poll for events
-        int fdReadyCount = 0;
-        struct epoll_event events[32];
-        memset(events, 0, 32*sizeof(struct epoll_event));
-        fdReadyCount = epoll_wait(epollFD, events, 32, 1000);
-        EXPECT_EQ(1, fdReadyCount);
-        ASSERT_EQ(static_cast<int>(fd2), events[0].data.fd);
-        ASSERT_EQ(endpoint2.GetFD(), events[0].data.fd);
-
-        endpoint2.HandleEPollEvent(events[0]);
-
-        EXPECT_EQ(true, endpoint2.IsPDUReady());
-
-        PDU rpdu;
-        EXPECT_TRUE(endpoint2.RecvPDU(rpdu));
-        EXPECT_EQ(*pdu, rpdu);
-    }
-    catch (Forte::Exception &e)
-    {
-        hlog(HLOG_ERR, "caught exception: %s\n", e.what());
-        FAIL();
-    }
-}
-
-class AsyncDataLoaderThread : public Forte::Thread
-{
-public:
-    AsyncDataLoaderThread(Forte::PDUPeerFileDescriptorEndpoint& peer, int fd)
-        : mPeer(peer),
-          mFD(fd),
-          mReceiveCount(0)
-        {
-            initialized();
-        }
-
-    ~AsyncDataLoaderThread() {
-        deleting();
-    }
-
-    int GetReceiveCount() {
-        AutoUnlockMutex lock(mReceiveCountMutex);
-        return mReceiveCount;
-    }
-
-protected:
-    void* run() {
-
-        Forte::PDUPtr pdu = makeTestPDU();
-        boost::shared_array<char> buf = PDU::CreateSendBuffer(*pdu);
-        size_t len = testPDUSize(pdu);
-
-        for (int i = 0; i < 100; ++i)
-        {
-            send(mFD, buf.get(), len, 0);
-            struct epoll_event event;
-            event.events = EPOLLIN;
-            mPeer.HandleEPollEvent(event);
-            {
-                AutoUnlockMutex lock(mReceiveCountMutex);
-                mReceiveCount++;
-            }
-        }
-        return NULL;
-    }
-
-protected:
-    Forte::PDUPeerFileDescriptorEndpoint& mPeer;
-    int mFD;
-    Forte::Mutex mReceiveCountMutex;
-    int mReceiveCount;
-};
 
 TEST_F(PDUPeerFileDescriptorEndpointUnitTest,
-       BlocksOnBufferFullUntilRecvPDUIsCalled)
+       FiresDisconnect_OnCloseFD_EPollErr)
 {
     FTRACE;
 
-    int fds[2];
-    socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
-    Forte::AutoFD fd1(fds[0]);
-    Forte::AutoFD fd2(fds[1]);
+    setupDefaultFDPair();
 
-    Forte::PDUPeerFileDescriptorEndpoint peer(fd1, 512, 768);
-    AsyncDataLoaderThread t(peer, fd2);
-
-    sleep(1);
-    ASSERT_EQ(t.GetReceiveCount(), 3);
-
-    PDU pdu;
-    while (t.GetReceiveCount() != 100)
     {
-        while (peer.RecvPDU(pdu))
+        Forte::AutoUnlockMutex lock(mEventMutex);
+        while (mConnectedEventCount < 2)
         {
+            mEventReceivedCondition.Wait();
         }
-        usleep(10000);
     }
-    ASSERT_EQ(100, t.GetReceiveCount());
+    EXPECT_EQ(2, mConnectedEventCount);
 
-    t.Shutdown();
-    t.WaitForShutdown();
+    struct epoll_event ev;
+    ev.events = EPOLLERR;
+    mEndpoint1->HandleEPollEvent(ev);
+
+    {
+        Forte::AutoUnlockMutex lock(mEventMutex);
+        while (mDisconnectedEventCount < 2)
+        {
+            mEventReceivedCondition.Wait();
+        }
+    }
+    EXPECT_EQ(2, mDisconnectedEventCount);
+
+    teardownDefaultFDPair();
 }
 
-TEST_F(PDUPeerFileDescriptorEndpointUnitTest, ThrowESendFailedOnBrokenPipe)
+/*TODO:
+TEST_F(PDUPeerSetImplOnBoxTest, CanReceiveDataWhenSendQueueIsFull)
 {
-    FTRACE;
-
-    try
-    {
-        int fds[2];
-        socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
-        Forte::AutoFD fd1(fds[0]);
-        Forte::AutoFD fd2(fds[1]);
-
-        AutoFD epollFD;
-        epollFD = epoll_create(4);
-        Forte::PDUPeerFileDescriptorEndpoint endpoint1(fd1);
-        Forte::PDUPeerFileDescriptorEndpoint endpoint2(fd2);
-
-        endpoint1.SetEPollFD(epollFD);
-        endpoint2.SetEPollFD(epollFD);
-
-        Forte::PDUPtr pdu = makeTestPDU();
-        boost::shared_array<char> buf = PDU::CreateSendBuffer(*pdu);
-
-        endpoint1.SendPDU(*pdu);
-
-        // poll for events
-        int fdReadyCount = 0;
-        struct epoll_event events[32];
-        memset(events, 0, 32*sizeof(struct epoll_event));
-        fdReadyCount = epoll_wait(epollFD, events, 32, 1000);
-        EXPECT_EQ(1, fdReadyCount);
-        ASSERT_EQ(static_cast<int>(fd2), events[0].data.fd);
-        ASSERT_EQ(endpoint2.GetFD(), events[0].data.fd);
-
-        endpoint2.HandleEPollEvent(events[0]);
-
-        EXPECT_TRUE(endpoint2.IsPDUReady());
-        PDU rpdu;
-        EXPECT_TRUE(endpoint2.RecvPDU(rpdu));
-        EXPECT_EQ(*pdu, rpdu);
-
-        close(fds[1]);
-
-        ASSERT_THROW(endpoint1.SendPDU(*pdu), EPeerSendFailed);
-    }
-    catch (Forte::Exception &e)
-    {
-        hlog(HLOG_ERR, "caught exception: %s\n", e.what());
-        FAIL();
-    }
 }
+*/
