@@ -25,7 +25,7 @@ void Forte::PDUPeerNetworkConnectorEndpoint::connect()
 {
     if (GetFD() == -1)
     {
-        int sock(createInetStreamSocket());
+        AutoFD sock(createInetStreamSocket());
         connectToAddress(sock, mConnectToAddress);
 
         // send identifier
@@ -34,11 +34,10 @@ void Forte::PDUPeerNetworkConnectorEndpoint::connect()
         {
             //TODO: check for EINTR or other recoverable errors
             hlog(HLOG_WARN, "could not send id to peer");
-            close(sock);
             return;
         }
 
-        SetFD(sock);
+        SetFD(sock.Release());
         setTCPKeepAlive(sock);
 
         hlog(HLOG_DEBUG, "established connection to %s:%d",
