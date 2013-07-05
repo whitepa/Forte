@@ -122,17 +122,5 @@ bool Forte::PDUPeerImpl::RecvPDU(Forte::PDU &out)
 {
     FTRACE;
 
-    if (!isRunning())
-    {
-        throw EObjectNotRunning();
-    }
-
-    if (mEndpoint->RecvPDU(out))
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    return mEndpoint->RecvPDU(out);
 }
