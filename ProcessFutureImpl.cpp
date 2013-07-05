@@ -231,14 +231,32 @@ void Forte::ProcessFutureImpl::run()
     {
         throw EProcessFutureManagementProcFailed(e.what());
     }
+
     // wait for the process to change state
+    DeadlineClock deadline;
+    deadline.ExpiresInSeconds(5);
     MonotonicClock mtc;
     AutoUnlockMutex lock(mWaitLock);
-    while (getState() == STATE_STARTING)
+    while (!deadline.Expired() &&
+           getState() == STATE_STARTING)
     {
         mWaitCond.TimedWait(mtc.GetTime() + Timespec::FromMillisec(100));
     }
 
+    if (deadline.Expired() &&
+        getState() == STATE_STARTING)
+    {
+        // get's cancel the process monitor
+        Cancel();
+
+        hlog_and_throw(
+            HLOG_WARN,
+            EProcessFutureManagementProcFailed(
+                FString(
+                    FStringFC(),
+                    "Timed out waiting for process monitor to start for command %s",
+                    mCommand.c_str())));
+    }
 }
 
 void Forte::ProcessFutureImpl::setState(int state)

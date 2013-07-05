@@ -20,6 +20,7 @@ bool Forte::ProcessMonitor::sGotSIGCHLD = false;
 
 Forte::ProcessMonitor::ProcessMonitor(int argc, char *argv[]) :
     mPeerSet(new PDUPeerSetBuilderImpl()),
+    mState(STATE_STARTUP),
     mInputFilename("/dev/null"),
     mOutputFilename("/dev/null"),
     mErrorFilename("/dev/null")
@@ -78,6 +79,9 @@ void Forte::ProcessMonitor::Run()
     mPeerSet->Start();
     mPeerSet->PeerCreate(mFD);
 
+    DeadlineClock deadline;
+    deadline.ExpiresInSeconds(10);
+
     // The process monitor should exit when:
     //  the process terminates AND all peer connections close
     while (isActiveState() || mPeerSet->GetConnectedCount() > 0)
@@ -86,6 +90,17 @@ void Forte::ProcessMonitor::Run()
         {
             if (sGotSIGCHLD)
                 doWait();
+
+            if (deadline.Expired() &&
+                mState == STATE_STARTUP)
+            {
+                // something is wrong, no params
+                // and command received for 10 seconds,
+                // let's exit from this loop
+                hlog(HLOG_ERR,
+                     "Breaking out of Process Monitor loop due to inactivity");
+                break;
+            }
 
             usleep(500);
         }
