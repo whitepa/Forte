@@ -113,11 +113,8 @@ public:
             break;
 
         case PDUPeerDisconnectedEvent:
-            hlog(HLOG_DEBUG2, "Recvd Disconnect Event");
+            hlog(HLOG_INFO, "Recvd Disconnect Event");
             ++mDisconnectedEventCount;
-            break;
-
-        default:
             break;
         }
 
@@ -150,6 +147,10 @@ public:
 
     PDUPeerSetBuilderPtr mPeerSet;
     uint64_t mPeerID;
+    Forte::Mutex mEventCallbackMutex;
+    int mCallbackCount;
+    int mConnectEventCount;
+    int mDisconnectEventCount;
 
     SocketAddressVector mPeerAddresses;
     SocketAddress mListenAddress;
@@ -472,6 +473,8 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, AllPeersReceiveConnectEvent)
         usleep(10000);
     }
 
+    sleep(2);
+
     foreach(const TestPeerPtr& peer, mTestPeers)
     {
         EXPECT_EQ(3, peer->GetConnectedEventCount());
@@ -486,9 +489,10 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, PeersReceiveDisconnectEvent)
 
     DeadlineClock deadline;
     deadline.ExpiresInSeconds(10);
+    bool allConnected(true);
     while (!deadline.Expired())
     {
-        bool allConnected(true);
+        allConnected = true;
         foreach(const TestPeerPtr& peer, mTestPeers)
         {
             foreach(const TestPeerPtr& peer2, mTestPeers)
@@ -506,11 +510,22 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, PeersReceiveDisconnectEvent)
         usleep(10000);
     }
 
+    ASSERT_TRUE(allConnected);
+
     mTestPeers[1]->DeletePeerSet();
     sleep(2);
 
-    EXPECT_EQ(1, mTestPeers[0]->GetDisconnectedEventCount());
-    EXPECT_EQ(1, mTestPeers[2]->GetDisconnectedEventCount());
+    //there is small race where a peer will disconnect as part of
+    //shutdown but have a peer reconnect during shutdown. this may
+    //result in and extra connect/reconnect event pair. there will
+    //also be 2 connect events from the in process peer and the other
+    //peer that does not go down
+    EXPECT_LE(1, mTestPeers[0]->GetDisconnectedEventCount());
+    EXPECT_LE(1, mTestPeers[2]->GetDisconnectedEventCount());
+    EXPECT_EQ(mTestPeers[0]->GetConnectedEventCount() - 2,
+              mTestPeers[0]->GetDisconnectedEventCount());
+    EXPECT_EQ(mTestPeers[2]->GetConnectedEventCount() - 2,
+              mTestPeers[2]->GetDisconnectedEventCount());
 }
 
 TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanBroadcastPDUWithOptionalData)
