@@ -37,8 +37,6 @@ PDUQueue::~PDUQueue()
 
 void PDUQueue::EnqueuePDU(const PDUPtr& pdu)
 {
-    FTRACE;
-
     // Potential race condition between semaphore & mutex locks
     AutoUnlockMutex lock(mPDUQueueMutex);
 
