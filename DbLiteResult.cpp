@@ -55,7 +55,6 @@ int DbLiteResult::LiteData::Load(sqlite3_stmt *stmt)
     hlog(HLOG_DEBUG2, "[%s] before step", sql);
     while ((err = sqlite3_step(stmt)) == SQLITE_ROW)
     {
-        hlog(HLOG_DEBUG2, "[%s] in loop", sql);
         // init row
         row.clear();
         row.reserve(n);
