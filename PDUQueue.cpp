@@ -108,8 +108,6 @@ void PDUQueue::WaitForNextPDU(PDUPtr& pdu)
 
 bool PDUQueue::isPDUExpired(PDUHolderPtr pduHolder)
 {
-    //FTRACE;
-
     Timespec timeout(mPDUSendTimeout, 0);
     Timespec now;
     now = mClock.GetTime();
