@@ -233,10 +233,10 @@ void ServerMain::MainLoop()
                 hlog(HLOG_INFO,"Quitting due to signal %d.", sig);
                 return;
             case SIGHUP:
-                // log rotation has occurred XXX need to lock logging system
-                hlog(HLOG_DEBUG, "reopening log files");
+                // log rotation has occurred
+                hlog(HLOG_INFO, "reopening log files");
                 mLogManager.Reopen();
-                hlog(HLOG_DEBUG, "log file reopened");
+                hlog(HLOG_INFO, "log file reopened");
                 break;
             default:
                 hlog(HLOG_ERR,"Unhandled signal %d received.", sig);
