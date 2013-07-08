@@ -66,7 +66,6 @@ void Forte::PDUPeerImpl::SendPDU(const Forte::PDU &pdu)
 */
 void Forte::PDUPeerImpl::EnqueuePDU(const Forte::PDUPtr& pdu)
 {
-    FTRACE;
     try
     {
         mPDUQueue->EnqueuePDU(pdu);
@@ -97,8 +96,6 @@ void Forte::PDUPeerImpl::EnqueuePDU(const Forte::PDUPtr& pdu)
 
 void Forte::PDUPeerImpl::PDUPeerEndpointEventCallback(PDUPeerEventPtr event)
 {
-    FTRACE;
-
     if (mEventCallback)
     {
         event->mPeer = GetPtr();
@@ -113,14 +110,10 @@ bool Forte::PDUPeerImpl::IsConnected(void) const
 
 bool Forte::PDUPeerImpl::IsPDUReady(void) const
 {
-    FTRACE;
-
     return mEndpoint->IsPDUReady();
 }
 
 bool Forte::PDUPeerImpl::RecvPDU(Forte::PDU &out)
 {
-    FTRACE;
-
     return mEndpoint->RecvPDU(out);
 }

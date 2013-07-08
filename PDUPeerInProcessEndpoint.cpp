@@ -76,14 +76,12 @@ void PDUPeerInProcessEndpoint::sendThreadRun()
 
 bool PDUPeerInProcessEndpoint::IsPDUReady() const
 {
-    FTRACE;
     AutoUnlockMutex lock(mMutex);
     return (mPDUBuffer.size() > 0);
 }
 
 bool PDUPeerInProcessEndpoint::RecvPDU(PDU &out)
 {
-    FTRACE;
     AutoUnlockMutex lock(mMutex);
     if (mPDUBuffer.size() > 0)
     {

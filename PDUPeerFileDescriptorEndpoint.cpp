@@ -164,8 +164,6 @@ void PDUPeerFileDescriptorEndpoint::SetFD(int fd)
 void PDUPeerFileDescriptorEndpoint::HandleEPollEvent(
     const epoll_event& e)
 {
-    FTRACE;
-
     if (e.events & EPOLLIN)
     {
         AutoUnlockMutex lock(mRecvBufferMutex);
@@ -431,7 +429,6 @@ void PDUPeerFileDescriptorEndpoint::recvUntilBlockOrComplete()
 
 void PDUPeerFileDescriptorEndpoint::bufferEnsureHasSpace()
 {
-    FTRACE;
     try
     {
         while (mRecvCursor == mRecvBufferSize
