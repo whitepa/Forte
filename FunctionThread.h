@@ -37,6 +37,7 @@ namespace Forte
     private:
         void* run() {
             mFunction();
+            mFunction.clear();
             return NULL;
         }
 
