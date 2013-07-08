@@ -117,6 +117,11 @@ void Thread::WaitForShutdown()
     while (!mShutdownComplete)
         mShutdownCompleteCondition.Wait();
 }
+bool Thread::IsShutdown(void)
+{
+    AutoUnlockMutex lock(mShutdownCompleteLock);
+    return mShutdownComplete;
+}
 
 void Thread::WaitForInitialize()
 {

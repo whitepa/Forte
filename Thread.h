@@ -52,6 +52,9 @@ namespace Forte
         // Wait for a thread to shutdown.
         void WaitForShutdown(void);
 
+        // Test if a thread is finished shutting down.
+        bool IsShutdown(void);
+
         // Wait for this tread to be initialized
         void WaitForInitialize(void);
 
