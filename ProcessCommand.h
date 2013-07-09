@@ -197,6 +197,11 @@ public:
         return mReturnCode;
     }
 
+    bool operator!() const
+    {
+        return (mReturnCode != 0);
+    }
+
 protected:
     explicit ProcessCommandResponse(const Forte::FString& response,
                                     const Forte::FString& errorResponse,
