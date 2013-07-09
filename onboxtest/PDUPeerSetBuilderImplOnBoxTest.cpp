@@ -372,7 +372,8 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest,
     peerSet.Shutdown();
 }
 
-TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanDispatchWithoutThrowing)
+TEST_F(PDUPeerSetBuilderImplOnBoxTest,
+       BroadcastAsyncAttemptsEnqueueToAllButFailsSilentlyIfNeeded)
 {
     FTRACE;
 
@@ -1033,6 +1034,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest,
 {
     FTRACE;
     setupThreePeers();
+    waitForAllConnected();
 
     for (int i=0; i<1000; i++)
     {
@@ -1081,6 +1083,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest,
 {
     FTRACE;
     setupThreePeers();
+    waitForAllConnected();
 
     for (int i=0; i<10000; i++)
     {

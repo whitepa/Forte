@@ -332,6 +332,7 @@ void PDUPeerFileDescriptorEndpoint::waitForConnected()
         }
         catch (ECouldNotConnect& e)
         {
+            mPDUSendQueue->Clear();
         }
 
         {
@@ -505,6 +506,7 @@ void PDUPeerFileDescriptorEndpoint::closeFileDescriptor()
             mFD = -1;
             doCallback = true;
         }
+        mPDUSendQueue->Clear();
     }
 
     if (doCallback)

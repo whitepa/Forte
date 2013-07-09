@@ -84,6 +84,14 @@ namespace Forte
             return mQueueType;
         }
 
+        void Clear() {
+            AutoUnlockMutex lock(mPDUQueueMutex);
+            mPDUQueue.clear();
+            mPDUQueueNotFullCondition.Broadcast();
+            mQueueSize = 0;
+            mAvgQueueSize = 0;
+        }
+
     protected:
         void lockedEnqueuePDU(const boost::shared_ptr<PDUHolder>& pdu);
         bool isPDUExpired(PDUHolderPtr pduHolder);
@@ -93,13 +101,13 @@ namespace Forte
     protected:
         long mPDUSendTimeout;
         mutable Forte::Mutex mPDUQueueMutex;
-        mutable Forte::ThreadCondition mPDUQueueNotEmptyCondition;
+        Forte::ThreadCondition mPDUQueueNotEmptyCondition;
+        Forte::ThreadCondition mPDUQueueNotFullCondition;
         std::deque<PDUHolderPtr> mPDUQueue;
         MonotonicClock mClock;
         // limit size of queue
         unsigned short mQueueMaxSize;
         PDUPeerQueueType mQueueType;
-        Semaphore mQueueSemaphore;
 
         int64_t mTotalQueued;
         int64_t mQueueSize;

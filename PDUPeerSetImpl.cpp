@@ -150,7 +150,15 @@ void Forte::PDUPeerSetImpl::BroadcastAsync(const PDUPtr& pdu)
     foreach (const IntPDUPeerPtrPair& p, mPDUPeers)
     {
         PDUPeerPtr peer(p.second);
-        peer->EnqueuePDU(pdu);
+        try
+        {
+            peer->EnqueuePDU(pdu);
+        }
+        catch(std::exception& e)
+        {
+            hlogstream(HLOG_DEBUG,
+                       "could not enqueue pdu for " << peer->GetID());
+        }
     }
 }
 

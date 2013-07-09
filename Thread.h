@@ -60,6 +60,16 @@ namespace Forte
             Forte::AutoUnlockMutex lock(mNotifyLock);
             return mThreadShutdown;
         }
+        static bool IsForteThreadAndShuttingDown(void) {
+            try
+            {
+                return Thread::MyThread()->IsShuttingDown();
+            }
+            catch (EThreadUnknown)
+            {
+                return false;
+            }
+        }
 
     private:
         // static callback for pthread_once

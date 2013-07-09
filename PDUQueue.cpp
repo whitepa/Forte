@@ -17,9 +17,9 @@ PDUQueue::PDUQueue(
     : mPDUSendTimeout(pduSendTimeout),
       mPDUQueueMutex(),
       mPDUQueueNotEmptyCondition(mPDUQueueMutex),
+      mPDUQueueNotFullCondition(mPDUQueueMutex),
       mQueueMaxSize(queueSize),
       mQueueType(queueType),
-      mQueueSemaphore(mQueueMaxSize),
       mTotalQueued(0),
       mQueueSize(0),
       mAvgQueueSize()
@@ -39,32 +39,29 @@ void PDUQueue::EnqueuePDU(const PDUPtr& pdu)
 {
     FTRACE;
 
-    if (mQueueType == PDU_PEER_QUEUE_BLOCK)
-    {
-        mQueueSemaphore.Wait();
-    }
-
     // Potential race condition between semaphore & mutex locks
     AutoUnlockMutex lock(mPDUQueueMutex);
 
-    if (mQueueType != PDU_PEER_QUEUE_BLOCK && mPDUQueue.size()+1 > mQueueMaxSize)
+    if (mPDUQueue.size()+1 > mQueueMaxSize)
     {
-        switch (mQueueType)
+        if (mQueueType == PDU_PEER_QUEUE_BLOCK)
         {
-        case PDU_PEER_QUEUE_CALLBACK:
-        case PDU_PEER_QUEUE_THROW:
+            while (mPDUQueue.size()+1 > mQueueMaxSize &&
+                   !Thread::IsForteThreadAndShuttingDown())
+            {
+                mPDUQueueNotFullCondition.Wait();
+            }
+            if (Thread::IsForteThreadAndShuttingDown())
+                boost::throw_exception(EThreadShutdown());
+        }
+        else // CALLBACK or THROW
+        {
             hlog_and_throw(HLOG_ERR, EPDUQueueFull(mQueueMaxSize));
-            return;
-        default:
-            hlog_and_throw(HLOG_ERR,
-                           EPDUQueueUnknownType(mQueueType));
-            return;
         }
     }
 
     mTotalQueued++;
-    mQueueSize = mPDUQueue.size();
-    mAvgQueueSize = mPDUQueue.size();
+    mAvgQueueSize = mQueueSize = mPDUQueue.size();
 
     PDUHolderPtr pduHolder(new PDUHolder);
     pduHolder->enqueuedTime = mClock.GetTime();
@@ -81,16 +78,15 @@ void PDUQueue::GetNextPDU(boost::shared_ptr<PDU>& pdu)
     {
         pdu = mPDUQueue.front()->pdu;
         mPDUQueue.pop_front();
-        mQueueSize = mPDUQueue.size();
-        mAvgQueueSize = mPDUQueue.size();
-        mQueueSemaphore.Post();
+        mAvgQueueSize = mQueueSize = mPDUQueue.size();
+        mPDUQueueNotFullCondition.Signal();
     }
 }
 
 void PDUQueue::WaitForNextPDU(PDUPtr& pdu)
 {
     AutoUnlockMutex lock(mPDUQueueMutex);
-    while (!Thread::MyThread()->IsShuttingDown()
+    while (!Thread::IsForteThreadAndShuttingDown()
            && mPDUQueue.empty())
     {
         mPDUQueueNotEmptyCondition.Wait();
@@ -100,13 +96,13 @@ void PDUQueue::WaitForNextPDU(PDUPtr& pdu)
     {
         pdu = mPDUQueue.front()->pdu;
         mPDUQueue.pop_front();
-        mQueueSize = mPDUQueue.size();
-        mAvgQueueSize = mPDUQueue.size();
-        mQueueSemaphore.Post();
+        mAvgQueueSize = mQueueSize = mPDUQueue.size();
+        mPDUQueueNotFullCondition.Signal();
     }
-    else if (Thread::MyThread()->IsShuttingDown())
+    else if (Thread::IsForteThreadAndShuttingDown())
     {
-        mQueueSemaphore.Post();
+        mPDUQueueNotFullCondition.Broadcast();
+        mPDUQueueNotEmptyCondition.Broadcast();
     }
 }
 
@@ -151,7 +147,7 @@ void PDUQueue::failExpiredPDUs()
                     events.push_back(event);
                     }*/
                 mPDUQueue.pop_front();
-                mQueueSemaphore.Post();
+                mPDUQueueNotFullCondition.Signal();
             }
         }
     }

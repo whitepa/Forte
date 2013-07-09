@@ -66,6 +66,11 @@ void Forte::PDUPeerImpl::SendPDU(const Forte::PDU &pdu)
 */
 void Forte::PDUPeerImpl::EnqueuePDU(const Forte::PDUPtr& pdu)
 {
+    if (!mEndpoint->IsConnected()
+        && mPDUQueue->GetQueueType() == PDU_PEER_QUEUE_BLOCK)
+    {
+        return;
+    }
     try
     {
         mPDUQueue->EnqueuePDU(pdu);
@@ -87,7 +92,7 @@ void Forte::PDUPeerImpl::EnqueuePDU(const Forte::PDUPtr& pdu)
                 hlog_and_throw(HLOG_ERR, EPDUQueueNoEventCallback());
             }
         }
-        else if (mPDUQueue->GetQueueType() == PDU_PEER_QUEUE_CALLBACK)
+        else if (mPDUQueue->GetQueueType() == PDU_PEER_QUEUE_THROW)
         {
             throw;
         }

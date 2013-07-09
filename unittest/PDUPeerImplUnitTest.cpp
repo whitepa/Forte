@@ -146,8 +146,11 @@ TEST_F(PDUPeerImplUnitTest, CanConstructWithMockEndpoint)
 TEST_F(PDUPeerImplUnitTest, EnqueuePDU_ProxiesTo_PDUQueue)
 {
     FTRACE;
-    PDUPeerEndpointPtr endpoint(new GMockPDUPeerEndpoint());
+    GMockPDUPeerEndpointPtr endpoint(new GMockPDUPeerEndpoint());
     boost::shared_ptr<PDUQueue> pduQueue(new PDUQueue);
+
+    EXPECT_CALL(*endpoint, IsConnected())
+        .WillRepeatedly(Return(true));
 
     PDUPeerImplPtr peer(new PDUPeerImpl(0, endpoint, pduQueue));
 
@@ -168,17 +171,35 @@ TEST_F(PDUPeerImplUnitTest, IsConnected_ProxiesTo_Endpoint)
 
     boost::shared_ptr<PDUQueue> pduQueue(new PDUQueue);
 
+    EXPECT_CALL(*mockEndpoint, IsConnected())
+        .WillRepeatedly(Return(true));
+
     PDUPeerImplPtr peer(new PDUPeerImpl(0, endpoint, pduQueue));
 
     PDUPtr pdu = makeTestPDU();
     peer->EnqueuePDU(pdu);
     ASSERT_EQ(1, peer->GetQueueSize());
 
-    EXPECT_CALL(*mockEndpoint, IsConnected())
-        .WillRepeatedly(Return(true));
-
     EXPECT_TRUE(peer->IsConnected());
 }
+
+/*TODO: pdu should throw on disconnected if queue type is throw
+TEST_F(PDUPeerImplUnitTest, EnqueuePDUThrowsIfNotConnected)
+{
+    FTRACE;
+    GMockPDUPeerEndpointPtr endpoint(new GMockPDUPeerEndpoint());
+    boost::shared_ptr<PDUQueue> pduQueue(new PDUQueue);
+
+    EXPECT_CALL(*endpoint, IsConnected())
+        .WillRepeatedly(Return(false));
+
+    PDUPeerImplPtr peer(new PDUPeerImpl(0, endpoint, pduQueue));
+
+    PDUPtr pdu = makeTestPDU();
+    EXPECT_THROW(peer->EnqueuePDU(pdu), EPDUPeerDisconnected);
+    ASSERT_EQ(0, peer->GetQueueSize());
+}
+*/
 
 /*
 TEST_F(PDUPeerImplUnitTest, SendPDUCallsErrorCallbackOnFailure)

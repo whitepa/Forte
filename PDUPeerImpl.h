@@ -13,6 +13,7 @@
 #include "FunctionThread.h"
 
 EXCEPTION_SUBCLASS(EPDUPeer, EPDUPeerSendError);
+EXCEPTION_SUBCLASS(EPDUPeer, EPDUPeerDisconnected);
 
 namespace Forte
 {
