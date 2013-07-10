@@ -166,6 +166,37 @@ TEST_F(ClockUnitTest, DeadlineClockExpiresAfterXSeconds)
     EXPECT_TRUE(expiresInOneSecond.Expired());
 }
 
+TEST_F(ClockUnitTest, DeadlineClockCanReturnRemainingSeconds)
+{
+    DeadlineClock expiresInFiveSeconds;
+    expiresInFiveSeconds.ExpiresInSeconds(5);
+
+    EXPECT_GE(expiresInFiveSeconds.GetRemainingSeconds(), 4);
+    hlogstream(HLOG_DEBUG,
+               "lock expires in " << expiresInFiveSeconds.GetRemainingSeconds());
+}
+
+TEST_F(ClockUnitTest, DeadlineClockCanReturnRemainingMilliseconds)
+{
+    DeadlineClock expiresInFiveSeconds;
+    expiresInFiveSeconds.ExpiresInMillisec(5000);
+
+    EXPECT_GE(expiresInFiveSeconds.GetRemainingSeconds(), 4);
+    hlogstream(HLOG_DEBUG,
+               "lock expires in " << expiresInFiveSeconds.GetRemainingSeconds());
+}
+
+TEST_F(ClockUnitTest, DeadlineClockCanReturnRemainingAsTimespec)
+{
+    DeadlineClock expiresInFiveSeconds;
+    expiresInFiveSeconds.ExpiresInSeconds(5);
+    Timespec ts;
+    expiresInFiveSeconds.GetRemaining(ts);
+    EXPECT_GE(ts.AsMillisec(), 4500);
+    hlogstream(HLOG_DEBUG,
+               "lock expires in " << ts.AsMillisec());
+}
+
 TEST_F(ClockUnitTest, DeadlineClockExpiresAfterXMillisec)
 {
     DeadlineClock expiresIn500Millisec;
