@@ -48,7 +48,8 @@ public:
         hlog(HLOG_INFO, "procmon env : %s", getenv("FORTE_PROCMON"));
     };
     static void TearDownTestCase() {
-
+        logManager.EndLogging(__FILE__ ".log");
+        logManager.EndLogging("//stderr");
     };
 
     static FString getParentTargetDir(FileSystem& fs) {
