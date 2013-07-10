@@ -37,11 +37,7 @@ const int Forte::ProcessManagerImpl::PDU_BUFFER_SIZE = 4096;
 Forte::ProcessManagerImpl::ProcessManagerImpl() :
     mPeerSet(new PDUPeerSetBuilderImpl()),
     mProcmonPath("/usr/libexec/procmon"),
-    mCallbackAvailableCondition (mCallbackQueueMutex),
-    mCallbackThread (new FunctionThread(
-                         FunctionThread::AutoInit(),
-                         boost::bind(&ProcessManagerImpl::callbackThreadRun, this),
-                         "processmanagerclbk"))
+    mCallbackAvailableCondition (mCallbackQueueMutex)
 {
     FTRACE;
     //TODO: does this need to be propogated now that we aren't running
@@ -60,6 +56,11 @@ Forte::ProcessManagerImpl::ProcessManagerImpl() :
     mPeerSet->SetEventCallback(
         boost::bind(&ProcessManagerImpl::pduPeerEventCallback, this, _1));
     mPeerSet->Start();
+
+    mCallbackThread.reset(new FunctionThread(
+                              FunctionThread::AutoInit(),
+                              boost::bind(&ProcessManagerImpl::callbackThreadRun, this),
+                              "processmanagerclbk"));
 }
 
 Forte::ProcessManagerImpl::~ProcessManagerImpl()
