@@ -249,6 +249,7 @@ namespace Forte
         virtual void ExpiresInMillisec(int millisec);
         virtual void GetRemaining(Forte::Timespec& ts) const;
         virtual int GetRemainingSeconds() const;
+        Forte::Timespec GetAbsExpirationTime() const;
 
     protected:
         Timespec mDeadlineTimespec;

@@ -91,6 +91,11 @@ int DeadlineClock::GetRemainingSeconds() const
     return (mDeadlineTimespec - GetTime()).AsSeconds();
 }
 
+Forte::Timespec DeadlineClock::GetAbsExpirationTime() const
+{
+    return mDeadlineTimespec;
+}
+
 void DeadlineClock::ExpiresAt(const Forte::Timespec &ts)
 {
     mDeadlineTimespec = ts;

@@ -197,6 +197,16 @@ TEST_F(ClockUnitTest, DeadlineClockCanReturnRemainingAsTimespec)
                "lock expires in " << ts.AsMillisec());
 }
 
+TEST_F(ClockUnitTest, DeadlineClockCanReturnAbsExpireTime)
+{
+    DeadlineClock expiresInFiveSeconds;
+    expiresInFiveSeconds.ExpiresInSeconds(5);
+    Forte::MonotonicClock clock;
+    Timespec ts = clock.GetTime() + Forte::Timespec::FromSeconds(5);
+
+    EXPECT_LE(expiresInFiveSeconds.GetAbsExpirationTime(), ts);
+}
+
 TEST_F(ClockUnitTest, DeadlineClockExpiresAfterXMillisec)
 {
     DeadlineClock expiresIn500Millisec;
