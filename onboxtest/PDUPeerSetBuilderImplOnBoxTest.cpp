@@ -1178,7 +1178,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest,
     const TestPeerPtr& flaker(mTestPeers[1]);
     int i = 0;
     DeadlineClock deadline;
-    deadline.ExpiresInSeconds(600);
+    deadline.ExpiresInSeconds(60);
     while (!deadline.Expired())
     {
         i++;
