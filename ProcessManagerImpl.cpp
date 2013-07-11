@@ -53,6 +53,15 @@ Forte::ProcessManagerImpl::ProcessManagerImpl() :
         mProcmonPath.assign(procmon);
     }
 
+    if (access(mProcmonPath.c_str(), X_OK) < 0 )
+    {
+        hlog(HLOG_CRIT, "procmon: %s: %s!",
+                        mProcmonPath.c_str(),
+                        SystemCallUtil::GetErrorDescription(errno).c_str());
+
+        SystemCallUtil::ThrowErrNoException(errno);
+    }
+
     mPeerSet->SetEventCallback(
         boost::bind(&ProcessManagerImpl::pduPeerEventCallback, this, _1));
     mPeerSet->Start();
