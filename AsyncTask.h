@@ -57,12 +57,18 @@ namespace Forte {
 
         void Wait(void) {
             Forte::AutoUnlockMutex lock(mWaitLock);
-            while (!IsComplete())
+            while (!mCompleted)
                 mWaitCond.Wait();
         }
 
-        bool IsComplete(void) const { return mCompleted; }
-        bool HasException(void) const { return mException; }
+        bool IsComplete(void) const {
+            Forte::AutoUnlockMutex lock(mWaitLock);
+            return mCompleted;
+        }
+        bool HasException(void) const {
+            Forte::AutoUnlockMutex lock(mWaitLock);
+            return mException;
+        }
 
         virtual void SetCallback(AsyncTaskCompletionCallback cb) {
             mCompletionCallback = cb;
@@ -73,20 +79,24 @@ namespace Forte {
     protected:
         virtual void setResult(ResultType res) {
             {
-                AutoUnlockMutex lock(mWaitLock);
-                mResult = res;
-                mCompleted = true;
-                mWaitCond.Broadcast();
-                if (mCompletionCallback)
+                AsyncTaskCompletionCallback cb;
+                {
+                    AutoUnlockMutex lock(mWaitLock);
+                    mResult = res;
+                    mCompleted = true;
+                    mWaitCond.Broadcast();
+                    cb = mCompletionCallback;
+                    mCompletionCallback.clear();
+                }
+                if (cb)
                 {
                     try
                     {
-                        mCompletionCallback(*this);
+                        cb(*this);
                     }
                     catch (...)
                     {
                     }
-                    mCompletionCallback = AsyncTaskCompletionCallback();
                 }
             }
         }
@@ -94,20 +104,24 @@ namespace Forte {
         virtual void setException(boost::exception_ptr e) {
             FTRACE;
             {
-                AutoUnlockMutex lock(mWaitLock);
-                mException = e;
-                mCompleted = true;
-                mWaitCond.Broadcast();
-                if (mCompletionCallback)
+                AsyncTaskCompletionCallback cb;
+                {
+                    AutoUnlockMutex lock(mWaitLock);
+                    mException = e;
+                    mCompleted = true;
+                    mWaitCond.Broadcast();
+                    cb = mCompletionCallback;
+                    mCompletionCallback.clear();
+                }
+                if (cb)
                 {
                     try
                     {
-                        mCompletionCallback(*this);
+                        cb(*this);
                     }
                     catch (...)
                     {
                     }
-                    mCompletionCallback = AsyncTaskCompletionCallback();
                 }
             }
         }
@@ -116,7 +130,7 @@ namespace Forte {
         bool mCompleted;
         ResultType mResult;
         boost::exception_ptr mException;
-        Forte::Mutex mWaitLock;
+        mutable Forte::Mutex mWaitLock;
         Forte::ThreadCondition mWaitCond;
         AsyncTaskCompletionCallback mCompletionCallback;
     };
@@ -153,12 +167,18 @@ namespace Forte {
 
         void Wait(void) {
             Forte::AutoUnlockMutex lock(mWaitLock);
-            while (!IsComplete())
+            while (!mCompleted)
                 mWaitCond.Wait();
         }
 
-        bool IsComplete(void) const { return mCompleted; }
-        bool HasException(void) const { return mException; }
+        bool IsComplete(void) const {
+            Forte::AutoUnlockMutex lock(mWaitLock);
+            return mCompleted;
+        }
+        bool HasException(void) const {
+            Forte::AutoUnlockMutex lock(mWaitLock);
+            return mException;
+        }
 
         virtual void SetCallback(AsyncTaskCompletionCallback cb) {
             mCompletionCallback = cb;
@@ -169,19 +189,23 @@ namespace Forte {
     protected:
         virtual void setResult(void) {
             {
-                AutoUnlockMutex lock(mWaitLock);
-                mCompleted = true;
-                mWaitCond.Broadcast();
-                if (mCompletionCallback)
+                AsyncTaskCompletionCallback cb;
+                {
+                    AutoUnlockMutex lock(mWaitLock);
+                    mCompleted = true;
+                    mWaitCond.Broadcast();
+                    cb = mCompletionCallback;
+                    mCompletionCallback.clear();
+                }
+                if (cb)
                 {
                     try
                     {
-                        mCompletionCallback(*this);
+                        cb(*this);
                     }
                     catch (...)
                     {
                     }
-                    mCompletionCallback = AsyncTaskCompletionCallback();
                 }
             }
         }
@@ -189,20 +213,24 @@ namespace Forte {
         virtual void setException(boost::exception_ptr e) {
             FTRACE;
             {
-                AutoUnlockMutex lock(mWaitLock);
-                mException = e;
-                mCompleted = true;
-                mWaitCond.Broadcast();
-                if (mCompletionCallback)
+                AsyncTaskCompletionCallback cb;
+                {
+                    AutoUnlockMutex lock(mWaitLock);
+                    mException = e;
+                    mCompleted = true;
+                    mWaitCond.Broadcast();
+                    cb = mCompletionCallback;
+                    mCompletionCallback.clear();
+                }
+                if (cb)
                 {
                     try
                     {
-                        mCompletionCallback(*this);
+                        cb(*this);
                     }
                     catch (...)
                     {
                     }
-                    mCompletionCallback = AsyncTaskCompletionCallback();
                 }
             }
         }
@@ -210,7 +238,7 @@ namespace Forte {
     private:
         bool mCompleted;
         boost::exception_ptr mException;
-        Forte::Mutex mWaitLock;
+        mutable Forte::Mutex mWaitLock;
         Forte::ThreadCondition mWaitCond;
         AsyncTaskCompletionCallback mCompletionCallback;
     };
