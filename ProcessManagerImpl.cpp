@@ -183,6 +183,8 @@ void Forte::ProcessManagerImpl::startMonitor(
         AutoFD parentfd(fds[0]);
         AutoFD childfd(fds[1]);
 
+        FString childfdStr(childfd);
+
         pid_t childPid = DaemonUtil::ForkSafely();
         if(childPid < 0)
             throw_exception(EProcessManagerUnableToFork(
@@ -208,16 +210,17 @@ void Forte::ProcessManagerImpl::startMonitor(
                 fprintf(stderr, "procmon child, daemon() failed: %d %s\n",
                         errno,
                         SystemCallUtil::GetErrorDescription(errno).c_str());
-                exit(-1);
+                _exit(-1);
             }
             setsid();
-            FString childfdStr(childfd);
-            char **vargs = new char* [3];
-            vargs[0] = const_cast<char *>("(procmon)"); // \TODO include the name of the monitored process
-            vargs[1] = const_cast<char *>(childfdStr.c_str());
-            vargs[2] = 0;
+            const char* vargs[] =
+            {
+                "(procmon)",  // TODO include the name of the monitored process
+                childfdStr.c_str(),
+                NULL,
+            };
 //        fprintf(stderr, "procmon child, exec '%s' '%s'\n", mProcmonPath.c_str(), vargs[1]);
-            execv(mProcmonPath, vargs);
+            execv(mProcmonPath, const_cast< char** >(vargs));
             fprintf(stderr, "procmon child, exec() failed: %d %s\n", errno,
                     SystemCallUtil::GetErrorDescription(errno).c_str());
             _exit(-1);
