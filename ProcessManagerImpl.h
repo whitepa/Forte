@@ -9,6 +9,7 @@
 #include "ProcessFutureImpl.h"
 #include "ProcessManagerPDU.h"
 #include "Clock.h"
+#include "FunctionThread.h"
 #include <boost/pointer_cast.hpp>
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
@@ -170,6 +171,10 @@ namespace Forte
          */
         void errorCallback(PDUPeer &peer);
 
+        void callbackThreadRun(void);
+
+        void deliverEvent(const PDUPeerEventPtr &event);
+
         /**
          * Lock for the process map
          */
@@ -186,6 +191,11 @@ namespace Forte
         PDUPeerSetBuilderPtr mPeerSet;
 
         FString mProcmonPath;
+
+        Mutex mCallbackQueueMutex;
+        Forte::ThreadCondition mCallbackAvailableCondition;
+        boost::shared_ptr<Forte::FunctionThread> mCallbackThread;
+        std::list<PDUPeerEventPtr> mCallbackQueue;
 
     };
     typedef boost::shared_ptr<ProcessManager> ProcessManagerPtr;

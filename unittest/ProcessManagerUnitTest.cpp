@@ -13,6 +13,8 @@
 #include "AutoDoUndo.h"
 #include <boost/bind.hpp>
 #include <boost/make_shared.hpp>
+#include <iostream>
+#include <fstream>
 
 using namespace std;
 using namespace Forte;
@@ -648,6 +650,78 @@ TEST_F(ProcessManagerTest, ProcessManagerCanRunHost)
     {
         hlogstream(HLOG_ERR, "std_exception: " <<
                    typeid(e).name() << " " << e.what());
+        FAIL();
+    }
+}
+
+static void processCompleteCallback(
+    boost::shared_ptr<ProcessFuture> &originalProcessHandle,
+    const boost::shared_ptr<ProcessFuture> &passedInProcessHandle)
+{
+    // let's delete the original process handle
+    originalProcessHandle.reset();
+}
+
+TEST_F(ProcessManagerTest, ProcessManagerLockup)
+{
+    try
+    {
+        {
+            hlog(HLOG_INFO, "new ProcessManager");
+            boost::shared_ptr<ProcessManager> pm(new ProcessManagerImpl);
+            hlog(HLOG_INFO, "CreateProcess");
+
+            sleep(1); // causes a race condition where the next Process is
+            // added during the epoll_wait
+
+            hlog(HLOG_INFO, "Run Process");
+            {
+                boost::shared_ptr<ProcessFuture> ph =
+                    pm->CreateProcessDontRun("/bin/sleep 3");
+
+                ph->SetProcessCompleteCallback(
+                    boost::bind(
+                        processCompleteCallback, boost::ref(ph), _1));
+                pm->RunProcess(ph);
+            }
+
+            DeadlineClock deadline;
+            deadline.ExpiresInSeconds(5);
+            while (!deadline.Expired() &&
+                   !pm->IsProcessMapEmpty())
+            {
+                sleep(1);
+            }
+
+            // give time for process manager to finish delivering the event
+            sleep(1);
+        }
+
+        std::ifstream stat("/proc/self/status");
+        int numberOfThreads = -1;
+        for(std::string line; std::getline(stat, line); )
+        {
+            if(line.find("Threads:") != std::string::npos)
+            {
+                hlogstream(HLOG_INFO, line);
+                FString threadsLine(line);
+                std::vector<FString> components;
+                threadsLine.Tokenize(":", components);
+
+                if (components.size() == 2)
+                {
+                    numberOfThreads = components[1].Trim().AsInteger();
+                }
+            }
+        }
+
+        // 1 for the main thread,
+        // there should be no more threads.
+        ASSERT_EQ(1, numberOfThreads);
+    }
+    catch (Exception &e)
+    {
+        hlog(HLOG_ERR, "exception: %s", e.what());
         FAIL();
     }
 }

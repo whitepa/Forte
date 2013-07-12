@@ -36,7 +36,12 @@ const int Forte::ProcessManagerImpl::PDU_BUFFER_SIZE = 4096;
 
 Forte::ProcessManagerImpl::ProcessManagerImpl() :
     mPeerSet(new PDUPeerSetBuilderImpl()),
-    mProcmonPath("/usr/libexec/procmon")
+    mProcmonPath("/usr/libexec/procmon"),
+    mCallbackAvailableCondition (mCallbackQueueMutex),
+    mCallbackThread (new FunctionThread(
+                         FunctionThread::AutoInit(),
+                         boost::bind(&ProcessManagerImpl::callbackThreadRun, this),
+                         "processmanagerclbk"))
 {
     FTRACE;
     //TODO: does this need to be propogated now that we aren't running
@@ -65,6 +70,12 @@ Forte::ProcessManagerImpl::~ProcessManagerImpl()
     // the Process objects.
 
     // \TODO abandon processes
+    mCallbackThread->Shutdown();
+    {
+        AutoUnlockMutex lock(mCallbackQueueMutex);
+        mCallbackAvailableCondition.Signal();
+    }
+    mCallbackThread->WaitForShutdown();
 
     mPeerSet->Shutdown();
 }
@@ -330,28 +341,9 @@ int ProcessManagerImpl::CreateProcessAndGetResult(
 
 void Forte::ProcessManagerImpl::pduPeerEventCallback(PDUPeerEventPtr event)
 {
-    switch (event->mEventType)
-    {
-    case PDUPeerReceivedPDUEvent:
-        pduCallback(*(event->mPeer));
-        break;
-
-    case PDUPeerSendErrorEvent:
-        errorCallback(*(event->mPeer));
-        break;
-
-    case PDUPeerConnectedEvent:
-        break;
-
-    case PDUPeerDisconnectedEvent:
-        // happends on file descriptor close. no way to reconnect so
-        // we will delete our side of the PDUPeer connection
-        mPeerSet->PeerDelete(event->mPeer);
-        break;
-
-    default:
-        break;
-    }
+    AutoUnlockMutex lock(mCallbackQueueMutex);
+    mCallbackQueue.push_back(event);
+    mCallbackAvailableCondition.Signal();
 }
 
 void Forte::ProcessManagerImpl::pduCallback(PDUPeer &peer)
@@ -434,3 +426,70 @@ bool Forte::ProcessManagerImpl::IsProcessMapEmpty(void)
     return (mProcesses.size() == 0);
 }
 
+void Forte::ProcessManagerImpl::deliverEvent(const PDUPeerEventPtr &event)
+{
+    switch (event->mEventType)
+    {
+    case PDUPeerReceivedPDUEvent:
+        pduCallback(*(event->mPeer));
+        break;
+
+    case PDUPeerSendErrorEvent:
+        errorCallback(*(event->mPeer));
+        break;
+
+    case PDUPeerConnectedEvent:
+        break;
+
+    case PDUPeerDisconnectedEvent:
+        // happends on file descriptor close. no way to reconnect so
+        // we will delete our side of the PDUPeer connection
+        mPeerSet->PeerDelete(event->mPeer);
+        break;
+
+    default:
+        break;
+    }
+}
+
+void Forte::ProcessManagerImpl::callbackThreadRun(void)
+{
+    Forte::Thread* thisThread = Forte::Thread::MyThread();
+    PDUPeerEventPtr event;
+
+    while (!thisThread->IsShuttingDown())
+    {
+        {
+            AutoUnlockMutex lock(mCallbackQueueMutex);
+            while (mCallbackQueue.empty()
+                   && !thisThread->IsShuttingDown())
+            {
+                mCallbackAvailableCondition.Wait();
+            }
+            if (!mCallbackQueue.empty())
+            {
+                event = mCallbackQueue.front();
+                mCallbackQueue.pop_front();
+            }
+        }
+
+        if (event)
+        {
+            try
+            {
+                deliverEvent(event);
+            }
+            catch (std::exception &e)
+            {
+                hlogstream(HLOG_WARN, "threw delivering callback event " << e.what());
+            }
+            catch (...)
+            {
+                hlogstream(HLOG_WARN,
+                           "threw delivering callback event (Unknown Exception)");
+            }
+
+            event.reset();
+        }
+    }
+}
