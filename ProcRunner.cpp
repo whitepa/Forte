@@ -112,8 +112,14 @@ int ProcRunner::Run(const FString& command,
         if (log_child || output != NULL)
         {
             fd_out = open(filename, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR);
-            if (fd_out != -1) dup2(fd_out, 1);
-            if (fd_out != -1) dup2(fd_out, 2);
+
+            if (fd_out != -1)
+            {
+                dup2(fd_out, STDOUT_FILENO);
+                dup2(fd_out, STDERR_FILENO);
+
+                close(fd_out);
+            }
         }
 
         // redirect input from given file (/dev/null by default)
