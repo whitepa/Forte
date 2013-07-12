@@ -80,7 +80,6 @@ namespace Forte
         bool RecvPDU(Forte::PDU &out);
 
         virtual void HandleEPollEvent(const struct epoll_event& e) {
-            FTRACE;
             mEndpoint->HandleEPollEvent(e);
         }
 
