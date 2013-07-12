@@ -171,10 +171,10 @@ Forte::FunctionEntryProxy _forte_trace_object(__PRETTY_FUNCTION__, __FILE__, __L
 
 
 //@ todo: optimize stream out of hot path
-#define FTRACESTREAM(message) { \
-    std::ostringstream o; \
-    o <<  message; \
-    Forte::FunctionEntryProxy _forte_trace_object(__PRETTY_FUNCTION__, __FILE__, __LINE__, o.str()); } \
+#define FTRACESTREAM(message)                                           \
+    std::ostringstream _forte_trace_stream;                             \
+    _forte_trace_stream <<  message;                                    \
+    Forte::FunctionEntryProxy _forte_trace_object(__PRETTY_FUNCTION__, __FILE__, __LINE__, _forte_trace_stream.str())
 
 /**
  * Same as FTRACE except allows a format string to be passed in
