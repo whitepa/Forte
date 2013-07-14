@@ -61,36 +61,33 @@ TEST_F(PDUPeerInProcessEndpointUnitTest, ConstructDelete)
     boost::shared_ptr<PDUQueue> pduQueue(new PDUQueue);
     PDUPeerInProcessEndpoint theClass(pduQueue);
 }
-/*
-TEST_F(PDUPeerInProcessEndpointUnitTest, ThrowsWhenPeerIsNotSetupToReceive)
+
+TEST_F(PDUPeerInProcessEndpointUnitTest, Requires2StageConstruction)
 {
     FTRACE;
-    PDUPeerInProcessEndpoint theClass;
-
-    PDU p;
-
-    ASSERT_THROW(theClass.SendPDU(p), EPDUPeerEndpoint);
-}
-
-TEST_F(PDUPeerInProcessEndpointUnitTest, CanSendPDUAndGetCallback)
-{
-    FTRACE;
-    PDUPeerInProcessEndpoint theClass;
+    boost::shared_ptr<PDUQueue> pduQueue(new PDUQueue);
+    PDUPeerInProcessEndpoint theClass(pduQueue);
     theClass.SetEventCallback(
         boost::bind(&PDUPeerInProcessEndpointUnitTest::EventCallback, this, _1));
 
-    PDU p;
-    theClass.SendPDU(p);
-    ASSERT_EQ(1, mCallbackReceiveCount);
+    theClass.Start();
+    sleep(1);
+    theClass.Shutdown();
 }
 
-TEST_F(PDUPeerInProcessEndpointUnitTest,
-       SendPDUTriggersThrowsIfCallbackIsNotSet)
+TEST_F(PDUPeerInProcessEndpointUnitTest, PullsPDUsFromPDUQueueAndSendsThem)
 {
     FTRACE;
-    PDUPeerInProcessEndpoint theClass;
+    boost::shared_ptr<PDUQueue> pduQueue(new PDUQueue);
+    PDUPeerInProcessEndpoint theClass(pduQueue);
+    theClass.SetEventCallback(
+        boost::bind(&PDUPeerInProcessEndpointUnitTest::EventCallback, this, _1));
+    theClass.Start();
 
-    PDU p;
-    ASSERT_THROW(theClass.SendPDU(p), EPDUPeerEndpoint);
+    PDUPtr p(new PDU);
+    pduQueue->EnqueuePDU(p);
+    sleep(1);
+    ASSERT_EQ(1, mCallbackReceiveCount);
+
+    theClass.Shutdown();
 }
-*/

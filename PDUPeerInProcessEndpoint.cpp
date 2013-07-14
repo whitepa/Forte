@@ -8,7 +8,8 @@ using namespace Forte;
 PDUPeerInProcessEndpoint::PDUPeerInProcessEndpoint(
     const boost::shared_ptr<PDUQueue>& sendQueue)
     : mSendQueue(sendQueue),
-      mConnectMessageSent(false)
+      mConnectMessageSent(false),
+      mEventAvailableCondition(mEventQueueMutex)
 {
 }
 
@@ -32,6 +33,11 @@ void PDUPeerInProcessEndpoint::Start()
             boost::bind(&PDUPeerInProcessEndpoint::sendThreadRun, this),
             "pdusend-fd"));
 
+    mCallbackThread.reset(
+        new FunctionThread(
+            FunctionThread::AutoInit(),
+            boost::bind(&PDUPeerInProcessEndpoint::callbackThreadRun, this),
+            "pduclbk-in"));
 }
 
 void PDUPeerInProcessEndpoint::Shutdown()
@@ -39,11 +45,20 @@ void PDUPeerInProcessEndpoint::Shutdown()
     recordShutdownCall();
 
     mSendThread->Shutdown();
+    mCallbackThread->Shutdown();
+
     mSendQueue->TriggerWaiters();
+    {
+        AutoUnlockMutex lock(mEventQueueMutex);
+        mEventAvailableCondition.Signal();
+    }
+
     mSendThread->WaitForShutdown();
+    mCallbackThread->WaitForShutdown();
 
     mSendThread.reset();
     mSendQueue.reset();
+    mCallbackThread.reset();
 }
 
 void PDUPeerInProcessEndpoint::sendThreadRun()
@@ -69,7 +84,7 @@ void PDUPeerInProcessEndpoint::sendThreadRun()
 
             PDUPeerEventPtr event(new PDUPeerEvent());
             event->mEventType = PDUPeerReceivedPDUEvent;
-            deliverEvent(event);
+            triggerCallback(event);
         }
     }
 }
@@ -108,9 +123,53 @@ void PDUPeerInProcessEndpoint::connect()
     {
         PDUPeerEventPtr event(new PDUPeerEvent());
         event->mEventType = PDUPeerConnectedEvent;
-        deliverEvent(event);
+        triggerCallback(event);
 
         AutoUnlockMutex lock(mMutex);
         mConnectMessageSent = true;
+    }
+}
+
+void PDUPeerInProcessEndpoint::triggerCallback(
+    const boost::shared_ptr<PDUPeerEvent>& event)
+{
+    AutoUnlockMutex lock(mEventQueueMutex);
+    mEventQueue.push_back(event);
+    mEventAvailableCondition.Signal();
+}
+
+void PDUPeerInProcessEndpoint::callbackThreadRun()
+{
+    Forte::Thread* thisThread = Forte::Thread::MyThread();
+    boost::shared_ptr<Forte::PDUPeerEvent> event;
+
+    while (!thisThread->IsShuttingDown())
+    {
+        {
+            AutoUnlockMutex lock(mEventQueueMutex);
+            while (mEventQueue.empty()
+                   && !Forte::Thread::MyThread()->IsShuttingDown())
+            {
+                mEventAvailableCondition.Wait();
+            }
+            if (!mEventQueue.empty())
+            {
+                event = mEventQueue.front();
+                mEventQueue.pop_front();
+            }
+        }
+
+        if (event)
+        {
+            try
+            {
+                deliverEvent(event);
+            }
+            catch (std::exception& e)
+            {
+                hlogstream(HLOG_WARN, "event callback threw " << e.what());
+            }
+            event.reset();
+        }
     }
 }

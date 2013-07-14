@@ -50,6 +50,9 @@ namespace Forte
         void sendThreadRun();
         void connect();
 
+        void callbackThreadRun();
+        void triggerCallback(const boost::shared_ptr<PDUPeerEvent>& event);
+
     protected:
         boost::shared_ptr<Forte::PDUQueue> mSendQueue;
 
@@ -57,6 +60,11 @@ namespace Forte
         std::list<PDUPtr> mPDUBuffer;
         bool mConnectMessageSent;
         boost::shared_ptr<Forte::FunctionThread> mSendThread;
+
+        boost::shared_ptr<Forte::FunctionThread> mCallbackThread;
+        mutable Forte::Mutex mEventQueueMutex;
+        Forte::ThreadCondition mEventAvailableCondition;
+        std::list<boost::shared_ptr<PDUPeerEvent> > mEventQueue;
     };
 
     typedef boost::shared_ptr<PDUPeerInProcessEndpoint> PDUPeerInProcessEndpointPtr;
