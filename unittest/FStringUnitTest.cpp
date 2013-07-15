@@ -402,3 +402,15 @@ TEST_F(FStringTest, HexDump)
 
 
 }
+TEST_F(FStringTest, ConstructFromVectorOfOptional)
+{
+    std::vector<boost::optional<uint32_t> > vec;
+    vec.resize(10);
+    EXPECT_STREQ(FString("_,_,_,_,_,_,_,_,_,_"), FString(vec));
+    vec[0] = 0;
+    vec[2] = 2;
+    vec[4] = 4;
+    vec[6] = 6;
+    vec[8] = 8;
+    EXPECT_STREQ(FString("0,_,2,_,4,_,6,_,8,_"), FString(vec));
+}

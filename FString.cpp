@@ -43,6 +43,20 @@ FString::FString(const std::vector<unsigned int> &intvec)
         first = false;
     }
 }
+FString::FString(const std::vector<boost::optional<uint32_t> > &intvec)
+{
+    bool first = true;
+    std::vector<boost::optional<uint32_t> >::const_iterator i;
+    for (i = intvec.begin(); i != intvec.end(); ++i)
+    {
+        if (!first) append(",");
+        if (*i)
+            append(FString(i->get()));
+        else
+            append("_");
+        first = false;
+    }
+}
 FString::FString(const std::set<unsigned int> &intset)
 {
     bool first = true;

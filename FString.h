@@ -12,6 +12,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
+#include <boost/optional.hpp>
 
 #define NOPOS std::string::npos
 namespace Forte
@@ -128,6 +129,11 @@ namespace Forte
          *Constructs an FString of items in the vector delimited by a comma after each item.
          **/
         FString(const std::vector<unsigned int> &intvec);
+
+        /**
+         *Constructs an FString of items in the vector delimited by a comma after each item.
+         **/
+        FString(const std::vector<boost::optional<uint32_t> > &intvec);
 
         /**
          *Constructs an FString of items in the set delimited by a comma after each item.
