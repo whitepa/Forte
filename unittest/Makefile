@@ -60,8 +60,10 @@ GSRCS = AutoMutexUnitTest.cpp \
 	ConditionAsyncLoggerUnitTest.cpp \
 	ConditionDeltaLoggerUnitTest.cpp \
 	ContextPredicateUnitTest.cpp \
+	CumulativeMovingAverageUnitTest.cpp \
 	DbLiteConnectionUnitTest.cpp \
 	DbConnectionPoolUnitTest.cpp \
+	EnableStatsUnitTest.cpp \
 	ExceptionUnitTest.cpp \
 	FileSystemUtilUnitTest.cpp \
 	FStringUnitTest.cpp \
@@ -90,9 +92,9 @@ GSRCS = AutoMutexUnitTest.cpp \
 	StateMachineSetStateUnitTest.cpp \
 	StateMachineTestHarnessUnitTest.cpp \
 	ThreadPoolDispatcherUnitTest.cpp \
+	WeakFunctionBinderUnitTest.cpp \
 	XMLUnitTest.cpp \
-	EnableStatsUnitTest.cpp \
-	CumulativeMovingAverageUnitTest.cpp \
+# ALPHABETICAL ORDER ABOVE, PLEASE!
 
 # flaky
 #	DbMirroredConnectionUnitTest.cpp \
