@@ -78,7 +78,6 @@ GSRCS = AutoMutexUnitTest.cpp \
 	PDUPeerNetworkConnectorEndpointUnitTest.cpp \
 	PDUUnitTest.cpp \
 	PidFileUnitTest.cpp \
-	ProcessManagerUnitTest.cpp \
 	ProcessCommandUnitTest.cpp \
 	ProcessorInformationUnitTest.cpp \
 	ProcFileSystemUnitTest.cpp \
@@ -97,6 +96,8 @@ GSRCS = AutoMutexUnitTest.cpp \
 
 # flaky
 #	DbMirroredConnectionUnitTest.cpp \
+# Moving to onbox
+#	ProcessManagerUnitTest.cpp \
 
 GPROGS = $(GSRCS:%.cpp=%)
 BPROGS = $(BSRCS:%.cpp=%)
