@@ -96,7 +96,7 @@ namespace Forte
         virtual void * run(void) {
             FTRACE;
             setThreadName("IOManager");
-            struct timespec timeout = Timespec::FromMillisec(200);
+            struct timespec timeout = Timespec::FromMillisec(25);
             struct io_event events[32];
             while (!IsShuttingDown()) {
                 // @TODO correctly handle shutdown with pending requests
