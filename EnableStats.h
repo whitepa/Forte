@@ -266,5 +266,53 @@ namespace Forte
         boost::function<void ()> mParentUnregisterFn;
     };
 
+    //TODO: put this elsewhere
+    class StatItem
+    {
+    public:
+        StatItem()
+            : mCount(0)
+            {
+            }
+
+        StatItem(const StatItem& p) {
+            Forte::AutoUnlockMutex lock(mMutex);
+            mCount = p.mCount;
+        }
+
+        StatItem& operator++ () {
+            Forte::AutoUnlockMutex lock(mMutex);
+            ++mCount;
+            return *this;
+        }
+
+        StatItem operator++ (int) {
+            StatItem result(*this);
+            ++(*this);
+            return result;
+        }
+
+        StatItem& operator-- () {
+            Forte::AutoUnlockMutex lock(mMutex);
+            --mCount;
+            return *this;
+        }
+
+        StatItem operator-- (int) {
+            StatItem result(*this);
+            --(*this);
+            return result;
+        }
+
+        operator int64_t () {
+            Forte::AutoUnlockMutex lock(mMutex);
+            return mCount;
+        }
+
+    protected:
+        Forte::Mutex mMutex;
+        int64_t mCount;
+    };
+
 }
 #endif

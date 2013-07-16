@@ -16,9 +16,11 @@ Forte::PDUPeerImpl::PDUPeerImpl(
     const boost::shared_ptr<PDUQueue>& pduQueue)
     : mConnectingPeerID(connectingPeerID),
       mEndpoint(endpoint),
-      mPDUQueue(pduQueue)
+      mPDUQueue(pduQueue),
+      mPDUDropCount(0)
 {
     FTRACE;
+    registerStatVariable<0>("PDUDropCount", &PDUPeerImpl::mPDUDropCount);
 }
 
 Forte::PDUPeerImpl::~PDUPeerImpl()
@@ -69,6 +71,7 @@ void Forte::PDUPeerImpl::EnqueuePDU(const Forte::PDUPtr& pdu)
     if (!mEndpoint->IsConnected()
         && mPDUQueue->GetQueueType() == PDU_PEER_QUEUE_BLOCK)
     {
+        ++mPDUDropCount;
         return;
     }
     try

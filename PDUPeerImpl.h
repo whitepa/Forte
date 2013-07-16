@@ -19,7 +19,7 @@ namespace Forte
 {
     class PDUPeerImpl :
         public PDUPeer,
-        public EnableStats<PDUPeerImpl, Locals<PDUPeerImpl> >
+        public EnableStats<PDUPeerImpl, Locals<PDUPeerImpl, int64_t> >
     {
     public:
         /**
@@ -89,6 +89,7 @@ namespace Forte
         uint64_t mConnectingPeerID;
         PDUPeerEndpointPtr mEndpoint;
         boost::shared_ptr<Forte::PDUQueue> mPDUQueue;
+        int64_t mPDUDropCount;
     };
 
 };
