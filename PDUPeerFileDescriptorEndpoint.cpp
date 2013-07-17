@@ -398,6 +398,13 @@ void PDUPeerFileDescriptorEndpoint::recvUntilBlockOrComplete()
                 PDUPeerEventPtr event(new PDUPeerEvent());
                 event->mEventType = PDUPeerReceivedPDUEvent;
                 triggerCallback(event);
+                mPDURecvReadyCountAvg =
+                    mPDURecvReadyCount = lockedPDURecvQueueSize();
+            }
+            else
+            {
+                mPDURecvReadyCountAvg =
+                    mPDURecvReadyCount = 0;
             }
         }
     }
@@ -487,6 +494,25 @@ bool PDUPeerFileDescriptorEndpoint::lockedIsPDUReady(void) const
         return true;
     else
         return false;
+}
+
+int PDUPeerFileDescriptorEndpoint::lockedPDURecvQueueSize() const
+{
+    assert(lockedIsPDUReady());
+
+    unsigned int cursor = 0;
+    PDUHeader *pduHeader;
+    size_t minPDUSize = sizeof(PDUHeader);
+    int readyCount(0);
+    do
+    {
+        pduHeader = reinterpret_cast<PDUHeader*>(mRecvBuffer.get() + cursor);
+        cursor +=
+            minPDUSize + pduHeader->payloadSize + pduHeader->optionalDataSize;
+        ++readyCount;
+    }
+    while (mRecvCursor >= cursor);
+    return readyCount;
 }
 
 void PDUPeerFileDescriptorEndpoint::closeFileDescriptor()

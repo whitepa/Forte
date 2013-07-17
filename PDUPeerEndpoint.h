@@ -13,6 +13,7 @@
 #include "EnableStats.h"
 #include "Locals.h"
 #include <boost/function.hpp>
+#include "CumulativeMovingAverage.h"
 
 EXCEPTION_CLASS(EPDUPeerEndpoint);
 
@@ -66,7 +67,8 @@ namespace Forte
         public EnableStats<PDUPeerEndpoint,
                            Locals<PDUPeerEndpoint,
                                   int64_t, int64_t, int64_t,
-                                  int64_t, int64_t, int64_t
+                                  int64_t, int64_t, int64_t,
+                                  int64_t, CumulativeMovingAverage
                                   > >
     {
     public:
@@ -76,7 +78,8 @@ namespace Forte
               mPDUSendErrors(0),
               mByteSendCount(0),
               mByteRecvCount(0),
-              mDisconnectCount(0) {
+              mDisconnectCount(0),
+              mPDURecvReadyCount(0) {
             registerStatVariable<0>("PDUSendCount",
                                     &PDUPeerEndpoint::mPDUSendCount);
 
@@ -94,6 +97,12 @@ namespace Forte
 
             registerStatVariable<5>("DisconnectCount",
                                     &PDUPeerEndpoint::mDisconnectCount);
+
+            registerStatVariable<6>("PDURecvReadyCount",
+                                    &PDUPeerEndpoint::mPDURecvReadyCount);
+
+            registerStatVariable<7>("PDURecvReadyCountAvg",
+                                    &PDUPeerEndpoint::mPDURecvReadyCountAvg);
         }
         virtual ~PDUPeerEndpoint() {}
 
@@ -205,6 +214,8 @@ namespace Forte
         int64_t mByteSendCount;
         int64_t mByteRecvCount;
         int64_t mDisconnectCount;
+        int64_t mPDURecvReadyCount;
+        CumulativeMovingAverage mPDURecvReadyCountAvg;
 
     private:
         mutable Forte::Mutex mEventCallbackMutex;

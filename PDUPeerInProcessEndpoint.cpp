@@ -80,6 +80,8 @@ void PDUPeerInProcessEndpoint::sendThreadRun()
             {
                 AutoUnlockMutex lock(mMutex);
                 mPDUBuffer.push_back(pdu);
+                ++mPDUSendCount;
+                mPDURecvReadyCountAvg = mPDURecvReadyCount = mPDUBuffer.size();
             }
 
             PDUPeerEventPtr event(new PDUPeerEvent());
@@ -111,6 +113,8 @@ bool PDUPeerInProcessEndpoint::RecvPDU(PDU &out)
         out.SetOptionalData(pdu->GetOptionalData());
 
         mPDUBuffer.pop_front();
+        ++mPDURecvCount;
+        mPDURecvReadyCountAvg = mPDURecvReadyCount = mPDUBuffer.size();
         return true;
     }
 

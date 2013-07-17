@@ -58,6 +58,7 @@ namespace Forte
     protected:
         void waitForConnected();
         bool lockedIsPDUReady(void) const;
+        int lockedPDURecvQueueSize() const;
         void callbackIfPDUReady();
         void bufferEnsureHasSpace();
 
