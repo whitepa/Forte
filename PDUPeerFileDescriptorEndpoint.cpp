@@ -661,7 +661,7 @@ void PDUPeerFileDescriptorEndpoint::callbackThreadRun()
             }
             catch (std::exception& e)
             {
-                hlogstream(HLOG_WARN, "event callback threw " << e.what());
+                hlogstream(HLOG_ERR, "exception in callback: " << e.what());
             }
             event.reset();
         }
