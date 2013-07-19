@@ -60,7 +60,7 @@ Forte::ProcessManagerImpl::ProcessManagerImpl() :
     mCallbackThread.reset(new FunctionThread(
                               FunctionThread::AutoInit(),
                               boost::bind(&ProcessManagerImpl::callbackThreadRun, this),
-                              "processmanagerclbk"));
+                              "procmgrcb"));
 }
 
 Forte::ProcessManagerImpl::~ProcessManagerImpl()
