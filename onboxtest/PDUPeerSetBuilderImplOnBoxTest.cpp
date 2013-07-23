@@ -136,6 +136,11 @@ public:
         return mDisconnectedEventCount;
     }
 
+    void ClearPDUReceivedList() {
+        AutoUnlockMutex lock(mEventMutex);
+        mReceivedPDUList.clear();
+    }
+
     Forte::Mutex mEventMutex;
     Forte::ThreadCondition mEventReceivedCondition;
     int mReceiveEventCount;
@@ -1205,16 +1210,11 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest,
             flaker->InstantiatePeerSet();
         }
 
-        // 1237 here just indicates i want to clear out the recv'd
-        // list periodically, but i don't want it to be on the same
-        // loops as as when flaker flakes
-        if (i % 1237 == 0)
+        foreach(const TestPeerPtr& peer, mTestPeers)
         {
-            foreach(const TestPeerPtr& peer, mTestPeers)
-            {
-                peer->mReceivedPDUList.clear();
-            }
+            peer->ClearPDUReceivedList();
         }
     }
+
     hlogstream(HLOG_INFO, "sent " << i << " pdus");
 }
