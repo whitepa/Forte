@@ -103,12 +103,6 @@ void PDUPeerFileDescriptorEndpoint::Shutdown()
     mSendThread->WaitForShutdown();
     mRecvThread->WaitForShutdown();
     mCallbackThread->WaitForShutdown();
-
-    mPDUSendQueue.reset();
-    mEPollMonitor.reset();
-    mSendThread.reset();
-    mRecvThread.reset();
-    mCallbackThread.reset();
 }
 
 void PDUPeerFileDescriptorEndpoint::SetFD(int fd)
