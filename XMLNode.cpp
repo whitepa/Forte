@@ -131,12 +131,16 @@ void XMLNode::XPathStr(FString &resultString, const Forte::FString &xpath)
         {
             if (result->nodesetval->nodeTab[i]->type == XML_ATTRIBUTE_NODE)
             {
+                if (!resultString.empty())
+                    resultString.append("\n");
                 // There should be only one child for each attribute node, a text
                 resultString = resultString + FString(reinterpret_cast<char *>(result->nodesetval->nodeTab[i]->children->content));
                 //resultString = resultString + FString((char *) xmlNodeGetContent(result->nodesetval->nodeTab[i]);
             }
             else if (result->nodesetval->nodeTab[i]->type == XML_TEXT_NODE)
             {
+                if (!resultString.empty())
+                    resultString.append("\n");
                 resultString = resultString + FString(reinterpret_cast<char *>(result->nodesetval->nodeTab[i]->content));
             }
             else

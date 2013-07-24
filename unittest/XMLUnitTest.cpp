@@ -72,9 +72,9 @@ TEST_F(XMLUnitTest, XPathTest)
 
     FString result_Nehalemest;
     doc.GetRootNode().XPathStr(result_Nehalemest, "//model/text()|//feature[@name='est']/@name");
-    ASSERT_STREQ("Nehalemest", result_Nehalemest);
+    ASSERT_STREQ("Nehalem\nest", result_Nehalemest);
 
     result_Nehalemest.clear();
     doc.GetRootNode().XPathStr(result_Nehalemest, "//feature[@name='est']/@name|//model/text()");
-    ASSERT_STREQ("Nehalemest", result_Nehalemest);
+    ASSERT_STREQ("Nehalem\nest", result_Nehalemest);
 }
