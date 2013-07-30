@@ -75,7 +75,11 @@ void Forte::ProcessMonitor::Run()
     pthread_sigmask(SIG_SETMASK, &set, NULL);
 
     mPeerSet->SetEventCallback(
-        boost::bind(&ProcessMonitor::pduCallback, this, _1));
+        boost::bind(WeakFunctionBinder(
+                        &ProcessMonitor::pduCallback,
+                        boost::static_pointer_cast<Forte::ProcessMonitor>(
+                            shared_from_this())),
+                    _1));
     mPeerSet->Start();
     mPeerSet->PeerCreate(mFD);
 
@@ -114,9 +118,12 @@ void Forte::ProcessMonitor::Run()
             // this is a fatal error, so we must send the error PDU
             hlog(HLOG_ERR, "exception in Poll(): %s", e.what());
             // \TODO send error PDU
+            mPeerSet->SetEventCallback(NULL);
             throw;
         }
     }
+
+    mPeerSet->SetEventCallback(NULL);
 }
 
 void Forte::ProcessMonitor::pduCallback(PDUPeerEventPtr event)

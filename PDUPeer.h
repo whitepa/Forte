@@ -94,16 +94,25 @@ namespace Forte
         virtual bool RecvPDU(Forte::PDU &out) = 0;
 
         void SetEventCallback(PDUPeerEventCallback f) {
+            Forte::AutoUnlockMutex lock(mEventCallbackMutex);
             mEventCallback = f;
         }
 
         // incoming events from our PDUPeerEndpoint
-        virtual void PDUPeerEndpointEventCallback(PDUPeerEventPtr event) {
+        virtual void PDUPeerEndpointEventCallback(PDUPeerEventPtr& event) {
             FTRACE;
-            if (mEventCallback)
+            PDUPeerEventCallback eventCallback;
             {
-                event->mPeer = GetPtr();
-                mEventCallback(event);
+                Forte::AutoUnlockMutex lock(mEventCallbackMutex);
+                if (mEventCallback)
+                {
+                    event->mPeer = GetPtr();
+                    eventCallback = mEventCallback;
+                }
+            }
+            if (eventCallback)
+            {
+                eventCallback(event);
             }
         }
 
@@ -118,7 +127,8 @@ namespace Forte
                 Object::shared_from_this());
         }
 
-    protected:
+    private:
+        Forte::Mutex mEventCallbackMutex;
         PDUPeerEventCallback mEventCallback;
     };
 };

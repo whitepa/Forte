@@ -83,8 +83,6 @@ namespace Forte
             mEndpoint->HandleEPollEvent(e);
         }
 
-        virtual void PDUPeerEndpointEventCallback(PDUPeerEventPtr event);
-
     protected:
         uint64_t mConnectingPeerID;
         PDUPeerEndpointPtr mEndpoint;

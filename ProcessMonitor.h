@@ -31,7 +31,7 @@ namespace Forte
     EXCEPTION_SUBCLASS2(EProcessMonitor, EProcessMonitorInvalidState,
                         "Process Monitor in invalid state");
 
-    class ProcessMonitor
+    class ProcessMonitor : public Forte::Object
     {
     public:
         enum State

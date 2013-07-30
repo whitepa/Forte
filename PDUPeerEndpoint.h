@@ -176,22 +176,24 @@ namespace Forte
         virtual void HandleEPollEvent(const struct epoll_event& e) = 0;
 
         void SetEventCallback(PDUPeerEventCallback f) {
-            //AutoUnlockMutex lock(mEventCallbackMutex);
-
-            //TODO: PDUPeerCallbacks call PeerDelete(), which call
-            // Shutdown(), which calls SetEventCallback(NULL). this
-            // causes a deadlock here. i'm thinking having a lock here
-            // would be good, need to think through it more though.
-
+            AutoUnlockMutex lock(mEventCallbackMutex);
             mEventCallback = f;
         }
 
     protected:
         void deliverEvent(const boost::shared_ptr<PDUPeerEvent>& event) {
-            //AutoUnlockMutex lock(mEventCallbackMutex);
-            if (mEventCallback)
+            PDUPeerEventCallback eventCallback;
             {
-                mEventCallback(event);
+                AutoUnlockMutex lock(mEventCallbackMutex);
+                if (mEventCallback)
+                {
+                    eventCallback = mEventCallback;
+                }
+            }
+
+            if (eventCallback)
+            {
+                eventCallback(event);
             }
         }
 

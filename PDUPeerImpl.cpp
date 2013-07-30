@@ -34,9 +34,11 @@ void Forte::PDUPeerImpl::Start()
     recordStartCall();
 
     mEndpoint->SetEventCallback(
-        boost::bind(&PDUPeer::PDUPeerEndpointEventCallback,
-                    this,
-                    _1));
+        boost::bind(
+            WeakFunctionBinder(
+                &PDUPeer::PDUPeerEndpointEventCallback,
+                boost::static_pointer_cast<PDUPeer>(shared_from_this())),
+            _1));
     mEndpoint->Start();
 
     // register the end point stats with this pdupeer as the parent
@@ -82,32 +84,16 @@ void Forte::PDUPeerImpl::EnqueuePDU(const Forte::PDUPtr& pdu)
     {
         if (mPDUQueue->GetQueueType() == PDU_PEER_QUEUE_CALLBACK)
         {
-            if (mEventCallback)
-            {
-                PDUPeerEventPtr ev(new PDUPeerEvent());
-                ev->mEventType = PDUPeerSendErrorEvent;
-                ev->mPeer = GetPtr();
-                ev->mPDU = pdu;
-                mEventCallback(ev);
-            }
-            else
-            {
-                hlog_and_throw(HLOG_ERR, EPDUQueueNoEventCallback());
-            }
+            PDUPeerEventPtr ev(new PDUPeerEvent());
+            ev->mEventType = PDUPeerSendErrorEvent;
+            ev->mPeer = GetPtr();
+            ev->mPDU = pdu;
+            PDUPeerEndpointEventCallback(ev);
         }
         else if (mPDUQueue->GetQueueType() == PDU_PEER_QUEUE_THROW)
         {
             throw;
         }
-    }
-}
-
-void Forte::PDUPeerImpl::PDUPeerEndpointEventCallback(PDUPeerEventPtr event)
-{
-    if (mEventCallback)
-    {
-        event->mPeer = GetPtr();
-        mEventCallback(event);
     }
 }
 

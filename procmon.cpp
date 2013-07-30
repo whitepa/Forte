@@ -13,8 +13,9 @@ int main(int argc, char *argv[])
 {
     try
     {
-        Forte::ProcessMonitor pm(argc, argv);
-        pm.Run();
+        boost::shared_ptr<Forte::ProcessMonitor> pm
+            (new Forte::ProcessMonitor(argc, argv));
+        pm->Run();
         fprintf(stderr, "PROCMON: exiting\n");
         return 0;
     }
