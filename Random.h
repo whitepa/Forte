@@ -12,7 +12,6 @@ namespace Forte
     class Random : public Object
     {
     public:
-        static FString GetSecureRandomData(unsigned int length);
         static FString GetRandomData(unsigned int length);
         static unsigned int GetRandomUInt(void);
     };
