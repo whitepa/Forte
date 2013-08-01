@@ -42,7 +42,7 @@ bool Forte::RunLoop::IsEmpty() const
 
 void * Forte::RunLoop::run(void)
 {
-    mThreadName.Format("runloop-%s-%u", mName.c_str(), GetThreadID());
+    mThreadName.Format("rl-%s", mName.c_str());
     hlog(HLOG_DEBUG, "runloop starting");
     MonotonicClock mc;
     std::multiset<RunLoopScheduleItem>::iterator i;
