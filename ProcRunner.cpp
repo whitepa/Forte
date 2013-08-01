@@ -581,12 +581,3 @@ int ProcRunner::Rsh(const FString& ip, const FString& command, FString *output, 
     return err;
 }
 
-
-int ProcRunner::Ssh(const FString& host, const FString& command, FString *output, int timeout)
-{
-    FString cmd, esc;
-    esc = ShellEscape(command);
-    cmd.Format("ssh %s %s", host.c_str(), esc.c_str());
-    return Run(cmd, "", output, timeout);
-}
-

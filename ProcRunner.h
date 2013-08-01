@@ -68,15 +68,6 @@ namespace Forte
                         FString *output = NULL,
                         int timeout = -1);
 
-        /**
-         *Do not use. @see SSHRunner.
-         **/
-
-        virtual int Ssh(const FString& ip,
-                        const FString& command,
-                        FString *output = NULL,
-                        int timeout = -1);
-
         virtual FString ShellEscape(const FString& arg);
 
     protected:
