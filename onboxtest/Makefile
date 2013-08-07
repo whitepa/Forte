@@ -40,8 +40,6 @@ PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
 	$(TARGETDIR)/SocketUtilOnBoxTest \
 	$(TARGETDIR)/StateMachineOnBoxTest3 \
 
-#TODO: rewrite this sans gpfs
-#	$(TARGETDIR)/DbMirroredConnectionUnitTest \
 # flaky or broken
 #	$(TARGETDIR)/SCSIUtilUnitTest \
 

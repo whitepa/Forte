@@ -96,8 +96,6 @@ GSRCS = AutoMutexUnitTest.cpp \
 	XMLUnitTest.cpp \
 # ALPHABETICAL ORDER ABOVE, PLEASE!
 
-# flaky
-#	DbMirroredConnectionUnitTest.cpp \
 # Moving to onbox
 #	ProcessManagerUnitTest.cpp \
 
@@ -121,8 +119,6 @@ PROG_DEPS_OBJS_ExceptionUnitTest =  \
 PROG_DEPS_OBJS_DbLiteConnectionUnitTest =
 
 PROG_DEPS_OBJS_DbConnectionPoolUnitTest =
-
-PROG_DEPS_OBJS_DbMirroredConnectionUnitTest =
 
 PROG_DEPS_OBJS_INotifyUnitTest =  \
 	../$(TARGETDIR)/INotify.o
