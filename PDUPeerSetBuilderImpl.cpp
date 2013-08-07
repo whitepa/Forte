@@ -54,7 +54,7 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
     }
 
     // begin setup PeerSet
-    mPDUPeerSet.reset(new PDUPeerSetImpl(pduPeers));
+    mPDUPeerSet.reset(new PDUPeerSetImpl(pduPeers, mEPollMonitor));
     mPDUPeerSet->SetEventCallback(eventCallback);
     includeStatsFromChild(mPDUPeerSet, "PeerSet");
     // end setup PeerSet
@@ -83,11 +83,11 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
 
 Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl()
     : mID(0),
-      mEPollMonitor(new EPollMonitor("peerset-epl"))
+      mEPollMonitor(new EPollMonitor("peerset"))
 {
     std::vector<PDUPeerPtr> emptyPeerVector;
 
-    mPDUPeerSet.reset(new PDUPeerSetImpl(emptyPeerVector));
+    mPDUPeerSet.reset(new PDUPeerSetImpl(emptyPeerVector, mEPollMonitor));
     includeStatsFromChild(mPDUPeerSet, "PeerSet");
 }
 

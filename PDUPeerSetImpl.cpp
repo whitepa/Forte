@@ -16,8 +16,10 @@
 using namespace boost;
 using namespace Forte;
 
-Forte::PDUPeerSetImpl::PDUPeerSetImpl(const std::vector<PDUPeerPtr>& peers)
-    : mEPollMonitor(new EPollMonitor("peerset"))
+Forte::PDUPeerSetImpl::PDUPeerSetImpl(
+    const std::vector<PDUPeerPtr>& peers,
+    const boost::shared_ptr<EPollMonitor>& epollMonitor)
+    : mEPollMonitor(epollMonitor)
 {
     FTRACE2("created with %zu peers", peers.size());
 
@@ -49,8 +51,6 @@ void Forte::PDUPeerSetImpl::Start()
 {
     recordStartCall();
 
-    mEPollMonitor->Start();
-
     foreach (const IntPDUPeerPtrPair& p, mPDUPeers)
     {
         p.second->Start();
@@ -66,8 +66,6 @@ void Forte::PDUPeerSetImpl::Shutdown()
     {
         p.second->Shutdown();
     }
-
-    mEPollMonitor->Shutdown();
 }
 
 boost::shared_ptr<PDUPeer> Forte::PDUPeerSetImpl::PeerCreate(int fd)

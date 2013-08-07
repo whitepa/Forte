@@ -62,8 +62,11 @@ public:
         int fds[2];
         socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
 
-        mPeerSet1.reset(new PDUPeerSetImpl(emptyPeerVector));
-        mPeerSet2.reset(new PDUPeerSetImpl(emptyPeerVector));
+        mEPollMonitor.reset(new EPollMonitor);
+        mEPollMonitor->Start();
+
+        mPeerSet1.reset(new PDUPeerSetImpl(emptyPeerVector, mEPollMonitor));
+        mPeerSet2.reset(new PDUPeerSetImpl(emptyPeerVector, mEPollMonitor));
 
         mPeerSet1->Start();
         mPeerSet2->Start();
@@ -83,6 +86,7 @@ public:
 
         mPeerSet1->Shutdown();
         mPeerSet2->Shutdown();
+        mEPollMonitor->Shutdown();
     }
 
 
@@ -129,6 +133,8 @@ public:
     Forte::ThreadCondition mReceivedCondition;
     int mReceivedPDUCount;
 
+    boost::shared_ptr<EPollMonitor> mEPollMonitor;
+
     boost::shared_ptr<Forte::PDUPeer> mPeer1;
     boost::shared_ptr<Forte::PDUPeer> mPeer2;
 
@@ -140,23 +146,28 @@ TEST_F(PDUPeerSetImplOnBoxTest, ConstructDestruct)
 {
     Forte::ThreadPoolDispatcherPtr workDispatcher;
     std::vector<boost::shared_ptr<PDUPeer> > peers;
-    PDUPeerSetImpl peerSet(peers);
+    boost::shared_ptr<EPollMonitor> epollMonitor(new EPollMonitor);
+    PDUPeerSetImpl peerSet(peers, epollMonitor);
 }
 
 TEST_F(PDUPeerSetImplOnBoxTest, StartShutdown)
 {
     Forte::ThreadPoolDispatcherPtr workDispatcher;
     std::vector<boost::shared_ptr<PDUPeer> > peers;
-    PDUPeerSetImpl peerSet(peers);
+    boost::shared_ptr<EPollMonitor> epollMonitor(new EPollMonitor);
+    epollMonitor->Start();
+    PDUPeerSetImpl peerSet(peers, epollMonitor);
     peerSet.Start();
     peerSet.Shutdown();
+    epollMonitor->Shutdown();
 }
 
 TEST_F(PDUPeerSetImplOnBoxTest, MultiStartShutdown)
 {
     Forte::ThreadPoolDispatcherPtr workDispatcher;
     std::vector<boost::shared_ptr<PDUPeer> > peers;
-    PDUPeerSetImpl peerSet(peers);
+    boost::shared_ptr<EPollMonitor> epollMonitor(new EPollMonitor);
+    PDUPeerSetImpl peerSet(peers, epollMonitor);
     peerSet.Start();
     peerSet.Shutdown();
 
@@ -170,9 +181,10 @@ TEST_F(PDUPeerSetImplOnBoxTest, PeerSetMustBeRunningToCreatePeers)
 
     int fds[2];
     socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
+    boost::shared_ptr<EPollMonitor> epollMonitor(new EPollMonitor);
 
-    Forte::PDUPeerSetImpl peerSet1(emptyPeerVector);
-    Forte::PDUPeerSetImpl peerSet2(emptyPeerVector);
+    Forte::PDUPeerSetImpl peerSet1(emptyPeerVector, epollMonitor);
+    Forte::PDUPeerSetImpl peerSet2(emptyPeerVector, epollMonitor);
 
     ASSERT_THROW(peerSet1.PeerCreate(fds[0]), EObjectNotRunning);
     ASSERT_THROW(peerSet2.PeerCreate(fds[1]), EObjectNotRunning);
@@ -184,9 +196,10 @@ TEST_F(PDUPeerSetImplOnBoxTest, CanCreatePeersFromFDAfterStart)
 
     int fds[2];
     socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
-
-    Forte::PDUPeerSetImpl peerSet1(emptyPeerVector);
-    Forte::PDUPeerSetImpl peerSet2(emptyPeerVector);
+    boost::shared_ptr<EPollMonitor> epollMonitor(new EPollMonitor);
+    epollMonitor->Start();
+    Forte::PDUPeerSetImpl peerSet1(emptyPeerVector, epollMonitor);
+    Forte::PDUPeerSetImpl peerSet2(emptyPeerVector, epollMonitor);
 
     peerSet1.Start();
     peerSet2.Start();
@@ -199,6 +212,7 @@ TEST_F(PDUPeerSetImplOnBoxTest, CanCreatePeersFromFDAfterStart)
 
     peerSet1.Shutdown();
     peerSet2.Shutdown();
+    epollMonitor->Shutdown();
 }
 
 TEST_F(PDUPeerSetImplOnBoxTest, DefaultSetupWorks)

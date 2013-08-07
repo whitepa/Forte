@@ -48,7 +48,8 @@ namespace Forte
                            Locals<PDUPeerSetImpl, ConnectedCount> >
     {
     public:
-        PDUPeerSetImpl(const std::vector<PDUPeerPtr>& peers);
+        PDUPeerSetImpl(const std::vector<PDUPeerPtr>& peers,
+                       const boost::shared_ptr<EPollMonitor>& epollMonitor);
         virtual ~PDUPeerSetImpl();
 
         /**
