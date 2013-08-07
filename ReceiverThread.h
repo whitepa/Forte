@@ -30,6 +30,8 @@ namespace Forte
     class ReceiverThread : public Thread
     {
     public:
+        class NoAutoStart {};
+
         inline ReceiverThread(
             boost::shared_ptr<Dispatcher> disp,
             const char *name,
@@ -51,6 +53,31 @@ namespace Forte
                 // TODO: validate IP address
                 initialized();
             }
+
+        inline ReceiverThread(
+            NoAutoStart unused,
+            boost::shared_ptr<Dispatcher> disp,
+            const char *name,
+            int port,
+            int backlog,
+            const char *bindIP = "")
+            :  mDisp(disp),
+               mName(name),
+               mPort(port),
+               mBacklog(backlog),
+               mBindIP(bindIP)
+            {
+                if (!disp)
+                    throw EReceiverDispatcherInvalid();
+
+                if (mName.empty())
+                    throw Exception("receiver must be given a valid name");
+            }
+
+        void StartThread() {
+            // TODO: validate IP address
+            initialized();
+        }
 
         virtual ~ReceiverThread() {
             deleting();

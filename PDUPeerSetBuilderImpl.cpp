@@ -71,14 +71,14 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
             "PDUCnect")
         );
 
-    //if needed, can make receiver thread wait for a Start call
     mReceiverThread.reset(
         new ReceiverThread(
+            ReceiverThread::NoAutoStart(),
             mConnectionDispatcher,
             "PDU",
-            listenAddress.second,
+            mListenAddress.second,
             32, // backlog
-            listenAddress.first.c_str()));
+            mListenAddress.first.c_str()));
 }
 
 Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl()
@@ -101,6 +101,11 @@ void Forte::PDUPeerSetBuilderImpl::Start()
     recordStartCall();
     mPDUPeerSet->Start();
     mEPollMonitor->Start();
+
+    if (mReceiverThread)
+    {
+        mReceiverThread->StartThread();
+    }
 }
 
 void Forte::PDUPeerSetBuilderImpl::Shutdown()
