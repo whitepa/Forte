@@ -304,13 +304,46 @@ namespace Forte
             return result;
         }
 
-        operator int64_t () {
+        StatItem& operator=(const StatItem& rhs)
+        {
+            if(this != &rhs)
+            {
+                const int64_t count(rhs);
+
+                {
+                    Forte::AutoUnlockMutex lock(mMutex);
+                    mCount = count;
+                }
+            }
+
+            return *this;
+        }
+
+        StatItem operator-(const StatItem& rhs) const
+        {
+            StatItem result(*this);
+            const int64_t count(rhs);
+            Forte::AutoUnlockMutex lock(mMutex);
+            result.mCount -= count;
+            return result;
+        }
+
+        StatItem operator+(const StatItem& rhs) const
+        {
+            StatItem result(*this);
+            const int64_t count(rhs);
+            Forte::AutoUnlockMutex lock(mMutex);
+            result.mCount += count;
+            return result;
+        }
+
+        operator int64_t () const {
             Forte::AutoUnlockMutex lock(mMutex);
             return mCount;
         }
 
     protected:
-        Forte::Mutex mMutex;
+        mutable Forte::Mutex mMutex;
         int64_t mCount;
     };
 
