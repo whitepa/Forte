@@ -28,6 +28,7 @@ void Forte::PDUPeerNetworkConnectorEndpoint::connect()
         AutoFD sock(createInetStreamSocket());
 
         Forte::setTCPNoDelay(sock);
+        Forte::setTCPQuickAck(sock);
 
         connectToAddress(sock, mConnectToAddress);
 

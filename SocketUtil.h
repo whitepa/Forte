@@ -58,5 +58,6 @@ namespace Forte
     void setTCPSendBufferSize(int fd, int tcpBufferSize);
 
     void setTCPNoDelay(int fd);
+    void setTCPQuickAck(int fd);
 };
 #endif

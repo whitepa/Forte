@@ -1,5 +1,6 @@
 // #SCQAD TAG: forte.pdupeer
 #include "PDUPeerSetConnectionHandler.h"
+#include "SocketUtil.h"
 #include "SystemCallUtil.h"
 #include "FTrace.h"
 
@@ -53,6 +54,8 @@ void PDUPeerSetConnectionHandler::Handler(Forte::Event* e)
     {
         //TODO: convert id to ip:socket for logging purposes
         hlogstream(HLOG_DEBUG2, "received connect from peer " << id);
+        Forte::setTCPNoDelay(event->mFD);
+        Forte::setTCPQuickAck(event->mFD);
         mPDUPeerSet->PeerAddFD(id, event->mFD);
     }
 }

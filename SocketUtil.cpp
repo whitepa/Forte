@@ -262,3 +262,17 @@ void Forte::setTCPNoDelay(int fd)
                            errno));
     }
 }
+void Forte::setTCPQuickAck(int fd)
+{
+    int tcpQuickAck = 1;
+    if (setsockopt(fd,
+                   IPPROTO_TCP,
+                   TCP_QUICKACK,
+                   &tcpQuickAck,
+                   sizeof (int)) == -1)
+    {
+        hlog_and_throw(HLOG_WARN, ESocketUtil(
+                           FStringFC(), "could not set TCP_QUICKACK: %d",
+                           errno));
+    }
+}
