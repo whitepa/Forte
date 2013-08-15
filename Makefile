@@ -114,6 +114,7 @@ SRCS =	\
 	StateMachineTestHarness.cpp \
 	StateRegion.cpp \
 	Thread.cpp \
+	ThreadCondition.cpp \
 	ThreadKey.cpp \
 	ThreadPoolDispatcher.cpp \
 	ThreadSafeObjectMap.cpp \

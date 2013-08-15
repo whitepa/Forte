@@ -1,10 +1,13 @@
 #ifndef _ThreadCondition_h
 #define _ThreadCondition_h
 
-#include <iostream>
+// POSIX
 #include <pthread.h>
+
+// Forte
 #include "AutoMutex.h"
 #include "Clock.h"
+
 
 namespace Forte
 {
@@ -12,42 +15,9 @@ namespace Forte
     class ThreadCondition
     {
     public:
-        inline ThreadCondition(Mutex &lock) : mLock(lock)
-        {
-            if (pthread_condattr_init(&mCondAttribute) == 0)
-                if (pthread_condattr_setclock(&mCondAttribute,
-                                              CLOCK_MONOTONIC) == 0)
-                    if (pthread_cond_init(&mCond, &mCondAttribute) == 0)
-                        return;
+        ThreadCondition(Mutex &lock);
 
-            throw EThreadCondition();
-        }
-
-        inline ~ThreadCondition()
-        {
-            int ret;
-            if ((ret = pthread_cond_destroy(&mCond)) != 0)
-            {
-                // only will catch this by running through a unit
-                // test, hitting too many circular dependencies if i
-                // try to include LogManager. here
-
-                char buf[256];
-                strerror_r(ret, buf, sizeof(buf));
-                buf[sizeof(buf) - 1] = 0;
-
-                std::cerr << "pthread_cond_destroy failed with " << buf;
-            }
-
-            if ((ret = pthread_condattr_destroy(&mCondAttribute)) != 0)
-            {
-                char buf[256];
-                strerror_r(ret, buf, sizeof(buf));
-                buf[sizeof(buf) - 1] = 0;
-
-                std::cerr << "pthread_condattr_destroy failed with " << buf;
-            }
-        };
+        ~ThreadCondition();
 
         inline int Signal() {
             return pthread_cond_signal(&mCond);
@@ -67,17 +37,11 @@ namespace Forte
                                           &abstime);
         }
 
-        inline int TimedWait(const int seconds) {
-            struct timespec ts;
-            MonotonicClock().GetTime(ts);
-            ts.tv_sec += seconds;
-            return TimedWait(ts);
-        }
+        int TimedWait(int seconds);
 
      protected:
         Mutex &mLock;
         pthread_cond_t mCond;
-        pthread_condattr_t mCondAttribute;
     };
 };
 
