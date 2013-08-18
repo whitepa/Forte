@@ -202,7 +202,7 @@ void PDUPeerFileDescriptorEndpoint::sendThreadRun()
         SendStatePDUReady,
         SendStateBufferAvailable
     };
-    bool continueTryingToSend(true);
+
     SendState state(SendStateDisconnected);
     while (!myThread->IsShuttingDown())
     {
@@ -262,7 +262,6 @@ void PDUPeerFileDescriptorEndpoint::sendThreadRun()
                     mPDUSendCount++;
 
                     state = SendStateConnected;
-                    continueTryingToSend = false;
                 }
             }
             else if (len == -1 && errno == EAGAIN)
@@ -290,7 +289,6 @@ void PDUPeerFileDescriptorEndpoint::sendThreadRun()
 
                     state = SendStateDisconnected;
                     closeFileDescriptor();
-                    continueTryingToSend = false;
                 }
             }
             else
@@ -305,7 +303,7 @@ void PDUPeerFileDescriptorEndpoint::sendThreadRun()
 
                 state = SendStateDisconnected;
                 closeFileDescriptor();
-                continueTryingToSend = false;
+
             }
             break;
         }
