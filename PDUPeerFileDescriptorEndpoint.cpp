@@ -634,28 +634,28 @@ void PDUPeerFileDescriptorEndpoint::callbackThreadRun()
         {
             AutoUnlockMutex lock(mEventQueueMutex);
             while (mEventQueue.empty()
-                   && !Forte::Thread::MyThread()->IsShuttingDown())
+                   && !thisThread->IsShuttingDown())
             {
                 mEventAvailableCondition.Wait();
             }
-            if (!mEventQueue.empty())
+
+            if (thisThread->IsShuttingDown())
             {
-                event = mEventQueue.front();
-                mEventQueue.pop_front();
+                return;
             }
+
+            event = mEventQueue.front();
+            mEventQueue.pop_front();
         }
 
-        if (event)
+        try
         {
-            try
-            {
-                deliverEvent(event);
-            }
-            catch (std::exception& e)
-            {
-                hlogstream(HLOG_ERR, "exception in callback: " << e.what());
-            }
-            event.reset();
+            deliverEvent(event);
         }
+        catch (std::exception& e)
+        {
+            hlogstream(HLOG_ERR, "exception in callback: " << e.what());
+        }
+        event.reset();
     }
 }
