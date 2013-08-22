@@ -259,7 +259,11 @@ DbResult DbLiteConnection::Query(const FString& sql)
         while (!res && tries_remaining > 0);
 
         // cleanup statement
-        sqlite3_finalize(stmt);
+        int rc;
+        if ((rc = sqlite3_finalize(stmt)) != SQLITE_OK)
+        {
+            hlog(HLOG_WARN, "sqlite3_finalize unhandled error: %d", rc);
+        }
         stmt = NULL;
 
         // set remaining sql
