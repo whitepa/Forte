@@ -16,7 +16,7 @@ namespace Forte
 {
     static const int RECV_BUFFER_SIZE = 65536;
     static const int DEFAULT_MAX_BUFFER_SIZE = 1048576;
-    static const int DEFAULT_SEND_TIMEOUT = 5*1000;
+    static const int DEFAULT_SEND_TIMEOUT = 20*1000;
 
     class PDUPeerFileDescriptorEndpoint : public PDUPeerEndpoint
     {
