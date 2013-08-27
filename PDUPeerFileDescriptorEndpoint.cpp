@@ -545,7 +545,8 @@ bool PDUPeerFileDescriptorEndpoint::RecvPDU(PDU &out)
         //TODO: this can be incremented sooner, and might be
         //useful. as it is reported currently, will indicate the
         //number of pdus delivered into the consumer
-        mPDURecvCount++;
+        ++mPDURecvCount;
+        mPDURecvReadyCountAvg = mPDURecvReadyCount = lockedPDURecvQueueSize();
 
         PDUHeader *pduHeader =
             reinterpret_cast<PDUHeader*>(mRecvBuffer.get());
