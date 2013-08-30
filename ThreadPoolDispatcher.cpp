@@ -220,8 +220,7 @@ void * Forte::ThreadPoolDispatcherWorker::run(void)
     FTRACE;
 
     ThreadPoolDispatcher &disp(dynamic_cast<ThreadPoolDispatcher&>(mDispatcher));
-    mThreadName.Format("%s-pool-%u", mDispatcher.mDispatcherName.c_str(),
-                       GetThreadID());
+    mThreadName.Format("%s-pool", mDispatcher.mDispatcherName.c_str());
     hlog(HLOG_DEBUG3, "initializing...");
     // call the request handler's initialization hook
     disp.mRequestHandler->Init();
