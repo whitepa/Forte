@@ -23,6 +23,7 @@ PDUPeerFileDescriptorEndpoint::PDUPeerFileDescriptorEndpoint(
     : mPDUSendQueue(pduSendQueue),
       mEPollMonitor(epollMonitor),
       mSendTimeoutSeconds(sendTimeoutSeconds),
+      mSendState(SendStateDisconnected),
       mRecvBufferMaxSize(receiveBufferMaxSize),
       mRecvBufferStepSize(receiveBufferStepSize),
       mRecvWorkAvailableCondition(mRecvBufferMutex),
@@ -196,27 +197,19 @@ void PDUPeerFileDescriptorEndpoint::sendThreadRun()
     pollFDs[0].events = POLLOUT | POLLERR;
     const int pollFDCount(1);
 
-    enum SendState {
-        SendStateDisconnected,
-        SendStateConnected,
-        SendStatePDUReady,
-        SendStateBufferAvailable
-    };
-
-    SendState state(SendStateDisconnected);
     while (!myThread->IsShuttingDown())
     {
-        switch(state)
+        switch(mSendState)
         {
         case SendStateDisconnected:
-            //hlog(HLOG_DEBUG, "state SendStateDisconnected");
+            //hlog(HLOG_DEBUG, "mSendState SendStateDisconnected");
             waitForConnected();
             {
                 AutoUnlockMutex fdlock(mFDMutex);
                 pollFDs[0].fd = mFD;
             }
 
-            state = SendStateConnected;
+            setSendState(SendStateConnected);
             break;
 
         case SendStateConnected:
@@ -225,7 +218,7 @@ void PDUPeerFileDescriptorEndpoint::sendThreadRun()
             mPDUSendQueue->WaitForNextPDU(pdu);
             if (pdu)
             {
-                state = SendStatePDUReady;
+                setSendState(SendStatePDUReady);
             }
             break;
 
@@ -237,7 +230,7 @@ void PDUPeerFileDescriptorEndpoint::sendThreadRun()
                 + pdu->GetHeader().payloadSize
                 + pdu->GetHeader().optionalDataSize;
             cursor = 0;
-            state = SendStateBufferAvailable;
+            setSendState(SendStateBufferAvailable);
             sendDeadline.ExpiresInSeconds(mSendTimeoutSeconds);
             break;
 
@@ -261,7 +254,7 @@ void PDUPeerFileDescriptorEndpoint::sendThreadRun()
                     sendBuffer.reset();
                     mPDUSendCount++;
 
-                    state = SendStateConnected;
+                    setSendState(SendStateConnected);
                 }
             }
             else if (len == -1 && errno == EAGAIN)
@@ -287,7 +280,7 @@ void PDUPeerFileDescriptorEndpoint::sendThreadRun()
                     event->mPDU = pdu;
                     triggerCallback(event);
 
-                    state = SendStateDisconnected;
+                    setSendState(SendStateDisconnected);
                     closeFileDescriptor();
                 }
             }
@@ -301,9 +294,8 @@ void PDUPeerFileDescriptorEndpoint::sendThreadRun()
                 event->mPDU = pdu;
                 triggerCallback(event);
 
-                state = SendStateDisconnected;
+                setSendState(SendStateDisconnected);
                 closeFileDescriptor();
-
             }
             break;
         }
@@ -525,6 +517,11 @@ void PDUPeerFileDescriptorEndpoint::closeFileDescriptor()
             doCallback = true;
         }
         mPDUSendQueue->Clear();
+
+        mRecvWorkAvailable = true;
+        mRecvWorkAvailableCondition.Signal();
+        setSendState(SendStateDisconnected);
+        mPDUSendQueue->TriggerWaiters();
     }
 
     if (doCallback)
@@ -659,4 +656,10 @@ void PDUPeerFileDescriptorEndpoint::callbackThreadRun()
         }
         event.reset();
     }
+}
+
+void PDUPeerFileDescriptorEndpoint::setSendState(const SendState& state)
+{
+    AutoUnlockMutex lock(mSendStateMutex);
+    mSendState = state;
 }

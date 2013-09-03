@@ -237,10 +237,6 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest, SetFDTriggersConnectedCallback)
 
     EXPECT_EQ(1, mConnectedEventCount);
 
-
-
-    EXPECT_EQ(1, mConnectedEventCount);
-
     e1->Shutdown();
 
     monitor->Shutdown();

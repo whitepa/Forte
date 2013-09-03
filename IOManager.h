@@ -123,7 +123,16 @@ namespace Forte
                 {
                     hlog(HLOG_DEBUG4, "received IO completion for request %lu",
                          reinterpret_cast<long>(events[i].obj->data));
-                    HandleCompletionEvent(&events[i]);
+                    try
+                    {
+                        HandleCompletionEvent(&events[i]);
+                    }
+                    catch (const std::exception& e)
+                    {
+                        hlogstream(HLOG_ERR,
+                                   "unhandled exception in io manager "
+                                   "completion callback: " << e.what());
+                    }
                 }
             }
             return NULL;

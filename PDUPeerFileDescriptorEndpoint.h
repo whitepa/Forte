@@ -74,6 +74,14 @@ namespace Forte
         boost::shared_ptr<EPollMonitor> mEPollMonitor;
 
         int mSendTimeoutSeconds;
+        mutable Forte::Mutex mSendStateMutex;
+        enum SendState {
+            SendStateDisconnected,
+            SendStateConnected,
+            SendStatePDUReady,
+            SendStateBufferAvailable
+        };
+        SendState mSendState;
         size_t mRecvBufferMaxSize;
         size_t mRecvBufferStepSize;
 
@@ -96,6 +104,7 @@ namespace Forte
         mutable Forte::Mutex mConnectMutex;
 
     private:
+        void setSendState(const SendState& state);
         void closeFileDescriptor();
         mutable Forte::Mutex mFDMutex;
         AutoFD mFD;
