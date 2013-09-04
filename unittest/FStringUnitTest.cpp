@@ -315,6 +315,17 @@ TEST_F(FStringTest, ImplodeExplodeBinaryFStringTest)
     }
 }
 
+TEST_F(FStringTest, ImplodeToNull)
+{
+    std::vector<FString> components;
+
+    components.push_back("a");
+    components.push_back("b");
+    components.push_back("c");
+    ASSERT_STREQ( FString().Implode("-", components), "a-b-c" );
+
+}
+
 TEST_F(FStringTest, TokenizeFStringTest)
 {
     FString s, d;

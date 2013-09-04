@@ -355,6 +355,7 @@ namespace Forte
             }
 
         bool RegexMatch(const char *exp, std::vector<FString> &matching_strings) const;
+        bool RegexMatch(const char *exp) { std::vector<FString> m; return RegexMatch(exp, m); }
 
         /// Split a multi-line string into single line components.  Line endings are
         /// automatically detected.  If trim is true, external whitespace will be trimmed
