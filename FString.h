@@ -126,6 +126,11 @@ namespace Forte
         FString(unsigned long long i) { Format("%llu", i); }
 
         /**
+         *Constructs an FString from an int64_t
+         **/
+        FString(int64_t i) { Format("%lld", static_cast<long long>(i)); }
+
+        /**
          *Constructs an FString of items in the vector delimited by a comma after each item.
          **/
         FString(const std::vector<unsigned int> &intvec);

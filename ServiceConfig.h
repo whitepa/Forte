@@ -3,6 +3,7 @@
 
 #include "Types.h"
 #include "AutoMutex.h"
+#include "LogManager.h"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/info_parser.hpp>
 #include <boost/property_tree/ini_parser.hpp>

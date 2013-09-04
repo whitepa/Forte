@@ -24,6 +24,13 @@ protected:
 
 };
 
+TEST_F(FStringTest, ConstructFromInt64_t)
+{
+    int64_t i(1232131231232);
+    FString s(i);
+    ASSERT_EQ(s, "1232131231232");
+}
+
 TEST_F(FStringTest, FStringStripNonMatchingCharsTest)
 {
     FString s, d;
