@@ -99,14 +99,12 @@ TEST_F (ContextPredicateTest, s_test1)
     // test predicate function
     Forte::ContextPredicatePtr cp7 = make_shared<ContextPredicate>(
             Forte::ContextPredicate::PREDICATE_FUNCTION_SET,
-                                boost::make_shared<Forte::ContextPredicateFunction>(
-                                    ContextPredicateTest::PredicateFunctionSet));
+            boost::bind(&ContextPredicateTest::PredicateFunctionSet, _1));
     EXPECT_TRUE( cp7->Evaluate(c1) );
 
     Forte::ContextPredicatePtr cp8 = make_shared<ContextPredicate>(
             Forte::ContextPredicate::PREDICATE_FUNCTION_CLEAR,
-                                boost::make_shared<Forte::ContextPredicateFunction>(
-                                    ContextPredicateTest::PredicateFunctionClear));
+            boost::bind(&ContextPredicateTest::PredicateFunctionClear, _1));
     EXPECT_TRUE( cp8->Evaluate(c1) );
 
     // test AND
