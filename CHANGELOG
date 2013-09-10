@@ -28,4 +28,4 @@ FORTE CHANGELOG
 1.0.4
   Retry NULL MySQL results up to 3 times
   Added CFunctorCallback
-  Disallow copy construction of CDbAutoConnection (prevents nasty bugs) 
+  Disallow copy construction of CDbAutoConnection (prevents nasty bugs)

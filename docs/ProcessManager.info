@@ -61,7 +61,7 @@ between the main process and the management process.  This socket
 allows commands, error codes, and/or I/O to travel back and forth.
 
 All Process objects must contain the following data, to allow it to be
-referenced by the forked management process: 
+referenced by the forked management process:
 - Origin Process Name
 - Origin PID
 - Command Line to run

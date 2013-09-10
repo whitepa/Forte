@@ -1,7 +1,7 @@
 /////////////////////////TODO:///////////////////////////////
 // enable to achieve code compatability between DEBUG and RELEASE versions
 // of the codebase, we want to move away from these sorts of #ifdef
-// usages. we need to eventually make an AutoDebugMutex that logs, etc, 
+// usages. we need to eventually make an AutoDebugMutex that logs, etc,
 // doesn't slow down performance on Mutex and has the above mentioned
 // code compatability. no time to do it now though, but we are going
 // to go ahead and make the Mutex compatible
