@@ -84,6 +84,18 @@ namespace Forte
          */
         virtual void Erase(const char *key);
 
+        /*
+         * Copies a tree starting at the given key
+         * to another tree starting at the given second key
+         *
+         * @throws EServiceConfig on any error.
+         *
+         * @param origKey
+         * @param targetKey
+         */
+        virtual void CopyTree(const Forte::FString &origKey,
+                              const Forte::FString &targetKey);
+
         virtual FString Get(const char *key) const;
         virtual int GetInteger(const char *key) const;
 

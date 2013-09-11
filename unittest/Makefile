@@ -85,6 +85,7 @@ GSRCS = AutoMutexUnitTest.cpp \
 	ProcFileSystemUnitTest.cpp \
 	RWLockUnitTest.cpp \
 	SCSIUtilUnitTest.cpp \
+	ServiceConfigUnitTest.cpp \
 	StateMachineDoIntervalUnitTest.cpp \
 	StateMachineDoMaximumIterationsUnitTest.cpp \
 	StateMachineEventDeliveryUnitTest.cpp \
@@ -206,7 +207,7 @@ PROG_DEPS_OBJS_PidFileUnitTest =  ../$(TARGETDIR)/PidFile.o
 
 PROG_DEPS_OBJS_XMLUnitTest =
 
-PROG_DEPS_OBJS_EnableStatsUnitTest =  
+PROG_DEPS_OBJS_EnableStatsUnitTest =
 
 PROG_DEPS_OBJS_CumulativeMovingAverageUnitTest =
 

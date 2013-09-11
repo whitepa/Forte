@@ -13,6 +13,7 @@ namespace Forte
         MOCK_METHOD2(Set, void (const char*, const char *));
         MOCK_METHOD2(Add, void (const char*, const char*));
         MOCK_METHOD1(Erase, void(const char*));
+        MOCK_METHOD2(CopyTree, void (const FString&, const FString&));
         MOCK_CONST_METHOD1(Get, FString(const char*));
         MOCK_CONST_METHOD1(GetInteger, int(const char*));
         MOCK_METHOD0(Clear, void(void));

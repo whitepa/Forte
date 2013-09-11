@@ -54,6 +54,31 @@ void ServiceConfig::Clear()
     mPTree = boost::property_tree::ptree();
 }
 
+void ServiceConfig::CopyTree(const FString &origKey, const FString &targetKey)
+{
+    FTRACE2("%s -> %s", origKey.c_str(), targetKey.c_str());
+
+    FStringVector keyVector;
+    GetVectorKeys(origKey.c_str(), keyVector);
+    foreach (const FString &key, keyVector)
+    {
+        FString innerOrigKey = origKey + "." + key;
+        FString innerTargetKey = targetKey + "." + key;
+
+        // If no value can be found for the innerKey,
+        // assume that the innerKey is actually another tree
+        try
+        {
+            FString value = Get<FString>(innerOrigKey);
+            Set(innerTargetKey, value);
+        }
+        catch (std::exception &e)
+        {
+            CopyTree(innerOrigKey, innerTargetKey);
+        }
+    }
+}
+
 void ServiceConfig::Erase(const char *key)
 {
     AutoUnlockMutex lock(mMutex);
