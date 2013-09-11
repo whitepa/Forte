@@ -107,6 +107,7 @@ SRCS =	\
 	ServiceConfig.cpp \
 	SocketUtil.cpp \
 	SSHRunner.cpp \
+	SSHRunnerFactory.cpp \
 	State.cpp \
 	StateHistoryLogger.cpp \
 	StateMachine.cpp \
@@ -210,6 +211,7 @@ HEADERS = \
 	ServerMain.h \
 	ServiceConfig.h \
 	SSHRunner.h \
+	SSHRunnerFactory.h \
 	Thread.h \
 	ThreadKey.h \
 	Types.h \
