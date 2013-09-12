@@ -42,7 +42,6 @@ namespace Forte
     protected:
         void init();
         DbConnectionPool() {};
-        static Mutex sSingletonMutex;
 
         FString mDbType;
         FString mDbName;
