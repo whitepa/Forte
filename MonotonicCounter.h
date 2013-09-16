@@ -10,20 +10,40 @@ namespace Forte
     class MonotonicCounter : public Object
     {
     public:
-        MonotonicCounter(uint32_t start=1)
-            : mCount(start)
-            {}
+        typedef uint32_t Int;
+
+        MonotonicCounter(Int prev = 0) : mCount(prev) {}
 
         ~MonotonicCounter() {}
 
-        uint32_t Next() {
+        operator Int() const
+        {
             AutoUnlockMutex lock(mMutex);
-            mCount++;
-            return mCount - 1;
+
+            return mCount;
         }
-    protected:
-        Forte::Mutex mMutex;
-        uint32_t mCount;
+
+        Int operator++()
+        {
+            AutoUnlockMutex lock(mMutex);
+
+            return ++mCount;
+        }
+
+        Int operator++(int)
+        {
+            AutoUnlockMutex lock(mMutex);
+
+            return mCount++;
+        }
+
+        Int Next()
+        {
+            return ++*this;
+        }
+    private:
+        mutable Forte::Mutex mMutex;
+        Int mCount;
     };
     typedef boost::shared_ptr<MonotonicCounter> MonotonicCounterPtr;
 };
