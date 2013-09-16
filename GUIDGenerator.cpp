@@ -77,3 +77,10 @@ void Forte::GUIDGenerator::ToString(
     }
     out = s.str();
 }
+void Forte::GUIDGenerator::ToBinary(std::vector<uint8_t> &out, const std::string &in)
+{
+    boost::uuids::string_generator gen;
+    boost::uuids::uuid u = gen(in);
+    out.resize(u.size());
+    std::copy(u.begin(), u.end(), out.begin());
+}

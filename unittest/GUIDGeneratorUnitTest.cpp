@@ -93,6 +93,19 @@ TEST_F(GUIDGeneratorUnitTest, CanConvertGUIDOfUint8_tArrayToString)
     ASSERT_EQ("00010203-0405-0607-0809-0a0b0c0d0e0f",
               converted);
 }
+TEST_F(GUIDGeneratorUnitTest, CanConvertGUIDOfStringToUint8_tArray)
+{
+    FTRACE;
+
+    GUIDGenerator gg;
+    FString str = "00010203-0405-0607-0809-0a0b0c0d0e0f";
+    std::vector<uint8_t> v;
+    gg.ToBinary(v, str);
+    for (int i = 0; i < 16; ++i)
+    {
+        ASSERT_EQ(i, v[i]);
+    }
+}
 
 TEST_F(GUIDGeneratorUnitTest, CanGenerate1MillionGUIDs)
 {

@@ -22,9 +22,12 @@ namespace Forte
         virtual FString & GenerateGUID(FString &out);
         virtual void GenerateGUID(uint8_t out[]);
         virtual void GenerateGUID(std::vector<uint8_t> &out);
-        virtual void ToString(std::string& out,
+
+        static void ToString(std::string& out,
                               const std::vector<uint8_t>& existing);
-        virtual void ToString(std::string& out, const uint8_t existing[]);
+        static void ToString(std::string& out, const uint8_t existing[]);
+
+        static void ToBinary(std::vector<uint8_t> &out, const std::string &in);
 
     private:
         Mutex mLock;
