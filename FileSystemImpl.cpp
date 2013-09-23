@@ -484,7 +484,7 @@ void FileSystemImpl::MakeDir(const FString& path, mode_t mode, bool make_parents
 {
     hlog(HLOG_DEBUG4, "FileSystemImpl::%s(%s, %04o, %s)", __FUNCTION__,
          path.c_str(), mode, (make_parents ? "true" : "false"));
-    FString stmp, parent;
+    FString stmp;
     struct stat st;
     int err;
 
@@ -516,8 +516,11 @@ void FileSystemImpl::MakeDir(const FString& path, mode_t mode, bool make_parents
         // create parent?
         if (make_parents)
         {
-            parent = path.Left(path.find_last_of('/'));
-            MakeDir(parent, mode, true);
+            size_t pos = path.find_last_of('/');
+            if (pos != std::string::npos)
+            {
+                MakeDir(path.Left(pos), mode, true);
+            }
         }
 
         // make path
