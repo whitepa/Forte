@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include "Exception.h"
+#include "Clock.h"
 
 namespace Forte
 {
@@ -53,6 +54,14 @@ namespace Forte
 
     //works for not sockets too
     void setSocketNonBlocking(int fd);
+    void setSocketNonBlockingSaveOldFlags(int fd, int &oldFlags);
+    void restoreSocketFlags(int fd, int flags);
+
+    void connectNonBlocking(
+        int fd,
+        const struct sockaddr *addr,
+        socklen_t addrlen,
+        const Forte::Timespec &timeout);
 
     int getTCPSendBufferSize(int fd);
     void setTCPSendBufferSize(int fd, int tcpBufferSize);

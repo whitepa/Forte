@@ -190,3 +190,58 @@ TEST_F(SocketUtilOnBoxTest, connectCanConnectToAcceptor)
 
     EXPECT_LE(c.GetTime().AsSeconds(), 1);*/
 }
+
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+TEST_F(SocketUtilOnBoxTest, NonBlockingConnectCanTimeout)
+{
+    // don't start the listener
+
+    struct sockaddr_in address;
+    SocketAddress sa("1.2.0.1", 21472); // some invalid address
+    AutoFD sock(createInetStreamSocket());
+
+    memset(&address, 0, sizeof(struct sockaddr_in));
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = inet_addr(sa.first.c_str());
+    address.sin_port = htons(sa.second);
+
+    EXPECT_THROW(
+        connectNonBlocking(
+            sock,
+            reinterpret_cast<struct sockaddr *>(&address),
+            sizeof(struct sockaddr_in),
+            Forte::Timespec::FromMillisec(500)),
+        ECouldNotConnect);
+}
+
+TEST_F(SocketUtilOnBoxTest, NonBlockingConnect)
+{
+    Forte::FunctionThread t(
+        Forte::FunctionThread::AutoInit(),
+        boost::bind(&SocketUtilOnBoxTest::listenAndExitThreadRun, this),
+        "blking-acpt-thr");
+
+    {
+        AutoUnlockMutex lock(mListeningMutex);
+        while (!mListening)
+        {
+            mListeningCondition.Wait();
+        }
+    }
+
+    struct sockaddr_in address;
+    SocketAddress sa("127.0.0.1", 21472); // some invalid address
+    AutoFD sock(createInetStreamSocket());
+
+    memset(&address, 0, sizeof(struct sockaddr_in));
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = inet_addr(sa.first.c_str());
+    address.sin_port = htons(sa.second);
+
+    EXPECT_NO_THROW(
+        connectNonBlocking(
+            sock,
+            reinterpret_cast<struct sockaddr *>(&address),
+            sizeof(struct sockaddr_in),
+            Forte::Timespec::FromMillisec(500)));
+}

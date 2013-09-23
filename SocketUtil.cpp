@@ -1,8 +1,10 @@
 #include "SocketUtil.h"
 #include "AutoFD.h"
 #include "FTrace.h"
+#include "AutoDoUndo.h"
 #include <netinet/tcp.h>
 #include <fcntl.h>
+#include <boost/bind.hpp>
 //TODO: this is lifted from linux/tcp.h. if i include linux/tcp.h, i
 //#include <linux/tcp.h>
 //get these errors:
@@ -212,6 +214,104 @@ void Forte::setSocketNonBlocking(int fd)
     if (s == -1)
     {
         throw EFcntlFailed(SystemCallUtil::GetErrorDescription(errno));
+    }
+}
+
+void Forte::setSocketNonBlockingSaveOldFlags(int fd, int &oldFlags)
+{
+    int flags, s;
+    flags = fcntl(fd, F_GETFL, 0);
+    if (flags == -1)
+    {
+        throw EFcntlFailed(SystemCallUtil::GetErrorDescription(errno));
+    }
+    oldFlags = flags;
+
+    flags |= O_NONBLOCK;
+    s = fcntl(fd, F_SETFL, flags);
+    if (s == -1)
+    {
+        throw EFcntlFailed(SystemCallUtil::GetErrorDescription(errno));
+    }
+}
+
+void Forte::restoreSocketFlags(int fd, int flags)
+{
+    if (fcntl(fd, F_SETFL, flags) < 0)
+    {
+        throw EFcntlFailed(SystemCallUtil::GetErrorDescription(errno));
+    }
+}
+
+void Forte::connectNonBlocking(
+    int fd,
+    const struct sockaddr *addr,
+    socklen_t addrlen,
+    const Forte::Timespec &timeout)
+{
+    int error = 0, ret = 0;
+    fd_set rset, wset;
+    socklen_t len = sizeof(error);
+    struct timeval  ts;
+
+    ts.tv_sec = timeout.AsSeconds();
+    ts.tv_usec = (timeout.GetNanosecs() / 1000);
+
+    FD_ZERO(&rset);
+    FD_SET(fd, &rset);
+    wset = rset;
+
+    int oldSocketFlags;
+    setSocketNonBlockingSaveOldFlags(fd, oldSocketFlags);
+    Forte::AutoDoUndo autoRestoreFlags(
+        boost::bind(&Forte::restoreSocketFlags,
+                    fd, oldSocketFlags));
+
+    //initiate non-blocking connect
+    if((ret = connect(fd, addr, addrlen)) < 0)
+    {
+        if (errno != EINPROGRESS)
+        {
+            throw ECouldNotConnect(FStringFC(), "Connect on socket is not in "
+                                 "progress after connect call - %i - %s",
+                                 errno,
+                                 SystemCallUtil::GetErrorDescription(errno).c_str());
+        }
+    }
+
+    if(ret == 0) //then connect succeeded right away
+    {
+        return;
+    }
+
+    //we are waiting for connect to complete now
+    if((ret = select(fd + 1, &rset, &wset, NULL,
+                     (!timeout.IsZero()) ? &ts : NULL)) < 0)
+    {
+        throw ECouldNotConnect("select call failed during connect");
+    }
+
+    if(ret == 0)
+    {
+        throw ECouldNotConnect("Timed out during connect call");
+    }
+
+    //we had a positive return so a descriptor is ready
+    if (FD_ISSET(fd, &rset) || FD_ISSET(fd, &wset))
+    {
+        if(getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, &len) < 0)
+        {
+            throw ECouldNotConnect("Error during getsockopt call");
+        }
+
+        if(error)
+        {  //check if we had a socket error
+            throw ECouldNotConnect("Got a socket error");
+        }
+    }
+    else
+    {
+        throw ECouldNotConnect("Timed out during connect call");
     }
 }
 

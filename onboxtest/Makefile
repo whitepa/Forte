@@ -37,8 +37,8 @@ PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
 	$(TARGETDIR)/ProcessManagerOnBoxTest \
 	$(TARGETDIR)/RunLoopUnitTest \
 	$(TARGETDIR)/ServerMainOnboxTest \
-	$(TARGETDIR)/SocketUtilOnBoxTest \
 	$(TARGETDIR)/StateMachineOnBoxTest3 \
+	$(TARGETDIR)/SocketUtilOnBoxTest \
 
 # flaky or broken
 #	$(TARGETDIR)/SCSIUtilUnitTest \
@@ -62,6 +62,9 @@ PROG_DEPS_OBJS_PDUPeerSetImplOnBoxTest = \
 	../$(TARGETDIR)/OnDemandDispatcher.o \
 	../$(TARGETDIR)/ReceiverThread.o \
 
+PROG_DEPS_OBJS_SocketUtilOnBoxTest = \
+	../$(TARGETDIR)/SocketUtil.o \
+
 PROG_DEPS_OBJS_PDUPeerSetBuilderImplOnBoxTest = \
 	../$(TARGETDIR)/PDU.o \
 	../$(TARGETDIR)/PDUPeerSetBuilderImpl.o \
@@ -76,7 +79,6 @@ PROG_DEPS_OBJS_PDUPeerSetBuilderImplOnBoxTest = \
 	../$(TARGETDIR)/ThreadPoolDispatcher.o \
 	../$(TARGETDIR)/OnDemandDispatcher.o \
 	../$(TARGETDIR)/ReceiverThread.o \
-
 
 ###  RULES  ###
 all: $(GTEST) $(PROGS)
