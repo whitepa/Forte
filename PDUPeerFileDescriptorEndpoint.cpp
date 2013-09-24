@@ -286,7 +286,14 @@ void PDUPeerFileDescriptorEndpoint::sendThreadRun()
             }
             else
             {
-                hlog(HLOG_ERR, "unexpected err from recv: %d", errno);
+                if (errno != ECONNRESET)
+                {
+                    hlog(HLOG_ERR, "unexpected err from send: %d", errno);
+                }
+                else
+                {
+                    hlog(HLOG_INFO, "lost connection to peer: %d", errno);
+                }
                 ++mPDUSendErrors;
 
                 PDUPeerEventPtr event(new PDUPeerEvent());
