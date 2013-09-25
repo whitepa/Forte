@@ -16,7 +16,7 @@
 #include "LogManager.h"
 #include "SystemCallUtil.h"
 
-#pragma GCC diagnostic warning "-Wold-style-cast"
+#pragma GCC diagnostic ignored "-Wold-style-cast"
 
 int Forte::createSocket(int domain, int type, int protocol)
 {
