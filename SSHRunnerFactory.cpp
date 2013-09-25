@@ -4,21 +4,21 @@
 #include "SSHRunnerFactory.h"
 using namespace Forte;
 
-SSHRunnerPtr SSHRunnerFactory::Create(const FString &SSHUsername,
-                                      const FString &SSHPassword,
+SSHRunnerPtr SSHRunnerFactory::Create(const FString &sshUsername,
+                                      const FString &sshPassword,
                                       const FString &IP,
-                                      int SSHPort,
+                                      int sshPort,
                                       unsigned int timeout)
 {
-    return Create(SSHUsername, SSHPassword, "", "", IP, SSHPort, timeout);
+    return Create(sshUsername, sshPassword, "", "", IP, sshPort, timeout);
 }
 
-SSHRunnerPtr SSHRunnerFactory::Create(const FString &SSHUsername,
-                                      const FString &SSHPassword,
-                                      const FString &SSHPublicKeyFile,
-                                      const FString &SSHPrivateKeyFile,
+SSHRunnerPtr SSHRunnerFactory::Create(const FString &sshUsername,
+                                      const FString &sshPassword,
+                                      const FString &sshPublicKeyFile,
+                                      const FString &sshPrivateKeyFile,
                                       const FString &IP,
-                                      int SSHPort,
+                                      int sshPort,
                                       unsigned int timeout)
 {
     FTRACE;
@@ -33,21 +33,21 @@ SSHRunnerPtr SSHRunnerFactory::Create(const FString &SSHUsername,
         try
         {
             SSHRunnerPtr sshRunner;
-            if (SSHPublicKeyFile != "")
+            if (sshPublicKeyFile != "")
             {
-                sshRunner=SSHRunnerPtr(new SSHRunner(SSHUsername,
-                                                     SSHPublicKeyFile,
-                                                     SSHPrivateKeyFile,
-                                                     SSHPassword,
+                sshRunner=SSHRunnerPtr(new SSHRunner(sshUsername,
+                                                     sshPublicKeyFile,
+                                                     sshPrivateKeyFile,
+                                                     sshPassword,
                                                      IP,
-                                                     SSHPort));
+                                                     sshPort));
             }
             else
             {
-                sshRunner=SSHRunnerPtr(new SSHRunner(SSHUsername,
-                                                     SSHPassword,
+                sshRunner=SSHRunnerPtr(new SSHRunner(sshUsername,
+                                                     sshPassword,
                                                      IP,
-                                                     SSHPort));
+                                                     sshPort));
             }
 
             hlog(HLOG_DEBUG2, "Host %s is up", IP.c_str());

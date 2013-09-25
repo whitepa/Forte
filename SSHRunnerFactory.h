@@ -12,18 +12,18 @@ namespace Forte
             SSHRunnerFactory() { FTRACE; }
             ~SSHRunnerFactory() { FTRACE; }
 
-            SSHRunnerPtr Create(const FString &SSHUsername,
-                                const FString &SSHPassword,
+            SSHRunnerPtr Create(const FString &sshUsername,
+                                const FString &sshPassword,
                                 const FString &IP,
-                                int SSHPort,
+                                int sshPort,
                                 unsigned int timeout);
 
-            SSHRunnerPtr Create(const FString &SSHUsername,
-                                const FString &SSHPassword,
-                                const FString &SSHPublicKeyFile,
-                                const FString &SSHPrivateKeyFile,
+            SSHRunnerPtr Create(const FString &sshUsername,
+                                const FString &sshPassword,
+                                const FString &sshPublicKeyFile,
+                                const FString &sshPrivateKeyFile,
                                 const FString &IP,
-                                int SSHPort,
+                                int sshPort,
                                 unsigned int timeout);
     };
 };
