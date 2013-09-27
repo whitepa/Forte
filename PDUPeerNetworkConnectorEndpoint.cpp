@@ -42,6 +42,7 @@ void Forte::PDUPeerNetworkConnectorEndpoint::connect()
         }
 
         setTCPKeepAlive(sock);
+        setTCPUserTimeout(sock);
         SetFD(sock.Release());
 
         hlog(HLOG_DEBUG, "established connection to %s:%d",

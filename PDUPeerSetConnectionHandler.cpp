@@ -56,6 +56,8 @@ void PDUPeerSetConnectionHandler::Handler(Forte::Event* e)
         hlogstream(HLOG_DEBUG2, "received connect from peer " << id);
         Forte::setTCPNoDelay(event->mFD);
         Forte::setTCPQuickAck(event->mFD);
+        Forte::setTCPKeepAlive(event->mFD);
+        Forte::setTCPUserTimeout(event->mFD);
         mPDUPeerSet->PeerAddFD(id, event->mFD);
     }
 }

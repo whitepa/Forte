@@ -44,10 +44,11 @@ namespace Forte
     void setTCPKeepAlive(int fd,
                          const int soKeepAliveEnabled=1,
                          const int tcpKeepAliveCount=4,
-                         const int tcpKeepAliveIntervalSeconds = 10);
+                         const int tcpKeepAliveIntervalSeconds = 10,
+                         const int tcpKeepAliveIdleSeconds = 1);
 
-    void setUserTimeout(int fd,
-                        const int tcpUserTimeoutInMillisec=30*1000);
+    void setTCPUserTimeout(int fd,
+                           const int tcpUserTimeoutInMillisec=30*1000);
 
     void setReuseAddr(int fd,
                       const int soResuseAddr=1);

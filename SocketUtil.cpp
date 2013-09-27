@@ -110,7 +110,8 @@ void Forte::connectToAddress(int fd, const Forte::SocketAddress& connectToAddres
 void Forte::setTCPKeepAlive(int fd,
                             const int soKeepAliveEnabled,
                             const int tcpKeepAliveCount,
-                            const int tcpKeepAliveIntervalSeconds)
+                            const int tcpKeepAliveIntervalSeconds,
+                            const int tcpKeepAliveIdleSeconds)
 {
 
     if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE,
@@ -156,27 +157,43 @@ void Forte::setTCPKeepAlive(int fd,
             hlog(HLOG_DEBUG2, "Set TCP_KEEPINTVL for socket to (%d)",
                  tcpKeepAliveIntervalSeconds);
         }
+
+        if (setsockopt(
+                fd, SOL_TCP, TCP_KEEPIDLE,
+                &tcpKeepAliveIdleSeconds,
+                sizeof(tcpKeepAliveIdleSeconds)) < 0)
+        {
+            hlog(HLOG_WARN,
+                 "Unable to turn on TCP_KEEPIDLE for socket %d, %d:%s",
+                 fd, errno,
+                 SystemCallUtil::GetErrorDescription(errno).c_str());
+        }
+        else
+        {
+            hlog(HLOG_DEBUG2, "Set TCP_KEEPIDLE for socket to (%d)",
+                 tcpKeepAliveIdleSeconds);
+        }
+
     }
 }
 
-// This fails the onbox test and does not seem to work.
-// void Forte::setUserTimeout(int fd, const int tcpUserTimeoutInMillisec)
-// {
-//     if (setsockopt(
-//             fd, SOL_TCP, TCP_USER_TIMEOUT,
-//             &tcpUserTimeoutInMillisec,
-//             sizeof(tcpUserTimeoutInMillisec)) < 0)
-//     {
-//         hlog(HLOG_WARN,
-//              "Unable to set on TCP_USER_TIMEOUT for socket, %s",
-//              SystemCallUtil::GetErrorDescription(errno).c_str());
-//     }
-//     else
-//     {
-//         hlog(HLOG_DEBUG2, "Set TCP_USER_TIMEOUT for socket to (%d)",
-//              tcpUserTimeoutInMillisec);
-//     }
-// }
+void Forte::setTCPUserTimeout(int fd, const int tcpUserTimeoutInMillisec)
+{
+    if (setsockopt(
+            fd, SOL_TCP, TCP_USER_TIMEOUT,
+            &tcpUserTimeoutInMillisec,
+            sizeof(tcpUserTimeoutInMillisec)) < 0)
+    {
+        hlog(HLOG_WARN,
+             "Unable to set on TCP_USER_TIMEOUT for socket, %s",
+             SystemCallUtil::GetErrorDescription(errno).c_str());
+    }
+    else
+    {
+        hlog(HLOG_DEBUG2, "Set TCP_USER_TIMEOUT for socket to (%d)",
+             tcpUserTimeoutInMillisec);
+    }
+}
 
 void Forte::setReuseAddr(int fd, const int soResuseAddr)
 {
