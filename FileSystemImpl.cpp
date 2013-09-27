@@ -272,7 +272,7 @@ void FileSystemImpl::GetChildren(const FString& path,
                 }
                 else
                 {
-                    hlog(HLOG_DEBUG, "Skipping %s (not recursing)",
+                    hlog(HLOG_DEBUG2, "Skipping %s (not recursing)",
                          stmp.c_str());
                 }
 
