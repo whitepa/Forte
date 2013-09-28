@@ -23,7 +23,7 @@ SSHRunnerPtr SSHRunnerFactory::Create(const FString &sshUsername,
 {
     FTRACE;
 
-    hlog(HLOG_INFO, "Waiting on Host %s for %d seconds", IP.c_str(), timeout);
+    hlog(HLOG_DEBUG2, "Waiting on Host %s for %d seconds", IP.c_str(), timeout);
 
     DeadlineClock deadline;
     deadline.ExpiresInSeconds(timeout);
