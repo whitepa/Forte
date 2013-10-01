@@ -110,6 +110,19 @@ namespace Forte
         virtual boost::shared_ptr<PDUPeer> PeerCreate(int fd) = 0;
 
         /**
+         * PeerAdd will take an externally created peer and add it to
+         * the list of peers in this peer set. Start() should not be
+         * called on the peer, if this PeerSet is running, it will
+         * start the peer, if it is not running, it will not start the
+         * peer.
+         *
+         * @param the peer to add
+         *
+         * @return
+         */
+        virtual void PeerAdd(const boost::shared_ptr<PDUPeer>& p) = 0;
+
+        /**
          * PeerEndpointAdd will create an fd to the endpoint object
          * owned by the given PDUPeer
          *

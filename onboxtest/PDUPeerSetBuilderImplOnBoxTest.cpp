@@ -139,6 +139,7 @@ public:
     void ClearPDUReceivedList() {
         AutoUnlockMutex lock(mEventMutex);
         mReceivedPDUList.clear();
+        mReceivePDUCount = 0;
     }
 
     Forte::Mutex mEventMutex;
@@ -153,9 +154,6 @@ public:
     PDUPeerSetBuilderPtr mPeerSet;
     uint64_t mPeerID;
     Forte::Mutex mEventCallbackMutex;
-    int mCallbackCount;
-    int mConnectEventCount;
-    int mDisconnectEventCount;
 
     SocketAddressVector mPeerAddresses;
     SocketAddress mListenAddress;
@@ -718,6 +716,91 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest, AllPeersReceiveABroadcastPDUFromLast)
     }
 
     PDUPtr expected = makePDUPtr();
+    foreach(const TestPeerPtr& peer, mTestPeers)
+    {
+        ASSERT_EQ(1, peer->GetReceivedCount());
+        ASSERT_EQ(1, peer->mReceivedPDUList.size());
+        expectEqual(expected, peer->mReceivedPDUList.front());
+    }
+}
+
+TEST_F(PDUPeerSetBuilderImplOnBoxTest, AllPeersReceiveABroadcastPDUFromAdded)
+{
+    FTRACE;
+    setupThreePeers();
+    waitForAllConnected();
+
+    // have to set up the new peer on the existing nodes first
+    SocketAddress newPeerAdddress(make_pair("127.0.0.1", 13003));
+    foreach(const TestPeerPtr& peer, mTestPeers)
+    {
+        peer->mPeerSet->PeerCreate(newPeerAdddress);
+    }
+
+    // set up new peer
+    mTestPeers.resize(4);
+    setupPeer(3,4);
+    waitForAllConnected();
+    ASSERT_EQ(4, mTestPeers[0]->mPeerSet->GetConnectedCount());
+    ASSERT_EQ(4, mTestPeers[1]->mPeerSet->GetConnectedCount());
+    ASSERT_EQ(4, mTestPeers[2]->mPeerSet->GetConnectedCount());
+    ASSERT_EQ(4, mTestPeers[3]->mPeerSet->GetConnectedCount());
+
+    PDUPtr pdu = makePDUPtr();
+    PDUPtr expected = makePDUPtr();
+
+    //broadcast from second, should receive on new
+    mTestPeers[2]->mPeerSet->BroadcastAsync(pdu);
+    DeadlineClock deadline;
+    deadline.ExpiresInSeconds(10);
+    while (!deadline.Expired())
+    {
+        bool callbacksDone(true);
+        foreach(const TestPeerPtr& peer, mTestPeers)
+        {
+            if (peer->GetReceivedCount() == 0)
+            {
+                callbacksDone = false;
+            }
+        }
+
+        if (callbacksDone)
+            break;
+
+        usleep(10000);
+    }
+    foreach(const TestPeerPtr& peer, mTestPeers)
+    {
+        ASSERT_EQ(1, peer->GetReceivedCount());
+        ASSERT_EQ(1, peer->mReceivedPDUList.size());
+        expectEqual(expected, peer->mReceivedPDUList.front());
+    }
+    ASSERT_EQ(4, mTestPeers.size());
+
+    foreach(const TestPeerPtr& peer, mTestPeers)
+    {
+        peer->ClearPDUReceivedList();
+    }
+
+    //broadcast from new, should receive on all
+    mTestPeers[3]->mPeerSet->BroadcastAsync(pdu);
+    deadline.ExpiresInSeconds(10);
+    while (!deadline.Expired())
+    {
+        bool callbacksDone(true);
+        foreach(const TestPeerPtr& peer, mTestPeers)
+        {
+            if (peer->GetReceivedCount() == 0)
+            {
+                callbacksDone = false;
+            }
+        }
+
+        if (callbacksDone)
+            break;
+
+        usleep(10000);
+    }
     foreach(const TestPeerPtr& peer, mTestPeers)
     {
         ASSERT_EQ(1, peer->GetReceivedCount());

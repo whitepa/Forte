@@ -8,6 +8,7 @@
 #include "PDUPeerEndpointFactoryImpl.h"
 
 using namespace boost;
+using namespace Forte;
 
 Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
     const SocketAddress& listenAddress,
@@ -21,7 +22,9 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
     PDUPeerQueueType queueType)
     : mListenAddress(listenAddress),
       mID(SocketAddressToID(listenAddress)),
-      mPeerSocketAddresses(peers),
+      mPDUPeerSendTimeout(pduPeerSendTimeout),
+      mQueueSize(queueSize),
+      mQueueType(queueType),
       mEPollMonitor(new EPollMonitor("peerset-epl")),
       mPDUPeerEndpointFactory(new PDUPeerEndpointFactoryImpl(mEPollMonitor))
 {
@@ -30,27 +33,18 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
     hlogstream(HLOG_INFO, "My pdu peer id is " << mID
          << " based on " << listenAddress.first << ":" << listenAddress.second);
 
-    sort(mPeerSocketAddresses.begin(), mPeerSocketAddresses.end());
     std::vector<PDUPeerPtr> pduPeers;
 
-    foreach(const SocketAddress& a, mPeerSocketAddresses)
+    foreach(const SocketAddress& sa, peers)
     {
         //TODO? this might belong in the factory
-        if (listenAddress == a
+        if (listenAddress == sa
             && !createInProcessPDUPeer)
         {
             continue;
         }
-        boost::shared_ptr<PDUQueue> pduQueue(
-            new Forte::PDUQueue(pduPeerSendTimeout, queueSize, queueType));
 
-        PDUPeerPtr p(
-            new PDUPeerImpl(
-                SocketAddressToID(a),
-                mPDUPeerEndpointFactory->Create(pduQueue, listenAddress, a, mID),
-                pduQueue));
-
-        pduPeers.push_back(p);
+        pduPeers.push_back(peerFromSocketAddress(sa));
     }
 
     // begin setup PeerSet
@@ -83,6 +77,9 @@ Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl(
 
 Forte::PDUPeerSetBuilderImpl::PDUPeerSetBuilderImpl()
     : mID(0),
+      mPDUPeerSendTimeout(30),
+      mQueueSize(1023),
+      mQueueType(PDU_PEER_QUEUE_THROW),
       mEPollMonitor(new EPollMonitor("peerset"))
 {
     std::vector<PDUPeerPtr> emptyPeerVector;
@@ -187,4 +184,26 @@ std::string Forte::PDUPeerSetBuilderImpl::IDToSocketAddress(
         throw EPDUPeerSetBuilderCouldNotCreateID(
             SystemCallUtil::GetErrorDescription(errno));
     }
+}
+
+boost::shared_ptr<Forte::PDUPeer> Forte::PDUPeerSetBuilderImpl::PeerCreate(
+    const Forte::SocketAddress& address)
+{
+    boost::shared_ptr<Forte::PDUPeer> p(peerFromSocketAddress(address));
+    mPDUPeerSet->PeerAdd(p);
+    return p;
+}
+
+boost::shared_ptr<Forte::PDUPeer> PDUPeerSetBuilderImpl::peerFromSocketAddress(
+    const Forte::SocketAddress& peerAddress)
+{
+    boost::shared_ptr<PDUQueue> pduQueue(
+        new Forte::PDUQueue(mPDUPeerSendTimeout, mQueueSize, mQueueType));
+
+    return boost::shared_ptr<Forte::PDUPeer>(
+        new PDUPeerImpl(
+            SocketAddressToID(peerAddress),
+            mPDUPeerEndpointFactory->Create(
+                pduQueue, mListenAddress, peerAddress, mID),
+            pduQueue));
 }

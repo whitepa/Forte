@@ -19,8 +19,9 @@ namespace Forte
         MOCK_METHOD1(BroadcastAsync, void(PDUPtr pdu));
 
         MOCK_METHOD1(PeerCreate, PDUPeerPtr (int fd));
+        MOCK_METHOD1(PeerCreate, PDUPeerPtr (const Forte::SocketAddress&));
         MOCK_METHOD1(GetPeer, PDUPeerPtr(uint64_t peerID));
-        MOCK_METHOD1(PeerDelete, void (PDUPeerPtr peer));
+        MOCK_METHOD1(PeerDelete, void (const PDUPeerPtr& peer));
         MOCK_CONST_METHOD0(GetSize, int());
         MOCK_METHOD0(GetConnectedCount, unsigned int ());
     };

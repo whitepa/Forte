@@ -5,6 +5,7 @@
 #include "PDUPeerTypes.h"
 #include "EnableStats.h"
 #include "ThreadedObject.h"
+#include "Types.h"
 
 namespace Forte
 {
@@ -23,8 +24,10 @@ namespace Forte
         virtual void BroadcastAsync(PDUPtr pdu) = 0;
 
         virtual PDUPeerPtr PeerCreate(int fd) = 0;
+        virtual PDUPeerPtr PeerCreate(const SocketAddress& address) = 0;
+
         virtual PDUPeerPtr GetPeer(uint64_t peerID) = 0;
-        virtual void PeerDelete(Forte::PDUPeerPtr peer) = 0;
+        virtual void PeerDelete(const Forte::PDUPeerPtr& peer) = 0;
 
         virtual int GetSize() const = 0;
         virtual unsigned int GetConnectedCount() = 0;

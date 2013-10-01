@@ -79,6 +79,8 @@ namespace Forte
          */
         PDUPeerPtr PeerCreate(int fd);
 
+        void PeerAdd(const boost::shared_ptr<PDUPeer>& p);
+
         void PeerAddFD(uint64_t peerID, int fd) {
             FTRACE2("%llu, %d", static_cast<unsigned long long>(peerID), fd);
             AutoUnlockMutex peerSetLock(mPDUPeerLock);
@@ -89,8 +91,8 @@ namespace Forte
                 //hlog_and_throw(HLOG_ERR, EPDUPeerInvalid());
                 hlogstream(HLOG_ERR, "Tried to add fd " << fd
                            << " to peer " << peerID
-                           << " but peer does not exist"
-                           << " running in a cluster whose nodes were not "
+                           << " but peer does not exist."
+                           << " running in a cluster whose nodes were not"
                            << " properly added!");
             }
             else

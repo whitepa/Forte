@@ -87,7 +87,9 @@ namespace Forte
             return mPDUPeerSet->PeerCreate(fd);
         }
 
-        void PeerDelete(Forte::PDUPeerPtr peer) {
+        boost::shared_ptr<PDUPeer> PeerCreate(const SocketAddress& address);
+
+        void PeerDelete(const Forte::PDUPeerPtr& peer) {
             mPDUPeerSet->PeerDelete(peer);
         }
 
@@ -98,7 +100,10 @@ namespace Forte
     protected:
         SocketAddress mListenAddress;
         uint64_t mID;
-        SocketAddressVector mPeerSocketAddresses;
+
+        const long mPDUPeerSendTimeout;
+        const unsigned short mQueueSize;
+        const PDUPeerQueueType mQueueType;
 
         boost::shared_ptr<ReceiverThread> mReceiverThread;
         boost::shared_ptr<PDUPeerSetConnectionHandler> mConnectionHandler;
@@ -106,6 +111,9 @@ namespace Forte
         boost::shared_ptr<EPollMonitor> mEPollMonitor;
         boost::shared_ptr<PDUPeerSet> mPDUPeerSet;
         boost::shared_ptr<PDUPeerEndpointFactory> mPDUPeerEndpointFactory;
+
+    private:
+        boost::shared_ptr<PDUPeer> peerFromSocketAddress(const SocketAddress& sa);
     };
 }
 

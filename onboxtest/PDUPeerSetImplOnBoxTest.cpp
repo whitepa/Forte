@@ -175,7 +175,7 @@ TEST_F(PDUPeerSetImplOnBoxTest, MultiStartShutdown)
     peerSet.Shutdown();
 }
 
-TEST_F(PDUPeerSetImplOnBoxTest, PeerSetMustBeRunningToCreatePeers)
+TEST_F(PDUPeerSetImplOnBoxTest, PeerSetMustBeRunningToCreatePeersWithFD)
 {
     std::vector<boost::shared_ptr<PDUPeer> > emptyPeerVector;
 

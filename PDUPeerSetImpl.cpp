@@ -112,6 +112,23 @@ void Forte::PDUPeerSetImpl::PeerDelete(const boost::shared_ptr<PDUPeer>& peer)
     }
 }
 
+void Forte::PDUPeerSetImpl::PeerAdd(const boost::shared_ptr<PDUPeer>& peer)
+{
+    FTRACE;
+
+    AutoUnlockMutex lock(mPDUPeerLock);
+    peer->SetEventCallback(mEventCallback);
+    mPDUPeers.insert(std::make_pair(peer->GetID(), peer));
+
+    FString peerName(FStringFC(), "Peer-%lu", peer->GetID());
+    includeStatsFromChild(peer, peerName);
+
+    if (isRunning())
+    {
+        peer->Start();
+    }
+}
+
 /*
 void Forte::PDUPeerSetImpl::Broadcast(const PDU& pdu) const
 {
