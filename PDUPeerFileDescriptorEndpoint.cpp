@@ -202,7 +202,7 @@ void PDUPeerFileDescriptorEndpoint::sendThreadRun()
         switch(mSendState)
         {
         case SendStateDisconnected:
-            hlog(HLOG_DEBUG, "mSendState SendStateDisconnected");
+            //hlog(HLOG_DEBUG, "mSendState SendStateDisconnected");
             waitForConnected();
             {
                 AutoUnlockMutex fdlock(mFDMutex);
@@ -213,7 +213,7 @@ void PDUPeerFileDescriptorEndpoint::sendThreadRun()
             break;
 
         case SendStateConnected:
-            hlog(HLOG_DEBUG, "state SendStateConnected");
+            //hlog(HLOG_DEBUG, "state SendStateConnected");
             pdu.reset();
             mPDUSendQueue->WaitForNextPDU(pdu);
             if (pdu)
@@ -223,7 +223,7 @@ void PDUPeerFileDescriptorEndpoint::sendThreadRun()
             break;
 
         case SendStatePDUReady:
-            hlog(HLOG_DEBUG, "state SendStatePDUReady");
+            //hlog(HLOG_DEBUG, "state SendStatePDUReady");
             sendBuffer = PDU::CreateSendBuffer(*pdu);
             sendBufferSize =
                 sizeof(PDUHeader)
@@ -235,7 +235,7 @@ void PDUPeerFileDescriptorEndpoint::sendThreadRun()
             break;
 
         case SendStateBufferAvailable:
-            // hlog(HLOG_DEBUG, "state SendStateBufferAvailable");
+            //hlog(HLOG_DEBUG, "state SendStateBufferAvailable");
             while ((len = send(mFD,
                                sendBuffer.get()+cursor,
                                sendBufferSize-cursor,
