@@ -102,7 +102,7 @@ void EPollMonitor::Start()
         new Forte::FunctionThread(
             Forte::FunctionThread::AutoInit(),
             boost::bind(&EPollMonitor::monitorThreadRun, this),
-            mName + "-epl"));
+            mName));
 }
 
 void EPollMonitor::Shutdown()
@@ -154,7 +154,10 @@ void EPollMonitor::monitorThreadRun()
             }
             catch(std::exception& e)
             {
-                hlogstream(HLOG_WARN, "err from epoll callback " << e.what());
+                if (hlog_ratelimit(60))
+                    hlogstream(HLOG_WARN,
+                               "err from epoll callback " << e.what()
+                               << "for fd " << events[i].data.fd);
             }
         }
     }
