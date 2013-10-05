@@ -53,7 +53,9 @@ namespace Forte
                            Locals<PDUQueue,
                                   int64_t,
                                   int64_t,
-                                  CumulativeMovingAverage> >
+                                  CumulativeMovingAverage,
+                                  int64_t
+                                  > >
     {
     public:
         PDUQueue(long pduSendTimeout = 2,
@@ -111,6 +113,7 @@ namespace Forte
 
         int64_t mTotalQueued;
         int64_t mQueueSize;
+        int64_t mDropCount;
         CumulativeMovingAverage mAvgQueueSize;
     };
 };

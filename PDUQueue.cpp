@@ -28,6 +28,7 @@ PDUQueue::PDUQueue(
     registerStatVariable<0>("totalQueued", &PDUQueue::mTotalQueued);
     registerStatVariable<1>("queueSize", &PDUQueue::mQueueSize);
     registerStatVariable<2>("averageQueueSize", &PDUQueue::mAvgQueueSize);
+    registerStatVariable<3>("dropCount", &PDUQueue::mDropCount);
 }
 
 PDUQueue::~PDUQueue()
@@ -51,6 +52,14 @@ void PDUQueue::EnqueuePDU(const PDUPtr& pdu)
             }
             if (Thread::IsForteThreadAndShuttingDown())
                 boost::throw_exception(EThreadShutdown());
+        }
+        else if (mQueueType == PDU_PEER_QUEUE_DROP)
+        {
+            ++mDropCount;
+            if (hlog_ratelimit(60))
+                hlogstream(HLOG_WARN, "Dropping PDUs " << mDropCount << " total");
+
+            return;
         }
         else // CALLBACK or THROW
         {

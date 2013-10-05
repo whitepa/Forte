@@ -24,6 +24,8 @@ namespace Forte
     class PDUPeerSet;
     typedef boost::shared_ptr<PDUPeerSet> PDUPeerSetPtr;
 
+    class PDUPeerSetBuilder;
+
     enum PDUPeerEventType
     {
         // sent when a PDU is received. Event delivered will have PDUPeer set
@@ -42,7 +44,8 @@ namespace Forte
     typedef enum {
         PDU_PEER_QUEUE_THROW,
         PDU_PEER_QUEUE_BLOCK,
-        PDU_PEER_QUEUE_CALLBACK
+        PDU_PEER_QUEUE_CALLBACK,
+        PDU_PEER_QUEUE_DROP
     } PDUPeerQueueType;
 
     class PDUPeerEvent
