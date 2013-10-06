@@ -16,17 +16,19 @@ namespace Forte
     public:
         DbAutoConnection(const Forte::Context &ctxt,
                          const char *poolname,
-                         bool autocommit = true)
+                         bool autocommit = true,
+                         bool secondaryPreferred = false)
             : mPoolPtr(ctxt.Get<DbConnectionPool>(poolname)),
-              mDbConnection(mPoolPtr->GetDbConnection())
+              mDbConnection(mPoolPtr->GetDbConnection(secondaryPreferred))
             {
                 // set autocommit appropriately
                 AutoCommit(autocommit);
             }
         DbAutoConnection(boost::shared_ptr<DbConnectionPool> poolPtr,
-                         bool autocommit = true)
+                         bool autocommit = true,
+                         bool secondaryPreferred = false)
             : mPoolPtr(poolPtr),
-              mDbConnection(mPoolPtr->GetDbConnection())
+              mDbConnection(mPoolPtr->GetDbConnection(secondaryPreferred))
             {
                 FTRACE2("-,%s", (autocommit ? "TRUE" : "FALSE"));
                 // set autocommit appropriately

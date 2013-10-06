@@ -135,7 +135,9 @@ DB_SRCS = \
 	DbLiteConnection.cpp \
 	DbLiteConnectionFactory.cpp \
 	DbMirroredConnection.cpp \
+	DbMirroredConnectionUseSecondary.cpp \
 	DbMirroredConnectionFactory.cpp \
+	DbMirroredConnectionUseSecondaryFactory.cpp \
 	DbSqlStatement.cpp \
 	DbBackupManager.cpp \
 	DbBackupManagerThread.cpp \

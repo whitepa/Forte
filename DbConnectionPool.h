@@ -30,7 +30,7 @@ namespace Forte
 
         virtual ~DbConnectionPool();
 
-        virtual DbConnection& GetDbConnection();
+        virtual DbConnection& GetDbConnection(bool secondaryPreferred = false);
         virtual void ReleaseDbConnection(DbConnection& connection);
         virtual void DeleteConnections();
 
@@ -56,6 +56,7 @@ namespace Forte
         list<DbConnection*> mFreeConnections;
         set<DbConnection*> mUsedConnections;
         boost::shared_ptr<DbConnectionFactory> mDbConnectionFactory;
+        boost::shared_ptr<DbConnectionFactory> mDbConnectionFactoryReadOnly;
     };
     typedef boost::shared_ptr<DbConnectionPool> DbConnectionPoolPtr;
 };

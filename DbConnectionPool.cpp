@@ -4,8 +4,8 @@
 #include "DbConnection.h"
 #include "DbLiteConnection.h"
 #include "DbLiteConnectionFactory.h"
-#include "DbMirroredConnection.h"
 #include "DbMirroredConnectionFactory.h"
+#include "DbMirroredConnectionUseSecondaryFactory.h"
 
 #ifdef FORTE_WITH_MYSQL
 #include "DbMyConnection.h"
@@ -70,6 +70,7 @@ void DbConnectionPool::init()
     {
         typedef DbConnectionFactoryBase<DbMyConnection> DbMyConnectionFactory;
         mDbConnectionFactory.reset(new DbMyConnectionFactory());
+        mDbConnectionFactoryReadOnly.reset(new DbMyConnectionFactory());
     }
 #endif
 #ifdef FORTE_WITH_PGSQL
@@ -77,6 +78,7 @@ void DbConnectionPool::init()
     {
         typedef DbConnectionFactoryBase<DbPgConnection> DbPgConnectionFactory;
         mDbConnectionFactory.reset(new DbPgConnectionFactory());
+        mDbConnectionFactoryReadOnly.reset(new DbPgConnectionFactory());
     }
 #endif
 #ifdef FORTE_WITH_SQLITE
@@ -85,12 +87,14 @@ void DbConnectionPool::init()
         if (mDbAltName.empty())
         {
             mDbConnectionFactory = boost::shared_ptr<DbConnectionFactory>(new DbLiteConnectionFactory());
+            mDbConnectionFactoryReadOnly = boost::shared_ptr<DbConnectionFactory>(new DbLiteConnectionFactory());
         }
         else
         {
             boost::shared_ptr<DbConnectionFactory> primaryDbFactory(new DbLiteConnectionFactory());
             boost::shared_ptr<DbConnectionFactory> secondaryDbFactory(new DbLiteConnectionFactory(SQLITE_OPEN_READONLY));
             mDbConnectionFactory.reset(new DbMirroredConnectionFactory(primaryDbFactory, secondaryDbFactory, mDbAltName));
+            mDbConnectionFactoryReadOnly.reset(new DbMirroredConnectionUseSecondaryFactory(primaryDbFactory, secondaryDbFactory, mDbAltName));
         }
     }
     else if (!mDbType.ComparePrefix("sqlite_", 7))
@@ -100,12 +104,15 @@ void DbConnectionPool::init()
         {
             mDbConnectionFactory = boost::shared_ptr<DbConnectionFactory>(
                     new DbLiteConnectionFactory(vfs));
+            mDbConnectionFactoryReadOnly = boost::shared_ptr<DbConnectionFactory>(
+                new DbLiteConnectionFactory(vfs));
         }
         else
         {
             boost::shared_ptr<DbConnectionFactory> primaryDbFactory(new DbLiteConnectionFactory(vfs));
             boost::shared_ptr<DbConnectionFactory> secondaryDbFactory(new DbLiteConnectionFactory(SQLITE_OPEN_READONLY));
             mDbConnectionFactory.reset(new DbMirroredConnectionFactory(primaryDbFactory, secondaryDbFactory, mDbAltName));
+            mDbConnectionFactoryReadOnly.reset(new DbMirroredConnectionUseSecondaryFactory(primaryDbFactory, secondaryDbFactory, mDbAltName));
         }
     }
 #endif
@@ -139,7 +146,7 @@ void DbConnectionPool::DeleteConnections()
     mFreeConnections.erase(mFreeConnections.begin(), mFreeConnections.end());
 }
 
-DbConnection& DbConnectionPool::GetDbConnection() {
+DbConnection& DbConnectionPool::GetDbConnection(bool secondaryPreferred) {
     FTRACE;
 
     DbConnection * pDb = NULL;
@@ -152,7 +159,10 @@ DbConnection& DbConnectionPool::GetDbConnection() {
         if (mFreeConnections.empty())
         {
             hlog(HLOG_DEBUG2, "[%s] Creating new connection", mDbName.c_str());
-            pDb = mDbConnectionFactory->create();
+            if (secondaryPreferred)
+                pDb = mDbConnectionFactoryReadOnly->create();
+            else
+                pDb = mDbConnectionFactory->create();
             initNeeded = true;
         } else {
             hlog(HLOG_DEBUG2, "[%s] Free connections=%zu, Used connections=%zu",
