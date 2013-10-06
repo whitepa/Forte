@@ -448,16 +448,30 @@ void Forte::ProcessManagerImpl::deliverEvent(const PDUPeerEventPtr &event)
         break;
 
     case PDUPeerSendErrorEvent:
-        errorCallback(*(event->mPeer));
+        try
+        {
+            errorCallback(*(event->mPeer));
+        }
+        catch (EProcessManagerInvalidPeer& e)
+        {
+            // possible to get two error events for same peer, or a
+            // peer error and disconnect in either order
+        }
         break;
 
     case PDUPeerConnectedEvent:
         break;
 
     case PDUPeerDisconnectedEvent:
-        // happends on file descriptor close. no way to reconnect so
-        // we will delete our side of the PDUPeer connection
-        mPeerSet->PeerDelete(event->mPeer);
+        try
+        {
+            errorCallback(*(event->mPeer));
+        }
+        catch (EProcessManagerInvalidPeer& e)
+        {
+            // possible to get two error events for same peer, or a
+            // peer error and disconnect in either order
+        }
         break;
 
     default:
