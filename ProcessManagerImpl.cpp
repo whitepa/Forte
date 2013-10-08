@@ -436,7 +436,7 @@ void Forte::ProcessManagerImpl::errorCallback(PDUPeer &peer)
 bool Forte::ProcessManagerImpl::IsProcessMapEmpty(void)
 {
     AutoUnlockMutex lock(mProcessesLock);
-    return (mProcesses.size() == 0);
+    return (mProcesses.empty());
 }
 
 void Forte::ProcessManagerImpl::deliverEvent(const PDUPeerEventPtr &event)

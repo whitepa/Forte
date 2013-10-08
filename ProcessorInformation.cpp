@@ -92,7 +92,7 @@ double ProcessorInformation::GetClockFrequencyInHertz() const
 {
     FTRACE;
 
-    if (mSocketsById.size() == 0) return 0.0;
+    if (mSocketsById.empty()) return 0.0;
 
     std::map<unsigned int, ProcessorSocketPtr>::const_iterator it;
     it = mSocketsById.begin();
@@ -104,7 +104,7 @@ bool ProcessorInformation::HasVirtualizationSupport() const
 {
     FTRACE;
 
-    if (mSocketsById.size() == 0) return false;
+    if (mSocketsById.empty()) return false;
 
     std::map<unsigned int, ProcessorSocketPtr>::const_iterator it;
     for (it = mSocketsById.begin(); it != mSocketsById.end(); it++)

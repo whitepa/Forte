@@ -69,7 +69,7 @@ namespace Forte
 
         double GetClockFrequencyInHertz() const {
             FTRACE;
-            if (mProcessors.size() == 0) return 0;
+            if (mProcessors.empty()) return 0;
             return mProcessors[0]->mClockFrequencyInHertz;
         }
 

@@ -149,7 +149,7 @@ DbConnection& DbConnectionPool::GetDbConnection() {
 
         hlog(HLOG_DEBUG2, "[%s] Free connections=%zu, Used connections=%zu",
              mDbName.c_str(), mFreeConnections.size(), mUsedConnections.size());
-        if (mFreeConnections.size() == 0)
+        if (mFreeConnections.empty())
         {
             hlog(HLOG_DEBUG2, "[%s] Creating new connection", mDbName.c_str());
             pDb = mDbConnectionFactory->create();
@@ -298,7 +298,7 @@ void DbConnectionPool::OutputUsedConnectionStatus()
     FTRACE;
     AutoUnlockMutex lock(mPoolMutex);
 
-    if (mUsedConnections.size() == 0) return;
+    if (mUsedConnections.empty()) return;
 
     FString stuff("Used Connections:\n");
 
