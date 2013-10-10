@@ -79,7 +79,7 @@ namespace Forte
          *Constructs an FString from a standard string.
          **/
 
-        FString(const std::string& other) { static_cast<std::string&>(*this) = other; }
+        FString(const std::string& other) : std::string(other) {}
 
         /**
          *Constructs an FString from a string.
@@ -182,7 +182,6 @@ namespace Forte
          * style where %@ means a token to replace with a string parameter
          */
         FString(const FStringFO &f, const FString &format, const std::vector<FString> &parameters);
-        virtual ~FString();
 
     public:
         // operators
@@ -502,6 +501,9 @@ namespace Forte
         FString& ImplodeBinary(const std::vector<FString> &components);
 
     };
+
+    // Forte::FString should not be larger than std::string
+    BOOST_STATIC_ASSERT(sizeof(Forte::FString) == sizeof(std::string));
 
     inline FString operator +(const FString& str, const FString& add) { FString ret = str; ret += add; return ret; }
     inline FString operator +(const FString& str, const char* add) { FString ret; ret = str; ret += add; return ret; }

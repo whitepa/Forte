@@ -27,11 +27,6 @@ FString::FString(const FStringFC &f, const char *format, ...)
     va_end(ap);
 }
 
-FString::~FString()
-{
-}
-
-
 FString::FString(const std::vector<unsigned int> &intvec)
 {
     bool first = true;
