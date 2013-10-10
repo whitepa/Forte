@@ -50,7 +50,7 @@ EventQueue::~EventQueue()
     mEmptyCondition.Broadcast();
 }
 
-void EventQueue::Add(boost::shared_ptr<Event> e)
+void EventQueue::Add(EventQueue::EventPtr e)
 {
     // check for NULL event
     if (!e)
@@ -70,7 +70,7 @@ void EventQueue::Add(boost::shared_ptr<Event> e)
             if (mMode == QUEUE_MODE_DROP_OLDEST || mMode == QUEUE_MODE_DROP_OLDEST_LOG)
             {
                 // delete the oldest entry
-                std::list<boost::shared_ptr<Event> >::iterator i;
+                std::list<EventQueue::EventPtr >::iterator i;
                 i = mQueue.begin();
                 if (i != mQueue.end())
                 {
@@ -98,28 +98,52 @@ void EventQueue::Add(boost::shared_ptr<Event> e)
     }
 }
 
-boost::shared_ptr<Event> EventQueue::Get(void)
+EventQueue::EventPtr EventQueue::Get(void)
+{
+    std::vector<EventQueue::EventPtr > events(
+        Get(1));
+
+    if(events.empty())
+    {
+        return EventQueue::EventPtr();
+    }
+    else
+    {
+        return *events.begin();
+    }
+}
+
+EventQueue::EventPtrVector EventQueue::Get(const unsigned long& max)
 {
     AutoUnlockMutex lock(mMutex);
-    boost::shared_ptr<Event> e;
-    std::list<boost::shared_ptr<Event> >::iterator i;
-    i = mQueue.begin();
-    if (i == mQueue.end())
-        return e;
-    e = *i;
-    mQueue.pop_front();
+    std::vector<EventQueue::EventPtr > events;
+    std::list<EventQueue::EventPtr >::iterator i;
+
+    for(i = mQueue.begin();
+        (i != mQueue.end()) && (events.size() < max);
+        i = mQueue.begin())
+    {
+        events.push_back(*i);
+        mQueue.pop_front();
+    }
+
+    if (events.empty())
+    {
+        return events;
+    }
+
     if (mMode == QUEUE_MODE_BLOCKING)
-        mMaxDepth.Post();
+        mMaxDepth.Post(events.size());
     if (mQueue.empty())
         mEmptyCondition.Broadcast();
-    return e;
+    return events;
 }
 
-boost::shared_ptr<Event> EventQueue::Peek(void)
+EventQueue::EventPtr EventQueue::Peek(void)
 {
     AutoUnlockMutex lock(mMutex);
-    boost::shared_ptr<Event> e;
-    std::list<boost::shared_ptr<Event> >::iterator i;
+    EventQueue::EventPtr e;
+    std::list<EventQueue::EventPtr >::iterator i;
     i = mQueue.begin();
     if (i == mQueue.end())
         return e;
@@ -127,16 +151,16 @@ boost::shared_ptr<Event> EventQueue::Peek(void)
     return e;
 }
 
-int EventQueue::GetEvents(int maxEvents, std::list<boost::shared_ptr<Event> > &result)
+int EventQueue::GetEvents(int maxEvents, std::list<EventQueue::EventPtr > &result)
 {
     result.clear();
     AutoUnlockMutex lock(mMutex);
-    std::list<boost::shared_ptr<Event> >::iterator i;
+    std::list<EventQueue::EventPtr >::iterator i;
     int count = 0;
     for (i = mQueue.begin(); i != mQueue.end() && maxEvents-- > 0;
          ++i)
     {
-        boost::shared_ptr<Event> e = *i;
+        EventQueue::EventPtr e = *i;
         if (e)
         {
             result.push_back(e);

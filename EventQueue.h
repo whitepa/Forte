@@ -17,6 +17,8 @@ namespace Forte
     class EventQueue : public Object
     {
     public:
+        typedef boost::shared_ptr<Event> EventPtr;
+        typedef std::vector<EventPtr> EventPtrVector;
         enum QueueMode
         {
             QUEUE_MODE_BLOCKING = 0,
@@ -33,10 +35,10 @@ namespace Forte
             ThreadCondition* notifier,
             QueueMode mode = QUEUE_MODE_BLOCKING);
         virtual ~EventQueue();
-
-        void Add(boost::shared_ptr<Event> e);
-        boost::shared_ptr<Event> Get(void);
-        boost::shared_ptr<Event> Peek(void);
+        void Add(EventPtr e);
+        EventPtr Get(void);
+        EventPtrVector Get(const unsigned long& max);
+        EventPtr Peek(void);
         inline bool Accepting(void) {
             AutoUnlockMutex lock(mMutex);
             return (!mShutdown && ((mMaxDepth.GetValue() > 0) ? true : false));
@@ -66,7 +68,7 @@ namespace Forte
         /// getEventCopies retreives references of the next maxEvents in the queue
         ///
         int GetEvents(
-            int maxEvents, std::list<boost::shared_ptr<Event> > &result);
+            int maxEvents, std::list<EventPtr > &result);
 
         int mDeepThresh;
         int mLastDepth;
@@ -74,7 +76,7 @@ namespace Forte
     protected:
         const QueueMode mMode;
         bool mShutdown;
-        std::list<boost::shared_ptr<Event> > mQueue;
+        std::list<EventPtr > mQueue;
         Semaphore mMaxDepth;
         Mutex mMutex;
         ThreadCondition mEmptyCondition;
