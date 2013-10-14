@@ -168,6 +168,8 @@ int SSHRunner::Run(
     FString *output,
     FString *errorOutput)
 {
+    hlog(HLOG_DEBUG, "Timeout: %lu", GetTimeout());
+
     // Try to open a channel to be used for executing the command.
     LIBSSH2_CHANNEL* channel = libssh2_channel_open_session(mSession);
     if( NULL == channel )
@@ -333,6 +335,18 @@ void SSHRunner::GetFile(const FString &remotePath, const FString &localPath)
     libssh2_channel_free(channel);
     channel = NULL;
 }
+
+// libssh2 timeouts are set in milliseconds
+unsigned long SSHRunner::GetTimeout(void)
+{
+    return libssh2_session_get_timeout(mSession) / 1000;
+}
+
+void SSHRunner::SetTimeout(unsigned long time)
+{
+    libssh2_session_set_timeout(mSession, time * 1000);
+}
+
 
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 

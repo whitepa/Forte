@@ -49,6 +49,14 @@ SSHRunnerPtr SSHRunnerFactory::Create(const FString &sshUsername,
                                                      IP,
                                                      sshPort));
             }
+            int remainingTime = deadline.GetRemainingSeconds();
+            if (timeout)
+            {
+                if (remainingTime < 1)
+                    sshRunner->SetTimeout(1);
+                else
+                    sshRunner->SetTimeout(remainingTime);
+            }
 
             hlog(HLOG_DEBUG2, "Host %s is up", IP.c_str());
             return sshRunner;

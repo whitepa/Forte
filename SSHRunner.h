@@ -78,6 +78,10 @@ namespace Forte
             return mIPAddress;
         }
 
+        // Timeouts are set in seconds
+        unsigned long GetTimeout(void);
+        void SetTimeout(unsigned long time);
+
     protected:
         /**
          * Empty constructor
