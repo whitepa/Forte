@@ -23,10 +23,8 @@ EXCEPTION_CLASS(EThreadKey);
         pthread_key_t mKey;
 
     private:
-        ThreadKey(const ThreadKey &other)
-            { throw EThreadKey(); }
-        const ThreadKey &operator=(const ThreadKey &rhs)
-            { throw EThreadKey(); return *this; }
+        ThreadKey(const ThreadKey &other) = delete;
+        const ThreadKey &operator=(const ThreadKey &rhs) = delete;
     };
 
 }; /* namespace Forte{} */

@@ -252,13 +252,11 @@ void FileSystemImpl::GetChildren(const FString& path,
         SystemCallUtil::ThrowErrNoException(errno);
     AutoFD dir(d);
 
-    int err_number = 0;
     FString stmp;
     struct dirent *result;
     struct dirent entry;
 
-    while ((err_number = readdir_r(dir, &entry, &result)) == 0
-           && result != NULL)
+    while (readdir_r(dir, &entry, &result) == 0 && result != NULL)
     {
         stmp = entry.d_name;
 
@@ -313,14 +311,12 @@ uint64_t FileSystemImpl::CountChildren(const FString& path,
         SystemCallUtil::ThrowErrNoException(errno);
     AutoFD dir(d);
 
-    int err_number = 0;
     FString stmp;
     struct dirent *result;
     struct dirent entry;
 
     uint64_t count = 0;
-    while ((err_number = readdir_r(dir, &entry, &result)) == 0
-           && result != NULL)
+    while (readdir_r(dir, &entry, &result) == 0 && result != NULL)
     {
         stmp = entry.d_name;
 

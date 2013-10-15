@@ -49,8 +49,9 @@ namespace Forte
         public:
             RunLoopScheduleItem(const boost::shared_ptr<Timer> &timer,
                                 const Forte::Timespec &absolute) :
-                mTimer(timer), mAbsolute(absolute) {
-                mScheduledTime = Forte::MonotonicClock().GetTime();
+                mTimer(timer),
+                mAbsolute(absolute),
+                mScheduledTime(Forte::MonotonicClock().GetTime()) {
             }
             bool operator < (const RunLoopScheduleItem &other) const {
                 return mAbsolute < other.mAbsolute;

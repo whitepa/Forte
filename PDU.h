@@ -115,13 +115,16 @@ namespace Forte
             }
         }
 
-        const void* GetData() {
+        const void* GetData() const {
             return mData;
         }
 
-        unsigned int GetSize() {
+        unsigned int GetSize() const {
             return mSize;
         }
+
+        PDUOptionalData(const PDUOptionalData& other) = delete;
+        const PDUOptionalData& operator=(const PDUOptionalData& rhs) = delete;
 
         unsigned int mSize;
         unsigned int mAttributes;

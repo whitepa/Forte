@@ -94,13 +94,13 @@ void PDUPeerInProcessEndpoint::sendThreadRun()
 bool PDUPeerInProcessEndpoint::IsPDUReady() const
 {
     AutoUnlockMutex lock(mMutex);
-    return (mPDUBuffer.size() > 0);
+    return (!mPDUBuffer.empty());
 }
 
 bool PDUPeerInProcessEndpoint::RecvPDU(PDU &out)
 {
     AutoUnlockMutex lock(mMutex);
-    if (mPDUBuffer.size() > 0)
+    if (!mPDUBuffer.empty())
     {
         //NOTE: this code is written this way because the original
         // PDUPeer's RecvPDU (now PDUPeerFileDescriptorEndpoint) is

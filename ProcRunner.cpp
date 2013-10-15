@@ -49,7 +49,6 @@ int ProcRunner::Run(const FString& command,
         hlog(HLOG_DEBUG3, "run(%s) [in %s]", command.c_str(), cwd.c_str());
     }
     LogTimer timer(HLOG_DEBUG3, "Child ran for @TIME@");
-    vector<FString>::const_iterator vi;
     FString stmp, filename, path = "/bin/bash";
     int ret = -1, fd_out = 1;
     bool log_child = false;
@@ -392,7 +391,6 @@ int ProcRunner::RunBackground(const FString& command, const FString& cwd,
         hlog(HLOG_DEBUG3, "run_background(%s) [in %s]", command.c_str(), cwd.c_str());
     }
 
-    vector<FString>::const_iterator vi;
     FString stmp, path = "/bin/bash";
     int status, ret = -1;
     sigset_t set;

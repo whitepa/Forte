@@ -15,12 +15,11 @@ namespace Forte
     class Event : public Object {
     public:
         Event() {};
-        Event(const FString &name) : mServerID(-1), mName(name) {}
+        Event(const FString &name) : mName(name) {}
         virtual ~Event() {}
 
         const FString &GetName(void) const { return mName; }
 
-        int mServerID;
         struct timeval mStartTime;
         FString mName;
     };

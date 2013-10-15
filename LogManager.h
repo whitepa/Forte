@@ -82,7 +82,7 @@ namespace Forte
 
     class LogFilter : public Object {
     public:
-        LogFilter(const FString sourceFile, int mask) :
+        LogFilter(const FString& sourceFile, int mask) :
             mSourceFile(sourceFile), mMask(mask), mMode(0) {};
         LogFilter(const LogFilter &other) {
             *this = other;

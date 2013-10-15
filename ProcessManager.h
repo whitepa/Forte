@@ -36,9 +36,6 @@ namespace Forte
         friend class Forte::ProcessFuture;
     public:
 
-        static const int MAX_RUNNING_PROCS;
-        static const int PDU_BUFFER_SIZE;
-
         typedef std::map<int, boost::weak_ptr<ProcessFuture> > ProcessMap;
 
         ProcessManager()

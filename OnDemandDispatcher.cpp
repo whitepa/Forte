@@ -51,7 +51,7 @@ void * Forte::OnDemandDispatcherManager::run(void)
                 }
                 else
                 {
-                    i++;
+                    ++i;
                 }
             }
         }

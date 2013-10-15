@@ -520,7 +520,7 @@ void LogManager::Reopen()  // re-open all log files
     std::list<PathMaskFormatData> recreate;
 
     LogfileVector::iterator i;
-    for (i = mLogfiles.begin(); i != mLogfiles.end(); i++)
+    for (i = mLogfiles.begin(); i != mLogfiles.end(); ++i)
     {
         if (!(*i)->Reopen())
         {
@@ -572,7 +572,7 @@ void LogManager::setLogMask(const char *path, unsigned int mask)
         const std::map<Forte::FString,unsigned int>& logMasks((*i)->GetLogMasks());
 
         for(std::map<Forte::FString,unsigned int>::const_iterator j=logMasks.begin();
-            j != logMasks.end(); j++)
+            j != logMasks.end(); ++j)
         {
             mLogMaskOR |= j->second;
         }
@@ -583,7 +583,7 @@ void LogManager::setLogMask(const char *path, unsigned int mask)
     }
 
     for(std::map<Forte::FString,unsigned int>::const_iterator k=mFileMasks.begin();
-        k != mFileMasks.end(); k++)
+        k != mFileMasks.end(); ++k)
     {
         mLogMaskOR |= k->second;
     }
@@ -600,7 +600,7 @@ void LogManager::setLogMaskOR()
         const std::map<Forte::FString,unsigned int>& logMasks((*i)->GetLogMasks());
 
         for(std::map<Forte::FString,unsigned int>::const_iterator j=logMasks.begin();
-            j != logMasks.end(); j++)
+            j != logMasks.end(); ++j)
         {
             mLogMaskOR |= j->second;
         }
@@ -611,7 +611,7 @@ void LogManager::setLogMaskOR()
     }
 
     for(std::map<Forte::FString,unsigned int>::const_iterator k=mFileMasks.begin();
-        k != mFileMasks.end(); k++)
+        k != mFileMasks.end(); ++k)
     {
         mLogMaskOR |= k->second;
     }

@@ -113,6 +113,11 @@ namespace Forte
                 _hlog(mFN.c_str(), mFile, mLine, HLOG_TRACE, "EXIT");
             }
         }
+
+    private:
+        FunctionEntry(const FunctionEntry& other) = delete;
+        const FunctionEntry& operator=(const FunctionEntry& rhs) = delete;
+
     protected:
         FString mFN;
         FString mFile;

@@ -150,7 +150,7 @@ void* DbBackupManagerThread::run()
         {
             INotify::EventVector::size_type kickCount(0);
 
-            for(INotify::EventVector::const_iterator i=events.begin(); i!=events.end(); i++)
+            for(INotify::EventVector::const_iterator i=events.begin(); i!=events.end(); ++i)
             {
                 const INotify::Event& event(**i);
 

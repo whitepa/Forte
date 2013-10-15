@@ -160,8 +160,6 @@ int ServiceConfig::GetInteger(const char *key) const
 
 int ServiceConfig::getInt(const char *key)
 {
-    int value;
-
     FString rootChild(key);
     rootChild.LeftString(".");
 
@@ -189,8 +187,7 @@ int ServiceConfig::getInt(const char *key)
 
     try
     {
-        value = Get<int>(boost::property_tree::ptree::path_type(propertyKey.c_str(), '/'));
-        return value;
+        return Get<int>(boost::property_tree::ptree::path_type(propertyKey.c_str(), '/'));
     }
     catch (boost::property_tree::ptree_bad_path &e)
     {

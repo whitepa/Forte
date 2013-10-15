@@ -827,7 +827,7 @@ void FString::OFormat(const FString &format, const std::vector<std::string> &par
     {
         append(format, startPos, endPos - startPos);
         append(*it);
-        it++;
+        ++it;
         startPos = endPos + 2;
         endPos = format.find_first_of("%@", startPos);
     }
@@ -856,7 +856,7 @@ void FString::OFormat(const FString &format, const std::vector<FString> &paramet
     {
         append(format, startPos, endPos - startPos);
         append(*it);
-        it++;
+        ++it;
         startPos = endPos + 2;
         endPos = format.find_first_of("%@", startPos);
     }

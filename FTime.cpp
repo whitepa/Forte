@@ -65,7 +65,7 @@ time_t FTime::Day(const ptime pt, const char *tz)
     catch (std::exception &e)
     {
         hlog(HLOG_ERR, "FTime::to_time_t(): %s", e.what());
-        throw e;
+        throw;
     }
 
 }

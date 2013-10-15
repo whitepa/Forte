@@ -35,7 +35,6 @@ namespace Forte
         uint64_t mPeerSetID; // sent to other peers to let them know who we are
         SocketAddress mConnectToAddress;
     };
-    typedef boost::shared_ptr<PDUPeerNetworkConnectorEndpoint> PDUPeerNetworkConnectorEndpointPtr;
 
 };
 #endif

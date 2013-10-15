@@ -40,8 +40,8 @@ namespace Forte
         virtual void OutputUsedConnectionStatus();
 
     protected:
+        DbConnectionPool() : mPoolSize(0) {}
         void init();
-        DbConnectionPool() {};
 
         FString mDbType;
         FString mDbName;

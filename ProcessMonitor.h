@@ -139,11 +139,6 @@ namespace Forte
         static bool sGotSIGCHLD;
 
         /**
-         * epoll descriptor
-         */
-        int mPollFD;
-
-        /**
          * passed in fd
          */
         int mFD;

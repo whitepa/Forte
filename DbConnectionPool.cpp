@@ -130,13 +130,13 @@ DbConnectionPool::~DbConnectionPool() {
 void DbConnectionPool::DeleteConnections()
 {
     AutoUnlockMutex lock(mPoolMutex);
-    if (mUsedConnections.size() > 0)
+    if (!mUsedConnections.empty())
     {
         throw EDbConnectionPoolOpenConnections("Connections are still open");
     }
 
     DbConnection* pDb;
-    while (mFreeConnections.size() > 0)
+    while (!mFreeConnections.empty())
     {
         pDb = mFreeConnections.back();
         mFreeConnections.pop_back();
