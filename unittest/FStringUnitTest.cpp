@@ -1,7 +1,12 @@
 #include <gtest/gtest.h>
 #include "FString.h"
+#include "OpenSSLInitializer.h"
+#include "SecureString.h"
+#include "SecureEnvelope.h"
+#include "Base64.h"
 #include "LogManager.h"
 
+using namespace std;
 using namespace Forte;
 using namespace boost;
 
@@ -420,6 +425,7 @@ TEST_F(FStringTest, HexDump)
 
 
 }
+
 TEST_F(FStringTest, ConstructFromVectorOfOptional)
 {
     std::vector<boost::optional<uint32_t> > vec;
@@ -431,4 +437,106 @@ TEST_F(FStringTest, ConstructFromVectorOfOptional)
     vec[6] = 6;
     vec[8] = 8;
     EXPECT_STREQ(FString("0,_,2,_,4,_,6,_,8,_"), FString(vec));
+}
+
+TEST_F(FStringTest, EncodeDecode)
+{
+    //this test pulled in from legacy
+    //forte/tests/test_string.cpp. could be cleaned up and separated
+    OpenSSLInitializer sslInit;
+
+    FString pubkey;
+    FString privkey;
+
+    FString::LoadFile("pubkey.pem", 0x100000, pubkey);
+    FString::LoadFile("privkey.pem", 0x100000, privkey);
+
+    FString plaintext;
+    hlog(HLOG_INFO, "base64 binary data");
+    {
+        KeyBuffer publicKeyBuffer(pubkey);
+        PublicKey publicKey(publicKeyBuffer, NULL);
+
+        RSAString rsaStr("This is the plaintext.", publicKey);
+        FString decoded, decoded2, tmp;
+        cout << "   encoded: " << rsaStr << endl;
+        Base64::Decode(rsaStr, decoded);
+        Base64::Encode(decoded, decoded.length(), tmp);
+        cout << "re-encoded: " << tmp << endl;
+        Base64::Decode(tmp, decoded2);
+        if (decoded.compare(decoded2))
+        {
+            FAIL() << "binary strings do not match";
+        }
+    }
+
+    {
+        KeyBuffer publicKeyBuffer(pubkey);
+        PublicKey publicKey(publicKeyBuffer, NULL);
+        KeyBuffer privateKeyBuffer(privkey);
+        PrivateKey privateKey(privateKeyBuffer, "forte");
+        FString plain("This is the plaintext.");
+        RSAString rsaStr(plain, publicKey);
+        cout << "Ciphertext: " << rsaStr << endl;
+        rsaStr.GetPlainText(plaintext, privateKey);
+        cout << "Plaintext: " << plaintext << endl;
+        cout << "Plaintext length is " << plaintext.length() << endl;
+        if (plaintext.compare(plain))
+        {
+            FAIL() << "plaintext does not match" << endl
+                   << plain << " (" << plain.length() << ")" << endl
+                   << plaintext << " (" << plaintext.length() << ")" << endl;
+        }
+    }
+
+    {
+        KeyBuffer publicKeyBuffer(pubkey);
+        KeyBuffer privateKeyBuffer(privkey);
+
+        SecureEnvelopeEncoder encoder(publicKeyBuffer);
+        SecureEnvelopeDecoder decoder(privateKeyBuffer, "forte");
+
+        FString accountNum = "4111222233334444";
+        FString obscuredNum = "XXXXXXXXXXXX4444";
+        FString out, decoded, obscured;
+        int mismatches = 0;
+        int total = 1000;
+        cout << "encoding credit card# " << accountNum
+             << " over " << total << " iterations:" << endl;
+        for (int i = 0; i < total; i++)
+        {
+            cout << "."; flush(cout);
+            encoder.Encode(accountNum, 4, out);
+            decoder.Decode(out, decoded);
+            if (decoded.Compare(accountNum))
+            {
+                mismatches++;
+                cout << "reattempting decode 10 times" << endl;
+                int secondfailures = 0;
+                for (int j = 0; j < 10; ++j)
+                {
+                    decoder.Decode(out, decoded);
+                    if (decoded.Compare(accountNum)) secondfailures++;
+                    cout << "decoded as: " << decoded << endl;
+                }
+                cout << "secondary failures: " << secondfailures << endl;
+            }
+            SecureEnvelopeDecoder::Obscured(out, obscured);
+            if (obscured.Compare(obscuredNum))
+            {
+                FAIL() << "obscured account number does not match expected";
+            }
+        }
+        cout << endl;
+        cout << "Obscured as: " << obscured << endl;
+        cout << " Decoded as: " << decoded << endl;
+
+        if (mismatches > 0)
+        {
+            FAIL() <<
+                FString(FStringFC(),
+                        "account number failed to decode %d times out of %d",
+                        mismatches, total);
+        }
+    }
 }

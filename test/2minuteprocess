@@ -1,5 +1,0 @@
-#!/bin/bash
-
-rm -f ./2minutetouchfile
-sleep 120
-touch ./2minutetouchfile
