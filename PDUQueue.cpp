@@ -22,6 +22,7 @@ PDUQueue::PDUQueue(
       mQueueType(queueType),
       mTotalQueued(0),
       mQueueSize(0),
+      mDropCount(0),
       mAvgQueueSize()
 {
     FTRACE;

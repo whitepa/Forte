@@ -92,6 +92,7 @@ namespace Forte
             mPDUQueueNotFullCondition.Broadcast();
             mQueueSize = 0;
             mAvgQueueSize = 0;
+            mDropCount = 0;
         }
 
     protected:
