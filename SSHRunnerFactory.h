@@ -16,7 +16,8 @@ namespace Forte
                                 const FString &sshPassword,
                                 const FString &IP,
                                 int sshPort,
-                                unsigned int timeout);
+                                unsigned int timeout,
+                                unsigned int retryDelay = 1);
 
             SSHRunnerPtr Create(const FString &sshUsername,
                                 const FString &sshPassword,
@@ -24,7 +25,8 @@ namespace Forte
                                 const FString &sshPrivateKeyFile,
                                 const FString &IP,
                                 int sshPort,
-                                unsigned int timeout);
+                                unsigned int timeout,
+                                unsigned int retryDelay = 1);
     };
 };
 

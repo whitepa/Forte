@@ -8,9 +8,17 @@ SSHRunnerPtr SSHRunnerFactory::Create(const FString &sshUsername,
                                       const FString &sshPassword,
                                       const FString &IP,
                                       int sshPort,
-                                      unsigned int timeout)
+                                      unsigned int timeout,
+                                      unsigned int retryDelay)
 {
-    return Create(sshUsername, sshPassword, "", "", IP, sshPort, timeout);
+    return Create(sshUsername,
+                  sshPassword,
+                  "",
+                  "",
+                  IP,
+                  sshPort,
+                  timeout,
+                  retryDelay);
 }
 
 SSHRunnerPtr SSHRunnerFactory::Create(const FString &sshUsername,
@@ -19,7 +27,8 @@ SSHRunnerPtr SSHRunnerFactory::Create(const FString &sshUsername,
                                       const FString &sshPrivateKeyFile,
                                       const FString &IP,
                                       int sshPort,
-                                      unsigned int timeout)
+                                      unsigned int timeout,
+                                      unsigned int retryDelay)
 {
     FTRACE;
 
@@ -72,7 +81,7 @@ SSHRunnerPtr SSHRunnerFactory::Create(const FString &sshUsername,
             if (hlog_ratelimit(10))
                 hlog(HLOG_DEBUG, "Not yet up, caught %s on %s",
                      e.what(), IP.c_str());
-            usleep(1000000);
+            sleep(retryDelay);
         }
     }
 }
