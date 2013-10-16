@@ -1,5 +1,4 @@
 // #SCQAD TESTTAG: forte, forte.pdupeer
-// #SCQAD TEST: ONBOX: PDUPeerSetImplOnBoxTest
 
 #include <sys/epoll.h>
 

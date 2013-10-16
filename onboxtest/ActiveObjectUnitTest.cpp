@@ -12,8 +12,6 @@
 #include <boost/make_shared.hpp>
 #include <boost/bind.hpp>
 
-// #SCQAD TEST: ONBOX: ActiveObjectUnitTest
-
 // #SCQAD TESTTAG: smoketest, forte
 
 using namespace Forte;

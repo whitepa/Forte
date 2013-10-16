@@ -36,12 +36,10 @@ PROGS=  $(TARGETDIR)/ActiveObjectUnitTest \
 	$(TARGETDIR)/PDUPeerSetImplOnBoxTest \
 	$(TARGETDIR)/ProcessManagerOnBoxTest \
 	$(TARGETDIR)/RunLoopUnitTest \
+	$(TARGETDIR)/SCSIUtilUnitTest \
 	$(TARGETDIR)/ServerMainOnboxTest \
-	$(TARGETDIR)/StateMachineOnBoxTest3 \
 	$(TARGETDIR)/SocketUtilOnBoxTest \
-
-# flaky or broken
-#	$(TARGETDIR)/SCSIUtilUnitTest \
+	$(TARGETDIR)/StateMachineOnBoxTest3 \
 
 PROG_DEPS_OBJS_EPollMonitorOnBoxTest = \
 	../$(TARGETDIR)/EPollMonitor.o \

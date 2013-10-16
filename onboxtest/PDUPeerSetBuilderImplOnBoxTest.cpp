@@ -1,5 +1,4 @@
 // #SCQAD TESTTAG: forte, forte.pdupeer
-// #SCQAD TEST: ONBOX: PDUPeerSetBuilderImplOnBoxTest
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"

@@ -8,8 +8,6 @@
 #include "SCSIUtil.h"
 #include "FileSystemImpl.h"
 
-// #SCQAD TEST: ONBOX: SCSIUtilUnitTest
-
 // #SCQAD TESTTAG: broken, smoketest, forte, storage, storage.iscsi
 
 using namespace Forte;

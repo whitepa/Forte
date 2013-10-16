@@ -11,8 +11,6 @@
 #include "Context.h"
 #include "FileSystemImpl.h"
 
-// #SCQAD TEST: ONBOX: INotifyUnitTest
-
 // #SCQAD TESTTAG: smoketest, forte
 
 using namespace Forte;

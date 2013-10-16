@@ -1,4 +1,3 @@
-// #SCQAD TEST: ONBOX: FileSystemImplOnBoxTest
 // #SCQAD TESTTAG: smoketest, forte
 #include <gtest/gtest.h>
 #include "LogManager.h"

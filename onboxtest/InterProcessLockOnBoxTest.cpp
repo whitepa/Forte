@@ -1,4 +1,3 @@
-// #SCQAD TEST: ONBOX: IntraProcessLockOnBoxTest
 // #SCQAD TESTTAG: smoketest, forte
 #include "Clock.h"
 #include "EventQueue.h"

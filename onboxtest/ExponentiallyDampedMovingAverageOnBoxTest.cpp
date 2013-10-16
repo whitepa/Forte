@@ -1,4 +1,3 @@
-// #SCQAD TEST: ONBOX: ExponentiallyDampedMovingAverageOnBoxTest
 // #SCQAD TESTTAG: smoketest, forte
 
 #include <gtest/gtest.h>
