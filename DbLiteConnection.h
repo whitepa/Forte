@@ -59,6 +59,7 @@ namespace Forte
         virtual void BackupDatabase(DbConnection &targetDatabase);
 
     private:
+        bool closeNonVirtual();
         FString getTmpBackupPath(const FString& targetPath) const;
         void backupDatabase(DbLiteConnection &dbTarget);
         void setError();

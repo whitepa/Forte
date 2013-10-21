@@ -30,7 +30,7 @@ DbLiteConnection::DbLiteConnection(int openFlags, const char *vfsName)
 DbLiteConnection::~DbLiteConnection()
 {
     FTRACE;
-    if (!Close())
+    if (!closeNonVirtual())
     {
         hlog(HLOG_ERR, "[%s] [%p] Failed to close (%i - %s)",
              mDBName.c_str(), this, mErrno, mError.c_str());
@@ -118,8 +118,12 @@ bool DbLiteConnection::Connect()
     return false;
 }
 
-
 bool DbLiteConnection::Close()
+{
+    return closeNonVirtual();
+}
+
+bool DbLiteConnection::closeNonVirtual()
 {
     hlog(HLOG_TRACE, "[%s] closing [%p/%p]", mDBName.c_str(), this, mDB);
 
