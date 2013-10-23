@@ -168,8 +168,6 @@ int SSHRunner::Run(
     FString *output,
     FString *errorOutput)
 {
-    hlog(HLOG_DEBUG, "Timeout: %lu", GetTimeout());
-
     // Try to open a channel to be used for executing the command.
     LIBSSH2_CHANNEL* channel = libssh2_channel_open_session(mSession);
     if( NULL == channel )
