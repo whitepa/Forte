@@ -161,7 +161,7 @@ void Forte::PDUPeerSetImpl::BroadcastAsync(const PDUPtr& pdu)
 
     AutoUnlockMutex lock(mPDUPeerLock);
 
-    hlog(HLOG_DEBUG2, "will enqueue pdu on %zu peers", mPDUPeers.size());
+    hlog(HLOG_DEBUG4, "will enqueue pdu on %zu peers", mPDUPeers.size());
     foreach (const IntPDUPeerPtrPair& p, mPDUPeers)
     {
         PDUPeerPtr peer(p.second);

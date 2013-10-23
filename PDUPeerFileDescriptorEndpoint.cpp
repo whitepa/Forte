@@ -557,7 +557,7 @@ bool PDUPeerFileDescriptorEndpoint::RecvPDU(PDU &out)
 
         size_t len = sizeof(PDUHeader) + pduHeader->payloadSize;
 
-        hlog(HLOG_DEBUG2, "found valid PDU: len=%zu", len);
+        hlog(HLOG_DEBUG4, "found valid PDU: len=%zu", len);
 
         out.SetHeader(*pduHeader);
         out.SetPayload(out.GetPayloadSize(),
@@ -591,7 +591,7 @@ bool PDUPeerFileDescriptorEndpoint::RecvPDU(PDU &out)
                0,
                totalBufferConsumed);
 
-        hlog(HLOG_DEBUG2, "found valid PDU: oldCursor=%zu newCursor=%zu",
+        hlog(HLOG_DEBUG4, "found valid PDU: oldCursor=%zu newCursor=%zu",
              mRecvCursor, mRecvCursor - totalBufferConsumed);
         mRecvCursor -= totalBufferConsumed;
 
