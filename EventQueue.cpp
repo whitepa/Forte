@@ -77,7 +77,6 @@ void EventQueue::Add(EventQueue::EventPtr e)
                     if (mMode == QUEUE_MODE_DROP_OLDEST_LOG && (*i))
                         hlog(HLOG_INFO, "Event queue full: dropping oldest event (%s)", (*i)->mName.c_str());
                     mQueue.pop_front();
-                    mMaxDepth.Post();
                 }
             }
             else if (mMode == QUEUE_MODE_THROW)
@@ -132,8 +131,7 @@ EventQueue::EventPtrVector EventQueue::Get(const unsigned long& max)
         return events;
     }
 
-    if (mMode == QUEUE_MODE_BLOCKING)
-        mMaxDepth.Post(events.size());
+    mMaxDepth.Post(events.size());
     if (mQueue.empty())
         mEmptyCondition.Broadcast();
     return events;

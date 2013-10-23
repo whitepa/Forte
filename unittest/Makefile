@@ -64,6 +64,7 @@ GSRCS = AutoMutexUnitTest.cpp \
 	DbLiteConnectionUnitTest.cpp \
 	DbConnectionPoolUnitTest.cpp \
 	EnableStatsUnitTest.cpp \
+	EventQueueUnitTest.cpp \
 	ExceptionUnitTest.cpp \
 	FileSystemUtilUnitTest.cpp \
 	FStringUnitTest.cpp \
