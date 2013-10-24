@@ -58,7 +58,6 @@ namespace Forte
     protected:
         void waitForConnected();
         bool lockedIsPDUReady(void) const;
-        int lockedPDURecvQueueSize() const;
         void callbackIfPDUReady();
         void bufferEnsureHasSpace();
 
@@ -104,6 +103,8 @@ namespace Forte
         mutable Forte::Mutex mConnectMutex;
 
     private:
+        void updateRecvQueueSizeStats();
+
         void setSendState(const SendState& state);
         void closeFileDescriptor();
         mutable Forte::Mutex mFDMutex;

@@ -389,15 +389,9 @@ void PDUPeerFileDescriptorEndpoint::recvUntilBlockOrComplete()
                 PDUPeerEventPtr event(new PDUPeerEvent());
                 event->mEventType = PDUPeerReceivedPDUEvent;
                 triggerCallback(event);
-                mPDURecvReadyCountAvg =
-                    mPDURecvReadyCount = lockedPDURecvQueueSize();
-            }
-            else
-            {
-                mPDURecvReadyCountAvg =
-                    mPDURecvReadyCount = 0;
             }
         }
+        updateRecvQueueSizeStats();
     }
 
     if (len < 0)
@@ -487,23 +481,28 @@ bool PDUPeerFileDescriptorEndpoint::lockedIsPDUReady(void) const
         return false;
 }
 
-int PDUPeerFileDescriptorEndpoint::lockedPDURecvQueueSize() const
+void PDUPeerFileDescriptorEndpoint::updateRecvQueueSizeStats()
 {
-    assert(lockedIsPDUReady());
-
-    unsigned int cursor = 0;
-    PDUHeader *pduHeader;
-    size_t minPDUSize = sizeof(PDUHeader);
-    int readyCount(0);
-    do
+    if (lockedIsPDUReady())
     {
-        pduHeader = reinterpret_cast<PDUHeader*>(mRecvBuffer.get() + cursor);
-        cursor +=
-            minPDUSize + pduHeader->payloadSize + pduHeader->optionalDataSize;
-        ++readyCount;
+        unsigned int cursor = 0;
+        PDUHeader *pduHeader;
+        size_t minPDUSize = sizeof(PDUHeader);
+        int readyCount(0);
+        do
+        {
+            pduHeader = reinterpret_cast<PDUHeader*>(mRecvBuffer.get() + cursor);
+            cursor +=
+                minPDUSize + pduHeader->payloadSize + pduHeader->optionalDataSize;
+            ++readyCount;
+        }
+        while (mRecvCursor >= cursor);
+        mPDURecvReadyCountAvg = mPDURecvReadyCount = readyCount;
     }
-    while (mRecvCursor >= cursor);
-    return readyCount;
+    else
+    {
+        mPDURecvReadyCountAvg = mPDURecvReadyCount = 0;
+    }
 }
 
 void PDUPeerFileDescriptorEndpoint::closeFileDescriptor()
@@ -545,12 +544,6 @@ bool PDUPeerFileDescriptorEndpoint::RecvPDU(PDU &out)
 
         if (!lockedIsPDUReady())
             return false;
-
-        //TODO: this can be incremented sooner, and might be
-        //useful. as it is reported currently, will indicate the
-        //number of pdus delivered into the consumer
-        ++mPDURecvCount;
-        mPDURecvReadyCountAvg = mPDURecvReadyCount = lockedPDURecvQueueSize();
 
         PDUHeader *pduHeader =
             reinterpret_cast<PDUHeader*>(mRecvBuffer.get());
@@ -594,6 +587,9 @@ bool PDUPeerFileDescriptorEndpoint::RecvPDU(PDU &out)
         hlog(HLOG_DEBUG4, "found valid PDU: oldCursor=%zu newCursor=%zu",
              mRecvCursor, mRecvCursor - totalBufferConsumed);
         mRecvCursor -= totalBufferConsumed;
+
+        ++mPDURecvCount;
+        updateRecvQueueSizeStats();
 
         mRecvWorkAvailable = true;
         mRecvWorkAvailableCondition.Signal();
