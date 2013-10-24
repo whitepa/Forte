@@ -390,15 +390,4 @@ namespace Forte
     std::ostream& operator<<(std::ostream& os, const Timespec& obj);
 };
 
-namespace std
-{
-
-    template <>
-    const Forte::Timespec& min (const Forte::Timespec& a, const Forte::Timespec& b);
-
-    template <>
-    const Forte::Timespec& max (const Forte::Timespec& a, const Forte::Timespec& b);
-
-}
-
 #endif
