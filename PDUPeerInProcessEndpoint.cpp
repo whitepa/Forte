@@ -123,7 +123,13 @@ bool PDUPeerInProcessEndpoint::RecvPDU(PDU &out)
 
 void PDUPeerInProcessEndpoint::connect()
 {
-    if (!mConnectMessageSent)
+    bool needToDoCallback;
+    {
+        AutoUnlockMutex lock(mMutex);
+        needToDoCallback = !mConnectMessageSent;
+    }
+
+    if (needToDoCallback)
     {
         PDUPeerEventPtr event(new PDUPeerEvent());
         event->mEventType = PDUPeerConnectedEvent;
