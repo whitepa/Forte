@@ -50,7 +50,7 @@ FString Logfile::GetLevelStr(int level)
     switch (level & HLOG_ALL)
     {
     case HLOG_SQL:
-        levelstr = "SQL";
+        levelstr = "SQL ";
         break;
     case HLOG_TRACE:
         levelstr = "TRCE";
