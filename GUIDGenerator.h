@@ -19,6 +19,7 @@ namespace Forte
         GUIDGenerator();
         virtual ~GUIDGenerator() {};
 
+        virtual std::string& GenerateGUID(std::string &out);
         virtual FString & GenerateGUID(FString &out);
         virtual void GenerateGUID(uint8_t out[]);
         virtual void GenerateGUID(std::vector<uint8_t> &out);
