@@ -52,6 +52,7 @@ SRCS =	\
 	ConditionFileLogger.cpp \
 	ConditionAsyncLogger.cpp \
 	ConditionDeltaLogger.cpp \
+	ConditionErrorLogger.cpp \
 	ConditionLogEntry.cpp \
 	Context.cpp \
 	ContextImpl.cpp \

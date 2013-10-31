@@ -59,6 +59,7 @@ GSRCS = AutoMutexUnitTest.cpp \
 	ConditionFileLoggerUnitTest.cpp \
 	ConditionAsyncLoggerUnitTest.cpp \
 	ConditionDeltaLoggerUnitTest.cpp \
+	ConditionErrorLoggerUnitTest.cpp \
 	ContextPredicateUnitTest.cpp \
 	CumulativeMovingAverageUnitTest.cpp \
 	DbLiteConnectionUnitTest.cpp \
@@ -179,6 +180,10 @@ PROG_DEPS_OBJS_ConditionAsyncLoggerUnitTest =  \
 
 PROG_DEPS_OBJS_ConditionDeltaLoggerUnitTest =  \
 	../$(TARGETDIR)/ConditionDeltaLogger.o \
+	../$(TARGETDIR)/ConditionLogEntry.o \
+
+PROG_DEPS_OBJS_ConditionErrorLoggerUnitTest =  \
+	../$(TARGETDIR)/ConditionErrorLogger.o \
 	../$(TARGETDIR)/ConditionLogEntry.o \
 
 PROG_DEPS_OBJS_ActiveObjectUnitTest =
