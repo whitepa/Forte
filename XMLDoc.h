@@ -8,6 +8,7 @@
 #include "XMLNode.h"
 #include "XMLTextNode.h"
 #include "Exception.h"
+#include <libxml/xmlsave.h>
 
 namespace Forte
 {
@@ -27,7 +28,8 @@ namespace Forte
     public:
         inline XMLNode GetRootNode() const { return XMLNode(mDoc->children); }
         XMLNode CreateDocument(const FString& root_name);
-        FString ToString() const;
+        FString ToString(
+            const int saveOptions = XML_SAVE_FORMAT | XML_SAVE_NO_DECL) const;
 
         inline operator XMLNode() const { return GetRootNode(); }
         inline operator FString() const { return ToString(); }
