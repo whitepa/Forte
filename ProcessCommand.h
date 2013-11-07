@@ -110,6 +110,13 @@ public:
     {
     }
 
+    template<typename A0, typename A1, typename A2, typename A3, typename A4, typename A5>
+    explicit ProcessCommand(boost::shared_ptr<Executor> executor,
+                            const A0& a0, const A1& a1, const A2& a2, const A3& a3, const A4& a4, const A5& a5)
+        :mExecutor(executor), mRequest(a0, a1, a2, a3, a4, a5)
+    {
+    }
+
 private:
     boost::shared_ptr<Executor> mExecutor;
     const request_type mRequest;
