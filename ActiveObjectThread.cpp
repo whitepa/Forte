@@ -9,7 +9,7 @@ using namespace Forte;
 ActiveObjectThread::ActiveObjectThread() :
     mQueue(MAX_QUEUED_CALLS)
 {
-    setThreadName("active");
+    setThreadName("ao");
     initialized();
 }
 ActiveObjectThread::~ActiveObjectThread()
@@ -36,7 +36,7 @@ bool ActiveObjectThread::IsCancelled(void)
 
 void ActiveObjectThread::SetName(const FString &name)
 {
-    setThreadName(FString(FStringFC(), "active-%s", name.c_str()));
+    setThreadName(FString(FStringFC(), "ao-%s", name.c_str()));
 }
 
 void ActiveObjectThread::DropQueue(void)
