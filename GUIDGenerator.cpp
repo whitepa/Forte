@@ -24,17 +24,6 @@ std::string& Forte::GUIDGenerator::GenerateGUID(std::string &out)
     return out;
 }
 
-FString & Forte::GUIDGenerator::GenerateGUID(FString &out)
-{
-    // generate a GUID
-    AutoUnlockMutex lock(mLock);
-    boost::uuids::uuid u = mUUIDGen();
-    std::stringstream ss;
-    ss << u;
-    out = ss.str();
-    return out;
-}
-
 void Forte::GUIDGenerator::GenerateGUID(uint8_t out[])
 {
     std::vector<uint8_t> v;
