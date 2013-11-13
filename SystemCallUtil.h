@@ -49,11 +49,19 @@ namespace Forte
     {
     public:
         static void ThrowErrNoException(int theErrNo) {
-            ThrowErrNoException(theErrNo, GetErrorDescription(theErrNo));
+            ThrowErrNoException(theErrNo, GetErrorDescription(theErrNo), HLOG_ERR);
         }
 
         static void ThrowErrNoException(int theErrNo, const FString& errDesc) {
-            hlog(HLOG_ERR, "errno %d (%s)", theErrNo, errDesc.c_str());
+            ThrowErrNoException(theErrNo, errDesc, HLOG_ERR);
+        }
+
+        static void ThrowErrNoException(int theErrNo, int logLevel) {
+            ThrowErrNoException(theErrNo, GetErrorDescription(theErrNo), logLevel);
+        }
+
+        static void ThrowErrNoException(int theErrNo, const FString& errDesc, int logLevel) {
+            hlog(logLevel, "errno %d (%s)", theErrNo, errDesc.c_str());
 
             switch (theErrNo) {
             case 0:
