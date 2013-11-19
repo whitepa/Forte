@@ -90,12 +90,6 @@ void PDUPeerFileDescriptorEndpoint::Shutdown()
         mRecvWorkAvailableCondition.Signal();
     }
 
-    // {
-    //     AutoUnlockMutex epolloutlock(mEPollOutReceivedMutex);
-    //     mEPollOutReceived = true;
-    //     mEPollOutReceivedCondition.Signal();
-    // }
-
     {
         AutoUnlockMutex lock(mEventQueueMutex);
         mEventAvailableCondition.Signal();
@@ -135,8 +129,6 @@ void PDUPeerFileDescriptorEndpoint::SetFD(int fd)
                         shared_from_this()),
                     _1));
 
-            // mEPollOutReceived = true;
-            // mEPollOutReceivedCondition.Signal();
             mRecvCursor = 0;
             mRecvWorkAvailable = true;
             mRecvWorkAvailableCondition.Signal();
@@ -513,7 +505,6 @@ void PDUPeerFileDescriptorEndpoint::closeFileDescriptor()
     {
         // stop sending and receiving
         AutoUnlockMutex recvlock(mRecvBufferMutex);
-        //AutoUnlockMutex epolloutlock(mEPollOutReceivedMutex);
         AutoUnlockMutex fdlock(mFDMutex);
         if (mFD != -1)
         {

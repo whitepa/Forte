@@ -92,9 +92,6 @@ namespace Forte
         size_t volatile mRecvCursor;
         boost::shared_ptr<Forte::FunctionThread> mRecvThread;
 
-        //mutable Forte::Mutex mEPollOutReceivedMutex;
-        //Forte::ThreadCondition mEPollOutReceivedCondition;
-        //bool mEPollOutReceived;
         boost::shared_ptr<Forte::FunctionThread> mSendThread;
 
         // since two threads are waiting on connection, they will both
