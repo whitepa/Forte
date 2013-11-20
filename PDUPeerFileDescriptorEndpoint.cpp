@@ -17,29 +17,30 @@ PDUPeerFileDescriptorEndpoint::PDUPeerFileDescriptorEndpoint(
     const boost::shared_ptr<PDUQueue>& pduSendQueue,
     const boost::shared_ptr<EPollMonitor>& epollMonitor,
     unsigned int sendTimeoutSeconds,
-    unsigned int receiveBufferSize,
-    unsigned int receiveBufferMaxSize,
-    unsigned int receiveBufferStepSize)
+    unsigned int recvBufferSize,
+    unsigned int recvBufferMaxSize,
+    unsigned int recvBufferStepSize)
     : mPDUSendQueue(pduSendQueue),
       mEPollMonitor(epollMonitor),
+      mFD(-1),
       mSendTimeoutSeconds(sendTimeoutSeconds),
       mSendState(SendStateDisconnected),
-      mRecvBufferMaxSize(receiveBufferMaxSize),
-      mRecvBufferStepSize(receiveBufferStepSize),
       mRecvWorkAvailableCondition(mRecvBufferMutex),
       mRecvWorkAvailable(false),
-      mRecvBufferSize(receiveBufferSize),
-      mRecvBuffer(new char[mRecvBufferSize]),
+      mRecvBufferSize(recvBufferSize),
+      mRecvBufferMaxSize(
+          recvBufferMaxSize < recvBufferSize
+          ? recvBufferSize
+          : recvBufferMaxSize),
+      mRecvBufferStepSize(
+          recvBufferStepSize < recvBufferSize
+          ? recvBufferSize
+          : recvBufferStepSize),
       mRecvCursor(0),
-      mFD(-1),
+      mRecvBuffer(new char[mRecvBufferSize]),
       mEventAvailableCondition(mEventQueueMutex)
 {
     FTRACE2("%d", static_cast<int>(mFD));
-
-    if (mRecvBufferMaxSize < mRecvBufferSize)
-        mRecvBufferMaxSize = mRecvBufferSize;
-    if (mRecvBufferStepSize > mRecvBufferSize)
-        mRecvBufferStepSize = mRecvBufferSize;
 
     memset(mRecvBuffer.get(), 0, mRecvBufferSize);
 
@@ -148,25 +149,66 @@ void PDUPeerFileDescriptorEndpoint::SetFD(int fd)
     }
 }
 
-void PDUPeerFileDescriptorEndpoint::HandleEPollEvent(
-    const epoll_event& e)
+void PDUPeerFileDescriptorEndpoint::waitForConnected()
 {
-    if (e.events & EPOLLIN)
+    AutoUnlockMutex connectLock(mConnectMutex);
+    //TODO: figure out a way to do this without sleeping
+    //todo:ConnectionManager.Connect(ip, port)
+    //todo:ConnectionManager.WaitForConnected(ip, port)
+    while (!Thread::MyThread()->IsShuttingDown())
     {
-        AutoUnlockMutex lock(mRecvBufferMutex);
-        mRecvWorkAvailable = true;
-        mRecvWorkAvailableCondition.Signal();
-    }
+        try
+        {
+            connect();
+        }
+        catch (ECouldNotConnect& e)
+        {
+            mPDUSendQueue->Clear();
+        }
 
-    if (e.events & EPOLLERR
-        || e.events & EPOLLHUP
-        || e.events & EPOLLRDHUP)
-    {
-        closeFileDescriptor();
+        {
+            AutoUnlockMutex fdlock(mFDMutex);
+            if (mFD != -1)
+            {
+                return;
+            }
+        }
+        Thread::MyThread()->InterruptibleSleep(Timespec::FromSeconds(1));
     }
 }
 
-#pragma GCC diagnostic ignored "-Wold-style-cast"
+void PDUPeerFileDescriptorEndpoint::closeFileDescriptor()
+{
+    FTRACE;
+
+    bool doCallback = false;
+    {
+        // stop sending and receiving
+        AutoUnlockMutex recvlock(mRecvBufferMutex);
+        AutoUnlockMutex fdlock(mFDMutex);
+        if (mFD != -1)
+        {
+            mEPollMonitor->RemoveFD(mFD);
+            mFD.Close();
+            mFD = -1;
+            doCallback = true;
+        }
+        mPDUSendQueue->Clear();
+
+        mRecvWorkAvailable = true;
+        mRecvWorkAvailableCondition.Signal();
+        setSendState(SendStateDisconnected);
+        mPDUSendQueue->TriggerWaiters();
+    }
+
+    if (doCallback)
+    {
+        PDUPeerEventPtr event(new PDUPeerEvent());
+        event->mEventType = PDUPeerDisconnectedEvent;
+        triggerCallback(event);
+    }
+}
+
 void PDUPeerFileDescriptorEndpoint::sendThreadRun()
 {
     FTRACE;
@@ -301,32 +343,10 @@ void PDUPeerFileDescriptorEndpoint::sendThreadRun()
     }
 }
 
-void PDUPeerFileDescriptorEndpoint::waitForConnected()
+void PDUPeerFileDescriptorEndpoint::setSendState(const SendState& state)
 {
-    AutoUnlockMutex connectLock(mConnectMutex);
-    //TODO: figure out a way to do this without sleeping
-    //todo:ConnectionManager.Connect(ip, port)
-    //todo:ConnectionManager.WaitForConnected(ip, port)
-    while (!Thread::MyThread()->IsShuttingDown())
-    {
-        try
-        {
-            connect();
-        }
-        catch (ECouldNotConnect& e)
-        {
-            mPDUSendQueue->Clear();
-        }
-
-        {
-            AutoUnlockMutex fdlock(mFDMutex);
-            if (mFD != -1)
-            {
-                return;
-            }
-        }
-        Thread::MyThread()->InterruptibleSleep(Timespec::FromSeconds(1));
-    }
+    AutoUnlockMutex lock(mSendStateMutex);
+    mSendState = state;
 }
 
 void PDUPeerFileDescriptorEndpoint::recvThreadRun()
@@ -444,13 +464,7 @@ void PDUPeerFileDescriptorEndpoint::bufferEnsureHasSpace()
     }
 }
 
-bool PDUPeerFileDescriptorEndpoint::IsPDUReady(void) const
-{
-    AutoUnlockMutex recvlock(mRecvBufferMutex);
-    return lockedIsPDUReady();
-}
-
-bool PDUPeerFileDescriptorEndpoint::lockedIsPDUReady(void) const
+bool PDUPeerFileDescriptorEndpoint::lockedIsPDUReady() const
 {
     // check for a valid PDU
     // (for now, read cursor is always the start of buffer)
@@ -497,37 +511,6 @@ void PDUPeerFileDescriptorEndpoint::updateRecvQueueSizeStats()
     }
 }
 
-void PDUPeerFileDescriptorEndpoint::closeFileDescriptor()
-{
-    FTRACE;
-
-    bool doCallback = false;
-    {
-        // stop sending and receiving
-        AutoUnlockMutex recvlock(mRecvBufferMutex);
-        AutoUnlockMutex fdlock(mFDMutex);
-        if (mFD != -1)
-        {
-            mEPollMonitor->RemoveFD(mFD);
-            mFD.Close();
-            mFD = -1;
-            doCallback = true;
-        }
-        mPDUSendQueue->Clear();
-
-        mRecvWorkAvailable = true;
-        mRecvWorkAvailableCondition.Signal();
-        setSendState(SendStateDisconnected);
-        mPDUSendQueue->TriggerWaiters();
-    }
-
-    if (doCallback)
-    {
-        PDUPeerEventPtr event(new PDUPeerEvent());
-        event->mEventType = PDUPeerDisconnectedEvent;
-        triggerCallback(event);
-    }
-}
 bool PDUPeerFileDescriptorEndpoint::RecvPDU(PDU &out)
 {
     {
@@ -654,8 +637,26 @@ void PDUPeerFileDescriptorEndpoint::callbackThreadRun()
     }
 }
 
-void PDUPeerFileDescriptorEndpoint::setSendState(const SendState& state)
+bool PDUPeerFileDescriptorEndpoint::IsPDUReady() const
 {
-    AutoUnlockMutex lock(mSendStateMutex);
-    mSendState = state;
+    AutoUnlockMutex recvlock(mRecvBufferMutex);
+    return lockedIsPDUReady();
+}
+
+void PDUPeerFileDescriptorEndpoint::HandleEPollEvent(
+    const epoll_event& e)
+{
+    if (e.events & EPOLLIN)
+    {
+        AutoUnlockMutex lock(mRecvBufferMutex);
+        mRecvWorkAvailable = true;
+        mRecvWorkAvailableCondition.Signal();
+    }
+
+    if (e.events & EPOLLERR
+        || e.events & EPOLLHUP
+        || e.events & EPOLLRDHUP)
+    {
+        closeFileDescriptor();
+    }
 }
