@@ -38,6 +38,13 @@ namespace Forte
                 throw EPropertyObjectNoKey(key);
             return i->second;
         };
+        void ClearProperty(const FString &key) {
+            AutoUnlockMutex lock(mPropertyLock);
+            StrStrMap::iterator i = mProperties.find(key);
+            if (i == mProperties.end())
+                throw EPropertyObjectNoKey(key);
+            mProperties.erase(i);
+        }
         void ClearAllProperties(void) {
             AutoUnlockMutex lock(mPropertyLock);
             mProperties.clear();
