@@ -46,6 +46,7 @@ void ServiceConfig::ReadConfigFile(
         throw EServiceConfig(stmp);
     }
 
+    resolveDuplicates(mPTree, "");
 }
 
 void ServiceConfig::Clear()
@@ -246,6 +247,32 @@ FString ServiceConfig::getString(const char *key)
         hlog(HLOG_ERR, "Error in query, conf file, or data: key(%s), error(%s)",
              key, e.what());
         boost::throw_exception(EServiceConfigNoKey(key));
+    }
+}
+
+void ServiceConfig::resolveDuplicates(boost::property_tree::ptree &tree,
+                                      const FString &path)
+{
+    char separator = '/';
+    // Walk the tree and re-put all values
+    auto endTree = tree.end();
+    for (auto it=tree.begin(); it != endTree; ++it)
+    {
+        boost::property_tree::ptree::value_type child = *it;
+        FString key = child.first;
+        FString childPath(path);
+        if (childPath.empty())
+            childPath = key;
+        else
+            childPath += separator + key;
+        boost::property_tree::ptree::data_type value = child.second.data();
+        //hlog(HLOG_DEBUG4, "Data: %s = |%s|", childPath.c_str(),
+        //     FString(value).c_str());
+        boost::property_tree::ptree newTree =
+            mPTree.put(
+                boost::property_tree::ptree::path_type(childPath, separator),
+                value);
+        resolveDuplicates(child.second, childPath);
     }
 }
 

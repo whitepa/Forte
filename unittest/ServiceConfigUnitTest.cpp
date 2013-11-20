@@ -56,3 +56,13 @@ TEST_F(ServiceConfigUnitTest, CopyTreeTest)
     g2fb = sc.Get<FString>("group2.foo.bar");
     ASSERT_TRUE(g1fb == g2fb);
 }
+
+TEST_F(ServiceConfigUnitTest, ResolveDuplicates)
+{
+    CGETNEW("forte.ServiceConfig", ServiceConfig, sc);
+    sc.ReadConfigFile("./ServiceConfigUnitTest.conf");
+
+    // Assume conf contains specific duplicates
+    FString newG1ID = sc.Get<FString>("group1.id");
+    ASSERT_TRUE(newG1ID == "13");
+}

@@ -277,6 +277,9 @@ namespace Forte
         }
 
     protected:
+        void resolveDuplicates(boost::property_tree::ptree &tree,
+                               const Forte::FString &path);
+
         ServiceConfigFileType mConfigFileType;
         std::string mConfigFileName;
         mutable Mutex mMutex;
