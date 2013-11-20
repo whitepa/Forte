@@ -4,7 +4,7 @@
 #include "LogManager.h"
 #include "GMockDispatcher.h"
 
-#include "PDUPeerNetworkConnectorEndpoint.h"
+#include "PDUPeerEndpointNetworkConnector.h"
 
 using namespace std;
 using namespace boost;
@@ -14,7 +14,7 @@ using ::testing::_;
 
 LogManager logManager;
 
-class PDUPeerNetworkConnectorEndpointUnitTest : public ::testing::Test
+class PDUPeerEndpointNetworkConnectorUnitTest : public ::testing::Test
 {
 public:
     static void SetUpTestCase() {
@@ -38,14 +38,14 @@ public:
     uint64_t mOwnerID;
 };
 
-TEST_F(PDUPeerNetworkConnectorEndpointUnitTest, ConstructDelete)
+TEST_F(PDUPeerEndpointNetworkConnectorUnitTest, ConstructDelete)
 {
     FTRACE;
     boost::shared_ptr<PDUQueue> pduQueue(new PDUQueue);
     boost::shared_ptr<EPollMonitor> monitor(new EPollMonitor);
 
     SocketAddress mListeningSocketAddress = make_pair("127.0.0.1", 12888);
-    PDUPeerNetworkConnectorEndpoint theClass(
+    PDUPeerEndpointNetworkConnector theClass(
         pduQueue,
         mOwnerID,
         mListeningSocketAddress,

@@ -6,7 +6,7 @@
 #include "LogManager.h"
 
 #include "PDUPeerEndpointFactory.h"
-#include "PDUPeerInProcessEndpoint.h"
+#include "PDUPeerEndpointInProcess.h"
 #include "PDUPeerImpl.h"
 
 #include "GMockPDUPeerEndpoint.h"

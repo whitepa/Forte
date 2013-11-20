@@ -1,11 +1,11 @@
 // #SCQAD TAG: forte.pdupeer
-#include "PDUPeerInProcessEndpoint.h"
+#include "PDUPeerEndpointInProcess.h"
 #include "FTrace.h"
 #include <boost/make_shared.hpp>
 
 using namespace Forte;
 
-PDUPeerInProcessEndpoint::PDUPeerInProcessEndpoint(
+PDUPeerEndpointInProcess::PDUPeerEndpointInProcess(
     const boost::shared_ptr<PDUQueue>& sendQueue)
     : mSendQueue(sendQueue),
       mConnectMessageSent(false),
@@ -13,11 +13,11 @@ PDUPeerInProcessEndpoint::PDUPeerInProcessEndpoint(
 {
 }
 
-PDUPeerInProcessEndpoint::~PDUPeerInProcessEndpoint()
+PDUPeerEndpointInProcess::~PDUPeerEndpointInProcess()
 {
 }
 
-void PDUPeerInProcessEndpoint::Start()
+void PDUPeerEndpointInProcess::Start()
 {
     recordStartCall();
 
@@ -30,17 +30,17 @@ void PDUPeerInProcessEndpoint::Start()
     mSendThread.reset(
         new FunctionThread(
             FunctionThread::AutoInit(),
-            boost::bind(&PDUPeerInProcessEndpoint::sendThreadRun, this),
+            boost::bind(&PDUPeerEndpointInProcess::sendThreadRun, this),
             "pdusend-fd"));
 
     mCallbackThread.reset(
         new FunctionThread(
             FunctionThread::AutoInit(),
-            boost::bind(&PDUPeerInProcessEndpoint::callbackThreadRun, this),
+            boost::bind(&PDUPeerEndpointInProcess::callbackThreadRun, this),
             "pduclbk-in"));
 }
 
-void PDUPeerInProcessEndpoint::Shutdown()
+void PDUPeerEndpointInProcess::Shutdown()
 {
     recordShutdownCall();
 
@@ -61,7 +61,7 @@ void PDUPeerInProcessEndpoint::Shutdown()
     mCallbackThread.reset();
 }
 
-void PDUPeerInProcessEndpoint::sendThreadRun()
+void PDUPeerEndpointInProcess::sendThreadRun()
 {
     FTRACE;
     hlog(HLOG_DEBUG2, "Starting PDUPeerSendThread thread");
@@ -91,19 +91,19 @@ void PDUPeerInProcessEndpoint::sendThreadRun()
     }
 }
 
-bool PDUPeerInProcessEndpoint::IsPDUReady() const
+bool PDUPeerEndpointInProcess::IsPDUReady() const
 {
     AutoUnlockMutex lock(mMutex);
     return (!mPDUBuffer.empty());
 }
 
-bool PDUPeerInProcessEndpoint::RecvPDU(PDU &out)
+bool PDUPeerEndpointInProcess::RecvPDU(PDU &out)
 {
     AutoUnlockMutex lock(mMutex);
     if (!mPDUBuffer.empty())
     {
         //NOTE: this code is written this way because the original
-        // PDUPeer's RecvPDU (now PDUPeerFileDescriptorEndpoint) is
+        // PDUPeer's RecvPDU (now PDUPeerEndpointFD) is
         // copying the PDU data into the PDU& directly from an
         // incoming ring buffer. A shared_ptr could be returned from
         // this function, but all call sites will need to be changed.
@@ -121,7 +121,7 @@ bool PDUPeerInProcessEndpoint::RecvPDU(PDU &out)
     return false;
 }
 
-void PDUPeerInProcessEndpoint::connect()
+void PDUPeerEndpointInProcess::connect()
 {
     bool needToDoCallback;
     {
@@ -140,7 +140,7 @@ void PDUPeerInProcessEndpoint::connect()
     }
 }
 
-void PDUPeerInProcessEndpoint::triggerCallback(
+void PDUPeerEndpointInProcess::triggerCallback(
     const boost::shared_ptr<PDUPeerEvent>& event)
 {
     AutoUnlockMutex lock(mEventQueueMutex);
@@ -148,7 +148,7 @@ void PDUPeerInProcessEndpoint::triggerCallback(
     mEventAvailableCondition.Signal();
 }
 
-void PDUPeerInProcessEndpoint::callbackThreadRun()
+void PDUPeerEndpointInProcess::callbackThreadRun()
 {
     Forte::Thread* thisThread = Forte::Thread::MyThread();
     boost::shared_ptr<Forte::PDUPeerEvent> event;

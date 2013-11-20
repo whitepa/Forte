@@ -4,7 +4,7 @@
 #include <sys/types.h>
 #include "AutoMutex.h"
 #include "LogManager.h"
-#include "PDUPeerFileDescriptorEndpoint.h"
+#include "PDUPeerEndpointFD.h"
 #include "Types.h"
 #include "SystemCallUtil.h"
 #include "SocketUtil.h"
@@ -13,7 +13,7 @@
 
 using namespace Forte;
 
-PDUPeerFileDescriptorEndpoint::PDUPeerFileDescriptorEndpoint(
+PDUPeerEndpointFD::PDUPeerEndpointFD(
     const boost::shared_ptr<PDUQueue>& pduSendQueue,
     const boost::shared_ptr<EPollMonitor>& epollMonitor,
     unsigned int sendTimeoutSeconds,
@@ -50,31 +50,31 @@ PDUPeerFileDescriptorEndpoint::PDUPeerFileDescriptorEndpoint(
     }
 }
 
-void PDUPeerFileDescriptorEndpoint::Start()
+void PDUPeerEndpointFD::Start()
 {
     recordStartCall();
 
     mSendThread.reset(
         new FunctionThread(
             FunctionThread::AutoInit(),
-            boost::bind(&PDUPeerFileDescriptorEndpoint::sendThreadRun, this),
+            boost::bind(&PDUPeerEndpointFD::sendThreadRun, this),
             "pdusend-fd"));
 
     mRecvThread.reset(
         new FunctionThread(
             FunctionThread::AutoInit(),
-            boost::bind(&PDUPeerFileDescriptorEndpoint::recvThreadRun, this),
+            boost::bind(&PDUPeerEndpointFD::recvThreadRun, this),
             "pdurecv-fd"));
 
     mCallbackThread.reset(
         new FunctionThread(
             FunctionThread::AutoInit(),
-            boost::bind(&PDUPeerFileDescriptorEndpoint::callbackThreadRun, this),
+            boost::bind(&PDUPeerEndpointFD::callbackThreadRun, this),
             "pduclbk-fd"));
 
 }
 
-void PDUPeerFileDescriptorEndpoint::Shutdown()
+void PDUPeerEndpointFD::Shutdown()
 {
     recordShutdownCall();
 
@@ -101,7 +101,7 @@ void PDUPeerFileDescriptorEndpoint::Shutdown()
     mCallbackThread->WaitForShutdown();
 }
 
-void PDUPeerFileDescriptorEndpoint::SetFD(int fd)
+void PDUPeerEndpointFD::SetFD(int fd)
 {
     FTRACE2("%d", fd);
 
@@ -125,8 +125,8 @@ void PDUPeerFileDescriptorEndpoint::SetFD(int fd)
                 fd,
                 ev,
                 boost::bind(
-                    &PDUPeerFileDescriptorEndpoint::HandleEPollEvent,
-                    boost::static_pointer_cast<PDUPeerFileDescriptorEndpoint>(
+                    &PDUPeerEndpointFD::HandleEPollEvent,
+                    boost::static_pointer_cast<PDUPeerEndpointFD>(
                         shared_from_this()),
                     _1));
 
@@ -149,7 +149,7 @@ void PDUPeerFileDescriptorEndpoint::SetFD(int fd)
     }
 }
 
-void PDUPeerFileDescriptorEndpoint::waitForConnected()
+void PDUPeerEndpointFD::waitForConnected()
 {
     AutoUnlockMutex connectLock(mConnectMutex);
     //TODO: figure out a way to do this without sleeping
@@ -177,7 +177,7 @@ void PDUPeerFileDescriptorEndpoint::waitForConnected()
     }
 }
 
-void PDUPeerFileDescriptorEndpoint::closeFileDescriptor()
+void PDUPeerEndpointFD::closeFileDescriptor()
 {
     FTRACE;
 
@@ -209,7 +209,7 @@ void PDUPeerFileDescriptorEndpoint::closeFileDescriptor()
     }
 }
 
-void PDUPeerFileDescriptorEndpoint::sendThreadRun()
+void PDUPeerEndpointFD::sendThreadRun()
 {
     FTRACE;
     hlog(HLOG_DEBUG2, "Starting PDUPeerSendThread thread");
@@ -343,13 +343,13 @@ void PDUPeerFileDescriptorEndpoint::sendThreadRun()
     }
 }
 
-void PDUPeerFileDescriptorEndpoint::setSendState(const SendState& state)
+void PDUPeerEndpointFD::setSendState(const SendState& state)
 {
     AutoUnlockMutex lock(mSendStateMutex);
     mSendState = state;
 }
 
-void PDUPeerFileDescriptorEndpoint::recvThreadRun()
+void PDUPeerEndpointFD::recvThreadRun()
 {
     FTRACE;
     hlog(HLOG_DEBUG2, "Starting PDUPeerRecvThread thread");
@@ -373,7 +373,7 @@ void PDUPeerFileDescriptorEndpoint::recvThreadRun()
     }
 }
 
-void PDUPeerFileDescriptorEndpoint::recvUntilBlockOrComplete()
+void PDUPeerEndpointFD::recvUntilBlockOrComplete()
 {
     const int flags(0);
     int len=1;
@@ -432,7 +432,7 @@ void PDUPeerFileDescriptorEndpoint::recvUntilBlockOrComplete()
     }
 }
 
-void PDUPeerFileDescriptorEndpoint::bufferEnsureHasSpace()
+void PDUPeerEndpointFD::bufferEnsureHasSpace()
 {
     try
     {
@@ -464,7 +464,7 @@ void PDUPeerFileDescriptorEndpoint::bufferEnsureHasSpace()
     }
 }
 
-bool PDUPeerFileDescriptorEndpoint::lockedIsPDUReady() const
+bool PDUPeerEndpointFD::lockedIsPDUReady() const
 {
     // check for a valid PDU
     // (for now, read cursor is always the start of buffer)
@@ -487,7 +487,7 @@ bool PDUPeerFileDescriptorEndpoint::lockedIsPDUReady() const
         return false;
 }
 
-void PDUPeerFileDescriptorEndpoint::updateRecvQueueSizeStats()
+void PDUPeerEndpointFD::updateRecvQueueSizeStats()
 {
     if (lockedIsPDUReady())
     {
@@ -511,7 +511,7 @@ void PDUPeerFileDescriptorEndpoint::updateRecvQueueSizeStats()
     }
 }
 
-bool PDUPeerFileDescriptorEndpoint::RecvPDU(PDU &out)
+bool PDUPeerEndpointFD::RecvPDU(PDU &out)
 {
     {
         AutoUnlockMutex recvlock(mRecvBufferMutex);
@@ -593,7 +593,7 @@ bool PDUPeerFileDescriptorEndpoint::RecvPDU(PDU &out)
     return true;
 }
 
-void PDUPeerFileDescriptorEndpoint::triggerCallback(
+void PDUPeerEndpointFD::triggerCallback(
     const boost::shared_ptr<PDUPeerEvent>& event)
 {
     AutoUnlockMutex lock(mEventQueueMutex);
@@ -601,7 +601,7 @@ void PDUPeerFileDescriptorEndpoint::triggerCallback(
     mEventAvailableCondition.Signal();
 }
 
-void PDUPeerFileDescriptorEndpoint::callbackThreadRun()
+void PDUPeerEndpointFD::callbackThreadRun()
 {
     Forte::Thread* thisThread = Forte::Thread::MyThread();
     boost::shared_ptr<Forte::PDUPeerEvent> event;
@@ -637,13 +637,13 @@ void PDUPeerFileDescriptorEndpoint::callbackThreadRun()
     }
 }
 
-bool PDUPeerFileDescriptorEndpoint::IsPDUReady() const
+bool PDUPeerEndpointFD::IsPDUReady() const
 {
     AutoUnlockMutex recvlock(mRecvBufferMutex);
     return lockedIsPDUReady();
 }
 
-void PDUPeerFileDescriptorEndpoint::HandleEPollEvent(
+void PDUPeerEndpointFD::HandleEPollEvent(
     const epoll_event& e)
 {
     if (e.events & EPOLLIN)

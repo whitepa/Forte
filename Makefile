@@ -81,10 +81,10 @@ SRCS =	\
 	OpenSSLInitializer.cpp \
 	PDU.cpp \
 	PDUPeerEndpointFactoryImpl.cpp \
-	PDUPeerFileDescriptorEndpoint.cpp \
+	PDUPeerEndpointFD.cpp \
 	PDUPeerImpl.cpp \
-	PDUPeerInProcessEndpoint.cpp \
-	PDUPeerNetworkConnectorEndpoint.cpp \
+	PDUPeerEndpointInProcess.cpp \
+	PDUPeerEndpointNetworkConnector.cpp \
 	PDUPeerSetBuilderImpl.cpp \
 	PDUPeerSetConnectionHandler.cpp \
 	PDUPeerSetImpl.cpp \

@@ -1,11 +1,11 @@
 // #SCQAD TAG: forte.pdupeer
-#ifndef __Forte_PDUPeerNetworkConnectorEndpoint_h_
-#define __Forte_PDUPeerNetworkConnectorEndpoint_h_
+#ifndef __Forte_PDUPeerEndpointNetworkConnector_h_
+#define __Forte_PDUPeerEndpointNetworkConnector_h_
 
 #include "Exception.h"
 #include "Object.h"
 #include "Dispatcher.h"
-#include "PDUPeerFileDescriptorEndpoint.h"
+#include "PDUPeerEndpointFD.h"
 #include "PDUPeerTypes.h"
 #include "SocketUtil.h"
 
@@ -14,19 +14,19 @@ namespace Forte
     class Mutex;
     class Event;
 
-    class PDUPeerNetworkConnectorEndpoint : public PDUPeerFileDescriptorEndpoint
+    class PDUPeerEndpointNetworkConnector : public PDUPeerEndpointFD
     {
     public:
-        PDUPeerNetworkConnectorEndpoint(
+        PDUPeerEndpointNetworkConnector(
             const boost::shared_ptr<PDUQueue>& pduSendQueue,
             uint64_t ownerPeerSetID,
             const SocketAddress& connectToAddress,
             const boost::shared_ptr<EPollMonitor>& epollMonitor);
 
-        virtual ~PDUPeerNetworkConnectorEndpoint() {}
+        virtual ~PDUPeerEndpointNetworkConnector() {}
 
-        boost::shared_ptr<PDUPeerNetworkConnectorEndpoint> GetPtr() {
-            return boost::static_pointer_cast<PDUPeerNetworkConnectorEndpoint>(
+        boost::shared_ptr<PDUPeerEndpointNetworkConnector> GetPtr() {
+            return boost::static_pointer_cast<PDUPeerEndpointNetworkConnector>(
                 Object::shared_from_this());
         }
 

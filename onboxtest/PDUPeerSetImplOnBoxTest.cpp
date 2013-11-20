@@ -14,7 +14,7 @@
 #include "PDUPeerImpl.h"
 #include "PDUPeerSetImpl.h"
 #include "PDUPeerSetConnectionHandler.h"
-#include "PDUPeerNetworkConnectorEndpoint.h"
+#include "PDUPeerEndpointNetworkConnector.h"
 
 #include "ReceiverThread.h"
 #include "OnDemandDispatcher.h"

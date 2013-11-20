@@ -1,6 +1,6 @@
 // #SCQAD TAG: forte.pdupeer
-#ifndef __Forte_PDUPeerFileDescriptorEndpoint_h_
-#define __Forte_PDUPeerFileDescriptorEndpoint_h_
+#ifndef __Forte_PDUPeerEndpointFD_h_
+#define __Forte_PDUPeerEndpointFD_h_
 
 #include <sys/epoll.h>
 #include <sys/types.h>
@@ -18,17 +18,17 @@ namespace Forte
     static const int DEFAULT_MAX_BUFFER_SIZE = 1048576;
     static const int DEFAULT_SEND_TIMEOUT = 20*1000;
 
-    class PDUPeerFileDescriptorEndpoint : public PDUPeerEndpoint
+    class PDUPeerEndpointFD : public PDUPeerEndpoint
     {
     public:
-        PDUPeerFileDescriptorEndpoint(
+        PDUPeerEndpointFD(
             const boost::shared_ptr<Forte::PDUQueue>& pduSendQueue,
             const boost::shared_ptr<EPollMonitor>& epollMonitor,
             unsigned int sendTimeoutSeconds = DEFAULT_SEND_TIMEOUT,
             unsigned int recvBufferSize = RECV_BUFFER_SIZE,
             unsigned int recvBufferMaxSize = DEFAULT_MAX_BUFFER_SIZE,
             unsigned int recvBufferStepSize = RECV_BUFFER_SIZE);
-        virtual ~PDUPeerFileDescriptorEndpoint() {}
+        virtual ~PDUPeerEndpointFD() {}
 
         virtual void Start();
         virtual void Shutdown();

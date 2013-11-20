@@ -12,8 +12,8 @@ namespace Forte
     class PDUPeerEndpoint;
     typedef boost::shared_ptr<PDUPeerEndpoint> PDUPeerEndpointPtr;
 
-    class PDUPeerNetworkConnectorEndpoint;
-    typedef boost::shared_ptr<PDUPeerNetworkConnectorEndpoint> PDUPeerNetworkConnectorEndpointPtr;
+    class PDUPeerEndpointNetworkConnector;
+    typedef boost::shared_ptr<PDUPeerEndpointNetworkConnector> PDUPeerEndpointNetworkConnectorPtr;
 
     class PDUPeer;
     typedef boost::shared_ptr<PDUPeer> PDUPeerPtr;

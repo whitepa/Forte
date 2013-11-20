@@ -3,7 +3,7 @@
 #include "FTrace.h"
 #include "LogManager.h"
 #include <boost/bind.hpp>
-#include "PDUPeerInProcessEndpoint.h"
+#include "PDUPeerEndpointInProcess.h"
 
 using namespace std;
 using namespace boost;
@@ -11,7 +11,7 @@ using namespace Forte;
 
 LogManager logManager;
 
-class PDUPeerInProcessEndpointUnitTest : public ::testing::Test
+class PDUPeerEndpointInProcessUnitTest : public ::testing::Test
 {
 public:
     static void SetUpTestCase() {
@@ -55,33 +55,33 @@ public:
     int mSendErrorCallbackReceiveCount;
 };
 
-TEST_F(PDUPeerInProcessEndpointUnitTest, ConstructDelete)
+TEST_F(PDUPeerEndpointInProcessUnitTest, ConstructDelete)
 {
     FTRACE;
     boost::shared_ptr<PDUQueue> pduQueue(new PDUQueue);
-    PDUPeerInProcessEndpoint theClass(pduQueue);
+    PDUPeerEndpointInProcess theClass(pduQueue);
 }
 
-TEST_F(PDUPeerInProcessEndpointUnitTest, Requires2StageConstruction)
+TEST_F(PDUPeerEndpointInProcessUnitTest, Requires2StageConstruction)
 {
     FTRACE;
     boost::shared_ptr<PDUQueue> pduQueue(new PDUQueue);
-    PDUPeerInProcessEndpoint theClass(pduQueue);
+    PDUPeerEndpointInProcess theClass(pduQueue);
     theClass.SetEventCallback(
-        boost::bind(&PDUPeerInProcessEndpointUnitTest::EventCallback, this, _1));
+        boost::bind(&PDUPeerEndpointInProcessUnitTest::EventCallback, this, _1));
 
     theClass.Start();
     sleep(1);
     theClass.Shutdown();
 }
 
-TEST_F(PDUPeerInProcessEndpointUnitTest, PullsPDUsFromPDUQueueAndSendsThem)
+TEST_F(PDUPeerEndpointInProcessUnitTest, PullsPDUsFromPDUQueueAndSendsThem)
 {
     FTRACE;
     boost::shared_ptr<PDUQueue> pduQueue(new PDUQueue);
-    PDUPeerInProcessEndpoint theClass(pduQueue);
+    PDUPeerEndpointInProcess theClass(pduQueue);
     theClass.SetEventCallback(
-        boost::bind(&PDUPeerInProcessEndpointUnitTest::EventCallback, this, _1));
+        boost::bind(&PDUPeerEndpointInProcessUnitTest::EventCallback, this, _1));
     theClass.Start();
 
     PDUPtr p(new PDU);

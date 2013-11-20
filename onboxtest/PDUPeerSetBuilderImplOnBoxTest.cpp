@@ -1215,7 +1215,7 @@ TEST_F(PDUPeerSetBuilderImplOnBoxTest,
 }
 
 //NOTE: PDUs with optional data larger than receiveBufferMaxSize in
-//PDUPeerFileDescriptorEndpoint endpoint will lock up
+//PDUPeerEndpointFD endpoint will lock up
 TEST_F(PDUPeerSetBuilderImplOnBoxTest, CanBroadcastPDUWithHalfMegOptionalData)
 {
     FTRACE;

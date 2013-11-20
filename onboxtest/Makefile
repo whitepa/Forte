@@ -50,11 +50,11 @@ PROG_DEPS_OBJS_PDUPeerSetImplOnBoxTest = \
 	../$(TARGETDIR)/PDUPeerSetBuilderImpl.o \
 	../$(TARGETDIR)/PDUPeerSetConnectionHandler.o \
 	../$(TARGETDIR)/PDUPeerEndpointFactoryImpl.o \
-	../$(TARGETDIR)/PDUPeerNetworkConnectorEndpoint.o \
-	../$(TARGETDIR)/PDUPeerInProcessEndpoint.o \
+	../$(TARGETDIR)/PDUPeerEndpointNetworkConnector.o \
+	../$(TARGETDIR)/PDUPeerEndpointInProcess.o \
 	../$(TARGETDIR)/PDUPeerSetImpl.o \
 	../$(TARGETDIR)/PDUPeerImpl.o \
-	../$(TARGETDIR)/PDUPeerFileDescriptorEndpoint.o \
+	../$(TARGETDIR)/PDUPeerEndpointFD.o \
 	../$(TARGETDIR)/Thread.o \
 	../$(TARGETDIR)/ThreadPoolDispatcher.o \
 	../$(TARGETDIR)/OnDemandDispatcher.o \
@@ -68,11 +68,11 @@ PROG_DEPS_OBJS_PDUPeerSetBuilderImplOnBoxTest = \
 	../$(TARGETDIR)/PDUPeerSetBuilderImpl.o \
 	../$(TARGETDIR)/PDUPeerSetConnectionHandler.o \
 	../$(TARGETDIR)/PDUPeerEndpointFactoryImpl.o \
-	../$(TARGETDIR)/PDUPeerNetworkConnectorEndpoint.o \
-	../$(TARGETDIR)/PDUPeerInProcessEndpoint.o \
+	../$(TARGETDIR)/PDUPeerEndpointNetworkConnector.o \
+	../$(TARGETDIR)/PDUPeerEndpointInProcess.o \
 	../$(TARGETDIR)/PDUPeerSetImpl.o \
 	../$(TARGETDIR)/PDUPeerImpl.o \
-	../$(TARGETDIR)/PDUPeerFileDescriptorEndpoint.o \
+	../$(TARGETDIR)/PDUPeerEndpointFD.o \
 	../$(TARGETDIR)/Thread.o \
 	../$(TARGETDIR)/ThreadPoolDispatcher.o \
 	../$(TARGETDIR)/OnDemandDispatcher.o \

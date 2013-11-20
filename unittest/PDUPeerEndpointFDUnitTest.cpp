@@ -6,8 +6,8 @@
 #include "LogManager.h"
 
 #include "PDUPeerEndpointFactory.h"
-#include "PDUPeerInProcessEndpoint.h"
-#include "PDUPeerFileDescriptorEndpoint.h"
+#include "PDUPeerEndpointInProcess.h"
+#include "PDUPeerEndpointFD.h"
 
 #include "GMockPDUPeerEndpoint.h"
 #include "GMockDispatcher.h"
@@ -20,10 +20,10 @@ using ::testing::_;
 
 LogManager logManager;
 
-class PDUPeerFileDescriptorEndpointUnitTest : public ::testing::Test
+class PDUPeerEndpointFDUnitTest : public ::testing::Test
 {
 public:
-    PDUPeerFileDescriptorEndpointUnitTest()
+    PDUPeerEndpointFDUnitTest()
         : mEventReceivedCondition(mEventMutex) {}
 
     static void SetUpTestCase() {
@@ -76,16 +76,16 @@ public:
         mFD1 = fds[0];
         mFD2 = fds[1];
 
-        mEndpoint1.reset(new PDUPeerFileDescriptorEndpoint(mPDUQueue1, mMonitor));
-        mEndpoint2.reset(new PDUPeerFileDescriptorEndpoint(mPDUQueue2, mMonitor));
+        mEndpoint1.reset(new PDUPeerEndpointFD(mPDUQueue1, mMonitor));
+        mEndpoint2.reset(new PDUPeerEndpointFD(mPDUQueue2, mMonitor));
 
         mEndpoint1->SetEventCallback(
             boost::bind(
-                &PDUPeerFileDescriptorEndpointUnitTest::EventCallback, this, _1));
+                &PDUPeerEndpointFDUnitTest::EventCallback, this, _1));
 
         mEndpoint2->SetEventCallback(
             boost::bind(
-                &PDUPeerFileDescriptorEndpointUnitTest::EventCallback, this, _1));
+                &PDUPeerEndpointFDUnitTest::EventCallback, this, _1));
 
         mEndpoint1->SetFD(mFD1);
         mEndpoint2->SetFD(mFD2);
@@ -146,8 +146,8 @@ public:
     Forte::AutoFD mFD2;
     boost::shared_ptr<PDUQueue> mPDUQueue1;
     boost::shared_ptr<PDUQueue> mPDUQueue2;
-    boost::shared_ptr<PDUPeerFileDescriptorEndpoint> mEndpoint1;
-    boost::shared_ptr<PDUPeerFileDescriptorEndpoint> mEndpoint2;
+    boost::shared_ptr<PDUPeerEndpointFD> mEndpoint1;
+    boost::shared_ptr<PDUPeerEndpointFD> mEndpoint2;
 };
 
 struct TestPayload
@@ -196,15 +196,15 @@ size_t testPDUSize(const boost::shared_ptr<PDU>& pdu)
         + pdu->GetOptionalDataSize();
 }
 
-TEST_F(PDUPeerFileDescriptorEndpointUnitTest, ConstructDelete)
+TEST_F(PDUPeerEndpointFDUnitTest, ConstructDelete)
 {
     FTRACE;
     boost::shared_ptr<PDUQueue> pduQueue(new PDUQueue);
     boost::shared_ptr<EPollMonitor> monitor(new EPollMonitor);
-    PDUPeerFileDescriptorEndpoint e(pduQueue, monitor);
+    PDUPeerEndpointFD e(pduQueue, monitor);
 }
 
-TEST_F(PDUPeerFileDescriptorEndpointUnitTest, SetFDTriggersConnectedCallback)
+TEST_F(PDUPeerEndpointFDUnitTest, SetFDTriggersConnectedCallback)
 {
     FTRACE;
     boost::shared_ptr<EPollMonitor> monitor(new EPollMonitor);
@@ -216,12 +216,12 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest, SetFDTriggersConnectedCallback)
     Forte::AutoFD fd2(fds[1]);
 
     boost::shared_ptr<PDUQueue> pduQueue1(new PDUQueue);
-    boost::shared_ptr<PDUPeerFileDescriptorEndpoint> e1(
-        new PDUPeerFileDescriptorEndpoint(pduQueue1, monitor));
+    boost::shared_ptr<PDUPeerEndpointFD> e1(
+        new PDUPeerEndpointFD(pduQueue1, monitor));
 
     e1->SetEventCallback(
         boost::bind(
-            &PDUPeerFileDescriptorEndpointUnitTest::EventCallback, this, _1));
+            &PDUPeerEndpointFDUnitTest::EventCallback, this, _1));
 
     e1->Start();
 
@@ -242,7 +242,7 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest, SetFDTriggersConnectedCallback)
     monitor->Shutdown();
 }
 
-TEST_F(PDUPeerFileDescriptorEndpointUnitTest, SendsAndRecvsViaEPollAndPDUQueue)
+TEST_F(PDUPeerEndpointFDUnitTest, SendsAndRecvsViaEPollAndPDUQueue)
 {
     FTRACE;
     boost::shared_ptr<EPollMonitor> monitor(new EPollMonitor);
@@ -254,13 +254,13 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest, SendsAndRecvsViaEPollAndPDUQueue)
     Forte::AutoFD fd2(fds[1]);
 
     boost::shared_ptr<PDUQueue> pduQueue1(new PDUQueue);
-    boost::shared_ptr<PDUPeerFileDescriptorEndpoint> e1(
-        new PDUPeerFileDescriptorEndpoint(pduQueue1, monitor));
+    boost::shared_ptr<PDUPeerEndpointFD> e1(
+        new PDUPeerEndpointFD(pduQueue1, monitor));
     e1->SetFD(fds[0]);
 
     boost::shared_ptr<PDUQueue> pduQueue2(new PDUQueue);
-    boost::shared_ptr<PDUPeerFileDescriptorEndpoint> e2(
-        new PDUPeerFileDescriptorEndpoint(pduQueue2, monitor));
+    boost::shared_ptr<PDUPeerEndpointFD> e2(
+        new PDUPeerEndpointFD(pduQueue2, monitor));
     e2->SetFD(fds[1]);
 
     e1->Start();
@@ -282,7 +282,7 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest, SendsAndRecvsViaEPollAndPDUQueue)
     monitor->Shutdown();
 }
 
-TEST_F(PDUPeerFileDescriptorEndpointUnitTest, QueuesPDUsForSending)
+TEST_F(PDUPeerEndpointFDUnitTest, QueuesPDUsForSending)
 {
     FTRACE;
     setupDefaultFDPair();
@@ -304,7 +304,7 @@ TEST_F(PDUPeerFileDescriptorEndpointUnitTest, QueuesPDUsForSending)
     teardownDefaultFDPair();
 }
 
-TEST_F(PDUPeerFileDescriptorEndpointUnitTest,
+TEST_F(PDUPeerEndpointFDUnitTest,
        FiresDisconnect_OnCloseFD_EPollErr)
 {
     FTRACE;
@@ -342,7 +342,7 @@ TEST_F(PDUPeerSetImplOnBoxTest, CanReceiveDataWhenSendQueueIsFull)
 }
 */
 
-TEST_F(PDUPeerFileDescriptorEndpointUnitTest, PDUPayoadVersionTest)
+TEST_F(PDUPeerEndpointFDUnitTest, PDUPayoadVersionTest)
 {
     FTRACE;
     setupDefaultFDPair();

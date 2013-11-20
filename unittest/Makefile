@@ -77,10 +77,10 @@ GSRCS = AutoMutexUnitTest.cpp \
 	LogManagerUnitTest.cpp \
 	MurmurUnitTest.cpp \
 	OnDemandDispatcherUnitTest.cpp \
-	PDUPeerFileDescriptorEndpointUnitTest.cpp \
+	PDUPeerEndpointFDUnitTest.cpp \
 	PDUPeerImplUnitTest.cpp \
-	PDUPeerInProcessEndpointUnitTest.cpp \
-	PDUPeerNetworkConnectorEndpointUnitTest.cpp \
+	PDUPeerEndpointInProcessUnitTest.cpp \
+	PDUPeerEndpointNetworkConnectorUnitTest.cpp \
 	PDUUnitTest.cpp \
 	PidFileUnitTest.cpp \
 	ProcessCommandUnitTest.cpp \
@@ -135,7 +135,7 @@ PROG_DEPS_OBJS_ProcessManagerUnitTest =  \
 	../$(TARGETDIR)/ProcessFutureImpl.o \
 	../$(TARGETDIR)/PDU.o \
 	../$(TARGETDIR)/PDUPeerSetImpl.o \
-	../$(TARGETDIR)/PDUPeerFileDescriptorEndpoint.o \
+	../$(TARGETDIR)/PDUPeerEndpointFD.o \
 
 PROG_DEPS_OBJS_ProcessCommandUnitTest =
 
@@ -146,17 +146,17 @@ PROG_DEPS_OBJS_ProcessorInformationUnitTest =  \
 	../$(TARGETDIR)/ProcFileSystem.o \
 	../$(TARGETDIR)/ProcessorInformation.o \
 
-PROG_DEPS_OBJS_PDUPeerInProcessEndpointUnitTest = \
+PROG_DEPS_OBJS_PDUPeerEndpointInProcessUnitTest = \
 	../$(TARGETDIR)/PDU.o \
-	../$(TARGETDIR)/PDUPeerInProcessEndpoint.o \
+	../$(TARGETDIR)/PDUPeerEndpointInProcess.o \
 
-PROG_DEPS_OBJS_PDUPeerFileDescriptorEndpointUnitTest = \
+PROG_DEPS_OBJS_PDUPeerEndpointFDUnitTest = \
 	../$(TARGETDIR)/PDU.o \
-	../$(TARGETDIR)/PDUPeerFileDescriptorEndpoint.o \
+	../$(TARGETDIR)/PDUPeerEndpointFD.o \
 
-PROG_DEPS_OBJS_PDUPeerNetworkConnectorEndpointUnitTest = \
+PROG_DEPS_OBJS_PDUPeerEndpointNetworkConnectorUnitTest = \
 	../$(TARGETDIR)/PDU.o \
-	../$(TARGETDIR)/PDUPeerNetworkConnectorEndpoint.o \
+	../$(TARGETDIR)/PDUPeerEndpointNetworkConnector.o \
 	../$(TARGETDIR)/Thread.o \
 
 PROG_DEPS_OBJS_PDUPeerImplUnitTest = \

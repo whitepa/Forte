@@ -2,9 +2,9 @@
 #include <boost/make_shared.hpp>
 #include "FTrace.h"
 #include "PDUPeerEndpointFactoryImpl.h"
-#include "PDUPeerFileDescriptorEndpoint.h"
-#include "PDUPeerNetworkConnectorEndpoint.h"
-#include "PDUPeerInProcessEndpoint.h"
+#include "PDUPeerEndpointFD.h"
+#include "PDUPeerEndpointNetworkConnector.h"
+#include "PDUPeerEndpointInProcess.h"
 
 using boost::shared_ptr;
 using namespace Forte;
@@ -15,8 +15,8 @@ boost::shared_ptr<PDUPeerEndpoint> PDUPeerEndpointFactoryImpl::Create(
 {
     FTRACE2("%d", fd);
     hlog(HLOG_DEBUG2, "Creating new FileDescriptorPDUPeer");
-    boost::shared_ptr<PDUPeerFileDescriptorEndpoint> p(
-        new PDUPeerFileDescriptorEndpoint(
+    boost::shared_ptr<PDUPeerEndpointFD> p(
+        new PDUPeerEndpointFD(
             pduSendQueue,
             mEPollMonitor.lock()));
     p->SetFD(fd);
@@ -43,7 +43,7 @@ boost::shared_ptr<PDUPeerEndpoint> PDUPeerEndpointFactoryImpl::Create(
             << ":" << connectToSocketAddress.second);
 
         return boost::shared_ptr<PDUPeerEndpoint>(
-            new PDUPeerFileDescriptorEndpoint(
+            new PDUPeerEndpointFD(
                 pduSendQueue,
                 mEPollMonitor.lock()));
     }
@@ -53,19 +53,19 @@ boost::shared_ptr<PDUPeerEndpoint> PDUPeerEndpointFactoryImpl::Create(
              localListenSocketAddress.first.c_str(),
              localListenSocketAddress.second);
         return boost::shared_ptr<PDUPeerEndpoint>(
-            new PDUPeerInProcessEndpoint(pduSendQueue));
+            new PDUPeerEndpointInProcess(pduSendQueue));
     }
     else
     {
         hlogstream(
             HLOG_DEBUG2,
-            "Creating new PDUPeerNetworkConnectorEndpoint, "
+            "Creating new PDUPeerEndpointNetworkConnector, "
             "will maintain connection to "
             << connectToSocketAddress.first
             << ":" << connectToSocketAddress.second);
 
-        PDUPeerNetworkConnectorEndpointPtr p(
-            new PDUPeerNetworkConnectorEndpoint(
+        PDUPeerEndpointNetworkConnectorPtr p(
+            new PDUPeerEndpointNetworkConnector(
                 pduSendQueue,
                 outgoingPeerSetID,
                 connectToSocketAddress,

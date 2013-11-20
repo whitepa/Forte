@@ -1,6 +1,6 @@
 // #SCQAD TAG: forte.pdupeer
-#ifndef __Forte_PDUPeerInProcessEndpoint_h_
-#define __Forte_PDUPeerInProcessEndpoint_h_
+#ifndef __Forte_PDUPeerEndpointInProcess_h_
+#define __Forte_PDUPeerEndpointInProcess_h_
 
 #include "Exception.h"
 #include "Object.h"
@@ -14,11 +14,11 @@
 
 namespace Forte
 {
-    class PDUPeerInProcessEndpoint : public PDUPeerEndpoint
+    class PDUPeerEndpointInProcess : public PDUPeerEndpoint
     {
     public:
-        PDUPeerInProcessEndpoint(const boost::shared_ptr<PDUQueue>& sendQueue);
-        virtual ~PDUPeerInProcessEndpoint();
+        PDUPeerEndpointInProcess(const boost::shared_ptr<PDUQueue>& sendQueue);
+        virtual ~PDUPeerEndpointInProcess();
 
         void Start();
         void Shutdown();
@@ -43,7 +43,7 @@ namespace Forte
             hlog_and_throw(
                 HLOG_ERR,
                 EUnimplemented(
-                    "AddFD called on PDUPeerInProcessEndpoint"));
+                    "AddFD called on PDUPeerEndpointInProcess"));
         }
 
     protected:
@@ -67,6 +67,6 @@ namespace Forte
         std::list<boost::shared_ptr<PDUPeerEvent> > mEventQueue;
     };
 
-    typedef boost::shared_ptr<PDUPeerInProcessEndpoint> PDUPeerInProcessEndpointPtr;
+    typedef boost::shared_ptr<PDUPeerEndpointInProcess> PDUPeerEndpointInProcessPtr;
 }
 #endif
