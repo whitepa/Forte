@@ -341,3 +341,38 @@ TEST_F(PDUPeerSetImplOnBoxTest, CanReceiveDataWhenSendQueueIsFull)
 {
 }
 */
+
+TEST_F(PDUPeerFileDescriptorEndpointUnitTest, PDUPayoadVersionTest)
+{
+    FTRACE;
+    setupDefaultFDPair();
+
+    std::vector<Forte::PDUPtr> pdus;
+    Forte::PDUPtr pdu = makeTestPDU();
+    pdus.push_back(pdu);
+
+    pdu = makeTestPDU();
+    pdu->SetPayloadVersion(1);
+    pdus.push_back(pdu);
+
+    pdu = makeTestPDU();
+    pdu->SetPayloadVersion(2);
+    pdus.push_back(pdu);
+
+    for (unsigned int i = 0; i < 3; ++i)
+    {
+        mPDUQueue1->EnqueuePDU(pdus.at(i));
+    }
+
+    Forte::PDU out;
+    for (unsigned int i = 0; i < 3; ++i)
+    {
+        while (!mEndpoint2->IsPDUReady()) { usleep(10000); }
+        bool received = mEndpoint2->RecvPDU(out);
+        PDUPtr oldPDU = pdus.at(i);
+        ASSERT_TRUE(received);
+        ASSERT_TRUE(PDU::GetPayloadVersion(out.GetVersion()) == i);
+    }
+
+    teardownDefaultFDPair();
+}

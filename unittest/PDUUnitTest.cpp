@@ -317,6 +317,21 @@ TEST_F(PDUUnitTest, ACopiedPDUIsEqualToTheOriginal)
     EXPECT_EQ(pdu1, pdu2);
 }
 
+TEST_F(PDUUnitTest, IncompatiblePayloadVersions)
+{
+    PDU pdu1(Opcode0, 0, 0, 1);
+    PDU pdu2 = pdu1;
+    PDU pdu3(Opcode0, 0, 0, 3);
+
+    ASSERT_TRUE(pdu1 == pdu2);
+
+    pdu2.SetPayloadVersion(3);
+
+    ASSERT_FALSE(pdu1 == pdu2);
+    ASSERT_FALSE(pdu1 == pdu3);
+    ASSERT_TRUE(pdu2 == pdu3);
+}
+
 /* a lot code depends on these semantics to work. will update that
  * code in the next pdu revision.
 

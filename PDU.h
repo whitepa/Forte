@@ -138,9 +138,10 @@ namespace Forte
 
         PDU(int op = 0,
             size_t size = 0,
-            const void *data = NULL)
+            const void *data = NULL,
+            unsigned int payloadVersion = 0)
         {
-            mHeader.version = PDU_VERSION;
+            mHeader.version = CalculatePDUVersion(PDU_VERSION, payloadVersion);
             mHeader.opcode = op;
             mHeader.payloadSize = size;
 
@@ -174,6 +175,19 @@ namespace Forte
         }
 
         static boost::shared_array<char> CreateSendBuffer(const Forte::PDU &pdu);
+        static unsigned int CalculatePDUVersion(unsigned int baseVersion,
+                                                unsigned int payloadVersion) {
+            return baseVersion | (payloadVersion << 16);
+        }
+        static unsigned int GetBasePDUVersion(unsigned int version) {
+            unsigned int v = version << 16;
+            return (v >>= 16);
+        }
+        static unsigned int GetPayloadVersion(unsigned int version) {
+
+            return version >> 16;
+        }
+
         PDUHeader GetHeader(void) const { return mHeader; }
         unsigned int GetVersion(void) const { return mHeader.version; }
         unsigned int GetOpcode(void) const { return mHeader.opcode; }
@@ -184,6 +198,12 @@ namespace Forte
 
         void SetHeader(const PDUHeader &header);
         void SetPayload(const unsigned int len, const void *data);
+        void SetPayloadVersion(const unsigned int payloadVersion) {
+            mHeader.version =
+                CalculatePDUVersion(
+                    GetBasePDUVersion(mHeader.version),
+                    payloadVersion);
+        }
 
         void SetOptionalData(
             const boost::shared_ptr<PDUOptionalData>& optionalData);

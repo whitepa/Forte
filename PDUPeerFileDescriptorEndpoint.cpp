@@ -603,12 +603,14 @@ bool PDUPeerFileDescriptorEndpoint::RecvPDU(PDU &out)
     // consumers.
 
     // Validate PDU
-    if (out.GetHeader().version != PDU::PDU_VERSION)
+    unsigned int basePDUVersion =
+        PDU::GetBasePDUVersion(out.GetHeader().version);
+    if (basePDUVersion != PDU::PDU_VERSION)
     {
         if (hlog_ratelimit(60))
             hlogstream(HLOG_ERR, "invalid PDU version."
                        << " expected " << PDU::PDU_VERSION
-                       << " received " << out.GetHeader().version);
+                       << " received " << basePDUVersion);
         //close the fd, this stream will never recover
         closeFileDescriptor();
         throw EPDUVersionInvalid();
