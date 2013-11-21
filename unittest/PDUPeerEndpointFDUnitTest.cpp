@@ -365,7 +365,7 @@ TEST_F(PDUPeerEndpointFDUnitTest, PDUsCanHaveAnySizePayload)
     for (int i = 0; i < 1024; ++i)
     {
         size_t thisPDUSize = rand() % testPDUMaxSize();
-        //hlog(HLOG_INFO, "sending PDU with optional payload of %zu", thisPDUSize);
+        //hlog(HLOG_ISNFO, "sending PDU with optional payload of %zu", thisPDUSize);
         Forte::PDUPtr pdu = makeTestPDU(thisPDUSize);
         mPDUQueue1->EnqueuePDU(pdu);
 
@@ -536,67 +536,22 @@ INSTANTIATE_TEST_CASE_P(PDUPayloads,
                         ::testing::Values(1, 16384, 114688));
 
 
-//TODO: this would be a useful tests
-// TEST_F(PDUPeerSetImplOnBoxTest, ExpandsAndCopiesRingBufferWhenFull)
-// {
-//     mMonitor.reset(new EPollMonitor);
-//     mPDUQueue1.reset(new PDUQueue);
-//     mPDUQueue2.reset(new PDUQueue);
-
-//     mMonitor->Start();
-
-//     int fds[2];
-//     socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
-//     mFD1 = fds[0];
-//     mFD2 = fds[1];
-
-//     mEndpoint1.reset(
-//         new PDUPeerEndpointFD(mPDUQueue1,
-//                               mMonitor,
-//                               TODO: change queue sizes
-//                               ));
-//     mEndpoint2.reset(
-//         new PDUPeerEndpointFD(mPDUQueue2,
-//                               mMonitor,
-//                               TODO: change queue sizes
-//                               ));
-
-//     mEndpoint1->SetEventCallback(
-//         boost::bind(
-//             &PDUPeerEndpointFDUnitTest::EventCallback, this, _1));
-
-//     mEndpoint2->SetEventCallback(
-//         boost::bind(
-//             &PDUPeerEndpointFDUnitTest::EventCallback, this, _1));
-
-//     mEndpoint1->SetFD(mFD1);
-//     mEndpoint2->SetFD(mFD2);
-
-//     mEndpoint1->Start();
-//     mEndpoint2->Start();
-
-//     //TODO: test goes here
-//     mPDUQueue1->EnqueuePDU(pdu);
-//     while (!mEndpoint2->RecvPDU(out));
-//     ASSERT_EQ(*pdu, out);
-//
-//teardownDefaultFDPair()
-// }
-
 TEST_F(PDUPeerEndpointFDUnitTest, CanSendAndVerifyAnythingMathingPDUSpec)
 {
     FTRACE;
 
     setupDefaultFDPair();
 
-    Forte::PDUPtr pdu = makeRandomPDU();
+    Forte::PDUPtr pdu;
     Forte::PDU out;
 
-    //TODO: onbox test for (int i=0; i<65536; ++i)
+    //TODO: onbox test
+    //for (int i=0; i<65536; ++i)
     for (int i=0; i<256; ++i)
     {
+        pdu = makeRandomPDU();
         mPDUQueue1->EnqueuePDU(pdu);
-        ASSERT_NO_THROW(while (!mEndpoint2->RecvPDU(out)));
+        ASSERT_NO_THROW(while (!mEndpoint2->RecvPDU(out)) { usleep(10000); } );
         ASSERT_EQ(*pdu, out);
     }
 

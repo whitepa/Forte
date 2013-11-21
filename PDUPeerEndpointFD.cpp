@@ -36,8 +36,8 @@ PDUPeerEndpointFD::PDUPeerEndpointFD(
           recvBufferStepSize < recvBufferSize
           ? recvBufferSize
           : recvBufferStepSize),
-      mRecvCursor(0),
       mRecvBuffer(new char[mRecvBufferSize]),
+      mCalculator(mRecvBuffer.get(), recvBufferSize),
       mEventAvailableCondition(mEventQueueMutex)
 {
     FTRACE2("%d", static_cast<int>(mFD));
@@ -130,7 +130,7 @@ void PDUPeerEndpointFD::SetFD(int fd)
                         shared_from_this()),
                     _1));
 
-            mRecvCursor = 0;
+            mCalculator.Reset(mRecvBuffer.get(), mRecvBufferSize);
             mRecvWorkAvailable = true;
             mRecvWorkAvailableCondition.Signal();
             sendConnect = true;
@@ -320,7 +320,8 @@ void PDUPeerEndpointFD::sendThreadRun()
             }
             else
             {
-                if (errno != ECONNRESET)
+                if (errno != ECONNRESET
+                    && errno != EBADF)
                 {
                     hlog(HLOG_ERR, "unexpected err from send: %d", errno);
                 }
@@ -357,43 +358,60 @@ void PDUPeerEndpointFD::recvThreadRun()
 
     while (!myThread->IsShuttingDown())
     {
-        waitForConnected();
-
+        try
         {
-            AutoUnlockMutex recvlock(mRecvBufferMutex);
-            while (!myThread->IsShuttingDown()
-                   && !mRecvWorkAvailable)
-            {
-                mRecvWorkAvailableCondition.Wait();
-            }
-            mRecvWorkAvailable = false;
-        }
+            waitForConnected();
 
-        recvUntilBlockOrComplete();
+            {
+                AutoUnlockMutex recvlock(mRecvBufferMutex);
+                while (!myThread->IsShuttingDown()
+                       && !mRecvWorkAvailable)
+                {
+                    mRecvWorkAvailableCondition.Wait();
+                }
+                mRecvWorkAvailable = false;
+            }
+
+            recvUntilBlockOrComplete();
+        }
+        catch (std::exception& e)
+        {
+            hlogstream(HLOG_WARN,
+                       "closing connection due to exception: " << e.what());
+
+            closeFileDescriptor();
+        }
     }
 }
 
 void PDUPeerEndpointFD::recvUntilBlockOrComplete()
 {
     const int flags(0);
-    int len=1;
+    int len(1);
 
     while (len > 0)
     {
         AutoUnlockMutex recvlock(mRecvBufferMutex);
         bufferEnsureHasSpace();
 
-        {
-            while ((len = recv(mFD,
-                               mRecvBuffer.get() + mRecvCursor,
-                               mRecvBufferSize - mRecvCursor,
-                               flags)) == -1
-                   && errno == EINTR) {}
-        }
+        while ((len = recv(
+                    mFD,
+                    mCalculator.GetWriteLocation(),
+                    mCalculator.GetWriteLength(),
+                    flags)) == -1
+               && errno == EINTR) {}
 
         if (len > 0)
         {
-            mRecvCursor += len;
+            mCalculator.RecordWrite(len);
+
+            // if (mCalculator.Full())
+            // {
+            //     hlogstream(
+            //         HLOG_DEBUG,
+            //         "recv buffer became. wrote " << len << " bytes");
+            // }
+
             mByteRecvCount += len;
 
             if (lockedIsPDUReady())
@@ -436,26 +454,42 @@ void PDUPeerEndpointFD::bufferEnsureHasSpace()
 {
     try
     {
-        while (mRecvCursor == mRecvBufferSize
+        while (mCalculator.Full()
                && mRecvBufferSize + mRecvBufferStepSize > mRecvBufferMaxSize)
         {
             mRecvWorkAvailableCondition.Wait();
         }
 
-        while (mRecvCursor == mRecvBufferSize)
+        if (mCalculator.Full())
         {
+            // increase size by step size. we do this creating a new
+            // buffer that is this size + step size, copying the old
+            // data into the new buffer, and updating the calculator
+            // with the new size, new address, and restore the offset
             size_t newsize = mRecvBufferSize + mRecvBufferStepSize;
 
             if (newsize > mRecvBufferMaxSize)
                 hlog_and_throw(HLOG_ERR, EPeerBufferOverflow());
 
-            char *tmpstr = new char[newsize];
-            memset (tmpstr, 0, newsize);
-            if (mRecvBufferSize)
-                memcpy(tmpstr, mRecvBuffer.get(), mRecvBufferSize);
-            mRecvBuffer.reset(tmpstr);
+            // new buffer
+            boost::shared_array<char> tmp(new char[newsize]);
+            memset (tmp.get(), 0, newsize);
+            size_t readLengthOldBuffer = mCalculator.GetReadLength();
+            // copy old data
+            mCalculator.ObjectCopy(tmp.get(), readLengthOldBuffer);
+            mRecvBuffer.swap(tmp);
+            // update calculator with new addres and size
             mRecvBufferSize = newsize;
-            hlog(HLOG_DEBUG, "PDU recv buf new size %zu", mRecvBufferSize);
+            mCalculator.Reset(mRecvBuffer.get(), mRecvBufferSize);
+            // update with proper offest. TODO: make this part of Reset
+            mCalculator.RecordWrite(readLengthOldBuffer);
+
+            hlogstream(HLOG_DEBUG,
+                       "PDU recv buf new size " << mRecvBufferSize
+                       << ", " << mCalculator.GetReadLength()
+                       << " bytes from old buffer and "
+                       << mCalculator.GetWriteLength()
+                       << " bytes available for writing");
         }
     }
     catch (std::bad_alloc &e)
@@ -466,48 +500,64 @@ void PDUPeerEndpointFD::bufferEnsureHasSpace()
 
 bool PDUPeerEndpointFD::lockedIsPDUReady() const
 {
-    // check for a valid PDU
-    // (for now, read cursor is always the start of buffer)
-    size_t minPDUSize = sizeof(PDUHeader);
-    if (mRecvCursor < minPDUSize)
+    if (mCalculator.GetReadLength() < sizeof(PDUHeader))
     {
-        hlog(HLOG_DEBUG4,
-             "buffer contains less data than minimum PDU %zu vs %zu",
-             mRecvCursor, minPDUSize);
         return false;
     }
 
-    PDUHeader *pduHeader =
-        reinterpret_cast<PDUHeader*>(mRecvBuffer.get());
+    if (mCalculator.ObjectWillWrap(sizeof(PDUHeader)))
+    {
+        mCalculator.ObjectCopy(
+            reinterpret_cast<char*>(&mTmpPDUHeader), sizeof(PDUHeader));
 
-    if (mRecvCursor >=
-        (minPDUSize + pduHeader->payloadSize + pduHeader->optionalDataSize))
-        return true;
+        if (mCalculator.GetReadLength() >= PDU::Size(mTmpPDUHeader))
+            return true;
+        else
+            return false;
+    }
     else
-        return false;
+    {
+        const PDUHeader* pduHeader =
+            reinterpret_cast<const PDUHeader*>(mCalculator.GetReadLocation());
+
+        if (mCalculator.GetReadLength() >= PDU::Size(*pduHeader))
+            return true;
+        else
+            return false;
+    }
 }
 
 void PDUPeerEndpointFD::updateRecvQueueSizeStats()
 {
-    if (lockedIsPDUReady())
+    if (mCalculator.Empty())
     {
-        unsigned int cursor = 0;
-        PDUHeader *pduHeader;
-        size_t minPDUSize = sizeof(PDUHeader);
-        int readyCount(0);
-        do
-        {
-            pduHeader = reinterpret_cast<PDUHeader*>(mRecvBuffer.get() + cursor);
-            cursor +=
-                minPDUSize + pduHeader->payloadSize + pduHeader->optionalDataSize;
-            ++readyCount;
-        }
-        while (mRecvCursor >= cursor);
-        mPDURecvReadyCountAvg = mPDURecvReadyCount = readyCount;
+        mPDURecvReadyCountAvg = mPDURecvReadyCount = 0;
     }
     else
     {
-        mPDURecvReadyCountAvg = mPDURecvReadyCount = 0;
+        size_t readyCount(0);
+        size_t readLength(0);
+        RingBufferCalculator calc(mCalculator);
+
+        while ((readLength = calc.GetReadLength()) >= sizeof(PDUHeader))
+        {
+            if (calc.ObjectWillWrap(sizeof(PDUHeader)))
+            {
+                calc.ObjectCopy(
+                    reinterpret_cast<char*>(&mTmpPDUHeader), sizeof(PDUHeader));
+                calc.RecordRead(std::min(PDU::Size(mTmpPDUHeader), readLength));
+            }
+            else
+            {
+                const PDUHeader* pduHeader =
+                    reinterpret_cast<const PDUHeader*>(
+                        calc.GetReadLocation());
+                calc.RecordRead(std::min(PDU::Size(*pduHeader), readLength));
+            }
+            ++readyCount;
+        }
+
+        mPDURecvReadyCountAvg = mPDURecvReadyCount = readyCount;
     }
 }
 
@@ -519,48 +569,60 @@ bool PDUPeerEndpointFD::RecvPDU(PDU &out)
         if (!lockedIsPDUReady())
             return false;
 
-        PDUHeader *pduHeader =
-            reinterpret_cast<PDUHeader*>(mRecvBuffer.get());
+        // copy the PDU to out happens in 3 stages
+        // copy the header
+        // copy the payload
+        // copy the optionalData if it exists
+        //
+        // in order to avoid copying the memory when not needed, we
+        // will copy directly from the recv buffer to the pdu. there
+        // is a special case where the header, payload or optionalData
+        // can wrap from the end to the begining of the buffer.
+        //
+        // the header is unique because we have to read it to learn
+        // about the other two pieces of data. in the case the header
+        // wraps, we have to copy it to use it.
+        //
+        // the payload and optionalData could be copied to the out
+        // buffer when they wrap without copying for them, but for
+        // that less common case and ease of coding, for now they just
+        // get copied
 
-        size_t len = sizeof(PDUHeader) + pduHeader->payloadSize;
-
-        hlog(HLOG_DEBUG4, "found valid PDU: len=%zu", len);
-
-        out.SetHeader(*pduHeader);
-        out.SetPayload(out.GetPayloadSize(),
-                       mRecvBuffer.get()+sizeof(PDUHeader));
-
-        if (pduHeader->optionalDataSize > 0)
+        if (mCalculator.ObjectWillWrap(sizeof(PDUHeader)))
         {
-            boost::shared_ptr<PDUOptionalData> data(
-                new PDUOptionalData(
-                    pduHeader->optionalDataSize,
-                    pduHeader->optionalDataAttributes));
+            PDUHeader pduHeader;
+            mCalculator.ObjectCopy(
+                reinterpret_cast<char*>(&pduHeader), sizeof(PDUHeader));
+            out.SetHeader(pduHeader);
+            mCalculator.RecordRead(sizeof(PDUHeader));
 
-            memcpy(
-                data->mData,
-                mRecvBuffer.get() + sizeof(PDUHeader) + pduHeader->payloadSize,
-                pduHeader->optionalDataSize);
+            if (pduHeader.payloadSize > 0)
+            {
+                copyPayloadToPDU(out, pduHeader);
+            }
 
-            out.SetOptionalData(data);
+            if (pduHeader.optionalDataSize > 0)
+            {
+                copyOptionalDataToPDU(out, pduHeader);
+            }
         }
+        else
+        {
+            const PDUHeader *pduHeader =
+                reinterpret_cast<const PDUHeader*>(mCalculator.GetReadLocation());
+            out.SetHeader(*pduHeader);
+            mCalculator.RecordRead(sizeof(PDUHeader));
 
-        // \TODO this memmove() based method is inefficient.  Implement a
-        // proper ring-buffer.
+            if (pduHeader->payloadSize > 0)
+            {
+                copyPayloadToPDU(out, *pduHeader);
+            }
 
-        // move the rest of the buffer and cursor back by 'len' bytes
-        size_t totalBufferConsumed = len + pduHeader->optionalDataSize;
-        memmove(mRecvBuffer.get(),
-                mRecvBuffer.get() + totalBufferConsumed,
-                mRecvBufferSize - totalBufferConsumed);
-
-        memset(mRecvBuffer.get() + mRecvBufferSize - totalBufferConsumed,
-               0,
-               totalBufferConsumed);
-
-        hlog(HLOG_DEBUG4, "found valid PDU: oldCursor=%zu newCursor=%zu",
-             mRecvCursor, mRecvCursor - totalBufferConsumed);
-        mRecvCursor -= totalBufferConsumed;
+            if (pduHeader->optionalDataSize > 0)
+            {
+                copyOptionalDataToPDU(out, *pduHeader);
+            }
+        }
 
         ++mPDURecvCount;
         updateRecvQueueSizeStats();
@@ -591,6 +653,36 @@ bool PDUPeerEndpointFD::RecvPDU(PDU &out)
     }
 
     return true;
+}
+
+void PDUPeerEndpointFD::copyPayloadToPDU(PDU& out, const PDUHeader& pduHeader)
+{
+    if (mCalculator.ObjectWillWrap(pduHeader.payloadSize))
+    {
+        //TODO: copy this data directly into out's buffer
+        boost::shared_array<char> tmp(new char[pduHeader.payloadSize]);
+        mCalculator.ObjectCopy(tmp.get(), pduHeader.payloadSize);
+        out.SetPayload(pduHeader.payloadSize, tmp.get());
+        mCalculator.RecordRead(pduHeader.payloadSize);
+    }
+    else
+    {
+        out.SetPayload(pduHeader.payloadSize, mCalculator.GetReadLocation());
+        mCalculator.RecordRead(pduHeader.payloadSize);
+    }
+}
+
+void PDUPeerEndpointFD::copyOptionalDataToPDU(
+    PDU& out, const PDUHeader& pduHeader)
+{
+    boost::shared_ptr<PDUOptionalData> od(
+        new PDUOptionalData(pduHeader.optionalDataSize,
+                            pduHeader.optionalDataAttributes));
+
+    mCalculator.ObjectCopy(
+        static_cast<char*>(od->mData), pduHeader.optionalDataSize);
+    out.SetOptionalData(od);
+    mCalculator.RecordRead(pduHeader.optionalDataSize);
 }
 
 void PDUPeerEndpointFD::triggerCallback(

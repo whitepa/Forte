@@ -174,6 +174,12 @@ namespace Forte
             }
         }
 
+        static size_t Size(const PDUHeader& header) {
+            return sizeof(PDUHeader)
+                + header.payloadSize
+                + header.optionalDataSize;
+        }
+
         static boost::shared_array<char> CreateSendBuffer(const Forte::PDU &pdu);
         static unsigned int CalculatePDUVersion(unsigned int baseVersion,
                                                 unsigned int payloadVersion) {

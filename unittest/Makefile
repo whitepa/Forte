@@ -86,6 +86,7 @@ GSRCS = AutoMutexUnitTest.cpp \
 	ProcessCommandUnitTest.cpp \
 	ProcessorInformationUnitTest.cpp \
 	ProcFileSystemUnitTest.cpp \
+	RingBufferCalculatorUnitTest.cpp \
 	RWLockUnitTest.cpp \
 	SCSIUtilUnitTest.cpp \
 	ServiceConfigUnitTest.cpp \

@@ -64,7 +64,7 @@ void PDUQueue::EnqueuePDU(const PDUPtr& pdu)
         }
         else // CALLBACK or THROW
         {
-            hlog_and_throw(HLOG_ERR, EPDUQueueFull(mQueueMaxSize));
+            hlog_and_throw(HLOG_WARN, EPDUQueueFull(mQueueMaxSize));
         }
     }
 

@@ -11,6 +11,7 @@
 #include "Locals.h"
 #include "EPollMonitor.h"
 #include "FunctionThread.h"
+#include "RingBufferCalculator.h"
 
 namespace Forte
 {
@@ -77,6 +78,9 @@ namespace Forte
 
         void callbackThreadRun();
 
+        void copyPayloadToPDU(PDU& out, const PDUHeader& pduHeader);
+        void copyOptionalDataToPDU(PDU& out, const PDUHeader& pduHeader);
+
     private:
         boost::shared_ptr<PDUQueue> mPDUSendQueue;
         boost::shared_ptr<EPollMonitor> mEPollMonitor;
@@ -101,8 +105,12 @@ namespace Forte
         size_t mRecvBufferSize;
         const size_t mRecvBufferMaxSize;
         const size_t mRecvBufferStepSize;
-        size_t volatile mRecvCursor;
         boost::shared_array<char> mRecvBuffer;
+
+        RingBufferCalculator mCalculator;
+        // it's common to have to copy the pdu header when it wraps in the
+        // recv buffer. allocating one here for re-use
+        mutable PDUHeader mTmpPDUHeader;
 
         mutable Forte::Mutex mEventQueueMutex;
         Forte::ThreadCondition mEventAvailableCondition;
