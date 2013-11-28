@@ -269,12 +269,16 @@ void PDUPeerEndpointFD::sendThreadRun()
             break;
 
         case SendStateBufferAvailable:
+        {
             //hlog(HLOG_DEBUG, "state SendStateBufferAvailable");
-            while ((len = send(mFD,
-                               sendBuffer.get()+cursor,
-                               sendBufferSize-cursor,
-                               flags)) == -1
-                   && errno == EINTR) {}
+            {
+                AutoUnlockMutex fdlock(mFDMutex);
+                while ((len = send(mFD,
+                                   sendBuffer.get()+cursor,
+                                   sendBufferSize-cursor,
+                                   flags)) == -1
+                       && errno == EINTR) {}
+            }
 
             if (len > 0)
             {
@@ -339,7 +343,8 @@ void PDUPeerEndpointFD::sendThreadRun()
                 setSendState(SendStateDisconnected);
                 closeFileDescriptor();
             }
-            break;
+        }
+        break;
         }
     }
 }
@@ -394,12 +399,15 @@ void PDUPeerEndpointFD::recvUntilBlockOrComplete()
         AutoUnlockMutex recvlock(mRecvBufferMutex);
         bufferEnsureHasSpace();
 
-        while ((len = recv(
-                    mFD,
-                    mCalculator.GetWriteLocation(),
-                    mCalculator.GetWriteLength(),
-                    flags)) == -1
-               && errno == EINTR) {}
+        {
+            AutoUnlockMutex fdlock(mFDMutex);
+            while ((len = recv(
+                        mFD,
+                        mCalculator.GetWriteLocation(),
+                        mCalculator.GetWriteLength(),
+                        flags)) == -1
+                   && errno == EINTR) {}
+        }
 
         if (len > 0)
         {

@@ -72,9 +72,13 @@ public:
         mMonitor->Start();
 
         int fds[2];
-        socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
-        mFD1 = fds[0];
-        mFD2 = fds[1];
+        if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1)
+        {
+            hlog_and_throw(HLOG_WARN,
+                           Exception(FString(FStringFC(),
+                                             "could not get fd: %d", errno)));
+        }
+        hlogstream(HLOG_INFO, "fd0: " << fds[0] << " fd1: " << fds[1]);
 
         mEndpoint1.reset(new PDUPeerEndpointFD(mPDUQueue1, mMonitor));
         mEndpoint2.reset(new PDUPeerEndpointFD(mPDUQueue2, mMonitor));
@@ -87,16 +91,15 @@ public:
             boost::bind(
                 &PDUPeerEndpointFDUnitTest::EventCallback, this, _1));
 
-        mEndpoint1->SetFD(mFD1);
-        mEndpoint2->SetFD(mFD2);
+        // pdu peer owns these and will release them
+        mEndpoint1->SetFD(fds[0]);
+        mEndpoint2->SetFD(fds[1]);
 
         mEndpoint1->Start();
         mEndpoint2->Start();
     }
 
     void teardownDefaultFDPair() {
-        mEndpoint1->SetFD(-1);
-        mEndpoint2->SetFD(-1);
         mEndpoint2->SetEventCallback(NULL);
         mEndpoint1->Shutdown();
         mEndpoint2->Shutdown();
@@ -142,8 +145,6 @@ public:
     int mDisconnectedEventCount;
 
     boost::shared_ptr<EPollMonitor> mMonitor;
-    Forte::AutoFD mFD1;
-    Forte::AutoFD mFD2;
     boost::shared_ptr<PDUQueue> mPDUQueue1;
     boost::shared_ptr<PDUQueue> mPDUQueue2;
     boost::shared_ptr<PDUPeerEndpointFD> mEndpoint1;
