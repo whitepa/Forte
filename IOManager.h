@@ -80,6 +80,7 @@ namespace Forte
     public:
         IOManager(int maxRequests) :
             mCompletionCond(mLock),
+            mRequestQueueEmptyCondition(mLock),
             mIOContext(NULL),
             mRequestCounter(0),
             mBlockFutureRequests(false) {
@@ -233,6 +234,10 @@ namespace Forte
                 }
                 req = (*i).second;
                 mPendingRequests.erase(requestNum);
+                if (mPendingRequests.empty())
+                {
+                    mRequestQueueEmptyCondition.Broadcast();
+                }
             }
             // Set result, triggering callbacks (from this thread)
             req->SetResult(event->res);
@@ -247,7 +252,7 @@ namespace Forte
 
             while (!mPendingRequests.empty())
             {
-                mCompletionCond.Wait();
+                mRequestQueueEmptyCondition.Wait();
             }
         }
 
@@ -263,6 +268,7 @@ namespace Forte
     private:
         Forte::Mutex mLock;
         Forte::ThreadCondition mCompletionCond;
+        Forte::ThreadCondition mRequestQueueEmptyCondition;
 
         io_context_t mIOContext;
 
