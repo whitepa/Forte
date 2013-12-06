@@ -18,6 +18,8 @@ namespace Forte
                         "Failed to submit IO operation");
 
     EXCEPTION_SUBCLASS(EIOManager, EIORequest);
+    EXCEPTION_SUBCLASS2(EIOManager, ERequestBlocked,
+                        "Request cannot be submitted because all requests are blocked");
     EXCEPTION_SUBCLASS2(EIORequest, EIORequestStillInProgress,
                         "The IO request is still in progress");
     EXCEPTION_SUBCLASS2(EIORequest, EIORequestCancelFailed,
@@ -79,7 +81,8 @@ namespace Forte
         IOManager(int maxRequests) :
             mCompletionCond(mLock),
             mIOContext(NULL),
-            mRequestCounter(0) {
+            mRequestCounter(0),
+            mBlockFutureRequests(false) {
             int err;
             // @TODO check range on maxRequests
             if ((err = io_setup(maxRequests, &mIOContext)) != 0)
@@ -100,6 +103,9 @@ namespace Forte
             struct io_event events[32];
             while (!IsShuttingDown()) {
                 // @TODO correctly handle shutdown with pending requests
+                //       NOTE: This can now be correctly handled by calling
+                //       WaitForAllPendingRequestsToComplete before calling
+                //       Shutdown.
                 int n = 0;
                 memset(events, 0, sizeof(struct io_event)*32);
                 n = io_getevents(mIOContext, 1, 32, events, &timeout);
@@ -135,12 +141,17 @@ namespace Forte
                     }
                 }
             }
+
             return NULL;
         }
 
         boost::shared_ptr<IORequest> NewRequest() {
             // @TODO allocate from a pool
             AutoUnlockMutex lock(mLock);
+
+            if (mBlockFutureRequests)
+                boost::throw_exception(ERequestBlocked());
+
             uint64_t reqnum = mRequestCounter++;
             boost::shared_ptr<IORequest> req(
                 new IORequest(
@@ -153,6 +164,10 @@ namespace Forte
         void SubmitRequest(const boost::shared_ptr<IORequest> &req) {
             FTRACE;
             AutoUnlockMutex lock(mLock);
+
+            if (mBlockFutureRequests)
+                boost::throw_exception(ERequestBlocked());
+
             int res;
             while ((res = io_submit(mIOContext, 1, req->GetIOCBs())) < 0)
             {
@@ -226,6 +241,25 @@ namespace Forte
             AutoUnlockMutex lock(mLock);
             return mPendingRequests.size();
         }
+
+        void WaitForAllPendingRequestsToComplete(void) {
+            AutoUnlockMutex lock(mLock);
+
+            while (!mPendingRequests.empty())
+            {
+                mCompletionCond.Wait();
+            }
+        }
+
+        void BlockFutureRequests(void) {
+            AutoUnlockMutex lock(mLock);
+            mBlockFutureRequests = true;
+        }
+
+        void UnblockFutureRequests(void) {
+            AutoUnlockMutex lock(mLock);
+            mBlockFutureRequests = false;
+        }
     private:
         Forte::Mutex mLock;
         Forte::ThreadCondition mCompletionCond;
@@ -237,6 +271,8 @@ namespace Forte
 
         // map of request number to request
         RequestMap mPendingRequests;
+
+        bool mBlockFutureRequests;
     };
 
 }

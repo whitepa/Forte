@@ -412,6 +412,111 @@ TEST_F(IOManagerUnitTest, ReadWriteMix)
     free(buf);
 }
 
+TEST_F(IOManagerUnitTest, BlockFutureRequests)
+{
+    FileSystemImpl fs;
+
+    // populate the file with some data
+    system(FString("/bin/dd bs=1024 count=10000 if=/dev/zero of=" + mTmpfile));
+
+    // Open the file with direct IO
+    AutoFD fd(open(mTmpfile, O_DIRECT));
+    ASSERT_NE(fd.GetFD(), -1);
+
+    // Allocate a buffer
+    char *buf = 0;
+    size_t len = 4096;
+    ASSERT_EQ(0, posix_memalign(reinterpret_cast<void **>(&buf), /*align*/4096, /*size*/len));
+    memset(buf, 0, len);
+
+    boost::shared_ptr<IOManager> iomgr = boost::make_shared<IOManager>(32);
+
+    boost::shared_ptr<IORequest> req = iomgr->NewRequest();
+    req->SetOp(IORequest::READ);
+    req->SetCallback(IOManagerUnitTest::Notify);
+    req->SetUserData(this);
+    req->SetBuffer(buf, len);
+    req->SetOffset(4096);
+    req->SetFD(fd);
+    uint64_t reqnum = req->GetRequestNumber();
+
+    // block requests
+    iomgr->BlockFutureRequests();
+    ASSERT_THROW(req->Begin(), ERequestBlocked);
+
+    iomgr->UnblockFutureRequests();
+    ASSERT_NO_THROW(req->Begin(););
+
+    hlog(HLOG_INFO, "submitted IO request %lu", reqnum);
+    Wait();
+    hlog(HLOG_INFO, "got result %ld", req->GetResult());
+    ASSERT_EQ(len, req->GetResult());
+    free(buf);
+}
+
+TEST_F(IOManagerUnitTest, WaitForAllRequestsToComplete)
+{
+    FTRACE;
+    FileSystemImpl fs;
+
+    // populate the file with some data
+    system(FString("/bin/dd bs=1024 count=10000 if=/dev/zero of=" + mTmpfile));
+
+    // Open the file with direct IO
+    AutoFD fd(open(mTmpfile, O_RDWR | O_DIRECT));
+    ASSERT_NE(fd.GetFD(), -1);
+
+    boost::shared_ptr<IOManager> iomgr = boost::make_shared<IOManager>(32);
+
+    ssize_t total = 512*512;
+    ssize_t each = 512;
+    char *buf = 0;
+    ASSERT_EQ(0, posix_memalign(reinterpret_cast<void **>(&buf), /*align*/4096, /*size*/total));
+    memset(buf, 1, total);
+    for(unsigned int i = 0; i < (total/sizeof(int)); ++i)
+    {
+        int *a = reinterpret_cast<int *>(buf + sizeof(int) * i);
+        if (*a != 0x01010101)
+            hlog(HLOG_ERR, "a != 0:  i=%u buf=%p addr=%p",
+                 i, buf, reinterpret_cast<int *>(buf + sizeof(int) * i));
+        ASSERT_EQ(0x01010101, *a);
+    }
+    std::map<uint64_t, boost::shared_ptr<IORequest> > requestMap;
+    for (int i = 0; i < total / each; ++i)
+    {
+        // submit IO request
+        boost::shared_ptr<IORequest> req = iomgr->NewRequest();
+        if (i % 2 == 0)
+            req->SetOp(IORequest::READ);
+        else
+            req->SetOp(IORequest::WRITE);
+        req->SetCallback(IOManagerUnitTest::Notify);
+        req->SetUserData(this);
+        req->SetBuffer(buf+(each*i), each);
+        req->SetOffset(each*i);
+        req->SetFD(fd);
+        uint64_t reqnum = req->GetRequestNumber();
+        ASSERT_NO_THROW(req->Begin(););
+        requestMap[reqnum] = req;
+        EXPECT_EQ(requestMap.size(), i+1); // (check for unique reqnums)
+    }
+
+    iomgr->WaitForAllPendingRequestsToComplete();
+
+    for(unsigned int i = 0; i < (total/sizeof(int)); ++i)
+    {
+        int *a = reinterpret_cast<int *>(buf + sizeof(int) * i);
+        int b = i / ((total/each) / sizeof(int));
+        if ((b % 2 == 0 && *a != 0) ||
+            (b % 2 != 0 && *a != 0x01010101))
+            hlog(HLOG_ERR, "a has unexpected value of 0x%x:  i=%u b=%d buf=%p addr=%p",
+                 *a, i, b, buf, reinterpret_cast<int *>(buf + sizeof(int) * i));
+        ASSERT_EQ((b % 2 == 0) ? 0 : 0x01010101, *a);
+    }
+    ASSERT_EQ(total/each, mNumCompletions);
+    free(buf);
+}
+
 // @TODO the CancelRequest test will need to be an onbox test which
 // uses a real hardware device.  This test will not work agains a
 // file, since the native linux AIO functionality serializes all
