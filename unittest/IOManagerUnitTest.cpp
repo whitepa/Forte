@@ -234,12 +234,12 @@ TEST_F(IOManagerUnitTest, MultipleReads)
     char *buf = 0;
     ASSERT_EQ(0, posix_memalign(reinterpret_cast<void **>(&buf), /*align*/4096, /*size*/total));
     memset(buf, 1, total);
-    for(unsigned int i = 0; i < (total/sizeof(int)); ++i)
+    for(unsigned int i = 0; i < (total/sizeof(uint32_t)); ++i)
     {
-        int *a = reinterpret_cast<int *>(buf + sizeof(int) * i);
+        uint32_t *a = reinterpret_cast<uint32_t *>(buf) + i;
         if (*a != 0x01010101)
             hlog(HLOG_ERR, "a != 0:  i=%u buf=%p addr=%p",
-                 i, buf, reinterpret_cast<int *>(buf + sizeof(int) * i));
+                 i, buf, reinterpret_cast<uint32_t *>(buf) + i);
         ASSERT_EQ(0x01010101, *a);
     }
     std::map<uint64_t, boost::shared_ptr<IORequest> > requestMap;
@@ -266,12 +266,12 @@ TEST_F(IOManagerUnitTest, MultipleReads)
         //      req->GetResult(), req->GetResult() > 0 ? "" : strerror(-req->GetResult()));
         EXPECT_EQ(each, req->GetResult());
     }
-    for(unsigned int i = 0; i < (total/sizeof(int)); ++i)
+    for(unsigned int i = 0; i < (total/sizeof(uint32_t)); ++i)
     {
-        int *a = reinterpret_cast<int *>(buf + sizeof(int) * i);
+        uint32_t *a = reinterpret_cast<uint32_t *>(buf) + i;
         if (*a != 0)
             hlog(HLOG_ERR, "a != 0:  i=%u buf=%p addr=%p",
-                 i, buf, reinterpret_cast<int *>(buf + sizeof(int) * i));
+                 i, buf, reinterpret_cast<uint32_t *>(buf) + i);
         ASSERT_EQ(0, *a);
     }
     ASSERT_EQ(total/each, mNumCompletions);
@@ -299,12 +299,12 @@ TEST_F(IOManagerUnitTest, MultipleWrites)
     char *buf = 0;
     ASSERT_EQ(0, posix_memalign(reinterpret_cast<void **>(&buf), /*align*/4096, /*size*/total));
     memset(buf, 1, total);
-    for(unsigned int i = 0; i < (total/sizeof(int)); ++i)
+    for(unsigned int i = 0; i < (total/sizeof(uint32_t)); ++i)
     {
-        int *a = reinterpret_cast<int *>(buf + sizeof(int) * i);
+        uint32_t *a = reinterpret_cast<uint32_t *>(buf) + i;
         if (*a != 0x01010101)
             hlog(HLOG_ERR, "a != 0:  i=%u buf=%p addr=%p",
-                 i, buf, reinterpret_cast<int *>(buf + sizeof(int) * i));
+                 i, buf, reinterpret_cast<uint32_t *>(buf) + i);
         ASSERT_EQ(0x01010101, *a);
     }
     std::map<uint64_t, boost::shared_ptr<IORequest> > requestMap;
@@ -331,12 +331,12 @@ TEST_F(IOManagerUnitTest, MultipleWrites)
         //      req->GetResult(), req->GetResult() > 0 ? "" : strerror(-req->GetResult()));
         EXPECT_EQ(each, req->GetResult());
     }
-    for(unsigned int i = 0; i < (total/sizeof(int)); ++i)
+    for(unsigned int i = 0; i < (total/sizeof(uint32_t)); ++i)
     {
-        int *a = reinterpret_cast<int *>(buf + sizeof(int) * i);
+        uint32_t *a = reinterpret_cast<uint32_t *>(buf) + i;
         if (*a != 0x01010101)
             hlog(HLOG_ERR, "a != 0x01010101:  i=%u buf=%p addr=%p",
-                 i, buf, reinterpret_cast<int *>(buf + sizeof(int) * i));
+                 i, buf, reinterpret_cast<uint32_t *>(buf) + i);
         ASSERT_EQ(0x01010101, *a);
     }
     ASSERT_EQ(total/each, mNumCompletions);
@@ -363,12 +363,12 @@ TEST_F(IOManagerUnitTest, ReadWriteMix)
     char *buf = 0;
     ASSERT_EQ(0, posix_memalign(reinterpret_cast<void **>(&buf), /*align*/4096, /*size*/total));
     memset(buf, 1, total);
-    for(unsigned int i = 0; i < (total/sizeof(int)); ++i)
+    for(unsigned int i = 0; i < (total/sizeof(uint32_t)); ++i)
     {
-        int *a = reinterpret_cast<int *>(buf + sizeof(int) * i);
+        uint32_t *a = reinterpret_cast<uint32_t *>(buf) + i;
         if (*a != 0x01010101)
             hlog(HLOG_ERR, "a != 0:  i=%u buf=%p addr=%p",
-                 i, buf, reinterpret_cast<int *>(buf + sizeof(int) * i));
+                 i, buf, reinterpret_cast<uint32_t *>(buf) + i);
         ASSERT_EQ(0x01010101, *a);
     }
     std::map<uint64_t, boost::shared_ptr<IORequest> > requestMap;
@@ -398,14 +398,14 @@ TEST_F(IOManagerUnitTest, ReadWriteMix)
         //      req->GetResult(), req->GetResult() > 0 ? "" : strerror(-req->GetResult()));
         EXPECT_EQ(each, req->GetResult());
     }
-    for(unsigned int i = 0; i < (total/sizeof(int)); ++i)
+    for(unsigned int i = 0; i < (total/sizeof(uint32_t)); ++i)
     {
-        int *a = reinterpret_cast<int *>(buf + sizeof(int) * i);
-        int b = i / ((total/each) / sizeof(int));
+        uint32_t *a = reinterpret_cast<uint32_t *>(buf) + i;
+        int b = i / ((total/each) / sizeof(uint32_t));
         if ((b % 2 == 0 && *a != 0) ||
             (b % 2 != 0 && *a != 0x01010101))
             hlog(HLOG_ERR, "a has unexpected value of 0x%x:  i=%u b=%d buf=%p addr=%p",
-                 *a, i, b, buf, reinterpret_cast<int *>(buf + sizeof(int) * i));
+                 *a, i, b, buf, reinterpret_cast<uint32_t *>(buf) + i);
         ASSERT_EQ((b % 2 == 0) ? 0 : 0x01010101, *a);
     }
     ASSERT_EQ(total/each, mNumCompletions);
@@ -473,12 +473,12 @@ TEST_F(IOManagerUnitTest, WaitForAllRequestsToComplete)
     char *buf = 0;
     ASSERT_EQ(0, posix_memalign(reinterpret_cast<void **>(&buf), /*align*/4096, /*size*/total));
     memset(buf, 1, total);
-    for(unsigned int i = 0; i < (total/sizeof(int)); ++i)
+    for(unsigned int i = 0; i < (total/sizeof(uint32_t)); ++i)
     {
-        int *a = reinterpret_cast<int *>(buf + sizeof(int) * i);
+        uint32_t *a = reinterpret_cast<uint32_t *>(buf) + i;
         if (*a != 0x01010101)
             hlog(HLOG_ERR, "a != 0:  i=%u buf=%p addr=%p",
-                 i, buf, reinterpret_cast<int *>(buf + sizeof(int) * i));
+                 i, buf, reinterpret_cast<uint32_t *>(buf) + i);
         ASSERT_EQ(0x01010101, *a);
     }
     std::map<uint64_t, boost::shared_ptr<IORequest> > requestMap;
@@ -503,14 +503,14 @@ TEST_F(IOManagerUnitTest, WaitForAllRequestsToComplete)
 
     iomgr->WaitForAllPendingRequestsToComplete();
 
-    for(unsigned int i = 0; i < (total/sizeof(int)); ++i)
+    for(unsigned int i = 0; i < (total/sizeof(uint32_t)); ++i)
     {
-        int *a = reinterpret_cast<int *>(buf + sizeof(int) * i);
-        int b = i / ((total/each) / sizeof(int));
+        uint32_t *a = reinterpret_cast<uint32_t *>(buf) + i;
+        int b = i / ((total/each) / sizeof(uint32_t));
         if ((b % 2 == 0 && *a != 0) ||
             (b % 2 != 0 && *a != 0x01010101))
             hlog(HLOG_ERR, "a has unexpected value of 0x%x:  i=%u b=%d buf=%p addr=%p",
-                 *a, i, b, buf, reinterpret_cast<int *>(buf + sizeof(int) * i));
+                 *a, i, b, buf, reinterpret_cast<uint32_t *>(buf) + i);
         ASSERT_EQ((b % 2 == 0) ? 0 : 0x01010101, *a);
     }
     ASSERT_EQ(total/each, mNumCompletions);
@@ -540,12 +540,12 @@ TEST_F(IOManagerUnitTest, WaitForAllRequestsToComplete)
 //     char *buf = 0;
 //     ASSERT_EQ(0, posix_memalign((void **)&buf, /*align*/4096, /*size*/total));
 //     memset(buf, 1, total);
-//     for(int i = 0; i < (ssize_t)(total/sizeof(int)); ++i)
+//     for(int i = 0; i < (ssize_t)(total/sizeof(uint32_t)); ++i)
 //     {
-//         int *a = (int *)(buf + sizeof(int) * i);
+//         uint32_t *a = reinterpret_cast<uint32_t *>(buf) + i;
 //         if (*a != 0x01010101)
 //             hlog(HLOG_ERR, "a != 0:  i=%d buf=%p addr=%p",
-//                  i, buf, (int *)(buf + sizeof(int) * i));
+//                  i, buf, reinterpret_cast<uint32_t *>(buf) + i);
 //         ASSERT_EQ(0x01010101, *a);
 //     }
 //     std::map<uint64_t, boost::shared_ptr<IORequest> > requestMap;
@@ -592,14 +592,14 @@ TEST_F(IOManagerUnitTest, WaitForAllRequestsToComplete)
 //             EXPECT_EQ(each, req->GetResult());
 //         }
 //     }
-//     for(int i = 0; i < (ssize_t)(total/sizeof(int)); ++i)
+//     for(int i = 0; i < (ssize_t)(total/sizeof(uint32_t)); ++i)
 //     {
-//         int *a = (int *)(buf + sizeof(int) * i);
-//         int b = i / ((total/each) / sizeof(int));
+//         uint32_t *a = reinterpret_cast<uint32_t *>(buf) + i;
+//         int b = i / ((total/each) / sizeof(uint32_t));
 //         if ((b % 2 == 0 && *a != 0) ||
 //             (b % 2 != 0 && *a != 0x01010101))
 //             hlog(HLOG_ERR, "a has unexpected value of 0x%x:  i=%d b=%d buf=%p addr=%p",
-//                  *a, i, b, buf, (int *)(buf + sizeof(int) * i));
+//                  *a, i, b, buf, reinterpret_cast<uint32_t *>(buf) + i);
 //         ASSERT_EQ((b % 2 == 0) ? 0 : 0x01010101, *a);
 //     }
 //     ASSERT_EQ(total/each, mNumCompletions);
