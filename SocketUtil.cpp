@@ -393,3 +393,45 @@ void Forte::setTCPQuickAck(int fd)
                            errno));
     }
 }
+void Forte::waitForSocketAvailable(int fd, int type, Timespec timeout)
+{
+    fd_set rset, wset;
+    fd_set *prset = &rset, *pwset = &wset;
+    int res = 0;
+
+    FD_ZERO(&rset);
+    FD_ZERO(&wset);
+
+    switch (type)
+    {
+    case SocketUtil::SOCKET_RDONLY:
+            FD_SET(fd, &rset);
+            pwset = NULL;
+            break;
+    case SocketUtil::SOCKET_WRONLY:
+            prset = NULL;
+            FD_SET(fd, &wset);
+            break;
+    case SocketUtil::SOCKET_RDWR:
+            FD_SET(fd, &rset);
+            FD_SET(fd, &wset);
+            break;
+    default:
+        throw(ESocketUtil(FString(
+                              FStringFC(), "Unknown socket type: %d", type)));
+    }
+
+    struct timeval tv;
+    tv.tv_sec = timeout.AsSeconds();
+    tv.tv_usec = timeout.GetNanosecs() / 1000;
+    res = select(fd + 1, prset, pwset, NULL, &tv);
+    if (res <= 0)
+    {
+        if (res == 0)
+            throw ESelectFailed("timed out");
+        else
+            throw ESelectFailed(SystemCallUtil::GetErrorDescription(errno));
+    }
+    FD_CLR(fd, &rset);
+    FD_CLR(fd, &wset);
+}

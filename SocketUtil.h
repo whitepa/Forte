@@ -34,6 +34,16 @@ namespace Forte
         "Could not connect to peer");
 
     EXCEPTION_SUBCLASS(ESocketUtil, EFcntlFailed);
+    EXCEPTION_SUBCLASS(ESocketUtil, ESelectFailed);
+
+    class SocketUtil {
+      public:
+        enum {
+            SOCKET_RDONLY = 0,
+            SOCKET_WRONLY,
+            SOCKET_RDWR
+        };
+    };
 
     int createSocket(int domain, int type, int protocol);
     int createInetStreamSocket();
@@ -69,5 +79,7 @@ namespace Forte
 
     void setTCPNoDelay(int fd);
     void setTCPQuickAck(int fd);
+
+    void waitForSocketAvailable(int fd, int type, Forte::Timespec timeout);
 };
 #endif
