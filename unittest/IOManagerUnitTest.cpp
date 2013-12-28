@@ -502,7 +502,8 @@ TEST_F(IOManagerUnitTest, WaitForAllRequestsToComplete)
     }
 
     iomgr->WaitForAllPendingRequestsToComplete();
-
+    ASSERT_EQ(0, iomgr->GetNumberOfPendingRequests());
+    Wait(total/each);
     for(unsigned int i = 0; i < (total/sizeof(uint32_t)); ++i)
     {
         uint32_t *a = reinterpret_cast<uint32_t *>(buf) + i;
