@@ -173,7 +173,7 @@ void PDUPeerEndpointFD::waitForConnected()
                 return;
             }
         }
-        Thread::MyThread()->InterruptibleSleep(Timespec::FromSeconds(1));
+        Thread::MyThread()->InterruptibleSleep(Timespec::FromSeconds(1), false);
     }
 }
 
