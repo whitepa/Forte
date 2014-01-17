@@ -12,10 +12,11 @@ using ::testing::StrEq;
 using ::testing::Throw;
 using ::testing::Return;
 using ::testing::StrictMock;
+using ::testing::AtLeast;
 
 LogManager logManager;
 
-class PidFileTest : public ::testing::Test
+class PidFileUnitTest : public ::testing::Test
 {
 public:
     static void SetUpTestCase() {
@@ -25,7 +26,7 @@ public:
     }
 };
 
-TEST_F(PidFileTest, IsProcessRunningReturnsFalseWhenPidFileNotPresent)
+TEST_F(PidFileUnitTest, IsProcessRunningWhenPidFileNotPresent)
 {
     FTRACE;
     GMockFileSystemPtr mfs = boost::make_shared<GMockFileSystem>();
@@ -40,67 +41,51 @@ TEST_F(PidFileTest, IsProcessRunningReturnsFalseWhenPidFileNotPresent)
     ASSERT_FALSE(p.IsProcessRunning());
 }
 
-TEST_F(PidFileTest, IsProcessRunningReturnsFalseWhenPidFileDoesntHaveProcFSEntry)
+TEST_F(PidFileUnitTest, IsProcessRunningWhenPidFileDoesntHaveProcFSEntries)
 {
     FTRACE;
     GMockFileSystemPtr mfs = boost::make_shared<GMockFileSystem>();
     GMockFileSystem &fs(*mfs);
 
     FString pidfile = "/var/run/my.pid";
-    FString procCmdLine = "/proc/5555/cmdline";
+    const FString procBase = "/proc/5555/";
+    FString procExe = procBase + "exe";
+    FString procCmdLine = procBase + "cmdline";
+    FString procStat = procBase + "stat";
 
     EXPECT_CALL(fs, FileExists(StrEq(pidfile)))
         .WillRepeatedly(Return(true));
 
     EXPECT_CALL(fs, FileGetContents(StrEq(pidfile)))
         .WillRepeatedly(Return("5555"));
-
-    EXPECT_CALL(fs, FileExists(StrEq(procCmdLine)))
-        .WillRepeatedly(Return(false));
-
-    PidFile p(mfs, "/var/run/my.pid", "/usr/bin/my");
-    ASSERT_FALSE(p.IsProcessRunning());
-}
-
-TEST_F(PidFileTest, IsProcessRunningReturnsFalseWhenProcFSEntryIsIncorrect)
-{
-    FTRACE;
-    GMockFileSystemPtr mfs = boost::make_shared<GMockFileSystem>();
-    GMockFileSystem &fs(*mfs);
-
-    FString pidfile = "/var/run/my.pid";
-    FString procCmdLine = "/proc/5555/cmdline";
-
-    EXPECT_CALL(fs, FileExists(StrEq(pidfile)))
-        .WillRepeatedly(Return(true));
-
-    EXPECT_CALL(fs, FileGetContents(StrEq(pidfile)))
-        .WillRepeatedly(Return("5555"));
-
-    EXPECT_CALL(fs, FileExists(StrEq(procCmdLine)))
-        .WillRepeatedly(Return(true));
-
-    EXPECT_CALL(fs, FileGetContents(StrEq(procCmdLine)))
-        .WillRepeatedly(Return("/some/other/prog"));
-
-    EXPECT_CALL(fs, Basename(StrEq("/some/other/prog"), _))
-        .WillRepeatedly(Return("prog"));
 
     EXPECT_CALL(fs, Basename(StrEq("/usr/bin/my"), _))
         .WillRepeatedly(Return("my"));
 
+    EXPECT_CALL(fs, FileExists(StrEq(procExe)))
+        .WillRepeatedly(Return(false));
+
+    EXPECT_CALL(fs, FileExists(StrEq(procCmdLine)))
+        .WillRepeatedly(Return(false));
+
+    EXPECT_CALL(fs, FileExists(StrEq(procStat)))
+        .WillRepeatedly(Return(false));
+
     PidFile p(mfs, "/var/run/my.pid", "/usr/bin/my");
     ASSERT_FALSE(p.IsProcessRunning());
 }
 
-TEST_F(PidFileTest, IsProcessRunningReturnsTrueWhenCorrectProcessIsRunning)
+TEST_F(PidFileUnitTest, IsProcessRunningWhenProcFSEntriesExistButIncorrect)
 {
     FTRACE;
     GMockFileSystemPtr mfs = boost::make_shared<GMockFileSystem>();
     GMockFileSystem &fs(*mfs);
 
     FString pidfile = "/var/run/my.pid";
-    FString procCmdLine = "/proc/5555/cmdline";
+    const FString procBase = "/proc/5555/";
+    FString procExe = procBase + "exe";
+    FString procCmdLine = procBase + "cmdline";
+    FString procStat = procBase + "stat";
 
     EXPECT_CALL(fs, FileExists(StrEq(pidfile)))
         .WillRepeatedly(Return(true));
@@ -108,10 +93,50 @@ TEST_F(PidFileTest, IsProcessRunningReturnsTrueWhenCorrectProcessIsRunning)
     EXPECT_CALL(fs, FileGetContents(StrEq(pidfile)))
         .WillRepeatedly(Return("5555"));
 
+    EXPECT_CALL(fs, Basename(StrEq("/usr/bin/my"), _))
+        .WillRepeatedly(Return("my"));
+
+    EXPECT_CALL(fs, FileExists(StrEq(procExe)))
+        .WillRepeatedly(Return(true));
+
+    EXPECT_CALL(fs, ResolveSymLink(StrEq(procExe)))
+        .WillRepeatedly(Return("/some/other/prog"));
+
     EXPECT_CALL(fs, FileExists(StrEq(procCmdLine)))
         .WillRepeatedly(Return(true));
 
     EXPECT_CALL(fs, FileGetContents(StrEq(procCmdLine)))
+        .WillRepeatedly(Return("whacky cmdline"));
+
+    EXPECT_CALL(fs, FileExists(StrEq(procStat)))
+        .WillRepeatedly(Return(true));
+
+    EXPECT_CALL(fs, FileGetContents(StrEq(procStat)))
+        .WillRepeatedly(Return("1234 (otherProg) gobbly gook"));
+
+    PidFile p(mfs, "/var/run/my.pid", "/usr/bin/my");
+    ASSERT_FALSE(p.IsProcessRunning());
+}
+
+TEST_F(PidFileUnitTest, IsProcessRunningWhenSymlinkResolvesCorrectly)
+{
+    FTRACE;
+    GMockFileSystemPtr mfs = boost::make_shared<GMockFileSystem>();
+    GMockFileSystem &fs(*mfs);
+
+    FString pidfile = "/var/run/my.pid";
+    FString procExe = "/proc/5555/exe";
+
+    EXPECT_CALL(fs, FileExists(StrEq(pidfile)))
+        .WillRepeatedly(Return(true));
+
+    EXPECT_CALL(fs, FileGetContents(StrEq(pidfile)))
+        .WillRepeatedly(Return("5555"));
+
+    EXPECT_CALL(fs, FileExists(StrEq(procExe)))
+        .WillRepeatedly(Return(true));
+
+    EXPECT_CALL(fs, ResolveSymLink(StrEq(procExe)))
         .WillRepeatedly(Return("/other/path/to/my"));
 
     EXPECT_CALL(fs, Basename(StrEq("/other/path/to/my"), _))
@@ -124,14 +149,14 @@ TEST_F(PidFileTest, IsProcessRunningReturnsTrueWhenCorrectProcessIsRunning)
     ASSERT_TRUE(p.IsProcessRunning());
 }
 
-TEST_F(PidFileTest, UnlinkNotCalledWhenCreateNotCalled)
+TEST_F(PidFileUnitTest, UnlinkNotCalledWhenCreateNotCalled)
 {
     FTRACE;
     GMockFileSystemPtr mfs = boost::make_shared<StrictMock<GMockFileSystem> >();
     GMockFileSystem &fs(*mfs);
 
     FString pidfile = "/var/run/my.pid";
-    FString procCmdLine = "/proc/5555/cmdline";
+    FString procExe = "/proc/5555/exe";
 
     EXPECT_CALL(fs, FileExists(StrEq(pidfile)))
         .WillRepeatedly(Return(true));
@@ -139,10 +164,10 @@ TEST_F(PidFileTest, UnlinkNotCalledWhenCreateNotCalled)
     EXPECT_CALL(fs, FileGetContents(StrEq(pidfile)))
         .WillRepeatedly(Return("5555"));
 
-    EXPECT_CALL(fs, FileExists(StrEq(procCmdLine)))
+    EXPECT_CALL(fs, FileExists(StrEq(procExe)))
         .WillRepeatedly(Return(true));
 
-    EXPECT_CALL(fs, FileGetContents(StrEq(procCmdLine)))
+    EXPECT_CALL(fs, ResolveSymLink(StrEq(procExe)))
         .WillRepeatedly(Return("/other/path/to/my"));
 
     EXPECT_CALL(fs, Basename(StrEq("/other/path/to/my"), _))
@@ -159,14 +184,14 @@ TEST_F(PidFileTest, UnlinkNotCalledWhenCreateNotCalled)
     // GMockFileSystem
 }
 
-TEST_F(PidFileTest, CreateThrowsWhenProcessIsRunning)
+TEST_F(PidFileUnitTest, CreateThrowsWhenProcessIsRunning)
 {
     FTRACE;
     GMockFileSystemPtr mfs = boost::make_shared<GMockFileSystem>();
     GMockFileSystem &fs(*mfs);
 
     FString pidfile = "/var/run/my.pid";
-    FString procCmdLine = "/proc/5555/cmdline";
+    FString procExe = "/proc/5555/exe";
 
     EXPECT_CALL(fs, FileExists(StrEq(pidfile)))
         .WillRepeatedly(Return(true));
@@ -174,10 +199,10 @@ TEST_F(PidFileTest, CreateThrowsWhenProcessIsRunning)
     EXPECT_CALL(fs, FileGetContents(StrEq(pidfile)))
         .WillRepeatedly(Return("5555"));
 
-    EXPECT_CALL(fs, FileExists(StrEq(procCmdLine)))
+    EXPECT_CALL(fs, FileExists(StrEq(procExe)))
         .WillRepeatedly(Return(true));
 
-    EXPECT_CALL(fs, FileGetContents(StrEq(procCmdLine)))
+    EXPECT_CALL(fs, ResolveSymLink(StrEq(procExe)))
         .WillRepeatedly(Return("/other/path/to/my"));
 
     EXPECT_CALL(fs, Basename(StrEq("/other/path/to/my"), _))
@@ -190,14 +215,14 @@ TEST_F(PidFileTest, CreateThrowsWhenProcessIsRunning)
     ASSERT_THROW(p.Create(5556), EAlreadyRunning);
 }
 
-TEST_F(PidFileTest, CreateHappyPath)
+TEST_F(PidFileUnitTest, CreateHappyPath)
 {
     FTRACE;
     GMockFileSystemPtr mfs = boost::make_shared<GMockFileSystem>();
     GMockFileSystem &fs(*mfs);
 
     FString pidfile = "/var/run/my.pid";
-    FString procCmdLine = "/proc/5555/cmdline";
+    FString procExe = "/proc/5555/exe";
 
     EXPECT_CALL(fs, FileExists(StrEq(pidfile)))
         .WillRepeatedly(Return(false));
@@ -215,4 +240,68 @@ TEST_F(PidFileTest, CreateHappyPath)
     p.Create(pid);
 }
 
+TEST_F(PidFileUnitTest, IsProcessRunningProcCmdLineFallback)
+{
+    FTRACE;
+    logManager.BeginLogging("//stdout");
+    GMockFileSystemPtr mfs = boost::make_shared<GMockFileSystem>();
+    GMockFileSystem &fs(*mfs);
 
+    FString pidfile = "/var/run/my.pid";
+    FString procCmdLine = "/proc/5555/cmdline";
+
+    EXPECT_CALL(fs, Basename(StrEq("/usr/bin/my"), _))
+        .WillRepeatedly(Return("my"));
+
+    EXPECT_CALL(fs, FileExists(_))
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(false));
+
+    EXPECT_CALL(fs, FileExists(StrEq(pidfile)))
+        .WillRepeatedly(Return(true));
+
+    EXPECT_CALL(fs, FileGetContents(StrEq(pidfile)))
+        .WillRepeatedly(Return("5555"));
+
+    EXPECT_CALL(fs, FileExists(StrEq(procCmdLine)))
+        .WillRepeatedly(Return(true));
+
+    EXPECT_CALL(fs, FileGetContents(StrEq(procCmdLine)))
+        .WillRepeatedly(Return("/other/path/to/my"));
+
+    PidFile p(mfs, "/var/run/my.pid", "/usr/bin/my");
+    ASSERT_TRUE(p.IsProcessRunning());
+}
+
+TEST_F(PidFileUnitTest, IsProcessRunningProcStatFallback)
+{
+    FTRACE;
+    logManager.BeginLogging("//stdout");
+    GMockFileSystemPtr mfs = boost::make_shared<GMockFileSystem>();
+    GMockFileSystem &fs(*mfs);
+
+    FString pidfile = "/var/run/my.pid";
+    FString procStat = "/proc/5555/stat";
+
+    EXPECT_CALL(fs, Basename(StrEq("/usr/bin/my"), _))
+        .WillRepeatedly(Return("my"));
+
+    EXPECT_CALL(fs, FileExists(_))
+        .Times(AtLeast(2))
+        .WillRepeatedly(Return(false));
+
+    EXPECT_CALL(fs, FileExists(StrEq(pidfile)))
+        .WillRepeatedly(Return(true));
+
+    EXPECT_CALL(fs, FileGetContents(StrEq(pidfile)))
+        .WillRepeatedly(Return("5555"));
+
+    EXPECT_CALL(fs, FileExists(StrEq(procStat)))
+        .WillRepeatedly(Return(true));
+
+    EXPECT_CALL(fs, FileGetContents(StrEq(procStat)))
+        .WillRepeatedly(Return("5555 (my) gobbly goop"));
+
+    PidFile p(mfs, "/var/run/my.pid", "/usr/bin/my");
+    ASSERT_TRUE(p.IsProcessRunning());
+}

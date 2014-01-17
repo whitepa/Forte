@@ -86,35 +86,99 @@ bool PidFile::IsProcessRunning()
         unsigned int pid =
             mFileSystem->FileGetContents(mPidFilePath).AsUnsignedInteger();
 
-        FString procCmdLine(FStringFC(), "/proc/%u/cmdline", pid);
+        FString basename = mFileSystem->Basename(mExecutableName);
 
-        if (mFileSystem->FileExists(procCmdLine))
+        try
         {
-            hlog(HLOG_DEBUG, "cmdline exists for %s. Checking to see if it"
-                 " is the correct process", mPidFilePath.c_str());
-
-            FString cmdline = mFileSystem->FileGetContents(procCmdLine);
-            size_t pos = cmdline.find_first_of('\0');
-            if (pos != NOPOS)
-                cmdline = cmdline.Left(pos);
-
-            FString basename = mFileSystem->Basename(mExecutableName);
-            // test if the basename of the current process and the
-            // process that has the pid are the same.
-            if (cmdline.length() >= basename.length()
-                    && basename.Compare(cmdline.Right(basename.length())) == 0)
+            FString procExe(FStringFC(), "/proc/%u/exe", pid);
+            if (mFileSystem->FileExists(procExe))
             {
-                hlog(HLOG_DEBUG, "Process is correct '%s'", basename.c_str());
-                return true;
+                hlog(HLOG_DEBUG, "exe exists for %s. Checking to see if it"
+                     " is the correct process", mPidFilePath.c_str());
+
+                FString exe = mFileSystem->ResolveSymLink(procExe);
+
+                // test if the basename of the current process and the
+                // process that has the pid are the same.
+                if (exe.length() >= basename.length()
+                    && basename.Compare(exe.Right(basename.length())) == 0)
+                {
+                    hlog(HLOG_DEBUG, "Process is correct '%s'", basename.c_str());
+                    return true;
+                }
+                hlog(HLOG_DEBUG, "%s details do not match our process.", procExe.c_str());
             }
         }
-        hlog(HLOG_DEBUG, "/proc/pid/cmdline details do match our process.");
-        return false;
+        catch (const EFileSystemResolveSymLink &e)
+        {
+            hlog(HLOG_DEBUG,
+                 "Absorbing exception thrown while resolving symlink /proc/%u/exe: %s",
+                 pid, e.what());
+        }
+
+        try
+        {
+            FString procCmdLine(FStringFC(), "/proc/%u/cmdline", pid);
+            if (mFileSystem->FileExists(procCmdLine))
+            {
+                hlog(HLOG_DEBUG, "cmdline exists for %s. Checking to see if it"
+                     " is the correct process", mPidFilePath.c_str());
+
+                FString cmdline = mFileSystem->FileGetContents(procCmdLine);
+                size_t pos = cmdline.find_first_of('\0');
+                if (pos != NOPOS)
+                    cmdline = cmdline.Left(pos);
+
+                // test if the basename of the current process and the
+                // process that has the pid are the same.
+                if (cmdline.length() >= basename.length()
+                    && basename.Compare(cmdline.Right(basename.length())) == 0)
+                {
+                    hlog(HLOG_DEBUG, "Process is correct '%s'", basename.c_str());
+                    return true;
+                }
+                hlog(HLOG_DEBUG,
+                     "%s details do not match our process either.", procCmdLine.c_str());
+            }
+        }
+        catch (const std::exception &e)
+        {
+            hlog(HLOG_DEBUG,
+                 "Absorbing exception thrown while parsing /proc/%u/cmdline: %s", pid, e.what());
+        }
+
+        try
+        {
+            FString procStat(FStringFC(), "/proc/%u/stat", pid);
+            if (mFileSystem->FileExists(procStat))
+            {
+                hlog(HLOG_DEBUG, "stat exists for %s. Checking to see if it"
+                     " is the correct process", mPidFilePath.c_str());
+
+                FStringVector stats;
+                mFileSystem->FileGetContents(procStat).RegexMatch("\\((.*?)\\)", stats);
+
+                if (stats.at(0).length() >= basename.length()
+                    && basename.Compare(stats.at(0)) == 0)
+                {
+                    hlog(HLOG_DEBUG, "Process is correct '%s'", basename.c_str());
+                    return true;
+                }
+                hlog(HLOG_DEBUG,
+                     "%s details do not match our process either.", procStat.c_str());
+            }
+        }
+        catch (const std::exception &e)
+        {
+            hlog(HLOG_WARN,
+                 "Caught an exception parsing /proc/%u/stat: %s", pid, e.what());
+            throw;
+        }
     }
     else
     {
         // PID file does not exist
         hlog(HLOG_DEBUG, "%s does not exist.", mPidFilePath.c_str());
-        return false;
     }
+    return false;
 }
