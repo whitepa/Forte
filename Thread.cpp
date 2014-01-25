@@ -140,6 +140,26 @@ void Thread::InterruptibleSleep(const struct timespec &interval,
     thr->interruptibleSleep(interval, throwOnShutdown);
 }
 
+void Thread::InterruptibleSleepOrSleep(const struct timespec &interval,
+                                       bool throwOnShutdown)
+{
+    try
+    {
+        InterruptibleSleep(interval, throwOnShutdown);
+    }
+    catch (EThreadUnknown)
+    {
+        struct timespec sleepTime, remaining;
+        sleepTime = interval;
+        while (nanosleep(&sleepTime, &remaining) == -1
+               && errno == EINTR)
+        {
+            sleepTime = remaining;
+        }
+
+    }
+}
+
 void Thread::interruptibleSleep(const struct timespec &interval, bool throwOnShutdown)
 {
     // Sleep for the desired interval.  If the thread is shutdown or notified
@@ -181,6 +201,7 @@ void Thread::interruptibleSleep(const struct timespec &interval, bool throwOnShu
     }
     mNotified = false;
 }
+
 
 Thread::~Thread()
 {

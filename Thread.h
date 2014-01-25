@@ -96,6 +96,13 @@ namespace Forte
         static void InterruptibleSleep(const struct timespec &interval,
                                        bool throwOnShutdown = true);
 
+        /**
+         * same as InterruptibleSleep except will just sleep if not
+         * called a Forte::Thread object
+         */
+        static void InterruptibleSleepOrSleep(const struct timespec &interval,
+                                              bool throwOnShutdown = true);
+
         FString mThreadName;
 
     protected:
